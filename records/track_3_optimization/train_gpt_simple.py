@@ -264,7 +264,7 @@ model.compile(dynamic=False)
 ########################################
 
 # we want to minimize this while still reaching 3.28 val loss
-train_steps = 3600
+train_steps = 3500
 
 # initialize model parameters
 for name, p in model.named_parameters():
@@ -277,7 +277,7 @@ optimizer1 = AdamW([dict(params=[model.embed.weight], lr=0.3),
                     dict(params=[p for p in model.parameters() if p.ndim < 2], lr=0.01)],
                    betas=(0.8, 0.95), eps=1e-10, weight_decay=0, fused=True)
 optimizer2 = Muon([p for p in model.blocks.parameters() if p.ndim >= 2],
-                  lr=0.02, weight_decay=0.01)
+                  lr=0.025, weight_decay=0.0125)
 optimizers = [optimizer1, optimizer2]
 assert set(p for opt in optimizers for group in opt.param_groups
            for p in group["params"]) == set(model.parameters())
