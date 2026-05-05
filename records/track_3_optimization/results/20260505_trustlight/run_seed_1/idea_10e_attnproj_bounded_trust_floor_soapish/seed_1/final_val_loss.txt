@@ -1,0 +1,1 @@
+target_reached step:3100/3175 val_loss:3.27941 target_val_loss:3.28000

@@ -1,0 +1,30 @@
+run_id=20260505_172848
+device=h100
+mode=sequential
+seeds=1
+gpus_per_run=4
+parallel_jobs=1
+install_reqs=0
+check_reqs=1
+check_data=1
+download_data=0
+data_tokens=40
+early_stop=1
+early_stop_catastrophic_steps=125
+early_stop_catastrophic_margin=0.50
+early_stop_grace_steps=1000
+early_stop_margin=0.03
+early_stop_patience=2
+target_val_loss=3.28
+train_progress_interval=0
+python_bin=python3
+torchrun_bin=torchrun
+repo_root=/workspace/modded-nanogpt
+script_dir=/workspace/modded-nanogpt/records/track_3_optimization/proposed_runs
+started_at=2026-05-05T17:28:48Z
+
+nvidia_smi:
+GPU 0: NVIDIA H100 80GB HBM3 (UUID: GPU-7a242116-69f6-d353-430d-4606d083bade)
+GPU 1: NVIDIA H100 80GB HBM3 (UUID: GPU-96b15a60-790d-08d1-6d6f-20aeb13288e5)
+GPU 2: NVIDIA H100 80GB HBM3 (UUID: GPU-1f97b9b9-115d-b137-3676-ec545bf210cf)
+GPU 3: NVIDIA H100 80GB HBM3 (UUID: GPU-58c5a92a-87e8-5a8a-0882-a5e8af161c68)
