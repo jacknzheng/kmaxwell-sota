@@ -40,6 +40,7 @@ which the PR appeared.
 | 10 | 3250 | 3.2789 (n=20)✓ | NorMuon lr=0.035 wd=0.025, end 50 steps early | 2026/05/03 | [log](results/20260503_normuon/e0d0185f-ccb8-426d-8265-a4e762ec69f6.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/276) | @lliu606 |
 | 11 | 3225 | 3.2785 (n=16)✓ | Setup from #9 plus [Contra-Muon](https://github.com/nilin/contra-muon) technique | 2026/05/01 | [log](results/20260501_contra_muon/08cd60f9-99e2-4e28-b1ac-19136dd42a05.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/275) | @nilin |
 | 12 | 3325 | 3.2790 (n=20)✓ | Muon with aux Adam, lr=.035 wd=.025, end 50 steps early following #8 & #10 | 2026/05/03 | [log](results/1bd8db7a-f3a3-4195-856d-cab7e0816443.txt) | N/A | @kellerjordan0 |
+| 13 | 3275 | 3.2785 (n=15)✓ | [Newton-Muon](https://arxiv.org/abs/2604.01472) with activation-covariance right-preconditioning refreshed every 64 steps before the Muon Newton-Schulz update ([details](results/20260505_newton_muon/README.md)); qkv lr=.020 wd=.025, attn.proj lr=.025 wd=.025, mlp.fc lr=.030 wd=.0375, mlp.proj lr=.030 wd=.025 | 2026/05/05 | [log](results/20260505_newton_muon/6fb302c7-d271-491b-906f-75cd6ec72075.txt) | TBD | @zhehangdu |
 
 <table>
   <tr>
