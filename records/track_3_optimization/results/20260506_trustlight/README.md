@@ -12,32 +12,35 @@ output projections.
 
 ## Result
 
-The submitted fixed checkpoint is step 3140. All six seeds were run with
+The submitted fixed checkpoint is step 3130. All six seeds were run with
 `EARLY_STOP=0` and `TARGET_VAL_LOSS=0`; no seed was dropped or stopped based on
 validation loss. The runs continued to step 3175, and the later checkpoints are
 shown for transparency.
 
-Under the Track 3 one-sided test with `sigma=0.0013`, the step 3140 mean is
-`3.27764000` over `n=6` seeds. This gives:
+Under the Track 3 one-sided test with `sigma=0.0013`, the step 3130 mean is
+`3.27823167` over `n=6` seeds. This gives:
 
 ```text
-(3.28 - 3.27764000) * sqrt(6) = 0.00578080 >= 0.004
-z = 4.4468
-p = 4.36e-6
+(3.28 - 3.27823167) * sqrt(6) = 0.00433151 >= 0.004
+z = 3.3319
+p = 4.31e-4
 ```
 
-| Seed | 3125 val | 3140 val | 3150 val | 3175 val |
-| -: | -: | -: | -: | -: |
-| 0 | 3.27918 | 3.27823 | 3.27774 | 3.27713 |
-| 1 | 3.27785 | 3.27690 | 3.27642 | 3.27579 |
-| 2 | 3.27948 | 3.27853 | 3.27807 | 3.27744 |
-| 3 | 3.28002 | 3.27907 | 3.27861 | 3.27797 |
-| 4 | 3.27822 | 3.27725 | 3.27678 | 3.27615 |
-| 5 | 3.27683 | 3.27586 | 3.27542 | 3.27479 |
-| **Mean** | **3.27859667** | **3.27764000** | **3.27717333** | **3.27654500** |
+Step 3125 is included to show the last failing checkpoint; step 3130 is the
+earliest passing checkpoint in these logs.
 
-At step 3140 the average training time was about 1100.084 seconds on 4x H100,
-with average `step_avg` about 350.35 ms. Wallclock is not the target metric for
+| Seed | 3125 val | 3130 val | 3140 val | 3150 val | 3175 val |
+| -: | -: | -: | -: | -: | -: |
+| 0 | 3.27918 | 3.27881 | 3.27823 | 3.27774 | 3.27713 |
+| 1 | 3.27785 | 3.27748 | 3.27690 | 3.27642 | 3.27579 |
+| 2 | 3.27948 | 3.27911 | 3.27853 | 3.27807 | 3.27744 |
+| 3 | 3.28002 | 3.27966 | 3.27907 | 3.27861 | 3.27797 |
+| 4 | 3.27822 | 3.27786 | 3.27725 | 3.27678 | 3.27615 |
+| 5 | 3.27683 | 3.27647 | 3.27586 | 3.27542 | 3.27479 |
+| **Mean** | **3.27859667** | **3.27823167** | **3.27764000** | **3.27717333** | **3.27654500** |
+
+At step 3130 the average training time was about 1096.561 seconds on 4x H100,
+with average `step_avg` about 350.34 ms. Wallclock is not the target metric for
 Track 3, but the timing is included to make the record easier to compare.
 
 ## Architecture and data
@@ -138,4 +141,3 @@ CHECK_REQS=1 INSTALL_REQS=0 CHECK_DATA=1 DOWNLOAD_DATA=0 DATA_TOKENS=40 \
 The full stdout logs are stored under
 `idea_10e_attnproj_bounded_trust_floor_soapish/seed_*/stdout.txt`. Each seed's
 metadata and final validation line are stored beside its stdout.
-
