@@ -126,18 +126,40 @@ This record was run sequentially on 4x H100. The local result directory combines
 two sequential batches: seeds `0 1 2` from run `20260506_023538` and seeds
 `3 4 5` from run `20260506_034620`.
 
-Equivalent run command:
+The folder now includes the files needed to replay the run set:
+
+- `train_gpt_simple_trustlight.py`: the train script extracted from the logged
+  source, with standalone early stopping defaulted off.
+- `requirements.txt`: the minimal Python packages used by the run environment.
+- `run.sh`: a sequential six-seed launcher that sets `EARLY_STOP=0` and
+  `TARGET_VAL_LOSS=0`, writes per-seed stdout/stderr/log files, and records
+  metadata under `repro_runs/<timestamp>/`.
+- `idea_10e_attnproj_bounded_trust_floor_soapish/seed_*/logs/*.txt`: the
+  original UUID logfiles containing the source used by each completed seed.
+
+From a fresh pod, the convenient command is:
 
 ```bash
-CUDA_VISIBLE_DEVICES=0,1,2,3 \
-DEVICE=h100 MODE=sequential GPUS_PER_RUN=4 PARALLEL_JOBS=1 \
-EXPERIMENTS="idea_10e_attnproj_bounded_trust_floor_soapish.py" \
-SEEDS="0 1 2 3 4 5" \
-TARGET_VAL_LOSS=0 EARLY_STOP=0 TRAIN_PROGRESS_INTERVAL=0 \
-CHECK_REQS=1 INSTALL_REQS=0 CHECK_DATA=1 DOWNLOAD_DATA=0 DATA_TOKENS=40 \
-./records/track_3_optimization/proposed_runs/run.sh
+INSTALL_REQS=1 DOWNLOAD_DATA=1 \
+./records/track_3_optimization/results/20260506_trustlight/run.sh
 ```
 
-The full stdout logs are stored under
+If requirements and FineWeb shards are already present, use:
+
+```bash
+./records/track_3_optimization/results/20260506_trustlight/run.sh
+```
+
+By default, `run.sh` uses `NPROC_PER_NODE=4`, `SEEDS="0 1 2 3 4 5"`,
+`DATA_TOKENS=40`, and writes outputs into this result folder. Override these
+environment variables if needed, for example:
+
+```bash
+CUDA_VISIBLE_DEVICES=0,1,2,3 NPROC_PER_NODE=4 SEEDS="0 1 2 3 4 5" \
+./records/track_3_optimization/results/20260506_trustlight/run.sh
+```
+
+The original full stdout logs are stored under
 `idea_10e_attnproj_bounded_trust_floor_soapish/seed_*/stdout.txt`. Each seed's
-metadata and final validation line are stored beside its stdout.
+metadata, final validation line, and UUID source log are stored beside its
+stdout.

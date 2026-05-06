@@ -52,3 +52,11 @@ Starting point and main inspiration: PR #278,
 "New record: Track_3_optimization: Add SOAP preconditioning to MLPs (3150, -75
 steps)", by @samacqua. Trustlight keeps the PR #278 MLP SOAP path and explores a
 bounded way to recover some benefit from SOAP on attention output projections.
+
+## Reproduction files
+
+The result folder includes `train_gpt_simple_trustlight.py`, `requirements.txt`,
+and `run.sh`. Running
+`./records/track_3_optimization/results/20260506_trustlight/run.sh` from the
+repo root replays seeds `0 1 2 3 4 5` sequentially with `EARLY_STOP=0` and
+`TARGET_VAL_LOSS=0`.
