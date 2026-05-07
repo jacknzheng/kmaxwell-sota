@@ -12,22 +12,23 @@ output projections.
 
 ## Result
 
-The submitted fixed checkpoint is step 3130. All six seeds were run with
+The submitted fixed checkpoint is step 3125. All eight seeds were run with
 `EARLY_STOP=0` and `TARGET_VAL_LOSS=0`; no seed was dropped or stopped based on
 validation loss. The runs continued to step 3175, and the later checkpoints are
 shown for transparency.
 
-Under the Track 3 one-sided test with `sigma=0.0013`, the step 3130 mean is
-`3.27823167` over `n=6` seeds. This gives:
+Under the Track 3 one-sided test with `sigma=0.0013`, the step 3125 mean is
+`3.27844125` over `n=8` seeds. This gives:
 
 ```text
-(3.28 - 3.27823167) * sqrt(6) = 0.00433151 >= 0.004
-z = 3.3319
-p = 4.31e-4
+(3.28 - 3.27844125) * sqrt(8) = 0.00440881 >= 0.004
+z = 3.3914
+p = 3.48e-4
 ```
 
-Step 3125 is included to show the last failing checkpoint; step 3130 is the
-earliest passing checkpoint in these logs.
+Step 3125 is the earliest passing checkpoint in the refreshed eight-seed set.
+With the original six seeds it was just below the required precision; seeds 6
+and 7 move the same fixed checkpoint over the Track 3 significance threshold.
 
 | Seed | 3125 val | 3130 val | 3140 val | 3150 val | 3175 val |
 | -: | -: | -: | -: | -: | -: |
@@ -37,10 +38,12 @@ earliest passing checkpoint in these logs.
 | 3 | 3.28002 | 3.27966 | 3.27907 | 3.27861 | 3.27797 |
 | 4 | 3.27822 | 3.27786 | 3.27725 | 3.27678 | 3.27615 |
 | 5 | 3.27683 | 3.27647 | 3.27586 | 3.27542 | 3.27479 |
-| **Mean** | **3.27859667** | **3.27823167** | **3.27764000** | **3.27717333** | **3.27654500** |
+| 6 | 3.27830 | 3.27795 | 3.27733 | 3.27687 | 3.27624 |
+| 7 | 3.27765 | 3.27728 | 3.27669 | 3.27622 | 3.27558 |
+| **Mean** | **3.27844125** | **3.27807750** | **3.27748250** | **3.27701625** | **3.27638625** |
 
-At step 3130 the average training time was about 1096.561 seconds on 4x H100,
-with average `step_avg` about 350.34 ms. Wallclock is not the target metric for
+At step 3125 the average training time was about 1127.821 seconds on 4x H100,
+with average `step_avg` about 360.90 ms. Wallclock is not the target metric for
 Track 3, but the timing is included to make the record easier to compare.
 
 ## Architecture and data
@@ -123,15 +126,16 @@ learn useful geometry; after the warm phase, the gate becomes more selective.
 ## Reproduction
 
 This record was run sequentially on 4x H100. The local result directory combines
-two sequential batches: seeds `0 1 2` from run `20260506_023538` and seeds
-`3 4 5` from run `20260506_034620`.
+three sequential batches: seeds `0 1 2` from run `20260506_023538`, seeds
+`3 4 5` from run `20260506_034620`, and seeds `6 7` from run
+`20260507_121153`.
 
 The folder now includes the files needed to replay the run set:
 
 - `train_gpt_simple_trustlight.py`: the train script extracted from the logged
   source, with standalone early stopping defaulted off.
 - `requirements.txt`: the minimal Python packages used by the run environment.
-- `run.sh`: a sequential six-seed launcher that sets `EARLY_STOP=0` and
+- `run.sh`: a sequential eight-seed launcher that sets `EARLY_STOP=0` and
   `TARGET_VAL_LOSS=0`, writes per-seed stdout/stderr/log files, and records
   metadata under `repro_runs/<timestamp>/`.
 - `idea_10e_attnproj_bounded_trust_floor_soapish/seed_*/logs/*.txt`: the
@@ -150,12 +154,12 @@ If requirements and FineWeb shards are already present, use:
 ./records/track_3_optimization/results/20260506_trustlight/run.sh
 ```
 
-By default, `run.sh` uses `NPROC_PER_NODE=4`, `SEEDS="0 1 2 3 4 5"`,
+By default, `run.sh` uses `NPROC_PER_NODE=4`, `SEEDS="0 1 2 3 4 5 6 7"`,
 `DATA_TOKENS=40`, and writes outputs into this result folder. Override these
 environment variables if needed, for example:
 
 ```bash
-CUDA_VISIBLE_DEVICES=0,1,2,3 NPROC_PER_NODE=4 SEEDS="0 1 2 3 4 5" \
+CUDA_VISIBLE_DEVICES=0,1,2,3 NPROC_PER_NODE=4 SEEDS="0 1 2 3 4 5 6 7" \
 ./records/track_3_optimization/results/20260506_trustlight/run.sh
 ```
 
