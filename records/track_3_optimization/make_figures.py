@@ -87,6 +87,34 @@ def add_legend(ax, legend_entries):
     ax.add_artist(legend)
 
 
+def plot_results(ax, plot_results, target_label_x):
+    legend_entries = []
+    for label, steps_to_target, evidence, steps, losses, color in plot_results:
+        legend_entries.append((label, f'→ {format_evidence(evidence, steps_to_target)}', color))
+        ax.plot(
+            steps,
+            losses,
+            marker='o',
+            markersize=3.5,
+            linewidth=2.2,
+            color=color,
+        )
+    ax.axhline(3.28, color='gray', linestyle='--', linewidth=1.5)
+    ax.annotate(
+        'target=3.28',
+        xy=(target_label_x, 3.28),
+        xytext=(8, 6),
+        textcoords='offset points',
+        color='gray',
+        fontsize=9,
+    )
+    ax.set_title('Modded-NanoGPT Optimization Benchmark as of 2026/05/04', pad=11, fontsize=11)
+    ax.set_xlabel('Training steps @ 0.5M bsz', fontsize=11)
+    ax.set_ylabel('Validation loss', fontsize=11)
+    add_legend(ax, legend_entries)
+    ax.tick_params(axis='both', which='major', labelsize=10)
+
+
 def get_logfile_paths(logfile):
     path = Path(f'results/{logfile}.txt')
     if path.parent == Path('results'):
@@ -163,33 +191,9 @@ for i, (number, label) in enumerate(logfiles.items()):
 
 # Generate figure
 fig, ax = plt.subplots(figsize=(5.5, 4), dpi=300)
-legend_entries = []
-for label, steps_to_target, evidence, steps, losses, color in results.values():
-    legend_entries.append((label, f'→ {format_evidence(evidence, steps_to_target)}', color))
-    ax.plot(
-        steps,
-        losses,
-        marker='o',
-        markersize=3.5,
-        linewidth=2.2,
-        color=color,
-    )
-ax.axhline(3.28, color='gray', linestyle='--', linewidth=1.5)
-ax.annotate(
-    'target=3.28',
-    xy=(0, 3.28),
-    xytext=(8, 6),
-    textcoords='offset points',
-    color='gray',
-    fontsize=9,
-)
-ax.set_title('Modded-NanoGPT Optimization Benchmark as of 2026/05/01', pad=11, fontsize=11)
-ax.set_xlabel('Training steps @ 0.5M bsz', fontsize=11)
-ax.set_ylabel('Validation loss', fontsize=11)
-add_legend(ax, legend_entries)
+plot_results(ax, results.values(), 0)
 ax.set_xlim(0, math.ceil(max_step / 1000) * 1000)
 ax.set_ylim(3.15, 4.0)
-ax.tick_params(axis='both', which='major', labelsize=10)
 fig.tight_layout()
 fig.savefig('figure.png', bbox_inches='tight')
 
@@ -208,34 +212,10 @@ zoom_losses = [
     if zoom_min_step <= step <= zoom_max_step
 ]
 fig, ax = plt.subplots(figsize=(5.5, 4), dpi=300)
-legend_entries = []
-for label, steps_to_target, evidence, steps, losses, color in zoom_results:
-    legend_entries.append((label, f'→ {format_evidence(evidence, steps_to_target)}', color))
-    ax.plot(
-        steps,
-        losses,
-        marker='o',
-        markersize=3.5,
-        linewidth=2.2,
-        color=color,
-    )
-ax.axhline(3.28, color='gray', linestyle='--', linewidth=1.5)
-ax.annotate(
-    'target=3.28',
-    xy=(zoom_min_step, 3.28),
-    xytext=(8, 6),
-    textcoords='offset points',
-    color='gray',
-    fontsize=9,
-)
-ax.set_title('Modded-NanoGPT Optimization Benchmark as of 2026/05/01', pad=11, fontsize=11)
-ax.set_xlabel('Training steps @ 0.5M bsz', fontsize=11)
-ax.set_ylabel('Validation loss', fontsize=11)
-add_legend(ax, legend_entries)
+plot_results(ax, zoom_results, zoom_min_step)
 ax.set_xlim(zoom_min_step, zoom_max_step)
 if zoom_losses:
     zoom_margin = 0.01
     ax.set_ylim(min(zoom_losses) - zoom_margin, max(zoom_losses) + zoom_margin)
-ax.tick_params(axis='both', which='major', labelsize=10)
 fig.tight_layout()
 fig.savefig('zoomed_figure.png', bbox_inches='tight')
