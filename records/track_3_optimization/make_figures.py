@@ -21,6 +21,7 @@ logfiles = {
     9: 'NorMuon w/ update clamp-min',
     10: 'NorMuon',
     11: 'ContraNorMuon w/ update clamp-min',
+    13: 'PMuon',
 }
 readme_rows = {}
 row_pattern = re.compile(
