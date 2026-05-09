@@ -58,6 +58,7 @@ This submission incorporates features from the following previous submissions:
 - @kumarkrishna PR274 / Skylight-001: NorMuon-lite row/column variance normalization, u/w floor postprocessing, and lr=0.0375 style Muon setup.
 - @nilin (me) PR275 / Contra-Muon: introduces Contra-Muon update term.
 - @samacqua PR278 / MLP SOAP preconditioning: SOAP preconditioning machinery / MLP SOAP idea. Our script uses that SOAP machinery and extends the selected SOAP set to MLP+V.
+- @SPThole PR283 / Trustlight: attention-SOAP path for attn.proj.weight. This submission adapts that path to attn.v.weight with an ungated V_SOAP_BLEND = 0.95.
 - @yash-oai PR287 / power law LR schedule PowerCool: learning rate `c * (t_end - step)^1.2` during cooldown.
 
-The SOAP-like preconditioning from samacqua / PR278 is also applied to the attention value-projection (V) matrices in this submission.
+The MLP SOAP path descends from PR278; the V SOAP path adapts the attention-SOAP path from PR283.
