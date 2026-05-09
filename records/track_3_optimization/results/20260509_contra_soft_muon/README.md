@@ -1,7 +1,7 @@
 # Contra-Muon to Soft-Muon results
 
 Start with contra-muon for diversity/exploration, interpolate through standard muon to soft-muon for exploitation.
-See https://web.archive.org/web/20260505070142/https://nilin.github.io/contra-muon-and-soft-muon/
+See https://nilin.github.io/contra-muon-and-soft-muon/
 
 ![Muon, Contra-Muon, and Soft-Muon singular-value maps on a log x-axis](soft_muon_contra125_maps_logx.png)
 
