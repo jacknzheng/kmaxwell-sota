@@ -59,6 +59,6 @@ This submission incorporates features from the following previous submissions:
 - @nilin (me) PR275 / Contra-Muon: introduces Contra-Muon update term.
 - @samacqua PR278 / MLP SOAP preconditioning: SOAP preconditioning machinery / MLP SOAP idea. Our script uses that SOAP machinery and extends the selected SOAP set to MLP+V.
 - @SPThole PR283 / Trustlight: attention-SOAP path for attn.proj.weight. This submission adapts that path to attn.v.weight with an ungated V_SOAP_BLEND = 0.95.
-- @yash-oai PR287 / power law LR schedule PowerCool: learning rate `c * (t_end - step)^1.2` during cooldown.
+- @yash-oai PR287 / power law LR schedule: learning rate `c * (t_end - step)^1.2` during cooldown.
 
-The MLP SOAP path descends from PR278; the V SOAP path adapts the attention-SOAP path from PR283.
+The MLP SOAP path descends from PR278; the V SOAP path adapts the attention-SOAP path from PR283. Compared to PR 287, the current submission has `32.77` steps faster mean crossing to `3.28` based on seeds 0-29.
