@@ -75,7 +75,7 @@ Figure 2. Per-optimizer best.
 
 ## Rules
 
-For a new result to be considered valid, the rules are as follows:
+For a new result to be considered valid, it must satisfy the following constraints:
 1. The dataset, batch size, and architecture must be kept the same as the baseline.
 2. The trainer cannot perform multiple forward-backward passes per step.
 3. (**Target loss and statistical significance**) The submitted run(s) must attain below 3.28 val loss, thereby matching [Andrej Karpathy's GPT-2 replication](https://github.com/karpathy/llm.c/discussions/481#:~:text=By%20the%20end%20of%20the%20optimization%20we%27ll%20get%20to%20about%203.29).
