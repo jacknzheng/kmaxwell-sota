@@ -74,6 +74,8 @@ To ensure statistical significance, the run(s) are required to pass a one-sided 
 5. (**No p-hacking using val spam**) Per-run early-stopping based on val loss (or any other form of per-run decision based on val loss) is not allowed. On the other hand, it *is* permitted to print the val loss every 25 steps near the end of training, and then select the earliest step that has stat sig for reaching the target. In other words, 
 early stopping is permitted as long as the stopping point is selected the same across all trails.
 
+### Freedoms
+
 New results have the freedom to modify:
 1. The optimization algorithm, even to something slow in terms of wallclock speed.
 2. The optimization hyperparameters, including schedules thereof.
