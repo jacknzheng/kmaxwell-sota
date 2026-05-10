@@ -102,8 +102,8 @@ makes the code more difficult for future humans (and AIs) to understand.
 
 ### Skeptical results
 
-I typically do not reproduce new results myself before accepting. Therefore, there is a possibility of fake results being accepted, if a submitter
-is feeling devious.
+I typically do not reproduce new results myself before accepting. Therefore, there is a possibility of fake results being accepted, if there is a submitter
+who is feeling devious.
 To provide a long-term defense against this, I welcome new skeptical results which themselves challenge an old result by providing statistical evidence
 that the old result either cheats (e.g., increased the model size) or does not really attain below 3.28 mean loss in the reported step count (e.g., possibly they cherrypicked logs).
 Such skeptical results are welcomed as valued first-class objects, and will be broadcast.
