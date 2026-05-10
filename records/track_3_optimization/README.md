@@ -105,9 +105,10 @@ makes the code more difficult for future humans (and AIs) to understand.
 I typically do not reproduce new results myself before accepting. Therefore, there is a possibility of fake results being accepted, if a submitter
 is feeling devious.
 To provide a long-term defense against this, I welcome new skeptical results which themselves challenge an old result by providing statistical evidence
-that the old result either cheats or does not really attain below 3.28 loss in the reported step count. Such skeptical results are welcomed
-as valued first-class objects, and will be broadcast. The acceptance of such a skeptical result which disproves an old result may
-warrant a ban for the submitter of the disproven old result. Hopefully this kind of thing never actually happens though.
+that the old result either cheats (e.g., increased the model size) or does not really attain below 3.28 mean loss in the reported step count (e.g., possibly they cherrypicked logs).
+Such skeptical results are welcomed as valued first-class objects, and will be broadcast.
+The acceptance of such a skeptical result which disproves an old result may
+warrant a ban for the rapscallion submitter of the disproven old result. Hopefully this kind of thing never actually happens though.
 
 
 ### Pairwise statistical significance
