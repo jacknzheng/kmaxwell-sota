@@ -230,7 +230,7 @@ for suffix in ["wr", "best"]:
     fig.savefig(f'img/figure_{suffix}.png', bbox_inches='tight', bbox_extra_artists=[legend])
 
     # Generate zoomed-in figure
-    zoom_min_step = 3000
+    zoom_min_step = 2800
     zoom_max_step = {"wr": 3650, "best": 3400}[suffix]
     zoom_results = [
         result for result in results.values()
