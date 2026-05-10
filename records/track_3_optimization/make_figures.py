@@ -208,6 +208,7 @@ for suffix in ["wr", "best"]:
             15: 'Newton-Muon',
             16: '#14 + SOAP precond on attn proj w/ trust gate',
             17: '#11 + Aurora',
+            18: 'PMuon',
         }
     else:
         assert False
