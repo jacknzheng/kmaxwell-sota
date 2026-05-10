@@ -67,11 +67,11 @@ def add_legend(ax, legend_entries):
             linewidth=2.2,
             color=color,
         ))
-        label_size = 7 if len(label) > 25 else 9
+        label_size = 6.5 if len(label) > 25 else 8
         text = VPacker(
             children=[
                 TextArea(label, textprops={'fontsize': label_size}),
-                TextArea(evidence, textprops={'fontsize': 7}),
+                TextArea(evidence, textprops={'fontsize': 6.5}),
             ],
             align='left',
             pad=0,
@@ -84,11 +84,13 @@ def add_legend(ax, legend_entries):
             sep=5,
         ))
     legend = AnchoredOffsetbox(
-        loc='upper right',
+        loc='upper left',
         child=VPacker(children=rows, align='left', pad=0, sep=3),
         frameon=True,
         pad=0.15,
         borderpad=0.75,
+        bbox_to_anchor=(1.02, 1),
+        bbox_transform=ax.transAxes,
     )
     legend.patch.set_alpha(plt.rcParams['legend.framealpha'])
     legend.patch.set_edgecolor(plt.rcParams['legend.edgecolor'])
