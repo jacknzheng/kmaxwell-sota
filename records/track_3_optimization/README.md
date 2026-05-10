@@ -115,7 +115,7 @@ According to the above information, 0.0014 val loss is worth about 100 * 0.0014/
 To clarify, this does not constitute evidence that the *algorithm* provided by result #11 is not really better; it only indicates that
 result #11 provides insufficient evidence for that conclusion.
 
-Another calculation: For result #13 --  a completely valid new <3.28 record -- we have the following two calculations.
+Another calculation: For result #13 --  a perfectly valid new <3.28 record -- we have the following two calculations.
 Against result #11, we have a difference of 15 steps, with final loss being the same. These steps are worth approximately
 15/100 * 0.0045 = 0.000675 nats (unit of loss). The two seed counts are n=16 and n=10. The general requirement is
 `(final_loss_diff + exp_stepbased_loss_diff) / (1/n1 + 1/n2)**0.5 >= 0.004`. For this case, the LHS is 0.00167, which does not reach up to statsig.
