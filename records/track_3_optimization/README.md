@@ -121,6 +121,8 @@ Against result #11, we have a difference of 15 steps, with final loss being the 
 `(final_loss_diff + exp_stepbased_loss_diff) / (1/n1 + 1/n2)**0.5 >= 0.004`. For this case, the LHS is 0.00167, which does not reach up to statsig.
 If we intead compare to result #8, the LHS is instead `((3.2778 - 3.2785) + (40/100 * 0.0045)) / (1/10 + 1/16)**0.5 = 0.0027`, which again does not reach statsig.
 
+A third calculation: For the Muon hparams in result #12 vs #6, we have `final_loss_diff = -0.0002`, `exp_stepbased_loss_diff = 50/100*0.0045 = 0.00225`, and `n1 = n2 = 20`. Therefore, the LHS of our general formula is `0.00648`, which is above `0.004`, so we can conclude that the algorithm provided by result #12 is statsig better than that provided by result #6.
+
 ------
 ------
 
