@@ -115,8 +115,8 @@ Reducing the step count of result #12 by 200 increases the mean loss from 3.2790
 
 For example, result #11 is not pairwise statsig vs the prior record, because it lowers step count by 25 while increasing estimated mean val loss by 3.2785 - 3.2771 = 0.0014.
 According to the above information, 0.0014 val loss is worth about 100 * 0.0014/0.0045 = 31 steps, which is greater than the step saving.
-To clarify, this does not constitute evidence that the *algorithm* provided by result #11 is not really better; it only indicates that
-result #11 provides insufficient evidence for that conclusion.
+To clarify, this does not constitute evidence that the *algorithm* provided by result #11 is not really better; it only indicates that the *logfiles* provided by
+result #11 do not contain insufficient evidence for that conclusion.
 
 Another calculation: For result #13 --  a perfectly valid new <3.28 record -- we have the following two calculations.
 Against result #11, we have a difference of 15 steps, with final loss being the same. These steps are worth approximately
