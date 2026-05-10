@@ -12,15 +12,14 @@ from matplotlib.offsetbox import AnchoredOffsetbox, DrawingArea, HPacker, TextAr
 logfiles = {
     # key: number in README results history
     # value: label
-    # 2: 'AdamW',
+    # Include results with lowest step count and a few baselines
     12: 'Muon',
-    5: 'MuonH',
     4: 'AdamH',
-    7: 'Muon²',
     8: 'NorMuonH',
     9: 'NorMuon w/ update clamp-min',
     10: 'NorMuon',
     11: 'ContraNorMuon w/ update clamp-min',
+    13: 'NorMuonH + MuLoCo',
 }
 readme_rows = {}
 row_pattern = re.compile(
