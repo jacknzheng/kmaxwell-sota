@@ -25,10 +25,6 @@ Notes:
 If it fails to reproduce (i.e., we get statistical evidence that its mean is above 3.28), then please report that, as it will be grounds to remove the run from the history.
 * The number in the leftmost column reflects the order in which these runs were accepted. This does not necessarily line up with the Date column, which is the date at which the PR appeared.
 * The (!) symbol next to the step count indicates a result that sets a new global step-count record (across all optimizers).
-* We could say that there are two tiers of world records results: Both tiers of achieve statistical significance at a lower step count than the previous record.
-But Tier 1 records additionally achieve stat significance for the claim that they are better than we could attain by simply shaving steps off the previous record and gathering more seeds, whereas Tier 2 records do not.
-For example, result #16 is a completely valid new Tier 2 record, because it attains statsig evidence for <3.28 at 3125 steps whereas result #14 did not.
-However, it falls short of being a valid new Tier 1 record, because #14 attains 3.2790 (n=4) at 3125 and it attains 3.2784 (n=8) at the same, which is not a statistically significant difference.
 
 | # | Steps to 3.28 | Evidence | Description | Date | Log | PR | Contributors |
 | - | -             | -        | -           | -    | -   | -  | -            |
@@ -47,7 +43,7 @@ However, it falls short of being a valid new Tier 1 record, because #14 attains 
 | 13 | 3210(!) | 3.27847 (n=10)✓ | NorMuonH (#8) wrapped in [MuLoCo](https://arxiv.org/abs/2502.07314)-style outer Nesterov SGD (Algorithm 1, K=1) over all trainable params, outer_lr=0.7 outer_momentum=0.5 sync_interval=30 (= 107 outer steps) | 2026/05/04 | [log](results/20260504_muloco_normuonh/7fba9434-58d8-4166-b6a7-d62ef8d17e5d.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/277) | @bentherien |
 | 14 | 3150(!) | 3.2776 (n=4)✓ | Setup from #12, plus SOAP preconditioning before Muon orthogonalization for the MLP weights, similarly to [soap-muon](https://nikhilvyas.github.io/SOAP_Muon.pdf) | 2026/05/04 | [log](results/20260504_contra_muon_mlp_soapish/0248394b-0d6c-4133-9ff7-e7ff2763cdd9.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/278) | @Sam_Acqua |
 | 15 | 3275 | 3.2785 (n=15)✓ | [Newton-Muon](https://arxiv.org/abs/2604.01472) with activation-covariance right-preconditioning refreshed every 64 steps before the Muon Newton-Schulz update ([details](results/20260505_newton_muon/README.md)); tuned lr/wd per param type | 2026/05/05 | [log](results/20260505_newton_muon/6fb302c7-d271-491b-906f-75cd6ec72075.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/281) | @zhehangdu |
-| 16 | 3125(!) | 3.2784 (n=8) | Setup from #14, plus SOAP precond for attention with trust gate (note: No statsig evidence that this is an improvement beyond getting more seeds for #15) | 2026/05/05 | [log](results/20260506_trustlight/fake_log_from_seed0.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/283) | @SPThole |
+| 16 | 3125(!) | 3.2784 (n=8) | Setup from #14, plus SOAP precond for attention with trust gate (note: this is a [Tier 2](#tier-1-vs-tier-2-results) record) | 2026/05/05 | [log](results/20260506_trustlight/fake_log_from_seed0.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/283) | @SPThole |
 
 <table>
   <tr>
@@ -91,11 +87,22 @@ that a submission was created, as long as it follows the rules. That being said,
 simplify any code it writes, since a tendency of AI-based results is to include techniques that neither help nor hurt, but add complexity ("barnacles"), which
 makes the code more difficult for future humans (and AIs) to understand.
 
+
+### Skeptical results
+
 I typically do not reproduce new results myself before accepting. Therefore, there is a possibility of fake results being accepted.
 To provide a long-term defense against this, I welcome new skeptical results which themselves challenge an old result by providing statistical evidence
 that the old result either cheats or does not really attain below 3.28 loss in the reported step count. Such skeptical results are welcomed
 as valued first-class objects, and will be broadcast. The acceptance of such a skeptical result which disproves an old result may
 warrant a permanent ban for the submitter of the old result. Hopefully this kind of thing never actually becomes a real necessity though.
+
+
+### Tier 1 vs Tier 2 results
+
+We could say that there are two tiers of world records results: Both tiers of achieve statistical significance at a lower step count than the previous record.
+But Tier 1 records additionally achieve stat significance for the claim that they are better than we could attain by simply shaving steps off the previous record and gathering more seeds, whereas Tier 2 records do not.
+For example, result #16 is a completely valid new Tier 2 record, because it attains statsig evidence for <3.28 at 3125 steps whereas result #14 did not.
+However, it falls short of being a valid new Tier 1 record, because #14 attains 3.2790 (n=4) at 3125 and it attains 3.2784 (n=8) at the same, which is not a statistically significant difference.
 
 
 ------
