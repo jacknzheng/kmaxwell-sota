@@ -165,6 +165,7 @@ random.Random(46).shuffle(color_cycle)
 max_step = 0
 results = {}
 for i, (number, label) in enumerate(logfiles.items()):
+    label = f"#{number}: {label}"
     color = color_cycle[i % len(color_cycle)]
     if number not in readme_rows:
         raise RuntimeError(f'No results-history row found in README for #{number}')
