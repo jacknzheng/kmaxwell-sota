@@ -18,8 +18,9 @@ logfiles = {
     8: 'NorMuonH',
     9: 'NorMuon w/ update clamp-min',
     10: 'NorMuon',
-    11: 'ContraNorMuon w/ update clamp-min',
-    13: 'NorMuonH + MuLoCo',
+    11: '#9 + Contra-Muon',
+    13: '#8 + MuLoCo',
+    14: '#11 + SOAP precond on MLP'
 }
 readme_rows = {}
 row_pattern = re.compile(
