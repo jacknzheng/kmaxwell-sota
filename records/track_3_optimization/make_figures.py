@@ -54,7 +54,7 @@ def format_evidence(evidence, steps_to_target):
 
 def add_legend(ax, legend_entries):
     if not legend_entries:
-        return
+        return None
     rows = []
     for label, evidence, color in legend_entries:
         handle = DrawingArea(26, 18, 0, 0)
@@ -97,7 +97,9 @@ def add_legend(ax, legend_entries):
     legend.patch.set_linewidth(1.0)
     if plt.rcParams['legend.fancybox']:
         legend.patch.set_boxstyle('round,pad=0.15,rounding_size=0.2')
+    legend.set_in_layout(False)
     ax.add_artist(legend)
+    return legend
 
 
 def plot_results(ax, plot_results, target_label_x):
@@ -124,8 +126,8 @@ def plot_results(ax, plot_results, target_label_x):
     ax.set_title('Modded-NanoGPT Optimization Benchmark as of 2026/05/04', pad=11, fontsize=11)
     ax.set_xlabel('Training steps @ 0.5M bsz', fontsize=11)
     ax.set_ylabel('Validation loss', fontsize=11)
-    add_legend(ax, legend_entries)
     ax.tick_params(axis='both', which='major', labelsize=10)
+    return add_legend(ax, legend_entries)
 
 
 def get_logfile_paths(logfile):
@@ -204,11 +206,8 @@ for suffix in ["wr", "best"]:
             8: 'NorMuonH',
             9: 'NorMuon w/ update clamp-min',
             10: 'NorMuon',
-            11: '#9 + Contra-Muon',
-            13: '#8 + MuLoCo',
             14: '#11 + SOAP precond on MLP',
             15: 'Newton-Muon',
-            16: '#14 + SOAP precond on attn proj w/ trust gate',
             17: '#11 + Aurora',
             18: 'PMuon',
         }
@@ -219,11 +218,11 @@ for suffix in ["wr", "best"]:
 
     # Generate figure
     fig, ax = plt.subplots(figsize=(5.5, 4), dpi=300)
-    plot_results(ax, results.values(), 0)
+    legend = plot_results(ax, results.values(), 0)
     ax.set_xlim(0, math.ceil(max_step / 1000) * 1000)
     ax.set_ylim(3.2, 3.85)
     fig.tight_layout()
-    fig.savefig(f'img/figure_{suffix}.png', bbox_inches='tight')
+    fig.savefig(f'img/figure_{suffix}.png', bbox_inches='tight', bbox_extra_artists=[legend])
 
     # Generate zoomed-in figure
     zoom_min_step = 3000
@@ -239,10 +238,10 @@ for suffix in ["wr", "best"]:
         if zoom_min_step <= step <= zoom_max_step
     ]
     fig, ax = plt.subplots(figsize=(5.5, 4), dpi=300)
-    plot_results(ax, zoom_results, zoom_min_step)
+    legend = plot_results(ax, zoom_results, zoom_min_step)
     ax.set_xlim(zoom_min_step, zoom_max_step)
     if zoom_losses:
         zoom_margin = 0.01
         ax.set_ylim(min(zoom_losses) - zoom_margin, max(zoom_losses) + zoom_margin)
     fig.tight_layout()
-    fig.savefig(f'img/zoomed_figure_{suffix}.png', bbox_inches='tight')
+    fig.savefig(f'img/zoomed_figure_{suffix}.png', bbox_inches='tight', bbox_extra_artists=[legend])
