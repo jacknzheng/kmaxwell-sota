@@ -52,6 +52,8 @@ If it fails to reproduce (i.e., we get statistical evidence that its mean is abo
 </table>
 Figure 1. World-record progression.
 
+<br><br>
+
 <table>
   <tr>
     <td width="50%"><img src="img/figure_best.png" width="100%"></td>
