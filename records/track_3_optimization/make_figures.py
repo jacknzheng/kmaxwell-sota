@@ -201,6 +201,7 @@ for suffix in ["wr", "best"]:
             13: '#8 + MuLoCo',
             14: '#11 + SOAP precond on MLP',
             16: '#14 + SOAP precond on attn proj w/ trust gate',
+            20: '#16 + tuned lr sched + Soft-Muon',
         }
     elif suffix == "best":
         logfiles = {
