@@ -186,8 +186,8 @@ for suffix in ["wr", "best"]:
     # Include results with lowest step count and a few baselines
     if suffix == "wr":
         logfiles = {
-            1: 'Muon',
-            3: 'Muon (better hparams)',
+            1: 'Muon (bad hparams)',
+            3: 'Muon (less bad hparams)',
             5: 'MuonH',
             8: 'NorMuonH',
             11: '#9 + Contra-Muon',
