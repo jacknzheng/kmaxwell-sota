@@ -44,7 +44,7 @@ def get_results(logfiles):
 
         max_step = max(max_step, max(steps))
         results[number] = (label, steps_to_target, evidence, steps, losses, color)
-        return results, max_step
+    return results, max_step
 
 
 def format_evidence(evidence, steps_to_target):
@@ -53,6 +53,8 @@ def format_evidence(evidence, steps_to_target):
 
 
 def add_legend(ax, legend_entries):
+    if not legend_entries:
+        return
     rows = []
     for label, evidence, color in legend_entries:
         handle = DrawingArea(26, 18, 0, 0)
@@ -165,7 +167,7 @@ def average_runs(runs):
 
 readme_rows = {}
 row_pattern = re.compile(
-    r'^\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|.*?\|\s*\[log\]\((results/[^)]+)\)'
+    r'^\|\s*(\d+)\s*\|\s*(\d+)[^|]*\|\s*([^|]+?)\s*\|.*?\|\s*\[log\]\((results/[^)]+)\)'
 )
 with open('README.md', 'r') as f:
     for line in f:
@@ -209,17 +211,18 @@ for suffix in ["wr", "best"]:
 
     results, max_step = get_results(logfiles)
 
-    # Generate figure
-    fig, ax = plt.subplots(figsize=(5.5, 4), dpi=300)
-    plot_results(ax, results.values(), 0)
-    ax.set_xlim(0, math.ceil(max_step / 1000) * 1000)
-    ax.set_ylim(3.15, 4.0)
-    fig.tight_layout()
-    fig.savefig(f'figure_{suffix}.png', bbox_inches='tight')
+    if suffix != "wr":
+        # Generate figure
+        fig, ax = plt.subplots(figsize=(5.5, 4), dpi=300)
+        plot_results(ax, results.values(), 0)
+        ax.set_xlim(0, math.ceil(max_step / 1000) * 1000)
+        ax.set_ylim(3.15, 4.0)
+        fig.tight_layout()
+        fig.savefig(f'figure_{suffix}.png', bbox_inches='tight')
 
     # Generate zoomed-in figure
     zoom_min_step = 3000
-    zoom_max_step = 3400
+    zoom_max_step = {"wr": 3650, "best": 3400}[suffix]
     zoom_results = [
         result for result in results.values()
         if result[1] < zoom_max_step
