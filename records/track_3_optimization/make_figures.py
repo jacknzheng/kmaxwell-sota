@@ -213,6 +213,7 @@ for suffix in ["wr", "best"]:
             15: 'Newton-Muon',
             17: '#11 + Aurora',
             18: 'PMuon',
+            19: 'KL-SOAP',
         }
     else:
         assert False
