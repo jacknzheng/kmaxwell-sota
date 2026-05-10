@@ -5,7 +5,7 @@ Unlike the main NanoGPT speedrun which seeks to minimize *wallclock time* by any
 
 [Longform announcement](https://x.com/kellerjordan0/status/2049193527440187494)
 
-Thank you to everyone who's contributed results:
+Thank you to everyone who's contributed results so far:
 @kaiyue-wen, @nilin, @alint77, @wilsoncwu, @kumarkrishna, @lliu606, @bentherien, @Sam_Acqua, @zhehangdu, @SPThole, @liyang2019, and @zzp1012.
 
 
