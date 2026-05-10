@@ -82,7 +82,7 @@ For a new result to be considered valid, it must satisfy the following constrain
 To ensure statistical significance, the run(s) are required to pass a one-sided z-test assuming σ=0.0013 that achieves p<.001 (hence 3.09σ = 0.004 delta below the target). E.g., for a single non-cherry-picked run, any val loss below 3.276 suffices, and for n=4 runs, any average below 3.278 suffices. **The precision condition we require is `(3.28 - mu) * n**0.5 >= 0.004`**, where `mu` is the average result over `n` non-cherry-picked runs. (Note: My first three results failed to follow this rule)
 4. (**Reproducibility**) To ensure full reprodubility, all code needed to reproduce the run must be included in the logfile. In particular, third-party optimizer libraries must not be imported; instead, the necessary code must be copied in its entirety into the train script. It's okay if this leads to thousands of extra lines, in the case of complex third-party libraries.
 5. (**No p-hacking using val spam**) Per-run early-stopping based on val loss (or any other form of per-run decision based on val loss) is not allowed. On the other hand, it *is* permitted to print the val loss every 25 steps near the end of training, and then select the earliest step that has stat sig for reaching the target. In other words, 
-early stopping is permitted as long as the stopping point is selected the same across all trails.
+early stopping is permitted as long as the stopping point is selected the same across all trials.
 
 ### Freedoms
 
