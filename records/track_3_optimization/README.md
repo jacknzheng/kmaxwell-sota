@@ -25,6 +25,10 @@ Notes:
 If it fails to reproduce (i.e., we get statistical evidence that its mean is above 3.28), then please report that, as it will be grounds to remove the run from the history.
 * The number in the leftmost column reflects the order in which these runs were accepted. This does not necessarily line up with the Date column, which is the date at which the PR appeared.
 * The (!) symbol next to the step count indicates a result that sets a new global step-count record (across all optimizers).
+* We could say that there are two tiers of world records results: Both tiers of achieve statistical significance at a lower step count than the previous record.
+But Tier 1 records additionally achieve stat significance for the claim that they are better than we could attain by simply shaving steps off the previous record and gathering more seeds, whereas Tier 2 records do not.
+For example, result #16 is a completely valid new Tier 2 record, because it attains statsig evidence for <3.28 at 3125 steps whereas result #14 did not.
+However, it falls short of being a valid new Tier 1 record, because #14 attains 3.2790 (n=4) at 3125 and it attains 3.2784 (n=8) at the same, which is not a statistically significant difference.
 
 | # | Steps to 3.28 | Evidence | Description | Date | Log | PR | Contributors |
 | - | -             | -        | -           | -    | -   | -  | -            |
