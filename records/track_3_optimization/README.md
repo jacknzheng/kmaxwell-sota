@@ -3,6 +3,10 @@
 The goal of this benchmark is to collaboratively|competitively find efficient neural network optimizers.
 Unlike the main NanoGPT speedrun which seeks to minimize *wallclock time* by any means, here we aim to minimize *step count* by improving the optimization algorithm (⇒ methods that are slow in terms of wallclock are perfectly OK). [Longform announcement](https://x.com/kellerjordan0/status/2049193527440187494)
 
+Thank you to everyone who's contributed results!
+@kaiyue-wen, @nilin, @alint77, @wilsoncwu, @kumarkrishna, @lliu606, @bentherien, @Sam_Acqua, @zhehangdu, @SPThole, @liyang2019, and @zzp1012.
+
+
 ## Quickstart
 
 The baseline setup (Muon with aux Adam) can be run using the following command on any {1,2,4,8}x-{A,H}100 machine:
