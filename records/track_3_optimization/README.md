@@ -96,7 +96,7 @@ I typically do not reproduce new results myself before accepting. Therefore, the
 To provide a long-term defense against this, I welcome new skeptical results which themselves challenge an old result by providing statistical evidence
 that the old result either cheats or does not really attain below 3.28 loss in the reported step count. Such skeptical results are welcomed
 as valued first-class objects, and will be broadcast. The acceptance of such a skeptical result which disproves an old result may
-warrant a ban for the submitter of the disproven old result. Hopefully this kind of thing never actually becomes a real necessity though.
+warrant a ban for the submitter of the disproven old result. Hopefully this kind of thing never actually happens though.
 
 
 ### Pairwise statistical significance
