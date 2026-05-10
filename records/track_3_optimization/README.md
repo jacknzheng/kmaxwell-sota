@@ -43,6 +43,7 @@ If it fails to reproduce (i.e., we get statistical evidence that its mean is abo
 | 13 | 3210(!) | 3.27847 (n=10)✓ | NorMuonH (#8) wrapped in [MuLoCo](https://arxiv.org/abs/2502.07314)-style outer Nesterov SGD (Algorithm 1, K=1) over all trainable params, outer_lr=0.7 outer_momentum=0.5 sync_interval=30 (= 107 outer steps) | 2026/05/04 | [log](results/20260504_muloco_normuonh/7fba9434-58d8-4166-b6a7-d62ef8d17e5d.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/277) | @bentherien |
 | 14 | 3150(!) | 3.2776 (n=4)✓ | Setup from #12, plus SOAP preconditioning before Muon orthogonalization for the MLP weights, similarly to [soap-muon](https://nikhilvyas.github.io/SOAP_Muon.pdf) | 2026/05/04 | [log](results/20260504_contra_muon_mlp_soapish/0248394b-0d6c-4133-9ff7-e7ff2763cdd9.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/278) | @Sam_Acqua |
 | 15 | 3275 | 3.2785 (n=15)✓ | [Newton-Muon](https://arxiv.org/abs/2604.01472) with activation-covariance right-preconditioning refreshed every 64 steps before the Muon Newton-Schulz update ([details](results/20260505_newton_muon/README.md)); tuned lr/wd per param type | 2026/05/05 | [log](results/20260505_newton_muon/6fb302c7-d271-491b-906f-75cd6ec72075.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/281) | @zhehangdu |
+| 16 | 3125(!) | 3.2784 (n=8) | Setup from #14, plus SOAP precond for attention with trust gate | 2026/05/05 | [log](results/20260506_trustlight/train_gpt_simple_trustlight.py) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/283) | @SPThole |
 
 <table>
   <tr>
@@ -85,6 +86,12 @@ AI-based submissions are also completely welcome. You can use AI to write the en
 that a submission was created, as long as it follows the rules. That being said, it would be polite for you ask your AI to 
 simplify any code it writes, since a tendency of AI-based results is to include techniques that neither help nor hurt, but add complexity ("barnacles"), which
 makes the code more difficult for future humans (and AIs) to understand.
+
+I typically do not reproduce new results myself before accepting. Therefore, there is a possibility of fake results being accepted.
+To provide a long-term defense against this, I welcome new skeptical results which themselves challenge an old result by providing statistical evidence
+that the old result either cheats or does not really attain below 3.28 loss in the reported step count. Such skeptical results are welcomed
+as valued first-class objects, and will be broadcast. The acceptance of such a skeptical result which disproves an old result may
+warrant a permanent ban for the submitter of the old result. Hopefully this kind of thing never actually becomes a real necessity though.
 
 
 ------
