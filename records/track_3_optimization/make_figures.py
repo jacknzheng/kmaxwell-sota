@@ -211,14 +211,13 @@ for suffix in ["wr", "best"]:
 
     results, max_step = get_results(logfiles)
 
-    if suffix != "wr":
-        # Generate figure
-        fig, ax = plt.subplots(figsize=(5.5, 4), dpi=300)
-        plot_results(ax, results.values(), 0)
-        ax.set_xlim(0, math.ceil(max_step / 1000) * 1000)
-        ax.set_ylim(3.15, 4.0)
-        fig.tight_layout()
-        fig.savefig(f'figure_{suffix}.png', bbox_inches='tight')
+    # Generate figure
+    fig, ax = plt.subplots(figsize=(5.5, 4), dpi=300)
+    plot_results(ax, results.values(), 0)
+    ax.set_xlim(0, math.ceil(max_step / 1000) * 1000)
+    ax.set_ylim(3.2, 3.85)
+    fig.tight_layout()
+    fig.savefig(f'figure_{suffix}.png', bbox_inches='tight')
 
     # Generate zoomed-in figure
     zoom_min_step = 3000
