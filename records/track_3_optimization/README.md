@@ -46,16 +46,16 @@ If it fails to reproduce (i.e., we get statistical evidence that its mean is abo
 
 <table>
   <tr>
-    <td width="50%"><img src="figure_wr.png" width="100%"></td>
-    <td width="50%"><img src="zoomed_figure_wr.png" width="100%"></td>
+    <td width="50%"><img src="img/figure_wr.png" width="100%"></td>
+    <td width="50%"><img src="img/zoomed_figure_wr.png" width="100%"></td>
   </tr>
 </table>
 Figure 1. World-record progression.
 
 <table>
   <tr>
-    <td width="50%"><img src="figure_best.png" width="100%"></td>
-    <td width="50%"><img src="zoomed_figure_best.png" width="100%"></td>
+    <td width="50%"><img src="img/figure_best.png" width="100%"></td>
+    <td width="50%"><img src="img/zoomed_figure_best.png" width="100%"></td>
   </tr>
 </table>
 Figure 2. Per-optimizer best.

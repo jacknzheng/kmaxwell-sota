@@ -217,7 +217,7 @@ for suffix in ["wr", "best"]:
     ax.set_xlim(0, math.ceil(max_step / 1000) * 1000)
     ax.set_ylim(3.2, 3.85)
     fig.tight_layout()
-    fig.savefig(f'figure_{suffix}.png', bbox_inches='tight')
+    fig.savefig(f'img/figure_{suffix}.png', bbox_inches='tight')
 
     # Generate zoomed-in figure
     zoom_min_step = 3000
@@ -239,4 +239,4 @@ for suffix in ["wr", "best"]:
         zoom_margin = 0.01
         ax.set_ylim(min(zoom_losses) - zoom_margin, max(zoom_losses) + zoom_margin)
     fig.tight_layout()
-    fig.savefig(f'zoomed_figure_{suffix}.png', bbox_inches='tight')
+    fig.savefig(f'img/zoomed_figure_{suffix}.png', bbox_inches='tight')
