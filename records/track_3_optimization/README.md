@@ -44,6 +44,7 @@ If it fails to reproduce (i.e., we get statistical evidence that its mean is abo
 | 14 | 3150(!) | 3.2776 (n=4)✓ | Setup from #12, plus SOAP preconditioning before Muon orthogonalization for the MLP weights, similarly to [soap-muon](https://nikhilvyas.github.io/SOAP_Muon.pdf) | 2026/05/04 | [log](results/20260504_contra_muon_mlp_soapish/0248394b-0d6c-4133-9ff7-e7ff2763cdd9.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/278) | @Sam_Acqua |
 | 15 | 3275 | 3.2785 (n=15)✓ | [Newton-Muon](https://arxiv.org/abs/2604.01472) with activation-covariance right-preconditioning refreshed every 64 steps before the Muon Newton-Schulz update ([details](results/20260505_newton_muon/README.md)); tuned lr/wd per param type | 2026/05/05 | [log](results/20260505_newton_muon/6fb302c7-d271-491b-906f-75cd6ec72075.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/281) | @zhehangdu |
 | 16 | 3125(!) | 3.2784 (n=8)✓ | Setup from #14, plus SOAP precond for attention with trust gate (note: not [statsig](#pairwise-statistical-significance) vs #14) | 2026/05/05 | [log](results/20260506_trustlight/fake_log_from_seed0.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/283) | @SPThole |
+| 17 | 3175 | 3.2789 (n=20) | Setup from #11, plus [Aurora](https://github.com/tilde-research/aurora-release) | [log](results/20260505_aurora/298f02bc-dbb4-4661-9ad8-f6429d532873.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/284) | @liyang2019 |
 
 <table>
   <tr>
