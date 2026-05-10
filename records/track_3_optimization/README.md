@@ -38,7 +38,7 @@ If it fails to reproduce (i.e., we get statistical evidence that its mean is abo
 | 8 | 3250(!) | 3.2778 (n=10)✓ | [NorMuon](https://arxiv.org/abs/2510.05491)[H](https://psychedelic-sunstone-851.notion.site/Fantastic-Pretraining-Optimizers-and-Where-to-Find-Them-2-1-Hyperball-Optimization-2e924306e6f280e7a5ffee00eb40a0dd) (Muon NS direction + Adafactor-style row/col variance preconditioning, then hyperball constraint on hidden matrices) with per-module init std (attn.proj std=.026, mlp.proj std=.031, mlp.fc std=.031, qkv default), lr=.018 mu=0.95 beta2=0.95 h_cooldown_frac=1.0 aux_cooldown_frac=.4, end 25 steps early | 2026/04/30 | [log](results/20260430_normuonh/f45b5dcf-16bb-4e83-b5c7-4ef4981f0e9f.txt)| [PR](https://github.com/KellerJordan/modded-nanogpt/pull/273) | @kaiyue-wen |
 | 9 | 3250 | 3.2771 (n=8)✓ | NorMuon with aux Adam + u/w-floor (wd-free strategy that clamps ‖u‖\_F / ‖w‖\_F to 0.35), lr=.0375 | 2026/04/29 | [log](results/20260501_skylight001/f78af80a-2ba3-4cf7-b9f7-e6e56ff2c54d.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/274) | @kumarkrishna |
 | 10 | 3250 | 3.2789 (n=20)✓ | NorMuon lr=0.035 wd=0.025, end 50 steps early | 2026/05/03 | [log](results/20260503_normuon/e0d0185f-ccb8-426d-8265-a4e762ec69f6.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/276) | @lliu606 |
-| 11 | 3225(!) | 3.2785 (n=16)✓ | Setup from #9 plus [Contra-Muon](https://github.com/nilin/contra-muon) technique | 2026/05/01 | [log](results/20260501_contra_muon/08cd60f9-99e2-4e28-b1ac-19136dd42a05.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/275) | @nilin |
+| 11 | 3225(!) | 3.2785 (n=16)✓ | Setup from #9 plus [Contra-Muon](https://github.com/nilin/contra-muon) technique (note: this result is [Tier 2](#tier-1-vs-tier-2-results)) | 2026/05/01 | [log](results/20260501_contra_muon/08cd60f9-99e2-4e28-b1ac-19136dd42a05.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/275) | @nilin |
 | 12 | 3325 | 3.2790 (n=20)✓ | Muon with aux Adam, lr=.035 wd=.025 following #10, end 25 steps early following #8 | 2026/05/03 | [log](results/1bd8db7a-f3a3-4195-856d-cab7e0816443.txt) | N/A | @kellerjordan0 |
 | 13 | 3210(!) | 3.2785 (n=10)✓ | NorMuonH (#8) wrapped in [MuLoCo](https://arxiv.org/abs/2502.07314)-style outer Nesterov SGD (Algorithm 1, K=1) over all trainable params, outer_lr=0.7 outer_momentum=0.5 sync_interval=30 (= 107 outer steps) | 2026/05/04 | [log](results/20260504_muloco_normuonh/7fba9434-58d8-4166-b6a7-d62ef8d17e5d.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/277) | @bentherien |
 | 14 | 3150(!) | 3.2776 (n=4)✓ | Setup from #12, plus SOAP preconditioning before Muon orthogonalization for the MLP weights, similarly to [soap-muon](https://nikhilvyas.github.io/SOAP_Muon.pdf) | 2026/05/04 | [log](results/20260504_contra_muon_mlp_soapish/0248394b-0d6c-4133-9ff7-e7ff2763cdd9.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/278) | @Sam_Acqua |
@@ -109,6 +109,11 @@ However, it falls short of being a valid new Tier 1 record, because #14 attains 
 In cases where the final step count was changed, to determine Tier 1 vs Tier 2 status we will need to extrapolate the expected change in loss.
 To do this we are aided by the following information:
 Reducing the step count of result #12 by 200 increases the mean loss from 3.2790 (n=20) to [3.2881 (n=8)](results/478c0427-06ce-4952-bc0a-7e2dfaea29b6.txt). This is a gap of 0.0091 across 200 steps, or 0.0045 per 100 steps. Therefore, for example, if you run a setup and get a mean loss of 3.2720, and want to target 3.2790, then you can likely shorten your run by approximately 156 steps.
+
+For example, result #11 is Tier 2, because it lowers step count by 25 while increasing estimated mean val loss by 3.2785 - 3.2771 = 0.0014.
+According to the above information, 0.0014 val loss is worth about 100 * 0.0014/0.0045 = 31 steps, which is greater than the step saving.
+To clarify, this does not constitute evidence that the *algorithm* provided by result #11 is not really better; it only indicates that
+result #11 provides insufficient evidence for that conclusion.
 
 ------
 ------
