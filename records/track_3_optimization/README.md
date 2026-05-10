@@ -102,16 +102,18 @@ warrant a ban for the submitter of the disproven old result. Hopefully this kind
 
 ### Pairwise statistical significance
 
-We define two tiers of world-record results: Both tiers of achieve statistical significance at a lower step count than the previous record they are comparing against.
-But Tier 1 records additionally achieve statsig for the claim that they are better than we could attain by simply shaving steps off the previous record and gathering more seeds, whereas Tier 2 records do not.
-For example, result #16 is a perfectly valid new Tier 2 record, because it attains statsig for <3.28 at 3125 steps whereas result #14 did not.
-However, it falls short of being a valid new Tier 1 record, because #14 attains 3.2790 (n=4) at 3125 and it attains 3.2784 (n=8) at the same, which is not a statsig difference.
+In some cases, new results can attain statistical significance for <3.28 at a lower step count than a previous result, while nevertheless not being statistically
+significantly stronger than the previous result. In other words, we have evidence that the new result is valid, but we don't yet have evidence
+that the same step count could not have been attained by running the old result with the same step and seed count as the new result.
 
-In cases where the final step count was changed, to determine Tier 1 vs Tier 2 status we will need to extrapolate the expected change in loss.
+For example, result #16 is a perfectly valid new result/record, because it attains statsig for <3.28 at 3125 steps whereas result #14 did not.
+However, it is not statsig better than its predecessor #14, because #14 attains 3.2790 (n=4) at 3125 and it attains 3.2784 (n=8) at the same, which is not a statsig difference.
+
+In cases where the final step count was changed, to determine pairwise statsig we will need to extrapolate the expected change in loss.
 To do this we are aided by the following information:
 Reducing the step count of result #12 by 200 increases the mean loss from 3.2790 (n=20) to [3.2881 (n=8)](results/478c0427-06ce-4952-bc0a-7e2dfaea29b6.txt). This is a gap of 0.0091 across 200 steps, or 0.0045 per 100 steps. Therefore, for example, if you run a setup and get a mean loss of 3.2720, and want to target 3.2790, then you can likely shorten your run by approximately 156 steps.
 
-For example, result #11 is Tier 2, because it lowers step count by 25 while increasing estimated mean val loss by 3.2785 - 3.2771 = 0.0014.
+For example, result #11 is not pairwise statsig vs the prior record, because it lowers step count by 25 while increasing estimated mean val loss by 3.2785 - 3.2771 = 0.0014.
 According to the above information, 0.0014 val loss is worth about 100 * 0.0014/0.0045 = 31 steps, which is greater than the step saving.
 To clarify, this does not constitute evidence that the *algorithm* provided by result #11 is not really better; it only indicates that
 result #11 provides insufficient evidence for that conclusion.
