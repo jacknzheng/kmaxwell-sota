@@ -20,13 +20,14 @@ random.Random(46).shuffle(color_cycle)
 
 def get_results(logfiles):
     max_step = 0
+    max_date = ''
     results = {}
     for i, (number, label) in enumerate(logfiles.items()):
         label = f"#{number}: {label}"
         color = color_cycle[i % len(color_cycle)]
         if number not in readme_rows:
             raise RuntimeError(f'No results-history row found in README for #{number}')
-        steps_to_target, evidence, logfile = readme_rows[number]
+        steps_to_target, evidence, date, logfile = readme_rows[number]
         runs = []
         for path in get_logfile_paths(logfile):
             runs.extend(parse_logfile(path))
@@ -43,8 +44,9 @@ def get_results(logfiles):
         steps, losses = zip(*kept_points)
 
         max_step = max(max_step, max(steps))
+        max_date = max(max_date, date)
         results[number] = (label, steps_to_target, evidence, steps, losses, color)
-    return results, max_step
+    return results, max_step, max_date
 
 
 def format_evidence(evidence, steps_to_target):
@@ -102,7 +104,7 @@ def add_legend(ax, legend_entries):
     return legend
 
 
-def plot_results(ax, plot_results, target_label_x):
+def plot_results(ax, plot_results, target_label_x, title_date):
     legend_entries = []
     for label, steps_to_target, evidence, steps, losses, color in plot_results:
         legend_entries.append((label, f'→ {format_evidence(evidence, steps_to_target)}', color))
@@ -123,7 +125,7 @@ def plot_results(ax, plot_results, target_label_x):
         color='gray',
         fontsize=9,
     )
-    ax.set_title('Modded-NanoGPT Optimization Benchmark as of 2026/05/04', pad=11, fontsize=11)
+    ax.set_title(f'Modded-NanoGPT Optimization Benchmark as of {title_date}', pad=11, fontsize=11)
     ax.set_xlabel('Training steps @ 0.5M bsz', fontsize=11)
     ax.set_ylabel('Validation loss', fontsize=11)
     ax.tick_params(axis='both', which='major', labelsize=10)
@@ -171,7 +173,7 @@ def average_runs(runs):
 
 readme_rows = {}
 row_pattern = re.compile(
-    r'^\|\s*(\d+)\s*\|\s*(\d+)[^|]*\|\s*([^|]+?)\s*\|.*?\|\s*\[log\]\((results/[^)]+)\)'
+    r'^\|\s*(\d+)\s*\|\s*(\d+)[^|]*\|\s*([^|]+?)\s*\|[^|]*\|\s*(\d{4}/\d{2}/\d{2})\s*\|\s*\[log\]\((results/[^)]+)\)'
 )
 with open('README.md', 'r') as f:
     for line in f:
@@ -180,8 +182,9 @@ with open('README.md', 'r') as f:
             number = int(m.group(1))
             steps_to_target = int(m.group(2))
             evidence = m.group(3).strip()
-            logfile = m.group(4).removeprefix('results/').removesuffix('.txt')
-            readme_rows[number] = (steps_to_target, evidence, logfile)
+            date = m.group(4)
+            logfile = m.group(5).removeprefix('results/').removesuffix('.txt')
+            readme_rows[number] = (steps_to_target, evidence, date, logfile)
 pattern = re.compile(r'step:(\d+)/(\d+)\s+val_loss:([0-9.]+)')
 
 for suffix in ["wr", "best"]:
@@ -214,11 +217,11 @@ for suffix in ["wr", "best"]:
     else:
         assert False
 
-    results, max_step = get_results(logfiles)
+    results, max_step, title_date = get_results(logfiles)
 
     # Generate figure
     fig, ax = plt.subplots(figsize=(5.5, 4), dpi=300)
-    legend = plot_results(ax, results.values(), 0)
+    legend = plot_results(ax, results.values(), 0, title_date)
     ax.set_xlim(0, math.ceil(max_step / 1000) * 1000)
     ax.set_ylim(3.2, 3.85)
     fig.tight_layout()
@@ -238,7 +241,7 @@ for suffix in ["wr", "best"]:
         if zoom_min_step <= step <= zoom_max_step
     ]
     fig, ax = plt.subplots(figsize=(5.5, 4), dpi=300)
-    legend = plot_results(ax, zoom_results, zoom_min_step)
+    legend = plot_results(ax, zoom_results, zoom_min_step, title_date)
     ax.set_xlim(zoom_min_step, zoom_max_step)
     if zoom_losses:
         zoom_margin = 0.01
