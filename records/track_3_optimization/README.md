@@ -15,7 +15,7 @@ The baseline setup (Muon with aux Adam) can be run using the following command o
 ```bash
 git clone https://github.com/KellerJordan/modded-nanogpt.git && cd modded-nanogpt
 pip install torch==2.11 huggingface_hub
-python data/cached_fineweb10B.py 20  # 2B tokens -- increase to 40 for 4B training tokens if using non near-SOTA optimizers
+python data/cached_fineweb10B.py 20  # 2B tokens -- increase to 40 for 4B if using non near-SOTA optimizers
 torchrun --standalone --nproc_per_node=$(nvidia-smi -L | wc -l) records/track_3_optimization/train_gpt_simple.py
 ```
 
