@@ -209,5 +209,3 @@ On the other hand, especially for optimizers with a lot of hyperparameters where
   url          = {https://github.com/KellerJordan/modded-nanogpt/tree/master/records/track_3_optimization}
 }
 ```
-
-![moongiga](img/moongiga.jpg)
