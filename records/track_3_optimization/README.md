@@ -40,7 +40,7 @@ If it fails to reproduce (i.e., we get statistical evidence that its mean is abo
 | 10 | 3250 | 3.2789 (n=20)✓ | NorMuon lr=0.035 wd=0.025, end 50 steps early | 2026/05/03 | [log](results/20260503_normuon/e0d0185f-ccb8-426d-8265-a4e762ec69f6.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/276) | @lliu606 |
 | 11 | 3225(!) | 3.2785 (n=16)✓ | Setup from #9 plus [Contra-Muon](https://github.com/nilin/contra-muon) technique (note: this result is [Tier 2](#tier-1-vs-tier-2-results)) | 2026/05/01 | [log](results/20260501_contra_muon/08cd60f9-99e2-4e28-b1ac-19136dd42a05.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/275) | @nilin |
 | 12 | 3325 | 3.2790 (n=20)✓ | Muon with aux Adam, lr=.035 wd=.025 following #10, end 25 steps early following #8 | 2026/05/03 | [log](results/1bd8db7a-f3a3-4195-856d-cab7e0816443.txt) | N/A | @kellerjordan0 |
-| 13 | 3210(!) | 3.2785 (n=10)✓ | NorMuonH (#8) wrapped in [MuLoCo](https://arxiv.org/abs/2502.07314)-style outer Nesterov SGD (Algorithm 1, K=1) over all trainable params, outer_lr=0.7 outer_momentum=0.5 sync_interval=30 (= 107 outer steps) | 2026/05/04 | [log](results/20260504_muloco_normuonh/7fba9434-58d8-4166-b6a7-d62ef8d17e5d.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/277) | @bentherien |
+| 13 | 3210(!) | 3.2785 (n=10)✓ | NorMuonH (#8) wrapped in [MuLoCo](https://arxiv.org/abs/2502.07314)-style outer Nesterov SGD (Algorithm 1, K=1) over all trainable params, outer_lr=0.7 outer_momentum=0.5 sync_interval=30 (= 107 outer steps) (note: Tier 2 vs. #11 or #8, second one is close to Tier 1) | 2026/05/04 | [log](results/20260504_muloco_normuonh/7fba9434-58d8-4166-b6a7-d62ef8d17e5d.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/277) | @bentherien |
 | 14 | 3150(!) | 3.2776 (n=4)✓ | Setup from #12, plus SOAP preconditioning before Muon orthogonalization for the MLP weights, similarly to [soap-muon](https://nikhilvyas.github.io/SOAP_Muon.pdf) | 2026/05/04 | [log](results/20260504_contra_muon_mlp_soapish/0248394b-0d6c-4133-9ff7-e7ff2763cdd9.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/278) | @Sam_Acqua |
 | 15 | 3275 | 3.2785 (n=15)✓ | [Newton-Muon](https://arxiv.org/abs/2604.01472) with activation-covariance right-preconditioning refreshed every 64 steps before the Muon Newton-Schulz update ([details](results/20260505_newton_muon/README.md)); tuned lr/wd per param type | 2026/05/05 | [log](results/20260505_newton_muon/6fb302c7-d271-491b-906f-75cd6ec72075.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/281) | @zhehangdu |
 | 16 | 3125(!) | 3.2784 (n=8)✓ | Setup from #14, plus SOAP precond for attention with trust gate (note: this result is [Tier 2](#tier-1-vs-tier-2-results)) | 2026/05/05 | [log](results/20260506_trustlight/fake_log_from_seed0.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/283) | @SPThole |
@@ -114,6 +114,12 @@ For example, result #11 is Tier 2, because it lowers step count by 25 while incr
 According to the above information, 0.0014 val loss is worth about 100 * 0.0014/0.0045 = 31 steps, which is greater than the step saving.
 To clarify, this does not constitute evidence that the *algorithm* provided by result #11 is not really better; it only indicates that
 result #11 provides insufficient evidence for that conclusion.
+
+Another calculation: For result #13 --  a completely valid new <3.28 record -- we have the following two calculations.
+Against result #11, we have a difference of 15 steps, with final loss being the same. These steps are worth approximately
+15/100 * 0.0045 = 0.000675 nats (unit of loss). The two seed counts are n=16 and n=10. The general requirement is
+`(final_loss_diff + exp_stepbased_loss_diff) / (1/n1 + 1/n2)**0.5 >= 0.004`. For this case, the LHS is 0.00167, which does not reach up to statsig.
+If we intead compare to result #8, the LHS is instead `((3.2778 - 3.2785) + (40/100 * 0.0045)) / (1/10 + 1/16)**0.5 = 0.0027`, which again does not reach statsig.
 
 ------
 ------
