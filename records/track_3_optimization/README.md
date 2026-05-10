@@ -102,9 +102,9 @@ warrant a permanent ban for the submitter of the old result. Hopefully this kind
 ### Tier 1 vs Tier 2 results
 
 We define two tiers of world-record results: Both tiers of achieve statistical significance at a lower step count than the previous record they are comparing against.
-But Tier 1 records additionally achieve stat significance for the claim that they are better than we could attain by simply shaving steps off the previous record and gathering more seeds, whereas Tier 2 records do not.
-For example, result #16 is a perfectly valid new Tier 2 record, because it attains statsig evidence for <3.28 at 3125 steps whereas result #14 did not.
-However, it falls short of being a valid new Tier 1 record, because #14 attains 3.2790 (n=4) at 3125 and it attains 3.2784 (n=8) at the same, which is not a statistically significant difference.
+But Tier 1 records additionally achieve statsig for the claim that they are better than we could attain by simply shaving steps off the previous record and gathering more seeds, whereas Tier 2 records do not.
+For example, result #16 is a perfectly valid new Tier 2 record, because it attains statsig for <3.28 at 3125 steps whereas result #14 did not.
+However, it falls short of being a valid new Tier 1 record, because #14 attains 3.2790 (n=4) at 3125 and it attains 3.2784 (n=8) at the same, which is not a statsig difference.
 
 In cases where the final step count was changed, to determine Tier 1 vs Tier 2 status we will need to extrapolate the expected change in loss.
 To do this we are aided by the following information:
