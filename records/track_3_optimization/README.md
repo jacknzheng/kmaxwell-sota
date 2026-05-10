@@ -129,8 +129,9 @@ result #11 do not contain insufficient evidence for that conclusion.
 
 Another calculation: For result #13 --  a perfectly valid new <3.28 record -- we have the following two calculations.
 Against result #11, we have a difference of 15 steps, with final loss being the same. These steps are worth approximately
-15/100 * 0.0045 = 0.000675 units of val loss. The two seed counts are n=16 and n=10. The general requirement is
-`(final_loss_diff + exp_stepbased_loss_diff) / (1/n1 + 1/n2)**0.5 >= 0.004`. For this case, the LHS is 0.00167, which does not reach up to statsig.
+15/100 * 0.0045 = 0.000675 units of val loss. The two seed counts are n=16 and n=10.
+**The general requirement is `(final_loss_diff + exp_stepbased_loss_diff) / (1/n1 + 1/n2)**0.5 >= 0.004`.**
+For this case, the LHS is 0.00167, which does not reach up to statsig.
 If we intead compare to result #8, the LHS is instead `((3.2778 - 3.2785) + (40/100 * 0.0045)) / (1/10 + 1/16)**0.5 = 0.0027`, which again does not reach statsig.
 
 A third calculation: For the Muon hparams in result #12 vs #6, we have `final_loss_diff = -0.0002`, `exp_stepbased_loss_diff = 50/100*0.0045 = 0.00225`, and `n1 = n2 = 20`. Therefore, the LHS of our general formula is `0.00648`, which is above `0.004`, so we have evidence that the muon hyperparameters of result #12 really are statsig better than those of result #6.
