@@ -8,34 +8,43 @@ from matplotlib.lines import Line2D
 from matplotlib.offsetbox import AnchoredOffsetbox, DrawingArea, HPacker, TextArea, VPacker
 
 
-# Extract results
-logfiles = {
-    # key: number in README results history
-    # value: label
-    # Include results with lowest step count and a few baselines
-    12: 'Muon',
-    4: 'AdamH',
-    8: 'NorMuonH',
-    9: 'NorMuon w/ update clamp-min',
-    10: 'NorMuon',
-    11: '#9 + Contra-Muon',
-    13: '#8 + MuLoCo',
-    14: '#11 + SOAP precond on MLP'
-}
-readme_rows = {}
-row_pattern = re.compile(
-    r'^\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|.*?\|\s*\[log\]\((results/[^)]+)\)'
-)
-with open('README.md', 'r') as f:
-    for line in f:
-        m = row_pattern.search(line)
-        if m:
-            number = int(m.group(1))
-            steps_to_target = int(m.group(2))
-            evidence = m.group(3).strip()
-            logfile = m.group(4).removeprefix('results/').removesuffix('.txt')
-            readme_rows[number] = (steps_to_target, evidence, logfile)
-pattern = re.compile(r'step:(\d+)/(\d+)\s+val_loss:([0-9.]+)')
+plt.style.use('seaborn-v0_8-whitegrid')
+plt.rcParams['font.family'] = 'DejaVu Sans'
+color_cycle = [
+    *plt.colormaps['tab20'].colors,
+    *plt.colormaps['tab20b'].colors,
+    *plt.colormaps['tab20c'].colors,
+]
+random.Random(46).shuffle(color_cycle)
+
+
+def get_results(logfiles):
+    max_step = 0
+    results = {}
+    for i, (number, label) in enumerate(logfiles.items()):
+        label = f"#{number}: {label}"
+        color = color_cycle[i % len(color_cycle)]
+        if number not in readme_rows:
+            raise RuntimeError(f'No results-history row found in README for #{number}')
+        steps_to_target, evidence, logfile = readme_rows[number]
+        runs = []
+        for path in get_logfile_paths(logfile):
+            runs.extend(parse_logfile(path))
+        if not runs:
+            raise RuntimeError(f'No loss curve found for results/{logfile}.txt')
+        steps, losses = average_runs(runs)
+        kept_points = [
+            (step, loss)
+            for step, loss in zip(steps, losses)
+            if step <= steps_to_target
+        ]
+        if not kept_points:
+            raise RuntimeError(f'No loss curve points found at or before step {steps_to_target} for results/{logfile}.txt')
+        steps, losses = zip(*kept_points)
+
+        max_step = max(max_step, max(steps))
+        results[number] = (label, steps_to_target, evidence, steps, losses, color)
+        return results, max_step
 
 
 def format_evidence(evidence, steps_to_target):
@@ -154,69 +163,78 @@ def average_runs(runs):
     return steps, losses
 
 
-plt.style.use('seaborn-v0_8-whitegrid')
-plt.rcParams['font.family'] = 'DejaVu Sans'
-color_cycle = [
-    *plt.colormaps['tab20'].colors,
-    *plt.colormaps['tab20b'].colors,
-    *plt.colormaps['tab20c'].colors,
-]
-random.Random(46).shuffle(color_cycle)
+readme_rows = {}
+row_pattern = re.compile(
+    r'^\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|.*?\|\s*\[log\]\((results/[^)]+)\)'
+)
+with open('README.md', 'r') as f:
+    for line in f:
+        m = row_pattern.search(line)
+        if m:
+            number = int(m.group(1))
+            steps_to_target = int(m.group(2))
+            evidence = m.group(3).strip()
+            logfile = m.group(4).removeprefix('results/').removesuffix('.txt')
+            readme_rows[number] = (steps_to_target, evidence, logfile)
+pattern = re.compile(r'step:(\d+)/(\d+)\s+val_loss:([0-9.]+)')
 
-max_step = 0
-results = {}
-for i, (number, label) in enumerate(logfiles.items()):
-    label = f"#{number}: {label}"
-    color = color_cycle[i % len(color_cycle)]
-    if number not in readme_rows:
-        raise RuntimeError(f'No results-history row found in README for #{number}')
-    steps_to_target, evidence, logfile = readme_rows[number]
-    runs = []
-    for path in get_logfile_paths(logfile):
-        runs.extend(parse_logfile(path))
-    if not runs:
-        raise RuntimeError(f'No loss curve found for results/{logfile}.txt')
-    steps, losses = average_runs(runs)
-    kept_points = [
-        (step, loss)
-        for step, loss in zip(steps, losses)
-        if step <= steps_to_target
+for suffix in ["wr", "best"]:
+    # key: number in README results history
+    # value: label
+    # Include results with lowest step count and a few baselines
+    if suffix == "wr":
+        logfiles = {
+            1: 'Muon',
+            3: 'Muon (better hparams)',
+            5: 'MuonH',
+            8: 'NorMuonH',
+            11: '#9 + Contra-Muon',
+            13: '#8 + MuLoCo',
+            14: '#11 + SOAP precond on MLP',
+        }
+    elif suffix == "best":
+        logfiles = {
+            12: 'Muon',
+            4: 'AdamH',
+            8: 'NorMuonH',
+            9: 'NorMuon w/ update clamp-min',
+            10: 'NorMuon',
+            11: '#9 + Contra-Muon',
+            13: '#8 + MuLoCo',
+            14: '#11 + SOAP precond on MLP',
+            15: 'Newton-Muon',
+        }
+    else:
+        assert False
+
+    results, max_step = get_results(logfiles)
+
+    # Generate figure
+    fig, ax = plt.subplots(figsize=(5.5, 4), dpi=300)
+    plot_results(ax, results.values(), 0)
+    ax.set_xlim(0, math.ceil(max_step / 1000) * 1000)
+    ax.set_ylim(3.15, 4.0)
+    fig.tight_layout()
+    fig.savefig(f'figure_{suffix}.png', bbox_inches='tight')
+
+    # Generate zoomed-in figure
+    zoom_min_step = 3000
+    zoom_max_step = 3400
+    zoom_results = [
+        result for result in results.values()
+        if result[1] < zoom_max_step
     ]
-    if not kept_points:
-        raise RuntimeError(f'No loss curve points found at or before step {steps_to_target} for results/{logfile}.txt')
-    steps, losses = zip(*kept_points)
-
-    max_step = max(max_step, max(steps))
-    results[number] = (label, steps_to_target, evidence, steps, losses, color)
-
-
-# Generate figure
-fig, ax = plt.subplots(figsize=(5.5, 4), dpi=300)
-plot_results(ax, results.values(), 0)
-ax.set_xlim(0, math.ceil(max_step / 1000) * 1000)
-ax.set_ylim(3.15, 4.0)
-fig.tight_layout()
-fig.savefig('figure.png', bbox_inches='tight')
-
-
-# Generate zoomed-in figure
-zoom_min_step = 3000
-zoom_max_step = 3400
-zoom_results = [
-    result for result in results.values()
-    if result[1] < zoom_max_step
-]
-zoom_losses = [
-    loss
-    for _, _, _, steps, losses, _ in zoom_results
-    for step, loss in zip(steps, losses)
-    if zoom_min_step <= step <= zoom_max_step
-]
-fig, ax = plt.subplots(figsize=(5.5, 4), dpi=300)
-plot_results(ax, zoom_results, zoom_min_step)
-ax.set_xlim(zoom_min_step, zoom_max_step)
-if zoom_losses:
-    zoom_margin = 0.01
-    ax.set_ylim(min(zoom_losses) - zoom_margin, max(zoom_losses) + zoom_margin)
-fig.tight_layout()
-fig.savefig('zoomed_figure.png', bbox_inches='tight')
+    zoom_losses = [
+        loss
+        for _, _, _, steps, losses, _ in zoom_results
+        for step, loss in zip(steps, losses)
+        if zoom_min_step <= step <= zoom_max_step
+    ]
+    fig, ax = plt.subplots(figsize=(5.5, 4), dpi=300)
+    plot_results(ax, zoom_results, zoom_min_step)
+    ax.set_xlim(zoom_min_step, zoom_max_step)
+    if zoom_losses:
+        zoom_margin = 0.01
+        ax.set_ylim(min(zoom_losses) - zoom_margin, max(zoom_losses) + zoom_margin)
+    fig.tight_layout()
+    fig.savefig(f'zoomed_figure_{suffix}.png', bbox_inches='tight')
