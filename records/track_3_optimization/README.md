@@ -201,9 +201,11 @@ On the other hand, especially for optimizers with a lot of hyperparameters where
 
 ## Citation
 
+```
 @misc{moddednanogpt_optimbench_2026,
   author       = {Keller Jordan},
   title        = {Modded-NanoGPT Optimization Benchmark},
   year         = {2026},
   url          = {https://github.com/KellerJordan/modded-nanogpt/tree/master/records/track_3_optimization}
 }
+```
