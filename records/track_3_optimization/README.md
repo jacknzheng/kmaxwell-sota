@@ -52,7 +52,7 @@ If it fails to reproduce (i.e., we get statistical evidence that its mean is abo
 </table>
 Figure 1. World-record progression.
 
-<br><br>
+<br>
 
 <table>
   <tr>
