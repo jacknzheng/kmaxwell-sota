@@ -199,8 +199,8 @@ for suffix in ["wr", "best"]:
             9: 'NorMuon w/ update clamp-min',
             11: '#9 + Contra-Muon',
             13: '#8 + MuLoCo',
-            14: '#11 + SOAP precond on MLP',
-            16: '#14 + SOAP precond on attn proj w/ trust gate',
+            14: '#11 + SOAP-Muon on MLP',
+            16: '#14 + SOAP-Muon on attn proj w/ trust gate',
             20: '#16 + tuned lr sched + Soft-Muon',
         }
     elif suffix == "best":
@@ -210,7 +210,7 @@ for suffix in ["wr", "best"]:
             8: 'NorMuonH',
             9: 'NorMuon w/ update clamp-min',
             10: 'NorMuon',
-            14: '#11 + SOAP precond on MLP',
+            14: '#11 + SOAP-Muon on MLP',
             15: 'Newton-Muon',
             17: '#11 + Aurora',
             18: 'PMuon',
