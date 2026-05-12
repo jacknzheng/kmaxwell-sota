@@ -196,7 +196,7 @@ for suffix in ["wr", "best"]:
             1: 'Muon (bad hparams)',
             3: 'Muon (less bad hparams)',
             5: 'MuonH',
-            8: 'NorMuonH',
+            9: 'NorMuon w/ update clamp-min',
             11: '#9 + Contra-Muon',
             13: '#8 + MuLoCo',
             14: '#11 + SOAP precond on MLP',
