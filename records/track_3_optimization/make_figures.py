@@ -210,7 +210,7 @@ for suffix in ["wr", "best"]:
             8: 'NorMuonH',
             9: 'NorMuon w/ update clamp-min',
             10: 'NorMuon',
-            14: '#11 + SOAP-Muon on MLP',
+            16: '#11 + SOAP-Muon',
             15: 'Newton-Muon',
             17: '#11 + Aurora',
             18: 'PMuon',
