@@ -4,6 +4,7 @@
 #   scripts/kmaxwell_sweep.sh --stage 2 --k 4
 #   scripts/kmaxwell_sweep.sh --stage 6 --k 4
 #   scripts/kmaxwell_sweep.sh --stage 7 --k 4 --weights 0.35,0.25,0.25,0.15 --delta 0.05
+#   scripts/kmaxwell_sweep.sh --stage 8 --delta 0.05
 #   scripts/kmaxwell_sweep.sh --stage 0 --dry-run
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

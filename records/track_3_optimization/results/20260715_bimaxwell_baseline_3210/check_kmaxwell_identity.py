@@ -23,10 +23,12 @@ from kmaxwell_kernel import (
     BIMAXWELL_W,
     BIMAXWELL_TAU_MIN,
     BIMAXWELL_TAU_MAX,
+    bimaxwell_embed_weights,
     build_kmaxwell_kernel,
     endpoint_mass_family,
     nesterov_filter_stats,
     parse_weights,
+    tau_span_anchoring_betas,
 )
 
 
@@ -137,6 +139,27 @@ def test_explicit_weights_and_mass_family():
     print(f"ok  explicit weights  w={weights}")
 
 
+def test_k4_bimaxwell_embed_replica():
+    tmin, tmax = tau_span_anchoring_betas(4, 1, 3)
+    tau, betas, weights, mean_age = build_kmaxwell_kernel(
+        4, tmin, tmax, 1.0, False, weights=bimaxwell_embed_weights(4, 1, 3, eps=0.0))
+    assert abs(betas[1] - BIMAXWELL_BF) < 1e-12, betas
+    assert abs(betas[3] - BIMAXWELL_BS) < 1e-12, betas
+    assert abs(weights[0]) < 1e-15 and abs(weights[2]) < 1e-15
+    assert abs(weights[1] - BIMAXWELL_W) < 1e-12
+    assert abs(weights[3] - (1.0 - BIMAXWELL_W)) < 1e-12
+    _, _, exact_w, exact_age = build_kmaxwell_kernel(
+        2, BIMAXWELL_TAU_MIN, BIMAXWELL_TAU_MAX, 1.0, bimaxwell_exact=True)
+    lag_m, _, noise = nesterov_filter_stats(betas, weights)
+    exact_lag, _, exact_noise = nesterov_filter_stats(
+        [BIMAXWELL_BF, BIMAXWELL_BS], exact_w)
+    assert abs(mean_age - exact_age) < 1e-12
+    assert abs(lag_m - exact_lag) < 1e-12
+    assert abs(noise - exact_noise) < 1e-12
+    print(f"ok  K=4 embed replica  beta={['%.6f' % b for b in betas]}  "
+          f"w={['%.4f' % w for w in weights]}  mean_age={mean_age:.6f}")
+
+
 def print_stage1_derived_mean_ages():
     print("stage-1 derived mean ages (tau_min=5.666..., tau_max=49, sigma=1):")
     for k in (2, 3, 4, 6, 8, 12, 16):
@@ -153,5 +176,6 @@ if __name__ == "__main__":
     test_exact_mix_matches_two_ema_scalar()
     test_stacked_mix_matches_two_buffers()
     test_explicit_weights_and_mass_family()
+    test_k4_bimaxwell_embed_replica()
     print_stage1_derived_mean_ages()
     print("all identity checks passed")
