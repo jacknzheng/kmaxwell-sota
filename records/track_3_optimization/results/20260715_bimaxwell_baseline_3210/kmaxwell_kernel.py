@@ -51,16 +51,38 @@ def build_kmaxwell_kernel(k, tau_min, tau_max, sigma, bimaxwell_exact=False):
     return tau, betas, weights, mean_age
 
 
+def nesterov_filter_stats(betas, weights, mu=0.95):
+    """Closed-form lag and noise gain of X = (1-μ)G + μ Σ w_k M_k.
+
+    lag_m: mean age of the EMA mix (bias / how far back M_eff looks)
+    lag_x: lag of the Nesterov polar input (= μ * lag_m)
+    noise_gain: Σ_t h[t]² of that Nesterov filter (variance / how much
+    minibatch noise gets through). CPU-only; does not touch training state.
+    """
+    if abs(sum(weights) - 1.0) > 1e-8:
+        raise ValueError("weights must sum to 1")
+    lag_m = sum(w * b / (1.0 - b) for w, b in zip(weights, betas))
+    lag_x = mu * lag_m
+    h0 = (1.0 - mu) + mu * sum(w * (1.0 - b) for w, b in zip(weights, betas))
+    noise = h0 * h0
+    for bi, wi in zip(betas, weights):
+        for bj, wj in zip(betas, weights):
+            noise += (mu * wi * (1.0 - bi)) * (mu * wj * (1.0 - bj)) * (bi * bj) / (1.0 - bi * bj)
+    return lag_m, lag_x, noise
+
+
 def format_kmaxwell_recipe(k, tau_min, tau_max, sigma, start, seed, bimaxwell_exact,
-                           tau, betas, weights, mean_age):
+                           tau, betas, weights, mean_age, mu=0.95):
     tau_list = ", ".join(f"{x:.6g}" for x in tau)
     beta_list = ", ".join(f"{x:.6g}" for x in betas)
     w_list = ", ".join(f"{x:.6g}" for x in weights)
     mode = "bimaxwell-exact" if bimaxwell_exact else "gaussian-log-tau"
+    lag_m, lag_x, noise = nesterov_filter_stats(betas, weights, mu=mu)
     return (
         f"K-Maxwell recipe: mode={mode} k={k} tau_min={tau_min:.6g} tau_max={tau_max:.6g} "
         f"sigma={sigma:.6g} start={start} seed={seed} mean_age={mean_age:.6g}\n"
         f"  tau=[{tau_list}]\n"
         f"  beta=[{beta_list}]\n"
-        f"  w=[{w_list}]"
+        f"  w=[{w_list}]\n"
+        f"  filter: mu={mu:.6g} lag_m={lag_m:.6g} lag_x={lag_x:.6g} noise_gain={noise:.6g}"
     )
