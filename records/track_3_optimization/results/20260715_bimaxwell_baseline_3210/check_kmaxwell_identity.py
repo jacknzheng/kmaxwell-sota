@@ -24,7 +24,9 @@ from kmaxwell_kernel import (
     BIMAXWELL_TAU_MIN,
     BIMAXWELL_TAU_MAX,
     build_kmaxwell_kernel,
+    endpoint_mass_family,
     nesterov_filter_stats,
+    parse_weights,
 )
 
 
@@ -121,6 +123,20 @@ def test_stacked_mix_matches_two_buffers():
     print(f"ok  stacked mix vs two-buffer  max_abs_err={err}")
 
 
+def test_explicit_weights_and_mass_family():
+    w = parse_weights("0.35,0.25,0.25,0.15")
+    assert abs(sum(w) - 1.0) < 1e-12
+    tau, _, weights, _ = build_kmaxwell_kernel(
+        4, BIMAXWELL_TAU_MIN, BIMAXWELL_TAU_MAX, 1.0, False, weights=w)
+    assert [round(x, 6) for x in weights] == [0.35, 0.25, 0.25, 0.15]
+    assert abs(tau[0] - BIMAXWELL_TAU_MIN) < 1e-12
+    fam = endpoint_mass_family(4, 0.1, 2)
+    assert len(fam) == 5
+    assert [round(x, 6) for x in fam[2]] == [0.25, 0.25, 0.25, 0.25]
+    assert [round(x, 6) for x in fam[3]] == [0.35, 0.25, 0.25, 0.15]
+    print(f"ok  explicit weights  w={weights}")
+
+
 def print_stage1_derived_mean_ages():
     print("stage-1 derived mean ages (tau_min=5.666..., tau_max=49, sigma=1):")
     for k in (2, 3, 4, 6, 8, 12, 16):
@@ -136,5 +152,6 @@ if __name__ == "__main__":
     test_exact_requires_k2()
     test_exact_mix_matches_two_ema_scalar()
     test_stacked_mix_matches_two_buffers()
+    test_explicit_weights_and_mass_family()
     print_stage1_derived_mean_ages()
     print("all identity checks passed")
