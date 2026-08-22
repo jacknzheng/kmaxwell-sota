@@ -61,7 +61,7 @@ def run_one(extra, log_dir: Path, nproc: int, dry_run: bool):
     log_dir.mkdir(parents=True, exist_ok=True)
     cmd = [
         "torchrun", "--standalone", f"--nproc_per_node={nproc}",
-        str(TRAIN), *map(str, extra),
+        "--", str(TRAIN), *map(str, extra),
     ]
     print(" ".join(cmd), flush=True)
     if dry_run:
