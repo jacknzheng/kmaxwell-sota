@@ -15,6 +15,39 @@ BIMAXWELL_TAU_MAX = BIMAXWELL_BS / (1.0 - BIMAXWELL_BS)  # 49.0
 BIMAXWELL_START = 1000
 
 
+def tau_span_anchoring_betas(k, i_fast, i_slow, beta_fast=BIMAXWELL_BF, beta_slow=BIMAXWELL_BS):
+    """Log-spaced [tau_min, tau_max] so beta[i_fast]=beta_fast and beta[i_slow]=beta_slow."""
+    if k < 2:
+        raise ValueError(f"--k must be >= 2, got {k}")
+    if not (0 <= i_fast < i_slow <= k - 1):
+        raise ValueError(f"need 0 <= i_fast < i_slow <= k-1, got {i_fast}, {i_slow}, {k}")
+    if not (0 < beta_fast < beta_slow < 1):
+        raise ValueError(f"need 0 < beta_fast < beta_slow < 1, got {beta_fast}, {beta_slow}")
+    t_fast = beta_fast / (1.0 - beta_fast)
+    t_slow = beta_slow / (1.0 - beta_slow)
+    step = math.log10(t_slow / t_fast) / (i_slow - i_fast)
+    log_min = math.log10(t_fast) - i_fast * step
+    log_max = math.log10(t_fast) + (k - 1 - i_fast) * step
+    return 10.0 ** log_min, 10.0 ** log_max
+
+
+def bimaxwell_embed_weights(k, i_fast, i_slow, eps=0.0):
+    """Put the 0.4385:0.5615 mix on (i_fast, i_slow); split leftover equally on extras."""
+    if not (0 <= i_fast < i_slow <= k - 1):
+        raise ValueError(f"need 0 <= i_fast < i_slow <= k-1, got {i_fast}, {i_slow}, {k}")
+    extras = [i for i in range(k) if i not in (i_fast, i_slow)]
+    leftover = float(eps) * len(extras)
+    if leftover < -1e-12 or leftover >= 1.0:
+        raise ValueError(f"eps={eps} leaves invalid leftover {leftover}")
+    scale = 1.0 - leftover
+    weights = [0.0] * k
+    weights[i_fast] = BIMAXWELL_W * scale
+    weights[i_slow] = (1.0 - BIMAXWELL_W) * scale
+    for i in extras:
+        weights[i] = float(eps)
+    return weights
+
+
 def parse_weights(text):
     """Parse '0.35,0.25,0.25,0.15' into a list that sums to 1."""
     weights = [float(x) for x in str(text).split(",") if str(x).strip() != ""]
