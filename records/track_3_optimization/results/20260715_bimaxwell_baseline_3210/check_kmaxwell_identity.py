@@ -24,6 +24,7 @@ from kmaxwell_kernel import (
     BIMAXWELL_TAU_MIN,
     BIMAXWELL_TAU_MAX,
     build_kmaxwell_kernel,
+    nesterov_filter_stats,
 )
 
 
@@ -36,7 +37,11 @@ def test_bimaxwell_exact_kernel():
     assert abs(tau[0] - BIMAXWELL_TAU_MIN) < 1e-12
     assert abs(tau[1] - BIMAXWELL_TAU_MAX) < 1e-12
     assert abs(mean_age - 30.0) < 2e-3, mean_age
-    print(f"ok  exact kernel  mean_age={mean_age:.6f}  tau={tau}  beta={betas}  w={weights}")
+    lag_m, lag_x, noise = nesterov_filter_stats(betas, weights)
+    assert abs(lag_m - mean_age) < 1e-12
+    assert 0.034 < noise < 0.036
+    print(f"ok  exact kernel  mean_age={mean_age:.6f}  lag_x={lag_x:.4f}  "
+          f"noise_gain={noise:.5f}  tau={tau}  beta={betas}  w={weights}")
 
 
 def test_gaussian_weights_deterministic():

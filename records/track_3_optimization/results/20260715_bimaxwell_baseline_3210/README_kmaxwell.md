@@ -45,3 +45,15 @@ scripts/kmaxwell_sweep.sh --stage 5 --k 4 --tau-max 200 --seeds 0,1,2
 ```
 
 `--dry-run` prints commands only. `NPROC_PER_NODE` overrides GPU count.
+
+## Filter bias-variance (closed form)
+
+Each run logs `lag_m`, `lag_x`, and `noise_gain` at startup. These are
+computed from `(beta, w, mu)` on CPU and do not change the update.
+
+```bash
+python3 records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/plot_kmaxwell_bias_variance.py
+```
+
+Writes `bias_variance.csv` and, if matplotlib is installed, `bias_variance.png`.
+x = mix mean age (bias / lag). y = Nesterov filter `||h||^2` (variance / noise gain).
