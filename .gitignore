@@ -1,5 +1,7 @@
 fineweb10B/
 pylog124M/
 __pycache__/
-logs/
+logs/*
+!logs/kmaxwell/
+!logs/kmaxwell/**/
 .DS_Store
