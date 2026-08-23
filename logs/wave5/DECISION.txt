@@ -1,0 +1,2 @@
+==== wave5 a38_tmin2  2026-08-23 23:17:44 ====
+after a37; skip a39/a40/ws50; k=6 age 38 window [2,56]

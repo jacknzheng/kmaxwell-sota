@@ -1,0 +1,76 @@
+==== 2026-08-23 23:17:44 K6_a38_tmin2 --k 6 --tau-min 2 --tau-max 56 --weights 0.02977,0.05954,0.08932,0.11909,0.14886,0.55342 ====
+W0823 23:17:45.824000 57291 torch/distributed/run.py:774] 
+W0823 23:17:45.824000 57291 torch/distributed/run.py:774] *****************************************
+W0823 23:17:45.824000 57291 torch/distributed/run.py:774] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0823 23:17:45.824000 57291 torch/distributed/run.py:774] *****************************************
+logs/5b3de559-fad8-4cfd-837d-e08a33675300.txt
+step:0/3250 val_loss:10.82584 train_time:0.000s step_avg:nanms
+step:1/3250 train_time:9.908s step_avg:9907.57ms
+step:2/3250 train_time:10.044s step_avg:5022.23ms
+step:3/3250 train_time:10.197s step_avg:3399.04ms
+step:4/3250 train_time:10.353s step_avg:2588.32ms
+step:5/3250 train_time:10.505s step_avg:2101.06ms
+step:6/3250 train_time:10.659s step_avg:1776.42ms
+step:7/3250 train_time:10.815s step_avg:1545.04ms
+step:8/3250 train_time:10.974s step_avg:1371.72ms
+step:9/3250 train_time:11.126s step_avg:1236.26ms
+step:10/3250 train_time:11.280s step_avg:1128.02ms
+step:11/3250 train_time:11.434s step_avg:1039.49ms
+step:12/3250 train_time:11.589s step_avg:965.78ms
+step:13/3250 train_time:11.743s step_avg:903.32ms
+step:14/3250 train_time:11.898s step_avg:849.84ms
+step:15/3250 train_time:12.053s step_avg:803.55ms
+step:16/3250 train_time:12.209s step_avg:763.04ms
+step:17/3250 train_time:12.362s step_avg:727.15ms
+step:18/3250 train_time:12.516s step_avg:695.33ms
+step:19/3250 train_time:12.672s step_avg:666.94ms
+step:20/3250 train_time:12.825s step_avg:641.25ms
+step:21/3250 train_time:12.979s step_avg:618.06ms
+step:22/3250 train_time:13.134s step_avg:596.99ms
+step:23/3250 train_time:13.289s step_avg:577.77ms
+step:24/3250 train_time:13.442s step_avg:560.09ms
+step:25/3250 train_time:13.596s step_avg:543.86ms
+step:26/3250 train_time:13.753s step_avg:528.96ms
+step:27/3250 train_time:13.909s step_avg:515.14ms
+step:28/3250 train_time:14.063s step_avg:502.24ms
+step:29/3250 train_time:14.217s step_avg:490.24ms
+step:30/3250 train_time:14.374s step_avg:479.12ms
+step:31/3250 train_time:14.528s step_avg:468.64ms
+step:32/3250 train_time:14.682s step_avg:458.80ms
+step:33/3250 train_time:14.836s step_avg:449.58ms
+step:34/3250 train_time:14.992s step_avg:440.95ms
+step:35/3250 train_time:15.146s step_avg:432.76ms
+step:36/3250 train_time:15.300s step_avg:425.00ms
+step:37/3250 train_time:15.454s step_avg:417.68ms
+step:38/3250 train_time:15.610s step_avg:410.78ms
+step:39/3250 train_time:15.762s step_avg:404.16ms
+step:40/3250 train_time:15.917s step_avg:397.92ms
+step:41/3250 train_time:16.074s step_avg:392.04ms
+step:42/3250 train_time:16.228s step_avg:386.39ms
+step:43/3250 train_time:16.382s step_avg:380.97ms
+step:44/3250 train_time:16.536s step_avg:375.82ms
+step:45/3250 train_time:16.692s step_avg:370.94ms
+step:46/3250 train_time:16.846s step_avg:366.21ms
+step:47/3250 train_time:17.000s step_avg:361.71ms
+step:48/3250 train_time:17.154s step_avg:357.37ms
+step:49/3250 train_time:17.309s step_avg:353.25ms
+step:50/3250 train_time:17.462s step_avg:349.24ms
+step:51/3250 train_time:17.617s step_avg:345.42ms
+step:52/3250 train_time:17.773s step_avg:341.79ms
+step:53/3250 train_time:17.928s step_avg:338.26ms
+step:54/3250 train_time:18.081s step_avg:334.83ms
+step:55/3250 train_time:18.235s step_avg:331.55ms
+step:56/3250 train_time:18.391s step_avg:328.42ms
+step:57/3250 train_time:18.544s step_avg:325.34ms
+step:58/3250 train_time:18.699s step_avg:322.39ms
+step:59/3250 train_time:18.854s step_avg:319.56ms
+step:60/3250 train_time:19.010s step_avg:316.83ms
+step:61/3250 train_time:19.163s step_avg:314.15ms
+step:62/3250 train_time:19.318s step_avg:311.59ms
+step:63/3250 train_time:19.474s step_avg:309.11ms
+step:64/3250 train_time:19.628s step_avg:306.68ms
+step:65/3250 train_time:19.782s step_avg:304.33ms
+step:66/3250 train_time:19.935s step_avg:302.05ms
+step:67/3250 train_time:20.091s step_avg:299.86ms
+step:68/3250 train_time:20.244s step_avg:297.71ms
+step:69/3250 train_time:20.399s step_avg:295.64ms

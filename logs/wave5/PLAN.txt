@@ -25,7 +25,13 @@ Skip interiors, start, k=8, mid-heavy — already lost at k=4.
 Skip [5.67, 49] k=6 — dead at ages 33 and 37.
 Skip 1-GPU n=8. Skip frozen-weight tau walks that let age drift.
 
-Wave B — leftover ~50 min, 4–5 runs. Do not start B until A is scored.
+Wave B override 2026-08-23 23:07 — after a37, prioritize decay not ±1 age.
+a36 already scored 3150=3.28078 (worse than a38). a37 finishing.
+Then skip a39/a40/ws50. Age held at 38, window only via run_B_decay.sh:
+  a38_tmin2 [2,56], a38_tmax64 [3,64], a38_tmin25 [2.5,56]
+Do not restack Aurora/SOAP unless 3150 <= 3.2798 or 3250 <= 3.2736.
+
+Wave B (original, unused after override) — leftover ~50 min, 4–5 runs. Do not start B until A is scored.
 Branch on whichever 3150 moved (lowest 3150 that beat 3.28036).
 
   age (a32 or a38 <= 3.28020):
