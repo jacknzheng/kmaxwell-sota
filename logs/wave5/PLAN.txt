@@ -1,0 +1,53 @@
+Wave 5 — unconfound age / w_slow / window at k=6 on the winning [3, 56] family.
+Muon #36 only. 8-GPU seed-0, start=1000. Same 3150 score as waves 1–4.
+Beat: K6_a35 3150=3.28036 (DEC tie 3.28040). Kill a direction at >= 3.2805.
+Do not restack Aurora/SOAP unless 3150 <= 3.2798 or 3250 <= 3.2736.
+
+Family: linear ramp on five log ticks, leftover on the slow tick, c so mean age
+hits the target. On this family, age and w_slow are the same knob
+(w_slow=0.30 -> age 29, 0.45 -> 35, 0.55 -> 39). Wave A splits them.
+
+Wave A — 6 runs, ~70 min. All k=6, log-spaced, seed 0.
+  K6_a32     younger, same family     [3, 56]  age 32
+  K6_a38     older, same family       [3, 56]  age 38
+  K6_ws40    split slow onto τ≈31     [3, 56]  age 35  w_slow=0.40
+  K6_ws50    DEC-like w_slow=0.50     [3, 56]  age 35
+  K6_tmin2   faster fast-decay        [2, 56]  age 35
+  K6_tmax64  slower slow-decay        [3, 64]  age 35
+
+a32/a38 are ±3 on the frozen K6_a35 family. ws40/ws50 are the first k=6 mix
+tests that do not smuggle an age change. tmin2/tmax64 re-solve the ramp so
+they read as window, not age. k=4 already killed raw tmin=2 and tmax=64 when
+age was allowed to drift; those are not the same experiments.
+
+Skip a30/a40 and tmin=4 / tmax=49 until a slope exists.
+Skip interiors, start, k=8, mid-heavy — already lost at k=4.
+Skip [5.67, 49] k=6 — dead at ages 33 and 37.
+Skip 1-GPU n=8. Skip frozen-weight tau walks that let age drift.
+
+Wave B — leftover ~50 min, 4–5 runs. Do not start B until A is scored.
+Branch on whichever 3150 moved (lowest 3150 that beat 3.28036).
+
+  age (a32 or a38 <= 3.28020):
+    two neighbors around the winner (a31/a34 or a36/a39)
+    plus the matching held-age mix (ws40-style if younger, ws50-style if older)
+    then one tau follow-up at that new age
+    (better A window if tmin2/tmax64 beat 3.28036, else [2.5, 56])
+
+  mix (ws40 or ws50 beat 3.28036):
+    one more w_slow step in that direction (ws35; 0.55 is infeasible at age 35)
+    plus the winner mix re-solved on tmin=2.5 and tmax=49, age held
+
+  tau (tmin2 or tmax64 beat 3.28036):
+    the in-between window at age 35 (tmin=2.5 or tmax=49)
+    plus the better of a32/a38 re-solved on that window
+
+  nothing beat 3.28036:
+    k=6 is a DEC tie, not wildly undertuned.
+    four DEC-embed shots: DEC's four masses parked on the nearest of the six
+    log ticks (0,2,3,5), ε on the extras (1,4). ε = 0, 0.01, 0.02, 0.04.
+    Stop. Do not invent a new family.
+
+Launch: logs/wave5/run.sh all   (A then auto-B). Lives in tmux persist:wave5.
+Logs: logs/wave5/<name>.stdout
+Trainer: records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell.py
