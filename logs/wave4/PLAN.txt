@@ -1,42 +1,33 @@
-Wave 4 — seed-0 hunt (NO scheduling / start). start=1000 always.
-Stay at k=4 except one k=6 hail mary. Mix re-opt deferred.
+Wave 4 — seed-0 interiors at frozen DEC mix / age 35, plus one k=6 hail mary.
+8-GPU sequential, start=1000. Score 3150.
+Beat: DEC 3150=3.28040 / 3250=3.27415. Kill an interior if 3150 stays >= 3.2805.
+k=6: kill if not clearly under DEC; do not grid further k=6 on the old window.
 
-Why interiors (not unimpactful):
-  DEC puts 45% of the mix on the two middle ticks (w1=0.20 at ~8, w2=0.25 at ~21).
-  Every prior wave only moved those ticks by stretching log-spaced [tau_min, tau_max].
-  Frozen-weight tau_max/tmin walks are locally dead (wave 1 + 3). This is the
-  remaining first-order shape knob that has not been isolated.
+DEC puts 45% of the mix on the two middle ticks. Frozen-weight tau walks are
+locally dead (waves 1 + 3). Interiors are the remaining first-order shape knob.
+Needs --taus in train_gpt_kmaxwell.py (log-spacing cannot place these).
 
-Do NOT run naive linear interiors at frozen DEC w:
-  tau=[3, 20.67, 38.33, 56] with 0.05/0.20/0.25/0.50 has mean age ~42.
-  Wave 1 A42 already lost. Linear at age 35 requires cutting w_slow 0.50 -> ~0.29
-  (mix confound). Skip unless spread/bunch move 3150.
+Do NOT run naive linear interiors at frozen DEC w: that drifts age to ~42
+(wave 1 A42 already lost) or requires cutting w_slow (mix confound).
 
-Frozen-w age-35 constraint on endpoints [3, 56], w=0.05,0.20,0.25,0.50:
-  0.20*t1 + 0.25*t2 = 6.85   =>   t2 = 27.4 - 0.8*t1
-  feasible t1 in (3, 15.22), t2 in (15.22, 25)
-  DEC log sits at t1=7.96, t2=21.11 (already run; do not rerun)
+Naming: logs/wave4/<name>.stdout
+  INT_{spread,mid,bunch}   k=4 --taus ..., frozen DEC w, age 35
+  K6_a35                   k=6 log [3, 56], rising ramp, age 35
+  START800                 extra: DEC kernel, start=800 (not in the interior grid)
 
-Beat: DEC 3150=3.28040 / 3250=3.27415. Score 3150.
-Kill an interior direction if 3150 stays >= 3.2805 (same rule as wave 2).
-k=6: kill if not clearly under DEC; do not grid further k=6.
+Launch (from repo root):
+  torchrun --standalone --nproc_per_node=8 --master_port=29511 -- \
+    records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell.py \
+    --seed 0 --start 1000 --k K [ --taus T | --tau-min TMIN --tau-max TMAX ] --weights W \
+    2>&1 | tee logs/wave4/<name>.stdout
 
-Runs (seed 0, start=1000):
-  INT_spread  k=4 --taus 3,4.5,23.8,56     w frozen   age=35.00
-              middles toward the poles (almost bi-Maxwell + two near-end ticks)
-  INT_mid     k=4 --taus 3,11,18.6,56      w frozen   age=35.00
-              halfway from DEC toward bunch
-  INT_bunch   k=4 --taus 3,13.5,16.6,56    w frozen   age=35.00
-              two mid-age units instead of a log ladder
-  K6_a35      k=6 log [3,56] rising w=0.03673,0.07345,0.11018,0.14690,0.18363,0.44911
-              age=35.00  hail mary only
+What we ran
+  START800    k=4 [3, 56] start=800  w=0.05,0.20,0.25,0.50                     3150=3.28059  3250=3.27430
+  INT_spread  k=4 --taus 3,4.5,23.8,56   w=0.05,0.20,0.25,0.50  age=35.00     3150=3.28079  3250=3.27462
+  INT_mid     k=4 --taus 3,11,18.6,56    w=0.05,0.20,0.25,0.50  age=35.00     3150=3.28064  3250=3.27434
+  INT_bunch   k=4 --taus 3,13.5,16.6,56  w=0.05,0.20,0.25,0.50  age=35.00     3150=3.28075  3250=3.27443
+  K6_a35      k=6 [3, 56] w=0.03673,0.07345,0.11018,0.14690,0.18363,0.44911   3150=3.28036  3250=3.27407
 
-Needs --taus in train_gpt_kmaxwell.py (log-spacing cannot place these interiors).
-
-Not this wave: mix pairwise on DEC, tau_max 1-D, k=2/k=3, start/onset, INT_lin.
-
-If an interior beats DEC at 3150: refine along that side of the constraint
-(e.g. more spread than 4.5/23.8). If none move, interiors are done; mix re-opt
-on the DEC log grid is the leftover weight question.
-
-Logs: logs/wave4/<name>.stdout
+Interiors lost. K6_a35 ties DEC and is the first k=6 on the winning spectrum.
+Wave 5 unconfounds age / mix / window on that family. Wave 4 kill stacked
+optimizers on frozen K6_a35.

@@ -1,24 +1,27 @@
 Wave 2 — seed-0 hunt (NO scheduling / start). start=1000 always.
-Budget: 4 h × 4 GPU, 4×1-GPU ~17 min/wave.
-Beat: first val_loss<3.28 at <=3150 (k=2 is 3160). Score 3150.
+4×1-GPU parallel. Beat: first val_loss<3.28 at <=3150 (k=2 is 3160). Score 3150.
 Kill axis if 3150 stays >=3.2805.
 
-Three knobs only:
-  1. mixture w
-  2. decay: tau/beta of the EMA units (tau_min, tau_max)
-  3. k=6 at the same arithmetic ages as k=4 (33.1 and 37.2)
+Three knobs only: mix w, decay (tau_min / tau_max), k=6 at the same arithmetic
+ages as k=4 (33.1 and 37.2). Not testing: start/onset, B80, seeds 1-7,
+pairwise ±0.02 on the old 49-winner.
 
-Not testing: start/onset, B80, seeds 1-7, pairwise ±0.02 on the old 49-winner.
+Naming: logs/wave2/<name>.stdout
+  K6a{age}                 k=6 on the old [5.67, 49] window, ramp to that age
+  DEC_tmin3_tmax56         k=4 winner mix, faster window [3, 56]
+  MIX_midheavy_tmax56      k=4 mid-heavy mix, tau_max=56 only
 
-Wave A (now), one change each, start=1000:
-  K6a33  k=6 tau[5.67,49] w=0.037,0.074,0.111,0.148,0.185,0.444  age=33.08
-  K6a37  k=6 tau[5.67,49] w=0.0274,0.0547,0.0821,0.1095,0.1368,0.5895  age=37.24
-  DEC    k=4 w frozen 0.05,0.20,0.25,0.50  tau_min=3 tau_max=56  (faster fast-decay)
-  MIX    k=4 tau_max=56  mid-heavy w=0.05,0.25,0.40,0.30  (shape, not just w_slow)
+Launch (from repo root; wave 2 used 1 GPU per job):
+  torchrun --standalone --nproc_per_node=1 --master_port=29511 -- \
+    records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell.py \
+    --seed 0 --start 1000 --k K --tau-min TMIN --tau-max TMAX --weights W \
+    2>&1 | tee logs/wave2/<name>.stdout
 
-Wave B after A, pick from what moved 3150:
-  decay: tau_min=4 and/or tau_min=8 at frozen B56 w
-  mix: one more shape at the better (k, tau)  e.g. flatter 0.10,0.30,0.30,0.30
-  k=6: even-rest age 33 only if rising k=6 is close
+What we ran
+  K6a33                 k=6 [5.67, 49]  w=0.037,0.074,0.111,0.148,0.185,0.444     age=33.08  3150=3.28153  3250=3.27514
+  K6a37                 k=6 [5.67, 49]  w=0.0274,0.0547,0.0821,0.1095,0.1368,0.5895 age=37.24  3150=3.28141  3250=3.27504
+  DEC_tmin3_tmax56      k=4 [3, 56]     w=0.05,0.20,0.25,0.50                     3150=3.28040  3250=3.27415
+  MIX_midheavy_tmax56   k=4 [5.67, 56]  w=0.05,0.25,0.40,0.30                     3150=3.28165  3250=3.27523
 
-Logs: logs/wave2/<name>.stdout
+DEC is the only move (tie with k=2 at 3150). k=6 on the old window and mid-heavy
+mix are dead. Wave 3 holds DEC mix and walks tau_min / tau_max.

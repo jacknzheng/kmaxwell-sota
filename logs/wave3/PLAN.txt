@@ -1,24 +1,30 @@
 Wave 3 — seed-0 decay follow-up after Wave 2 DEC.
 start=1000, k=4 always. Frozen mix always: 0.05,0.20,0.25,0.50
-1×H100 sequential (~65 min/run). Remaining: DEC4 + DEC3_t49.
+1×H100 sequential. Score 3150.
+Wave 2 DEC ref: [3, 56] same w → 3150=3.28040  3250=3.27415
 
-Beat: first val_loss<3.28 at <=3150 (k=2 is 3160). Score 3150.
+Holds w fixed so a win/loss reads as tau_min / tau_max. Kill decay only if
+DEC4 stays >=3.2805 at 3150 *and* DEC3_t49 does not recover. DEC2 losing does
+not kill the axis — DEC at tau_min=3 still holds.
 
-Wave 2 DEC (ref): tau[3,56] same w  → 3150=3.28040  3250=3.27415
+Not testing: k=6, tau_min=8, mix-weight changes, mid-heavy/flatter mix, B80,
+seeds 1-7. Mix follow-up on the DEC window is wave 4.
 
-  DEC2       tau_min=2  tau_max=56  w frozen    done: 3150=3.28076  3250=3.27447  lost
-  DEC4       tau_min=4  tau_max=56  w frozen    interpolate 3 vs 5.67
-  DEC3_t49   tau_min=3  tau_max=49  w frozen    unconfound stretch
+Naming: logs/wave3/<name>.stdout
+  DEC2        tau_min=2  tau_max=56   faster than DEC
+  DEC4        tau_min=4  tau_max=56   interpolate 3 vs 5.67
+  DEC3_t49    tau_min=3  tau_max=49   unconfound stretch (not run)
 
-Dropped: DEC3_wfast (tau[3,56], w=0.10,0.20,0.25,0.45).
-That is a mix change, not a decay change. Wave 3 holds w fixed so a win/loss
-reads as tau_min / tau_max. Doubling w_fast already lost on the old grid
-(0.10,0.20,0.25,0.45 at tau[5.67,49] → 3.27514). Mix follow-up on the DEC
-window is wave 4, after DEC4 and DEC3_t49 pin the 1-D decay.
+Dropped: DEC3_wfast (tau[3,56], w=0.10,0.20,0.25,0.45) — mix change, not decay.
 
-Kill decay only if DEC4 stays >=3.2805 at 3150 *and* DEC3_t49 does not recover.
-DEC2 losing does not kill the axis — DEC at tau_min=3 still holds.
+Launch (from repo root):
+  torchrun --standalone --nproc_per_node=1 --master_port=29511 -- \
+    records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell.py \
+    --seed 0 --k 4 --start 1000 --tau-min TMIN --tau-max TMAX \
+    --weights 0.05,0.20,0.25,0.50 \
+    2>&1 | tee logs/wave3/<name>.stdout
 
-Not testing: k=6, tau_min=8, mix-weight changes, mid-heavy/flatter mix, B80, seeds 1-7.
-
-Logs: logs/wave3/<name>.stdout
+What we ran
+  DEC2      [2, 56]  3150=3.28076  3250=3.27447  lost
+  DEC4      [4, 56]  started, not finished (box moved to wave 4)
+  DEC3_t49  [3, 49]  not run

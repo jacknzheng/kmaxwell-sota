@@ -1,0 +1,24 @@
+Wave 1 — age scan + frozen-weight tau_max stretch on the k=4 [5.67, 49] winner.
+4-GPU sequential, seed 0, start=1000. Score 3250 (later waves switch to 3150).
+Winner to beat: stage7 0.05,0.20,0.25,0.50 at [5.67, 49] → 3250=3.27439.
+
+Naming: logs/wave1/<name>.stdout
+  A{age}_age{age}   same window [5.67, 49], reshape mix so mean age hits {age}
+  B{tmax}_tmax{tmax} winner weights frozen, tau_max stretched
+
+Launch (from repo root):
+  torchrun --standalone --nproc_per_node=4 --master_port=29511 -- \
+    records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell.py \
+    --seed 0 --k 4 --start 1000 \
+    --tau-min 5.666666666666666 --tau-max TMAX --weights W \
+    2>&1 | tee logs/wave1/<name>.stdout
+
+What we ran
+  A36_age36   [5.67, 49]  w=0.041,0.163,0.204,0.592          3150=3.28080  3250=3.27438
+  A42_age42   [5.67, 49]  w=0.022,0.088,0.110,0.780          3150=3.28128  3250=3.27491
+  A48_age48   [5.67, 49]  w=0.00314,0.012561,0.015701,0.968597  3150=3.28242  3250=3.27606
+  B56_tmax56  [5.67, 56]  w=0.05,0.20,0.25,0.50              3150=3.28057  3250=3.27428
+  B64_tmax64  [5.67, 64]  w=0.05,0.20,0.25,0.50              3150=3.28075  3250=3.27452
+  B80 skipped: 56/64 did not beat 3.27439.
+
+Older ages and frozen-w tmax stretch both lose. Next wave moves tau_min and k.
