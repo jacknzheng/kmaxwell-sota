@@ -1,0 +1,17 @@
+Wave 3 — seed-0 decay follow-up after Wave 2 DEC.
+start=1000, k=4 always. 1×H100 sequential (~65 min/run, ~4.3 h total).
+
+Beat: first val_loss<3.28 at <=3150 (k=2 is 3160). Score 3150.
+Kill decay if DEC2 and DEC4 both stay >=3.2805 at 3150.
+
+Frozen mix unless noted: 0.05,0.20,0.25,0.50
+Wave 2 DEC (ref): tau[3,56] same w  → 3150=3.28040  3250=3.27415
+
+  DEC2       tau_min=2  tau_max=56  w frozen          push faster-fast
+  DEC4       tau_min=4  tau_max=56  w frozen          interpolate 3 vs 5.67
+  DEC3_t49   tau_min=3  tau_max=49  w frozen          unconfound stretch
+  DEC3_wfast tau_min=3  tau_max=56  w=0.10,0.20,0.25,0.45  more mass on fast
+
+Not testing: k=6, tau_min=8, mid-heavy/flatter mix, B80, seeds 1-7.
+
+Logs: logs/wave3/<name>.stdout
