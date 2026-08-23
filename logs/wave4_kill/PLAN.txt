@@ -1,0 +1,32 @@
+Wave 4 kill — freeze K6_a35, stack on every optimizer WR.
+3 hours, 8 GPUs. Do not hunt more mixes. Do not finish wave 3 on this box.
+
+K6_a35 (frozen):
+  k=6  tau log-spaced [3, 56]
+  w=0.03673,0.07345,0.11018,0.14690,0.18363,0.44911
+  mean age = 35.00  (same arith age as DEC k=4)
+  start=1000
+
+Why this, not more k=6: wave-2 k=6 lost on the OLD window [5.67, 49].
+K6_a35 is the first k=6 on the winning DEC spectrum. Extra ticks at the
+same age as DEC. Freeze it and spend GPU on the record tree.
+
+Per-optimizer WRs we stack on:
+  muon    #36 tuned baseline 3250   via train_gpt_kmaxwell.py
+  soap    #46 SOAP-Muon WR   2690   via train_gpt_cwd_kmaxwell.py   GLOBAL
+  aurora  #42 Aurora+EMA     2860   via train_gpt_aurora_kmaxwell.py
+  adam    #4  AdamH          4875   via train_gpt_adamh_kmaxwell.py
+
+Beat #46: val_ema mean < 3.28 with (3.28-mean)*sqrt(n) >= 0.004 at a step < 2690.
+#46 seed-0 val_ema at 2690 was 3.27795 (n=8 mean 3.27833).
+
+Launch:
+  logs/wave4_kill/run.sh probe     # 8-GPU seed-0 of #46  (~20 min)
+  logs/wave4_kill/run.sh trees     # then 8-GPU seed-0 Aurora + AdamH + muon
+  logs/wave4_kill/run.sh n8 soap   # 8x1-GPU seeds 0-7 of #46 (only if probe wins)
+
+Decision after probe (read val_ema, not raw val_loss):
+  2690 val_ema <= 3.2770  or  first <3.28 by 2660  -> n8 soap immediately
+  2690 val_ema >= 3.2795                            -> #46 stack is dead, trees then n8 muon
+  in between                                        -> finish trees (Aurora/AdamH/muon seed-0)
+                                                     then n8 the one that beat its parent
