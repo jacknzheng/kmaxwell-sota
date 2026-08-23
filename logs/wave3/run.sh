@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Wave 3 on 1×H100: sequential 1-GPU runs. Logs: this dir (tee) + trainer uuid files.
+# Mix frozen. DEC3_wfast dropped — see PLAN.txt.
 set -euo pipefail
 ROOT="/workspace/modded-nanogpt"
 TRAIN="$ROOT/records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell.py"
@@ -37,10 +38,9 @@ run_one() {
 run_one DEC2 --tau-min 2 --tau-max 56 --weights "$WINNER_W"
 run_one DEC4 --tau-min 4 --tau-max 56 --weights "$WINNER_W"
 run_one DEC3_t49 --tau-min 3 --tau-max 49 --weights "$WINNER_W"
-run_one DEC3_wfast --tau-min 3 --tau-max 56 --weights 0.10,0.20,0.25,0.45
 
 echo "wave3 done"
-for n in DEC2 DEC4 DEC3_t49 DEC3_wfast; do
+for n in DEC2 DEC4 DEC3_t49; do
   f="$LOGDIR/${n}.stdout"
   echo "$n 3150=$(score_3150 "$f") 3250=$(final_loss "$f")"
 done
