@@ -4,4 +4,6 @@ __pycache__/
 logs/*
 !logs/kmaxwell/
 !logs/kmaxwell/**/
+!logs/wave1/
+!logs/wave1/**/
 .DS_Store
