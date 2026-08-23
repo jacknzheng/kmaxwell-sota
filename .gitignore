@@ -14,4 +14,6 @@ logs/*
 !logs/wave4/**/
 !logs/wave4_kill/
 !logs/wave4_kill/**/
+!logs/wave5/
+!logs/wave5/**/
 .DS_Store
