@@ -1,0 +1,10 @@
+{
+  "bimaxwell_3160": 3.27974,
+  "bimaxwell_final": 3.27451,
+  "notified_3160": [],
+  "notified_final": [
+    "stage7/seed0_k4_..._weights0p05,0p2,0p25,0p5 3.27439",
+    "stage7/seed0_k4_..._weights0p03,0p22,0p25,0p5 3.27441",
+    "stage7/seed0_k4_..._weights0p05,0p22,0p23,0p5 3.27442"
+  ]
+}
