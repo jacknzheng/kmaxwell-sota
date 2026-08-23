@@ -6,4 +6,8 @@ logs/*
 !logs/kmaxwell/**/
 !logs/wave1/
 !logs/wave1/**/
+!logs/wave2/
+!logs/wave2/**/
+!logs/wave3/
+!logs/wave3/**/
 .DS_Store
