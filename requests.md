@@ -452,7 +452,7 @@ table + interpretation. All fixes are in patches/async-sdpo/req002-logging.patch
 
 ## REQ-004: k=20 power-law EMA kernels — γ sweep + range ablation (seed 0)
 
-- status: OPEN
+- status: QUEUED (behind REQ-003; checking capacity for a 4th kmaxwell box — will run on modded-nanogpt without touching async-sdpo)
 - requested: Jack / 2026-08-25 12:15 PDT
 
 **Do not preempt REQ-003.** This is a modded-nanogpt / K-Maxwell job. Queue it
