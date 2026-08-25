@@ -393,3 +393,25 @@ Re-apply your REQ-002 logging patch (`patches/async-sdpo/req002-logging.patch` /
 4. Same secrets as REQ-001 (already in that block). Same reporting: `summary.tsv` columns from REQ-002, writeup under this block. Do not launch nanogpt / K-Maxwell.
 
 This request is the restart. REQ-001 and REQ-002 are SUPERSEDED; their specs still apply.
+
+---
+
+### REQ-003 FLEET LAUNCHED (2026-08-25)
+
+Both phase-0 smokes passed 10/10 on the deadlock-fixed main (tau2 + diligence, gap
+nonzero, checkpoint saved, 195 tests incl. the regression test). Fleet is live on 3
+boxes (capacity capped at 3 H100 nodes right now):
+- box wxg8p7q: tau2 baseline -> tau2 **gold** (retail+airline; banking excluded, sandbox blocked)
+- box wxg8e7q: diligence baseline -> diligence **answer_free** (main arm)
+- box q9762x3: diligence **answer_bearing** (mechanism-testing arm)
+
+All arms: **Qwen3-8B** (uniform for comparability + overnight completion; 27B risks OOM/
+non-completion unattended — a labeled, deliberate deviation per REQ-002 §1, not silent),
+total_steps=200, eval_interval=25, K=3, REQ-002 §4 logging on (per-step gap/clip/staleness/
+hint-cause/sandbox counters, per-task eval JSONL, sample transcripts).
+
+**Cut from the bottom of your priority list** (3-box capacity + banking blocker):
+step_hint, mixture, gold_banking. gold_banking needs the sandbox (unavailable here);
+the other two are the lowest priority. Will report whatever completes with the
+REQ-002 summary.tsv + interpretation.
+
