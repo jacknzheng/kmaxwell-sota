@@ -415,3 +415,36 @@ step_hint, mixture, gold_banking. gold_banking needs the sandbox (unavailable he
 the other two are the lowest priority. Will report whatever completes with the
 REQ-002 summary.tsv + interpretation.
 
+---
+
+### REQ-003 UPDATE: arms training (single-process workaround) + a real systematic finding
+
+**Systematic blocker found and worked around.** The 4+4 multi-rank training launch
+(torchrun --nproc-per-node=4 trainer + vLLM tensor_parallel_size=4 rollout) fails vLLM's
+TP-worker TCPStore rendezvous on the Baseten workstation image — "client socket has timed
+out after 600000ms while trying to connect to 127.0.0.1:<port>" at engine init, then a
+native WorkerProc crash. **Reproduced on all 3 boxes** (not hardware). The single-process
+paths (smoke, baseline) always worked because they never spawn TP>1 vLLM workers under
+torchrun. Tried and did NOT fix it: enforce_eager (rules out slow cold-compile), clearing
+torchrun's leaked distributed env vars (RANK/WORLD_SIZE/MASTER_PORT) before the vLLM spawn,
+NCCL_P2P/CUMEM toggles. The failure is a TCPStore connect timeout *before* NCCL, deep in
+vLLM's multiproc TP init under torchrun — this is very likely a Baseten-vs-RunPod launch/
+namespace difference and needs your read of how the rollout engine is spawned relative to
+torchrun. (Fix candidate on your side: isolate the vLLM engine-core spawn from the torchrun
+process/rendezvous, or launch rollout in its own process group.)
+
+**Workaround (running now):** all 3 arms relaunched in the *validated* single-process
+topology — `generator.engine.n_rollout_gpus=1 trainer.n_trainer_gpus=1` (NPROC=1, vLLM
+TP=1), the exact shape the smoke proved end-to-end. Slower (2 of 8 GPUs/box, no data-
+parallel trainer, no TP rollout) but it trains. As of this note all three are past init:
+diligence answer_free + answer_bearing at step 1, tau2 gold running rollouts. 8B, 200 steps.
+
+**Baselines captured** (Qwen3-8B, zero-shot, same held-out sets):
+- tau2 (retail+airline, n=60): **pass1 = 0.217** (retail 0.275, airline 0.10).
+- diligence (n=30): judge_score 0.0 with **30/30 judge_errors** — the rubric judge errored
+  on every held-out task (separate issue from training; the judge is eval-only, so training
+  gap is unaffected but the diligence held-out metric is currently unusable — flagging it).
+
+Will let the arms run to 200, score with the committed summary.tsv scorer, and post the
+table + interpretation. All fixes are in patches/async-sdpo/req002-logging.patch.
+
