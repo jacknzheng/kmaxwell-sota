@@ -41,7 +41,7 @@ Reference results already on this branch: CWD frozen KM passes @2680 (#46 =
 
 ## REQ-001: async-sdpo post-training fleet (NOT nanogpt)
 
-- status: RUNNING (picked up 2026-08-25T01:4xZ by jerry-agent; phase 0 provisioning)
+- status: SUPERSEDED by REQ-003 (box was stopped on the step-3 hang; deadlock is fixed on async-sdpo main)
 - requested: Jack / 2026-08-25
 
 This is **not** a modded-nanogpt / K-Maxwell / Track 3 job. Do not launch CWD, anneal, or seed fleets. Clone a different repo and run our off-policy SDPO post-training stack on fresh 8×H100 Baseten workstations, one box per ablation, in parallel.
@@ -158,7 +158,7 @@ Make this robust: install the tools in the image, fail loud at startup if they'r
 
 ## REQ-002: reporting contract for REQ-001 — comparable ablations, explicit reward, mandatory logging
 
-- status: RUNNING (applied to REQ-001 in flight; §4 logging patch lands on an async-sdpo branch before any Phase-2 arm launches, so the table will not mix logging builds. Capacity note: only ~3 free H100 nodes right now — arms will run in your §Priority order, serialized as boxes free up.)
+- status: SUPERSEDED by REQ-003 (same reporting contract; resume on fresh main)
 - requested: Jack / 2026-08-25 01:45 PDT
 
 Companion to REQ-001, not a replacement. Same fleet, same arms, same repo. This block pins down **what you must report and log** so the arms are actually comparable to each other. REQ-001 said what to run; this says what a finished answer looks like. If REQ-001 is already RUNNING, apply this to it in flight — do not relaunch anything just to satisfy this block.
@@ -362,3 +362,34 @@ EngineCore procs between runs (they pin GPU 0 VRAM).
 can run the whole fleet cleanly — the recipe + fixes make bringup a non-event now.
 Ping me on this branch and I'll pick it straight back up.
 
+---
+
+## REQ-003: resume async-sdpo fleet on NEW main (deadlock A is fixed)
+
+- status: OPEN
+- requested: Jack / 2026-08-25 10:54 PDT
+
+**Ping / restart.** Blocker A from your REQ-001/002 FINAL note is fixed. Pull a **fresh clone of `async-sdpo` `main`** (do not keep running the hung box or the pre-fix tree). Then continue REQ-001 + REQ-002 as written: Phase 0 smoke, Phase 1 baselines, then the fleet in the priority order, with the REQ-002 table/logging contract.
+
+### What changed on https://github.com/jacknzheng/async-sdpo.git `main`
+
+Tip is `69c023f` ("Fix the K=3 producer deadlock: admit batch_size groups per step."), already pushed to origin/main.
+
+The hang after ~3 steps (GPUs at 0%, last activity `evaluator_env.calculate_reward`) was the staleness manager treating `mini_batch_size` as groups/step while `get_batch` drains `batch_size`. After a few steps the producer could not refill. `AsyncStalenessManager` now admits `trainer.batch_size` groups per step. There is a regression test for this.
+
+Also already on main (do not regress):
+- tau2 startup **fails loud** if `bwrap` cannot create namespaces (`1235bfa`). Banking still needs a privileged/seccomp-unconfined box; if the Baseten image still cannot, isolate `gold_banking` / banking subdomain and continue retail+airline + all diligence arms.
+- Launch via `scripts/run_taubench.sh` and `scripts/run_diligencebench.sh`.
+- Diligence teachers: `answer_free` | `answer_bearing` | `mixture` (50/50 KL of the two teachers).
+- Packed LM-head / response logprobs path, FSDP2 4+4 split, default model still README's 27B with 8B OOM fallback.
+
+Re-apply your REQ-002 logging patch (`patches/async-sdpo/req002-logging.patch` / branch `jerry-agent-req002`) **on top of this new main**, not the old tree. If it conflicts, fix the patch — do not revert the deadlock fix. Keep the CUDA-device pin in weight-sync threads, `batch_size` not `training_batch_size`, no double `solo_mode`, tool-capable user-sim model, NCCL `NCCL_CUMEM_ENABLE=0 NCCL_P2P_DISABLE=1`, OpenRouter-as-OpenAI env, vLLM 0.26.x + cu128 re-pin. Those bringup fixes were real.
+
+### Do this now
+
+1. Provision a **new** 8×H100 (the old box was stopped). Fresh clone `main` @ `69c023f` or later.
+2. Phase 0 smokes: `bash scripts/run_taubench.sh smoke` and `bash scripts/run_diligencebench.sh smoke`. Confirm training continues **past step 3** and `teacher_minus_student_logp` stays clearly nonzero. If it still hangs, dump the last 200 lines of `train.log`/`console.log` under this block and stop — do not scale out.
+3. Phase 1 baselines, then fleet per REQ-002 priority (tau2 `gold`, diligence `answer_free`, then `answer_bearing`, then `step_hint` / `mixture` / `gold_banking` if boxes remain).
+4. Same secrets as REQ-001 (already in that block). Same reporting: `summary.tsv` columns from REQ-002, writeup under this block. Do not launch nanogpt / K-Maxwell.
+
+This request is the restart. REQ-001 and REQ-002 are SUPERSEDED; their specs still apply.
