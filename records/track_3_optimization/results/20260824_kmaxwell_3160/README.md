@@ -1,5 +1,9 @@
 # Record: Track 3 Optimization — K-Maxwell annealed momentum on the tuned Muon baseline — 3160 steps (n=8)
 
+## Credits
+
+Idea and direction: [Jeffrey Cheng](https://github.com/jeffreyscheng) ([@jeffreyscheng](https://github.com/jeffreyscheng)). Help from: [Jerry Hong](https://github.com/jerryhong21) ([@jerryhong21](https://github.com/jerryhong21)).
+
 ## TL;DR
 
 This is the **tuned Muon + aux AdamW baseline** (result #36, PR
@@ -62,15 +66,15 @@ were frozen before this fleet ran.
 
 ## Configuration
 
-| field | value (was, in #36) |
-|---|---|
-| K-Maxwell `k` / `[τ_min, τ_max]` | `8` / `[3, 64]` (new) |
-| mix weights (start, age 58) | `0.005094,0.010188,0.015282,0.020376,0.025470,0.030564,0.035658,0.857369` |
-| mix weights (end, age 26) | `0.032262,0.064524,0.096786,0.129047,0.161309,0.193571,0.225833,0.096669` |
-| anneal | linear lerp over post-1000 steps, `anneal-frac=1.0` |
-| enable at | step 1000 (lazy-init identity) |
-| `MUON_LR` / `MU` / aux AdamW | unchanged from #36 |
-| `train_steps` | 3250 (unchanged) |
+| field                            | value (was, in #36)                                                       |
+| -------------------------------- | ------------------------------------------------------------------------- |
+| K-Maxwell `k` / `[τ_min, τ_max]` | `8` / `[3, 64]` (new)                                                     |
+| mix weights (start, age 58)      | `0.005094,0.010188,0.015282,0.020376,0.025470,0.030564,0.035658,0.857369` |
+| mix weights (end, age 26)        | `0.032262,0.064524,0.096786,0.129047,0.161309,0.193571,0.225833,0.096669` |
+| anneal                           | linear lerp over post-1000 steps, `anneal-frac=1.0`                       |
+| enable at                        | step 1000 (lazy-init identity)                                            |
+| `MUON_LR` / `MU` / aux AdamW     | unchanged from #36                                                        |
+| `train_steps`                    | 3250 (unchanged)                                                          |
 
 ## Result
 
@@ -78,25 +82,25 @@ were frozen before this fleet ran.
 has no Tail-EMA readout). Dense eval-only validation every 10 steps over
 `[2900, 3250]`, identical for every seed (rule 5: uniform selection).
 
-| seed | step 3150 | step **3160** | step 3170 | step 3200 | step 3250 |
-|---:|---:|---:|---:|---:|---:|
-| 0 | 3.27779 | 3.27702 | 3.27626 | 3.27419 | 3.27240 |
-| 1 | 3.27717 | 3.27643 | 3.27562 | 3.27353 | 3.27174 |
-| 2 | 3.27772 | 3.27688 | 3.27615 | 3.27405 | 3.27224 |
-| 3 | 3.27882 | 3.27797 | 3.27725 | 3.27511 | 3.27333 |
-| 4 | 3.27996 | 3.27916 | 3.27834 | 3.27625 | 3.27451 |
-| 5 | 3.28098 | 3.28020 | 3.27947 | 3.27735 | 3.27557 |
-| 6 | 3.27902 | 3.27824 | 3.27744 | 3.27534 | 3.27357 |
-| 7 | 3.27835 | 3.27759 | 3.27685 | 3.27474 | 3.27290 |
-| **mean** | **3.27873** | **3.27794** | **3.27717** | **3.27507** | **3.27328** |
+|                 seed |       step 3150 |   step **3160** |       step 3170 |       step 3200 |       step 3250 |
+| -------------------: | --------------: | --------------: | --------------: | --------------: | --------------: |
+|                    0 |         3.27779 |         3.27702 |         3.27626 |         3.27419 |         3.27240 |
+|                    1 |         3.27717 |         3.27643 |         3.27562 |         3.27353 |         3.27174 |
+|                    2 |         3.27772 |         3.27688 |         3.27615 |         3.27405 |         3.27224 |
+|                    3 |         3.27882 |         3.27797 |         3.27725 |         3.27511 |         3.27333 |
+|                    4 |         3.27996 |         3.27916 |         3.27834 |         3.27625 |         3.27451 |
+|                    5 |         3.28098 |         3.28020 |         3.27947 |         3.27735 |         3.27557 |
+|                    6 |         3.27902 |         3.27824 |         3.27744 |         3.27534 |         3.27357 |
+|                    7 |         3.27835 |         3.27759 |         3.27685 |         3.27474 |         3.27290 |
+|             **mean** |     **3.27873** |     **3.27794** |     **3.27717** |     **3.27507** |     **3.27328** |
 | **(3.28 − mean)·√8** | **0.00360 (✗)** | **0.00584 (✓)** | **0.00800 (✓)** | **0.01394 (✓)** | **0.01900 (✓)** |
 
 **First-passing step = 3160.**
 
-| step | 3150 | 3160 | 3175 | 3200 | 3210 | 3250 |
-|---:|---:|---:|---:|---:|---:|---:|
+|             step |    3150 |        3160 |    3175 |    3200 |    3210 |    3250 |
+| ---------------: | ------: | ----------: | ------: | ------: | ------: | ------: |
 | mean (ours, n=8) | 3.27873 | **3.27794** | 3.27677 | 3.27507 | 3.27453 | 3.27328 |
-| mean (#36, n=10) | 3.28528 | — | 3.28291 | 3.28087 | — | 3.27866 |
+| mean (#36, n=10) | 3.28528 |           — | 3.28291 | 3.28087 |       — | 3.27866 |
 
 Pairwise at 3250 vs #36: `(3.27866 − 3.27328) / √(1/8+1/10) = 0.0113 ≥ 0.004`.
 
@@ -118,23 +122,18 @@ forward-backward per step; no third-party optimizer import; the stopping rule
 ## Files
 
 - `train_gpt_kmaxwell_anneal.py` — self-contained solution artifact (#36 baseline
-  + the annealed K-Maxwell kernel). `kmaxwell_kernel.py` is the sibling used to
-  build the log-spaced ticks / mix.
+  - the annealed K-Maxwell kernel). `kmaxwell_kernel.py` is the sibling used to
+    build the log-spaced ticks / mix.
 - `H100_seed{0..7}.txt` — the n=8 H100 logs the numbers above are computed from,
   each embedding its full source. These embed the research trainer launched with
   `--k 8 --tau-min 3 --tau-max 64 --weights <age58> --weights-end <age26>
-  --anneal-frac 1.0` (equivalently, `train_gpt_kmaxwell_anneal.py` hardcodes
+--anneal-frac 1.0` (equivalently, `train_gpt_kmaxwell_anneal.py` hardcodes
   exactly these).
 - `figure.png` — full descent vs #36 and the bi-Maxwell 3210 baseline.
   `zoomed_figure.png` — target-zone zoom. Rebuild:
   `python3 plot_muon_compare.py`.
 
-## Credits
-
-Idea and direction: [Jeffrey Cheng](https://github.com/jeffreyscheng)
-([@jeffreyscheng](https://github.com/jeffreyscheng)). Help:
-[Jerry Hong](https://github.com/jerryhong21)
-([@jerryhong21](https://github.com/jerryhong21)).
+## Setup & credits
 
 Baseline: result #36 (tuned Muon + aux AdamW) by
 [@konstmish](https://github.com/konstmish)

@@ -1,5 +1,9 @@
 # Record: Track 3 Optimization — frozen K-Maxwell momentum on SOAP-CWD — 2680 steps (n=8)
 
+## Credits
+
+Idea and direction: [Jeffrey Cheng](https://github.com/jeffreyscheng) ([@jeffreyscheng](https://github.com/jeffreyscheng)). Help from: [Jerry Hong](https://github.com/jerryhong21) ([@jerryhong21](https://github.com/jerryhong21)).
+
 ## TL;DR
 
 Not a new optimizer stack: this is record **#46** (PR
@@ -63,13 +67,13 @@ EMA-Nesterov (`0.3 / 0.99 / 300 / rest−950`), PowerCool LR (`power=1.2`,
 
 ## Configuration
 
-| field | value (was, in #46) |
-|---|---|
-| K-Maxwell `k` / `[τ_min, τ_max]` / mean age | `6` / `[3, 56]` / `35` (new) |
-| mix weights | `0.036726,0.073452,0.110179,0.146905,0.183631,0.449107` |
-| enable at | step 1000 (lazy-init identity) |
-| `TAILEMA_*` / `ROWFLOOR` / `CWD` | unchanged |
-| `MUON_LR` / `MU` | `0.0375` / `0.95` (unchanged) |
+| field                                                           | value (was, in #46)                                                                               |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| K-Maxwell `k` / `[τ_min, τ_max]` / mean age                     | `6` / `[3, 56]` / `35` (new)                                                                      |
+| mix weights                                                     | `0.036726,0.073452,0.110179,0.146905,0.183631,0.449107`                                           |
+| enable at                                                       | step 1000 (lazy-init identity)                                                                    |
+| `TAILEMA_*` / `ROWFLOOR` / `CWD`                                | unchanged                                                                                         |
+| `MUON_LR` / `MU`                                                | `0.0375` / `0.95` (unchanged)                                                                     |
 | `FINAL_TRAIN_STEPS` / `FINAL_SCHEDULE_STEPS` / `FINAL_LR_POWER` | `2900` / `2900` / `1.2` (unchanged; runs stopped at 2720, identical to a full run on `[0, 2720]`) |
 
 ## Result
@@ -79,17 +83,17 @@ readout** (`val_ema`), the readout this configuration ships (#45/#46). Dense
 eval every 5 steps on the tail; per-seed first val_ema crossing of 3.28:
 `{2655, 2660, 2660, 2660, 2675, 2645, 2675, 2655}` (mean 2661).
 
-| seed | step 2675 | step **2680** | step 2685 | step 2690 | step 2700 |
-|---:|---:|---:|---:|---:|---:|
-| 0 | 3.27850 | 3.27818 | 3.27786 | 3.27753 | 3.27697 |
-| 1 | 3.27892 | 3.27865 | 3.27828 | 3.27796 | 3.27740 |
-| 2 | 3.27868 | 3.27837 | 3.27804 | 3.27771 | 3.27716 |
-| 3 | 3.27866 | 3.27832 | 3.27798 | 3.27768 | 3.27709 |
-| 4 | 3.27981 | 3.27948 | 3.27915 | 3.27884 | 3.27827 |
-| 5 | 3.27780 | 3.27749 | 3.27715 | 3.27684 | 3.27626 |
-| 6 | 3.27974 | 3.27941 | 3.27906 | 3.27877 | 3.27820 |
-| 7 | 3.27819 | 3.27788 | 3.27755 | 3.27721 | 3.27665 |
-| **mean** | **3.27879** | **3.27847** | **3.27813** | **3.27782** | **3.27725** |
+|                 seed |       step 2675 |   step **2680** |       step 2685 |       step 2690 |       step 2700 |
+| -------------------: | --------------: | --------------: | --------------: | --------------: | --------------: |
+|                    0 |         3.27850 |         3.27818 |         3.27786 |         3.27753 |         3.27697 |
+|                    1 |         3.27892 |         3.27865 |         3.27828 |         3.27796 |         3.27740 |
+|                    2 |         3.27868 |         3.27837 |         3.27804 |         3.27771 |         3.27716 |
+|                    3 |         3.27866 |         3.27832 |         3.27798 |         3.27768 |         3.27709 |
+|                    4 |         3.27981 |         3.27948 |         3.27915 |         3.27884 |         3.27827 |
+|                    5 |         3.27780 |         3.27749 |         3.27715 |         3.27684 |         3.27626 |
+|                    6 |         3.27974 |         3.27941 |         3.27906 |         3.27877 |         3.27820 |
+|                    7 |         3.27819 |         3.27788 |         3.27755 |         3.27721 |         3.27665 |
+|             **mean** |     **3.27879** |     **3.27847** |     **3.27813** |     **3.27782** |     **3.27725** |
 | **(3.28 − mean)·√8** | **0.00343 (✗)** | **0.00432 (✓)** | **0.00528 (✓)** | **0.00617 (✓)** | **0.00778 (✓)** |
 
 **First-passing step = 2680** (val_ema; 2675 fails at 0.00343, 2680 clears at 0.00432).
@@ -125,12 +129,7 @@ to a 2900-step run).
   `zoomed_figure.png` — target-zone zoom. Rebuild:
   `python3 plot_cwd_compare.py`.
 
-## Credits
-
-Idea and direction: [Jeffrey Cheng](https://github.com/jeffreyscheng)
-([@jeffreyscheng](https://github.com/jeffreyscheng)). Help:
-[Jerry Hong](https://github.com/jerryhong21)
-([@jerryhong21](https://github.com/jerryhong21)).
+## Setup & credits
 
 #46 stack: PR [#328](https://github.com/KellerJordan/modded-nanogpt/pull/328) by
 [@ypwang61](https://github.com/ypwang61) (SOAP-Muon #321, Tail-EMA #325,
