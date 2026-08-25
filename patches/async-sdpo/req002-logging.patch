@@ -1,4 +1,4 @@
-From 74191d9502f0e0a42efcb8e6ed5b527cc77f1db2 Mon Sep 17 00:00:00 2001
+From 5d517f4560c3d4b7082a7d7dcb00665a2d3e28ef Mon Sep 17 00:00:00 2001
 From: Jerry Hong <jerry.hong@baseten.co>
 Date: Tue, 25 Aug 2026 02:00:32 -0700
 Subject: [PATCH] =?UTF-8?q?REQ-002=20=C2=A74=20logging:=20hint-cause=20+?=
@@ -26,18 +26,39 @@ Content-Transfer-Encoding: 8bit
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01YKPwGqPuEuP2wzzHuCEhok
 ---
- data/hint.py     | 62 +++++++++++++++++++++++-----------
+ data/hint.py     | 54 +++++++++++++++++++++++------
  run.py           | 62 ++++++++++++++++++++++++++++++----
  train/logger.py  | 88 ++++++++++++++++++++++++++++++++++++++++--------
  train/store.py   | 29 ++++++++++++++++
  train/trainer.py | 50 ++++++++++++++++++++++++++-
- 5 files changed, 250 insertions(+), 41 deletions(-)
+ 5 files changed, 251 insertions(+), 32 deletions(-)
 
 diff --git a/data/hint.py b/data/hint.py
-index a4d492a..371795d 100644
+index a4d492a..b5f77c5 100644
 --- a/data/hint.py
 +++ b/data/hint.py
-@@ -21,10 +21,16 @@ ERROR_HINT_PROMPTS: dict[str, str] = {
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ 
++import contextvars
+ import logging
+ import asyncio
+ import os
+@@ -11,6 +12,13 @@ from reward.judge import chat_completion
+ 
+ logger = logging.getLogger(__name__)
+ 
++# Why the most recent build_error_hint() call failed, for REQ-002 §4 hint accounting.
++# A ContextVar (not a global) so concurrent hint tasks don't clobber each other's cause:
++# asyncio copies the context per task, and within one _one_hint coroutine the value set
++# inside build_error_hint is visible after the await. build_error_hint keeps its pinned
++# bare-string return; the cause rides alongside out-of-band.
++_hint_cause: contextvars.ContextVar[str] = contextvars.ContextVar("hint_cause", default="")
++
+ _PROMPTS_DIR = Path(__file__).parent / "prompts"
+ 
+ ERROR_HINT_PROMPTS: dict[str, str] = {
+@@ -21,10 +29,16 @@ ERROR_HINT_PROMPTS: dict[str, str] = {
  
  @dataclass(frozen=True)
  class Hints:
@@ -55,73 +76,65 @@ index a4d492a..371795d 100644
  
      def ok(self, mode: str) -> bool:
          if mode == "mixture":
-@@ -69,7 +75,7 @@ async def build_error_hint(
+@@ -67,8 +81,10 @@ async def build_error_hint(
+             f"unknown hint prompt {prompt_variant!r}; choose from {sorted(ERROR_HINT_PROMPTS)}"
+         )
  
++    _hint_cause.set("")
      api_key = os.environ.get("OPENROUTER_API_KEY")
      if not api_key:
--        return ""
-+        return "", "openrouter_error"
++        _hint_cause.set("openrouter_error")
+         return ""
  
      if user_prompt is None:
-         user_prompt = (
-@@ -88,16 +94,19 @@ async def build_error_hint(
+@@ -88,12 +104,18 @@ async def build_error_hint(
              timeout=timeout,
              max_retries=max_retries,
          )
 +    except (asyncio.TimeoutError, TimeoutError):
 +        logger.warning("error-hint generation timed out (variant=%s)", prompt_variant)
-+        return "", "timeout"
++        _hint_cause.set("timeout")
++        return ""
      except Exception:  # noqa: BLE001 -- a hint failure must never break a rollout
--        logger.debug("error-hint generation failed", exc_info=True)
--        return ""
-+        logger.warning("error-hint generation failed (variant=%s)", prompt_variant, exc_info=True)
-+        return "", "openrouter_error"
+         logger.debug("error-hint generation failed", exc_info=True)
++        _hint_cause.set("openrouter_error")
+         return ""
  
      generated = generated.strip()
      if not generated:
--        return ""
-+        return "", "empty"
++        _hint_cause.set("empty")
+         return ""
      if prompt_variant == "step_hint":
--        return generated
--    return f"Guidance for answering this question:\n{generated}\n"
-+        return generated, ""
-+    return f"Guidance for answering this question:\n{generated}\n", ""
- 
- # initialize hint rate limiter to None
- _HINT_SEM: asyncio.Semaphore | None = None
-@@ -109,16 +118,28 @@ def _hint_sem(concurrency: int) -> asyncio.Semaphore:
+         return generated
+@@ -109,9 +131,17 @@ def _hint_sem(concurrency: int) -> asyncio.Semaphore:
      return _HINT_SEM
  
  
 -async def _one_hint(config: Config, task: Task, response_text: str, variant: str) -> str:
-+def _norm(result) -> tuple[str, str]:
-+    """Accept (text, cause) from the real build_error_hint or a bare string from
-+    test doubles; infer 'empty' when a bare empty string comes back."""
-+    if isinstance(result, tuple):
-+        text, cause = result
-+    else:
-+        text, cause = result, ""
-+    if not text and not cause:
-+        cause = "empty"
-+    return text, cause
++def _cause_for(text: str) -> str:
++    """Cause of a hint result: '' when text is present, else whatever the last
++    build_error_hint() recorded on the ContextVar (falling back to 'empty')."""
++    if text:
++        return ""
++    return _hint_cause.get() or "empty"
 +
 +
 +async def _one_hint(config: Config, task: Task, response_text: str, variant: str) -> tuple[str, str]:
      async with _hint_sem(config.generator.hint.concurrency):
 -        return await build_error_hint(
-+        return _norm(await build_error_hint(
++        text = await build_error_hint(
              query=task.query,
              sections=task.sections,
              response_text=response_text,
-             prompt_variant=variant,
+@@ -119,6 +149,7 @@ async def _one_hint(config: Config, task: Task, response_text: str, variant: str
              model=config.generator.hint.model,
              timeout=config.generator.hint.timeout,
--        )
-+        ))
+         )
++    return text, _cause_for(text)
  
  
  async def generate_hint(config: Config, task: Task, response_text: str) -> Hints:
-@@ -127,12 +148,13 @@ async def generate_hint(config: Config, task: Task, response_text: str) -> Hints
+@@ -127,7 +158,8 @@ async def generate_hint(config: Config, task: Task, response_text: str) -> Hints
          if mode == "gold":
              from data.tau_harness import gold_suffix
  
@@ -131,20 +144,12 @@ index a4d492a..371795d 100644
          if mode == "step_hint":
              from data.tau_harness import gold_material
  
-             async with _hint_sem(config.generator.hint.concurrency):
--                text = await build_error_hint(
-+                text, cause = _norm(await build_error_hint(
-                     prompt_variant="step_hint",
-                     user_prompt=(
-                         f"<gold>\n{gold_material(task)}\n</gold>\n\n"
-@@ -140,17 +162,19 @@ async def generate_hint(config: Config, task: Task, response_text: str) -> Hints
-                     ),
+@@ -141,16 +173,18 @@ async def generate_hint(config: Config, task: Task, response_text: str) -> Hints
                      model=config.generator.hint.model,
                      timeout=config.generator.hint.timeout,
--                )
+                 )
 -            return Hints(free=text)
-+                ))
-+            return Hints(free=text, cause=cause)
++            return Hints(free=text, cause=_cause_for(text))
          if mode == "mixture":
 -            free, bearing = await asyncio.gather(
 +            (free, fc), (bearing, bc) = await asyncio.gather(
