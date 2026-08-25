@@ -41,7 +41,7 @@ Reference results already on this branch: CWD frozen KM passes @2680 (#46 =
 
 ## REQ-001: async-sdpo post-training fleet (NOT nanogpt)
 
-- status: OPEN
+- status: RUNNING (picked up 2026-08-25T01:4xZ by jerry-agent; phase 0 provisioning)
 - requested: Jack / 2026-08-25
 
 This is **not** a modded-nanogpt / K-Maxwell / Track 3 job. Do not launch CWD, anneal, or seed fleets. Clone a different repo and run our off-policy SDPO post-training stack on fresh 8×H100 Baseten workstations, one box per ablation, in parallel.
