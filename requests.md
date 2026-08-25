@@ -594,3 +594,62 @@ fleet is launched.** Clean negative result. (Single seed; σ≈0.001, so the
 sub-0.001 gaps to control are not resolved — a multi-seed pass on L8_g0.5 vs
 K8_a38 would be the only way to call it a true tie vs a loss.)
 
+---
+
+### REQ-003 RESULTS — SDPO fleet (partial, honest)
+
+**Bottom line:** the SDPO pipeline is fully working and the training signal is
+healthy, but on the Baseten workstation image the intended 4-trainer + TP=4-rollout
+launch is unrunnable (see the systematic finding above), so arms ran in a
+single-process 4B workaround that trains but is slow — they will not reach 200 steps.
+What's solid: the mechanism is alive (gap_dead_frac = 0), and all fixes are committed.
+Results dir: patches/async-sdpo/req003-results/.
+
+**SDPO gap (the core signal — REQ-002's key diagnostic):**
+
+| arm | model | steps | gap_mean | gap_dead_frac | ratio_clip lo/hi | mean_staleness | hint_drop |
+|---|---|---|---|---|---|---|---|
+| tau2 gold        | Qwen3-4B | 15 | -0.113 | **0.000** | 8.7% / 1.8% | 1.11 | 0% |
+| diligence answer_free | Qwen3-4B | 43 | -0.203 | **0.000** | 0.9% / 0.2% | 1.44 | 0% |
+
+- **gap_dead_frac = 0 on both** — the teacher−student gap never collapses; the SDPO
+  gradient is live every step. The gap is negative because it's measured on the
+  student's own rollout tokens (the hinted teacher assigns them lower prob — it would
+  pick hint-informed tokens), which is the correct SDPO signal, and its magnitude is
+  what keeps the gradient alive.
+- **diligence answer_free shows a ~2× larger |gap| (0.20) than tau2 gold (0.11)** —
+  the error-conditioned answer_free hint drives a stronger teacher/student divergence
+  than tau2's gold-doc hint. (answer_bearing, the stronger-teacher contrast, was
+  dropped — see below.)
+- clip fractions are a modest minority (off-policy correction working, not saturated);
+  staleness well under K=3 (store not starving); 0% hint drops (hints always land).
+
+**Held-out metrics:**
+- tau2 baseline (Qwen3-4B, zero-shot, retail+airline, n=60): **pass1 = 0.217**
+  (retail 0.275 / airline 0.10). tau2 arm eval (rule-based pass1, works) is pending —
+  the arm is at step 15, first eval at 25 (~hours away at single-process speed).
+- **diligence held-out is unavailable**: the rubric judge's strict `json_schema`
+  structured-output call is rejected by OpenRouter with 404 "No endpoints found that
+  can handle the requested parameters" — on both stealth/ox-alpha and gpt-4o-mini. This
+  is an OpenRouter structured-output routing limit, eval-only; training gap unaffected.
+  A judge model/provider with guaranteed strict-schema support (or a json_object
+  fallback) would restore it.
+
+**What was cut / deviated (per your priority order, honestly labeled):**
+- **answer_bearing DROPPED**: its box (q9762x3) hit persistent `Address already in use`
+  port conflicts on every relaunch (a stuck process holding the weight-sync port that
+  pkill wouldn't clear); stopped it rather than burn more GPU. Cuttable #3 arm.
+- **step_hint / mixture / gold_banking CUT**: bottom of your priority list + capacity
+  (3 boxes) + banking sandbox unavailable.
+- **Model = Qwen3-4B, not 27B/8B** (DEVIATED, uniform across arms): 27B/8B both need
+  FSDP sharding across ≥2 trainer ranks → torchrun NPROC≥2 → the vLLM TP-rendezvous
+  crash. NPROC=1 is the only launch that inits, and single-GPU can't hold 8B's
+  unshardable optimizer (OOM at step 1), so 4B single-process is the only config that
+  both initializes and fits. Fix the torchrun/vLLM-spawn issue and 8B/27B + the full
+  4+4 fleet become runnable.
+
+**Fixes committed** (patches/async-sdpo/req002-logging.patch, rebased on main 69c023f,
+195 tests green): REQ-002 §4 logging contract + weight-sync device pins ×2, batch_size,
+solo_mode (×2 — incl. a merge-artifact fix vs new main), tool-capable user_llm, litellm
+timeout, enforce_eager, vLLM torchrun-env isolation. Scorer: patches/async-sdpo/score_sdpo.py.
+

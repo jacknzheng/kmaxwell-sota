@@ -1,0 +1,1073 @@
+=== diligence baseline (4B, judge=gpt-4o-mini) ===
+run diligence-baseline-20260825-213442
+logs /root/async-sdpo/log/diligence-baseline-20260825-213442
+cmd  uv run --no-sync python run.py data.dataset=diligence data.n_heldout=30 logging.output_dir=runs/sdpo-diligence logging.wandb_project=sdpo-diligence --baseline generator.hint.prompt=answer_free generator.engine.n_rollout_gpus=1 trainer.n_trainer_gpus=1 trainer.mini_batch_size=1 model.model=Qwen/Qwen3-4B judge.model=openai/gpt-4o-mini logging.run_name=diligence-baseline-20260825-213442 logging.log_dir=/root/async-sdpo/log
+2026-08-25 21:34:46,934 INFO sdpo: run diligence-baseline-20260825-213442 | run.py data.dataset=diligence data.n_heldout=30 logging.output_dir=runs/sdpo-diligence logging.wandb_project=sdpo-diligence --baseline generator.hint.prompt=answer_free generator.engine.n_rollout_gpus=1 trainer.n_trainer_gpus=1 trainer.mini_batch_size=1 model.model=Qwen/Qwen3-4B judge.model=openai/gpt-4o-mini logging.run_name=diligence-baseline-20260825-213442 logging.log_dir=/root/async-sdpo/log
+2026-08-25 21:34:46,934 INFO sdpo: file logs: /root/async-sdpo/log/diligence-baseline-20260825-213442
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+=== diligence answer_free (200, 4B, judge=gpt-4o-mini) ===
+run diligence-answer_free-20260825-213447
+logs /root/async-sdpo/log/diligence-answer_free-20260825-213447
+cmd  uv run --no-sync python run.py data.dataset=diligence data.n_heldout=30 logging.output_dir=runs/sdpo-diligence logging.wandb_project=sdpo-diligence generator.hint.prompt=answer_free trainer.total_steps=200 generator.engine.n_rollout_gpus=1 trainer.n_trainer_gpus=1 trainer.mini_batch_size=1 model.model=Qwen/Qwen3-4B judge.model=openai/gpt-4o-mini logging.run_name=diligence-answer_free-20260825-213447 logging.log_dir=/root/async-sdpo/log
+wandb: Currently logged in as: jacknzheng (jacknzheng-united-states-department-of-state) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run qztp81d3
+wandb: Tracking run with wandb version 0.28.2
+wandb: Run data is saved locally in /root/async-sdpo/log/diligence-baseline-20260825-213442/wandb/run-20260825_213448-qztp81d3
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run diligence-baseline-20260825-213442
+wandb: ⭐️ View project at https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-diligence
+wandb: 🚀 View run at https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-diligence/runs/qztp81d3
+wandb: Detected [google.genai] in use.
+wandb: Use W&B Weave for improved LLM call tracing. Install Weave with `pip install weave` then add `import weave` to the top of your script.
+wandb: For more information, check out the docs at: https://weave-docs.wandb.ai
+2026-08-25 21:34:49,124 INFO sdpo: wandb run: diligence-baseline-20260825-213442 (https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-diligence/runs/qztp81d3)
+2026-08-25 21:34:49,609 INFO httpx: HTTP Request: HEAD https://huggingface.co/datasets/paperinstruments/diligence-bench/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-25 21:34:49,609 WARNING huggingface_hub.utils._http: Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-25 21:34:49,621 INFO httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/paperinstruments/diligence-bench/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37/README.md "HTTP/1.1 200 OK"
+2026-08-25 21:34:49,758 INFO httpx: HTTP Request: HEAD https://huggingface.co/datasets/paperinstruments/diligence-bench/resolve/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37/diligence-bench.py "HTTP/1.1 404 Not Found"
+2026-08-25 21:34:50,182 INFO httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/paperinstruments/diligence-bench/paperinstruments/diligence-bench.py "HTTP/1.1 404 Not Found"
+2026-08-25 21:34:50,344 INFO httpx: HTTP Request: GET https://huggingface.co/api/datasets/paperinstruments/diligence-bench/revision/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37 "HTTP/1.1 200 OK"
+2026-08-25 21:34:50,483 INFO httpx: HTTP Request: HEAD https://huggingface.co/datasets/paperinstruments/diligence-bench/resolve/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-08-25 21:34:50,734 INFO httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=paperinstruments/diligence-bench "HTTP/1.1 200 OK"
+2026-08-25 21:34:50,875 INFO httpx: HTTP Request: GET https://huggingface.co/api/datasets/paperinstruments/diligence-bench/tree/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37?recursive=false&expand=false "HTTP/1.1 200 OK"
+2026-08-25 21:34:51,016 INFO httpx: HTTP Request: HEAD https://huggingface.co/datasets/paperinstruments/diligence-bench/resolve/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-08-25 21:34:52,005 INFO sdpo: run diligence-answer_free-20260825-213447 | run.py data.dataset=diligence data.n_heldout=30 logging.output_dir=runs/sdpo-diligence logging.wandb_project=sdpo-diligence generator.hint.prompt=answer_free trainer.total_steps=200 generator.engine.n_rollout_gpus=1 trainer.n_trainer_gpus=1 trainer.mini_batch_size=1 model.model=Qwen/Qwen3-4B judge.model=openai/gpt-4o-mini logging.run_name=diligence-answer_free-20260825-213447 logging.log_dir=/root/async-sdpo/log
+2026-08-25 21:34:52,005 INFO sdpo: file logs: /root/async-sdpo/log/diligence-answer_free-20260825-213447
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+wandb: Currently logged in as: jacknzheng (jacknzheng-united-states-department-of-state) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run 6pkr6sag
+wandb: Tracking run with wandb version 0.28.2
+wandb: Run data is saved locally in /root/async-sdpo/log/diligence-answer_free-20260825-213447/wandb/run-20260825_213453-6pkr6sag
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run diligence-answer_free-20260825-213447
+wandb: ⭐️ View project at https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-diligence
+wandb: 🚀 View run at https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-diligence/runs/6pkr6sag
+wandb: Detected [google.genai] in use.
+wandb: Use W&B Weave for improved LLM call tracing. Install Weave with `pip install weave` then add `import weave` to the top of your script.
+wandb: For more information, check out the docs at: https://weave-docs.wandb.ai
+2026-08-25 21:34:54,164 INFO sdpo: wandb run: diligence-answer_free-20260825-213447 (https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-diligence/runs/6pkr6sag)
+2026-08-25 21:34:54,701 INFO httpx: HTTP Request: HEAD https://huggingface.co/datasets/paperinstruments/diligence-bench/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-25 21:34:54,702 WARNING huggingface_hub.utils._http: Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-25 21:34:54,714 INFO httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/paperinstruments/diligence-bench/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37/README.md "HTTP/1.1 200 OK"
+2026-08-25 21:34:54,851 INFO httpx: HTTP Request: HEAD https://huggingface.co/datasets/paperinstruments/diligence-bench/resolve/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37/diligence-bench.py "HTTP/1.1 404 Not Found"
+INFO 08-25 21:34:55 [model.py:623] Resolved architecture: Qwen3ForCausalLM
+INFO 08-25 21:34:55 [model.py:1788] Using max model len 16384
+INFO 08-25 21:34:55 [scheduler.py:252] Chunked prefill is enabled with max_num_batched_tokens=2048.
+INFO 08-25 21:34:55 [vllm.py:1109] Asynchronous scheduling is enabled.
+WARNING 08-25 21:34:55 [vllm.py:1163] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+WARNING 08-25 21:34:55 [vllm.py:1213] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+INFO 08-25 21:34:55 [kernel.py:295] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+INFO 08-25 21:34:55 [vllm.py:1392] Cudagraph is disabled under eager mode
+INFO 08-25 21:34:55 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant
+2026-08-25 21:34:55,277 INFO httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/paperinstruments/diligence-bench/paperinstruments/diligence-bench.py "HTTP/1.1 404 Not Found"
+2026-08-25 21:34:55,417 INFO httpx: HTTP Request: GET https://huggingface.co/api/datasets/paperinstruments/diligence-bench/revision/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37 "HTTP/1.1 200 OK"
+2026-08-25 21:34:55,552 INFO httpx: HTTP Request: HEAD https://huggingface.co/datasets/paperinstruments/diligence-bench/resolve/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-08-25 21:34:55,809 INFO httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=paperinstruments/diligence-bench "HTTP/1.1 200 OK"
+2026-08-25 21:34:55,946 INFO httpx: HTTP Request: GET https://huggingface.co/api/datasets/paperinstruments/diligence-bench/tree/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37?recursive=false&expand=false "HTTP/1.1 200 OK"
+2026-08-25 21:34:56,081 INFO httpx: HTTP Request: HEAD https://huggingface.co/datasets/paperinstruments/diligence-bench/resolve/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-08-25 21:34:56,122 INFO sdpo: loaded 120 train / 30 held-out tasks
+2026-08-25 21:34:59,081 INFO httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen3-4B/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-25 21:34:59,094 INFO httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-4B/1cfa9a7208912126459214e8b04321603b3df60c/config.json "HTTP/1.1 200 OK"
+2026-08-25 21:34:59,237 INFO httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen3-4B/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-25 21:34:59,248 INFO httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-4B/1cfa9a7208912126459214e8b04321603b3df60c/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-08-25 21:34:59,390 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen3-4B/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-08-25 21:34:59,532 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen3-4B/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-08-25 21:35:00,344 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen3-4B "HTTP/1.1 200 OK"
+2026-08-25 21:35:00,480 INFO httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen3-4B/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-25 21:35:00,491 INFO httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-4B/1cfa9a7208912126459214e8b04321603b3df60c/config.json "HTTP/1.1 200 OK"
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 10291.76it/s]
+2026-08-25 21:35:00,932 INFO httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen3-4B/resolve/main/generation_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-25 21:35:00,943 INFO httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-4B/1cfa9a7208912126459214e8b04321603b3df60c/generation_config.json "HTTP/1.1 200 OK"
+(EngineCore pid=24358) INFO 08-25 21:35:05 [core.py:116] Initializing a V1 LLM engine (v0.26.0) with config: model='Qwen/Qwen3-4B', speculative_config=None, tokenizer='Qwen/Qwen3-4B', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=16384, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen3-4B, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [2048], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native']), enable_flashinfer_autotune=True, enable_cutedsl_warmup=True, enable_bf16x3_router_gemm=False, moe_backend='auto', linear_backend='auto')
+INFO 08-25 21:35:05 [model.py:623] Resolved architecture: Qwen3ForCausalLM
+INFO 08-25 21:35:05 [model.py:1788] Using max model len 16384
+INFO 08-25 21:35:05 [scheduler.py:252] Chunked prefill is enabled with max_num_batched_tokens=2048.
+INFO 08-25 21:35:05 [vllm.py:1109] Asynchronous scheduling is enabled.
+WARNING 08-25 21:35:05 [vllm.py:1163] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+WARNING 08-25 21:35:05 [vllm.py:1213] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+INFO 08-25 21:35:05 [kernel.py:295] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+INFO 08-25 21:35:05 [vllm.py:1392] Cudagraph is disabled under eager mode
+INFO 08-25 21:35:05 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant
+(EngineCore pid=24358) INFO 08-25 21:35:06 [parallel_state.py:1615] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://10.0.58.178:39265 backend=nccl
+(EngineCore pid=24358) INFO 08-25 21:35:06 [parallel_state.py:1946] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=24358) INFO 08-25 21:35:06 [gpu_worker.py:378] Using V2 Model Runner
+(EngineCore pid=24358) INFO 08-25 21:35:06 [model_runner.py:284] Loading model from scratch...
+(EngineCore pid=24358) INFO 08-25 21:35:07 [cuda.py:482] Using FLASH_ATTN attention backend out of potential backends: ['FLASH_ATTN', 'FLASHINFER', 'TRITON_ATTN', 'FLEX_ATTENTION'].
+(EngineCore pid=24358) INFO 08-25 21:35:07 [flash_attn.py:776] Using FlashAttention version 3
+(EngineCore pid=24358) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(EngineCore pid=24358) 2026-08-25 21:35:08,440 WARNING huggingface_hub.utils._http: Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(EngineCore pid=24358) INFO 08-25 21:35:08 [weight_utils.py:869] Filesystem type for checkpoints: OVERLAY. Checkpoint size: 7.49 GiB. Available RAM: 1548.39 GiB.
+(EngineCore pid=24358) INFO 08-25 21:35:08 [weight_utils.py:892] Auto-prefetch is disabled because the filesystem (OVERLAY) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+(EngineCore pid=24358) Loading safetensors checkpoint shards:   0% Completed | 0/3 [00:00<?, ?it/s]
+(EngineCore pid=24358) Loading safetensors checkpoint shards:  33% Completed | 1/3 [00:00<00:01,  1.36it/s]
+(EngineCore pid=24358) Loading safetensors checkpoint shards:  67% Completed | 2/3 [00:01<00:00,  1.28it/s]
+(EngineCore pid=24358) Loading safetensors checkpoint shards: 100% Completed | 3/3 [00:01<00:00,  2.11it/s]
+(EngineCore pid=24358) Loading safetensors checkpoint shards: 100% Completed | 3/3 [00:01<00:00,  1.81it/s]
+(EngineCore pid=24358) 
+(EngineCore pid=24358) INFO 08-25 21:35:10 [default_loader.py:430] Loading weights took 1.66 seconds
+(EngineCore pid=24358) INFO 08-25 21:35:10 [model_runner.py:305] Model loading took 7.5 GiB and 4.334652 seconds
+(EngineCore pid=24358) INFO 08-25 21:35:10 [topk_topp_sampler.py:55] Using FlashInfer for top-p & top-k sampling.
+(EngineCore pid=24358) INFO 08-25 21:35:11 [factory.py:114] Creating weight transfer engine: NCCLWeightTransferEngine
+(EngineCore pid=24358) INFO 08-25 21:35:12 [gpu_worker.py:560] Available KV cache memory: 59.39 GiB
+(EngineCore pid=24358) INFO 08-25 21:35:12 [kv_cache_utils.py:2177] GPU KV cache size: 432,480 tokens
+(EngineCore pid=24358) INFO 08-25 21:35:12 [kv_cache_utils.py:2178] Maximum concurrency for 16,384 tokens per request: 26.40x
+(EngineCore pid=24358) <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.cudart module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.runtime module instead.
+(EngineCore pid=24358) <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.nvrtc module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.nvrtc module instead.
+(EngineCore pid=24358) INFO 08-25 21:35:12 [kernel_warmup.py:227] Using FlashInfer autotune cache file: /root/cache/vllm/flashinfer_autotune_cache/0.6.14/90a/a415d9c5b7bea33ee0300a62a5ebc36607dcec9fa733be137888e176777e9565/autotune_configs.json
+(EngineCore pid=24358) 2026-08-25 21:35:12,668 - INFO - autotuner.py:651 - flashinfer.jit: [Autotuner]: Autotuning process starts ...
+(EngineCore pid=24358) 2026-08-25 21:35:12,694 - INFO - autotuner.py:674 - flashinfer.jit: [Autotuner]: Autotuning process ends
+(EngineCore pid=24358) WARNING 08-25 21:35:12 [kernel_warmup.py:258] No FlashInfer autotune cache entries found.Falling back to default tactics.
+(EngineCore pid=24358) INFO 08-25 21:35:12 [kernel_warmup.py:65] Warming up ll_bf16 router GEMM kernels.
+(EngineCore pid=24950) INFO 08-25 21:35:15 [core.py:116] Initializing a V1 LLM engine (v0.26.0) with config: model='Qwen/Qwen3-4B', speculative_config=None, tokenizer='Qwen/Qwen3-4B', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=16384, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen3-4B, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [2048], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native']), enable_flashinfer_autotune=True, enable_cutedsl_warmup=True, enable_bf16x3_router_gemm=False, moe_backend='auto', linear_backend='auto')
+(EngineCore pid=24950) INFO 08-25 21:35:16 [parallel_state.py:1615] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://10.0.58.178:58157 backend=nccl
+(EngineCore pid=24950) INFO 08-25 21:35:16 [parallel_state.py:1946] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=24950) INFO 08-25 21:35:16 [gpu_worker.py:378] Using V2 Model Runner
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330] EngineCore failed to start.
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330] Traceback (most recent call last):
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1299, in run_engine_core
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]     return func(*args, **kwargs)
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1065, in __init__
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]     super().__init__(
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 125, in __init__
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]     self.model_executor = executor_class(vllm_config)
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]     return func(*args, **kwargs)
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 109, in __init__
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]     self._init_executor()
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/executor/uniproc_executor.py", line 63, in _init_executor
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]     self.driver_worker.init_device()
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/worker/worker_base.py", line 331, in init_device
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]     self.worker.init_device()  # type: ignore
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]     ^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]     return func(*args, **kwargs)
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 389, in init_device
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]     self.requested_memory = request_memory(init_snapshot, self.cache_config)
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/worker/utils.py", line 435, in request_memory
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330]     raise ValueError(
+(EngineCore pid=24950) ERROR 08-25 21:35:16 [core.py:1330] ValueError: Free memory on device cuda:0 (10.71/79.18 GiB) on startup is less than desired GPU memory utilization (0.85, 67.3 GiB). Decrease GPU memory utilization or reduce GPU memory used by other processes.
+(EngineCore pid=24950) Process EngineCore:
+(EngineCore pid=24950) Traceback (most recent call last):
+(EngineCore pid=24950)   File "/root/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+(EngineCore pid=24950)     self.run()
+(EngineCore pid=24950)   File "/root/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/multiprocessing/process.py", line 108, in run
+(EngineCore pid=24950)     self._target(*self._args, **self._kwargs)
+(EngineCore pid=24950)   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1334, in run_engine_core
+(EngineCore pid=24950)     raise e
+(EngineCore pid=24950)   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1299, in run_engine_core
+(EngineCore pid=24950)     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+(EngineCore pid=24950)                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=24950)   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=24950)     return func(*args, **kwargs)
+(EngineCore pid=24950)            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=24950)   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 1065, in __init__
+(EngineCore pid=24950)     super().__init__(
+(EngineCore pid=24950)   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 125, in __init__
+(EngineCore pid=24950)     self.model_executor = executor_class(vllm_config)
+(EngineCore pid=24950)                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=24950)   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=24950)     return func(*args, **kwargs)
+(EngineCore pid=24950)            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=24950)   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 109, in __init__
+(EngineCore pid=24950)     self._init_executor()
+(EngineCore pid=24950)   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/executor/uniproc_executor.py", line 63, in _init_executor
+(EngineCore pid=24950)     self.driver_worker.init_device()
+(EngineCore pid=24950)   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/worker/worker_base.py", line 331, in init_device
+(EngineCore pid=24950)     self.worker.init_device()  # type: ignore
+(EngineCore pid=24950)     ^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=24950)   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=24950)     return func(*args, **kwargs)
+(EngineCore pid=24950)            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=24950)   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 389, in init_device
+(EngineCore pid=24950)     self.requested_memory = request_memory(init_snapshot, self.cache_config)
+(EngineCore pid=24950)                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=24950)   File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/worker/utils.py", line 435, in request_memory
+(EngineCore pid=24950)     raise ValueError(
+(EngineCore pid=24950) ValueError: Free memory on device cuda:0 (10.71/79.18 GiB) on startup is less than desired GPU memory utilization (0.85, 67.3 GiB). Decrease GPU memory utilization or reduce GPU memory used by other processes.
+[rank0]:[W825 21:35:17.653149448 ProcessGroupNCCL.cpp:1575] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+Traceback (most recent call last):
+  File "/root/async-sdpo/run.py", line 647, in <module>
+    main()
+  File "/root/async-sdpo/run.py", line 641, in main
+    asyncio.run(train(config, smoke=args.smoke, ctx=ctx))
+  File "/root/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/root/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/async-sdpo/run.py", line 419, in train
+    engine.start()
+  File "/root/async-sdpo/train/backends/vllm.py", line 125, in start
+    self.engine = AsyncLLM.from_engine_args(engine_args)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 246, in from_engine_args
+    return cls(
+           ^^^^
+  File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 146, in __init__
+    self.engine_core = EngineCoreClient.make_async_mp_client(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 132, in make_async_mp_client
+    return AsyncMPClient(*client_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 963, in __init__
+    super().__init__(
+  File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 573, in __init__
+    with launch_core_engines(
+         ^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 144, in __exit__
+    next(self.gen)
+  File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1213, in launch_core_engines
+    wait_for_engine_startup(
+  File "/root/async-sdpo/.venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1272, in wait_for_engine_startup
+    raise RuntimeError(
+RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+(EngineCore pid=24358) INFO 08-25 21:35:20 [cutedsl_warmup.py:101] Skipping CuTeDSL warmup because no compile units were requested.
+(EngineCore pid=24358) INFO 08-25 21:35:20 [gpu_worker.py:857] Free memory on device (78.66/79.18 GiB) on startup. Desired GPU memory utilization is (0.85, 67.3 GiB). Actual usage is 7.5 GiB for weight, 0.18 GiB for peak activation, 0.22 GiB for non-torch memory, and 0.0 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=63615858279` (59.25 GiB) to fit into requested memory, or `--kv-cache-memory=75811885056` (70.61 GiB) to fully utilize gpu memory. Current kv cache memory in use is 59.39 GiB.
+(EngineCore pid=24358) INFO 08-25 21:35:21 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(EngineCore pid=24358) INFO 08-25 21:35:21 [core.py:347] init engine (profile, create kv cache, warmup model) took 10.74 s
+[1;34mwandb[0m: 
+[1;34mwandb[0m: 🚀 View run [33mdiligence-answer_free-20260825-213447[0m at: [34mhttps://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-diligence/runs/6pkr6sag[0m
+[1;34mwandb[0m: Find logs at: [1;35mlog/diligence-answer_free-20260825-213447/wandb/run-20260825_213453-6pkr6sag/logs[0m
+(EngineCore pid=24358) INFO 08-25 21:35:23 [vllm.py:1109] Asynchronous scheduling is enabled.
+(EngineCore pid=24358) WARNING 08-25 21:35:23 [vllm.py:1163] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(EngineCore pid=24358) WARNING 08-25 21:35:23 [vllm.py:1213] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(EngineCore pid=24358) INFO 08-25 21:35:23 [kernel.py:295] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(EngineCore pid=24358) INFO 08-25 21:35:23 [vllm.py:1392] Cudagraph is disabled under eager mode
+2026-08-25 21:35:23,586 INFO train.backends.vllm: rollout engine ready: Qwen/Qwen3-4B on 1 GPU(s)
+(EngineCore pid=24358) INFO 08-25 21:35:23 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant
+WARNING 08-25 21:35:23 [input_processor.py:282] Passing raw prompts to InputProcessor is deprecated and will be removed in v0.18. You should instead pass the outputs of Renderer.render_cmpl() or Renderer.render_chat().
+(EngineCore pid=24358) WARNING 08-25 21:35:23 [jit_monitor.py:135] Triton kernel JIT compilation during inference: _topk_log_softmax_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+DIL_FREE_EXIT=1
+2026-08-25 21:36:14,352 INFO sdpo: ZERO-SHOT BASELINE: {'judge_score': 0.0, 'judge_errors': 30.0}
+INFO 08-25 21:36:14 [core_client.py:655] [shutdown] MPClient: start timeout=default
+INFO 08-25 21:36:14 [core_client.py:657] [shutdown] MPClient: stopping engine manager
+(EngineCore pid=24358) INFO 08-25 21:36:14 [core.py:1313] [shutdown] EngineCore: trigger received signal=SIGTERM
+(EngineCore pid=24358) INFO 08-25 21:36:14 [core.py:1432] [shutdown] EngineCore: start mode=abort timeout=0s
+(EngineCore pid=24358) INFO 08-25 21:36:14 [core.py:1463] [shutdown] EngineCore: request processing complete; starting resource teardown
+(EngineCore pid=24358) INFO 08-25 21:36:14 [core.py:1326] [shutdown] EngineCore: exiting busy loop
+INFO 08-25 21:36:17 [core_client.py:659] [shutdown] MPClient: engine manager stopped
+INFO 08-25 21:36:17 [core_client.py:660] [shutdown] MPClient: cleaning up background resources
+INFO 08-25 21:36:17 [core_client.py:662] [shutdown] MPClient: complete
+wandb: updating run metadata
+wandb: uploading wandb-summary.json; uploading config.yaml
+wandb: uploading history steps 0-0, summary, console lines 26-31
+wandb: 
+wandb: Run history:
+wandb: eval/judge_errors ▁
+wandb:  eval/judge_score ▁
+wandb: 
+wandb: Run summary:
+wandb: eval/judge_errors 30
+wandb:  eval/judge_score 0
+wandb:      judge_errors 30
+wandb:       judge_score 0
+wandb: 
+wandb: 🚀 View run diligence-baseline-20260825-213442 at: https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-diligence/runs/qztp81d3
+wandb: ⭐️ View project at: https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-diligence
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./log/diligence-baseline-20260825-213442/wandb/run-20260825_213448-qztp81d3/logs
+DIL_BASE_EXIT=0
+=== diligence answer_free (200, 4B, judge=gpt-4o-mini) ===
+run diligence-answer_free-20260825-213629
+logs /root/async-sdpo/log/diligence-answer_free-20260825-213629
+cmd  uv run --no-sync python run.py data.dataset=diligence data.n_heldout=30 logging.output_dir=runs/sdpo-diligence logging.wandb_project=sdpo-diligence generator.hint.prompt=answer_free trainer.total_steps=200 generator.engine.n_rollout_gpus=1 trainer.n_trainer_gpus=1 trainer.mini_batch_size=1 model.model=Qwen/Qwen3-4B judge.model=openai/gpt-4o-mini logging.run_name=diligence-answer_free-20260825-213629 logging.log_dir=/root/async-sdpo/log
+2026-08-25 21:36:33,780 INFO sdpo: run diligence-answer_free-20260825-213629 | run.py data.dataset=diligence data.n_heldout=30 logging.output_dir=runs/sdpo-diligence logging.wandb_project=sdpo-diligence generator.hint.prompt=answer_free trainer.total_steps=200 generator.engine.n_rollout_gpus=1 trainer.n_trainer_gpus=1 trainer.mini_batch_size=1 model.model=Qwen/Qwen3-4B judge.model=openai/gpt-4o-mini logging.run_name=diligence-answer_free-20260825-213629 logging.log_dir=/root/async-sdpo/log
+2026-08-25 21:36:33,780 INFO sdpo: file logs: /root/async-sdpo/log/diligence-answer_free-20260825-213629
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+wandb: Currently logged in as: jacknzheng (jacknzheng-united-states-department-of-state) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run iljv5gax
+wandb: Tracking run with wandb version 0.28.2
+wandb: Run data is saved locally in /root/async-sdpo/log/diligence-answer_free-20260825-213629/wandb/run-20260825_213635-iljv5gax
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run diligence-answer_free-20260825-213629
+wandb: ⭐️ View project at https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-diligence
+wandb: 🚀 View run at https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-diligence/runs/iljv5gax
+wandb: Detected [google.genai] in use.
+wandb: Use W&B Weave for improved LLM call tracing. Install Weave with `pip install weave` then add `import weave` to the top of your script.
+wandb: For more information, check out the docs at: https://weave-docs.wandb.ai
+2026-08-25 21:36:36,851 INFO sdpo: wandb run: diligence-answer_free-20260825-213629 (https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-diligence/runs/iljv5gax)
+2026-08-25 21:36:37,338 INFO httpx: HTTP Request: HEAD https://huggingface.co/datasets/paperinstruments/diligence-bench/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-25 21:36:37,339 WARNING huggingface_hub.utils._http: Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-25 21:36:37,344 INFO httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/paperinstruments/diligence-bench/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37/README.md "HTTP/1.1 200 OK"
+2026-08-25 21:36:37,475 INFO httpx: HTTP Request: HEAD https://huggingface.co/datasets/paperinstruments/diligence-bench/resolve/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37/diligence-bench.py "HTTP/1.1 404 Not Found"
+2026-08-25 21:36:37,895 INFO httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/paperinstruments/diligence-bench/paperinstruments/diligence-bench.py "HTTP/1.1 404 Not Found"
+2026-08-25 21:36:38,024 INFO httpx: HTTP Request: GET https://huggingface.co/api/datasets/paperinstruments/diligence-bench/revision/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37 "HTTP/1.1 200 OK"
+2026-08-25 21:36:38,155 INFO httpx: HTTP Request: HEAD https://huggingface.co/datasets/paperinstruments/diligence-bench/resolve/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-08-25 21:36:38,405 INFO httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=paperinstruments/diligence-bench "HTTP/1.1 200 OK"
+2026-08-25 21:36:38,537 INFO httpx: HTTP Request: GET https://huggingface.co/api/datasets/paperinstruments/diligence-bench/tree/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37?recursive=false&expand=false "HTTP/1.1 200 OK"
+2026-08-25 21:36:38,672 INFO httpx: HTTP Request: HEAD https://huggingface.co/datasets/paperinstruments/diligence-bench/resolve/372f3b1f1d0cb4c4ae7653eab486bab7ba403e37/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-08-25 21:36:38,713 INFO sdpo: loaded 120 train / 30 held-out tasks
+2026-08-25 21:36:41,680 INFO httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen3-4B/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-25 21:36:41,686 INFO httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-4B/1cfa9a7208912126459214e8b04321603b3df60c/config.json "HTTP/1.1 200 OK"
+2026-08-25 21:36:41,823 INFO httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen3-4B/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-25 21:36:41,828 INFO httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-4B/1cfa9a7208912126459214e8b04321603b3df60c/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-08-25 21:36:41,963 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen3-4B/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-08-25 21:36:42,100 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen3-4B/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-08-25 21:36:42,836 INFO httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen3-4B "HTTP/1.1 200 OK"
+2026-08-25 21:36:42,965 INFO httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen3-4B/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-25 21:36:42,970 INFO httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-4B/1cfa9a7208912126459214e8b04321603b3df60c/config.json "HTTP/1.1 200 OK"
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 10131.11it/s]
+2026-08-25 21:36:43,404 INFO httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen3-4B/resolve/main/generation_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-25 21:36:43,410 INFO httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-4B/1cfa9a7208912126459214e8b04321603b3df60c/generation_config.json "HTTP/1.1 200 OK"
+INFO 08-25 21:36:48 [model.py:623] Resolved architecture: Qwen3ForCausalLM
+INFO 08-25 21:36:48 [model.py:1788] Using max model len 16384
+INFO 08-25 21:36:48 [scheduler.py:252] Chunked prefill is enabled with max_num_batched_tokens=2048.
+INFO 08-25 21:36:48 [vllm.py:1109] Asynchronous scheduling is enabled.
+WARNING 08-25 21:36:48 [vllm.py:1163] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+WARNING 08-25 21:36:48 [vllm.py:1213] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+INFO 08-25 21:36:48 [kernel.py:295] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+INFO 08-25 21:36:48 [vllm.py:1392] Cudagraph is disabled under eager mode
+INFO 08-25 21:36:48 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant
+(EngineCore pid=25904) INFO 08-25 21:36:58 [core.py:116] Initializing a V1 LLM engine (v0.26.0) with config: model='Qwen/Qwen3-4B', speculative_config=None, tokenizer='Qwen/Qwen3-4B', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=16384, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen3-4B, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [2048], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native']), enable_flashinfer_autotune=True, enable_cutedsl_warmup=True, enable_bf16x3_router_gemm=False, moe_backend='auto', linear_backend='auto')
+(EngineCore pid=25904) INFO 08-25 21:36:59 [parallel_state.py:1615] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://10.0.58.178:43835 backend=nccl
+(EngineCore pid=25904) INFO 08-25 21:36:59 [parallel_state.py:1946] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=25904) INFO 08-25 21:36:59 [gpu_worker.py:378] Using V2 Model Runner
+(EngineCore pid=25904) INFO 08-25 21:36:59 [model_runner.py:284] Loading model from scratch...
+(EngineCore pid=25904) INFO 08-25 21:37:00 [cuda.py:482] Using FLASH_ATTN attention backend out of potential backends: ['FLASH_ATTN', 'FLASHINFER', 'TRITON_ATTN', 'FLEX_ATTENTION'].
+(EngineCore pid=25904) INFO 08-25 21:37:00 [flash_attn.py:776] Using FlashAttention version 3
+(EngineCore pid=25904) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(EngineCore pid=25904) 2026-08-25 21:37:01,188 WARNING huggingface_hub.utils._http: Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(EngineCore pid=25904) INFO 08-25 21:37:01 [weight_utils.py:869] Filesystem type for checkpoints: OVERLAY. Checkpoint size: 7.49 GiB. Available RAM: 1549.27 GiB.
+(EngineCore pid=25904) INFO 08-25 21:37:01 [weight_utils.py:892] Auto-prefetch is disabled because the filesystem (OVERLAY) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+(EngineCore pid=25904) Loading safetensors checkpoint shards:   0% Completed | 0/3 [00:00<?, ?it/s]
+(EngineCore pid=25904) Loading safetensors checkpoint shards:  33% Completed | 1/3 [00:00<00:01,  1.46it/s]
+(EngineCore pid=25904) Loading safetensors checkpoint shards:  67% Completed | 2/3 [00:01<00:00,  1.40it/s]
+(EngineCore pid=25904) Loading safetensors checkpoint shards: 100% Completed | 3/3 [00:01<00:00,  1.97it/s]
+(EngineCore pid=25904) 
+(EngineCore pid=25904) INFO 08-25 21:37:02 [default_loader.py:430] Loading weights took 1.53 seconds
+(EngineCore pid=25904) INFO 08-25 21:37:03 [model_runner.py:305] Model loading took 7.5 GiB and 3.999860 seconds
+(EngineCore pid=25904) INFO 08-25 21:37:03 [topk_topp_sampler.py:55] Using FlashInfer for top-p & top-k sampling.
+(EngineCore pid=25904) INFO 08-25 21:37:03 [factory.py:114] Creating weight transfer engine: NCCLWeightTransferEngine
+(EngineCore pid=25904) INFO 08-25 21:37:04 [gpu_worker.py:560] Available KV cache memory: 59.39 GiB
+(EngineCore pid=25904) INFO 08-25 21:37:04 [kv_cache_utils.py:2177] GPU KV cache size: 432,480 tokens
+(EngineCore pid=25904) INFO 08-25 21:37:04 [kv_cache_utils.py:2178] Maximum concurrency for 16,384 tokens per request: 26.40x
+(EngineCore pid=25904) <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.cudart module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.runtime module instead.
+(EngineCore pid=25904) <frozen importlib._bootstrap_external>:1301: FutureWarning: The cuda.nvrtc module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.nvrtc module instead.
+(EngineCore pid=25904) INFO 08-25 21:37:05 [kernel_warmup.py:227] Using FlashInfer autotune cache file: /root/cache/vllm/flashinfer_autotune_cache/0.6.14/90a/a415d9c5b7bea33ee0300a62a5ebc36607dcec9fa733be137888e176777e9565/autotune_configs.json
+(EngineCore pid=25904) 2026-08-25 21:37:05,237 - INFO - autotuner.py:651 - flashinfer.jit: [Autotuner]: Autotuning process starts ...
+(EngineCore pid=25904) 2026-08-25 21:37:05,259 - INFO - autotuner.py:674 - flashinfer.jit: [Autotuner]: Autotuning process ends
+(EngineCore pid=25904) WARNING 08-25 21:37:05 [kernel_warmup.py:258] No FlashInfer autotune cache entries found.Falling back to default tactics.
+(EngineCore pid=25904) INFO 08-25 21:37:05 [kernel_warmup.py:65] Warming up ll_bf16 router GEMM kernels.
+(EngineCore pid=25904) INFO 08-25 21:37:12 [cutedsl_warmup.py:101] Skipping CuTeDSL warmup because no compile units were requested.
+(EngineCore pid=25904) INFO 08-25 21:37:12 [gpu_worker.py:857] Free memory on device (78.66/79.18 GiB) on startup. Desired GPU memory utilization is (0.85, 67.3 GiB). Actual usage is 7.5 GiB for weight, 0.18 GiB for peak activation, 0.22 GiB for non-torch memory, and 0.0 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=63615858279` (59.25 GiB) to fit into requested memory, or `--kv-cache-memory=75811885056` (70.61 GiB) to fully utilize gpu memory. Current kv cache memory in use is 59.39 GiB.
+(EngineCore pid=25904) INFO 08-25 21:37:13 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(EngineCore pid=25904) INFO 08-25 21:37:13 [core.py:347] init engine (profile, create kv cache, warmup model) took 10.01 s
+(EngineCore pid=25904) INFO 08-25 21:37:15 [vllm.py:1109] Asynchronous scheduling is enabled.
+(EngineCore pid=25904) WARNING 08-25 21:37:15 [vllm.py:1163] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(EngineCore pid=25904) WARNING 08-25 21:37:15 [vllm.py:1213] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(EngineCore pid=25904) INFO 08-25 21:37:15 [kernel.py:295] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(EngineCore pid=25904) INFO 08-25 21:37:15 [vllm.py:1392] Cudagraph is disabled under eager mode
+2026-08-25 21:37:15,464 INFO train.backends.vllm: rollout engine ready: Qwen/Qwen3-4B on 1 GPU(s)
+2026-08-25 21:37:15,468 INFO train.backends.vllm: weight-sync: opening rendezvous at 127.0.0.1:51216, waiting for 1 receiver(s)
+(EngineCore pid=25904) INFO 08-25 21:37:15 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant
+INFO 08-25 21:37:15 [pynccl.py:113] vLLM is using nccl==2.28.9
+2026-08-25 21:37:16,402 INFO train.backends.vllm: weight-sync: rendezvous complete, all 2 ranks joined
+2026-08-25 21:37:16,403 INFO train.backends.vllm: joined weight-sync group at rank offset 1
+2026-08-25 21:37:16,404 INFO train.trainer: Total steps: 200
+WARNING 08-25 21:37:17 [input_processor.py:282] Passing raw prompts to InputProcessor is deprecated and will be removed in v0.18. You should instead pass the outputs of Renderer.render_cmpl() or Renderer.render_chat().
+(EngineCore pid=25904) WARNING 08-25 21:37:17 [jit_monitor.py:135] Triton kernel JIT compilation during inference: _topk_log_softmax_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+2026-08-25 21:38:20,818 WARNING sdpo: dropping rollout for task 87: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:38:43,330 WARNING sdpo: dropping rollout for task 75: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:38:48,110 WARNING sdpo: dropping rollout for task 66: no hint could be generated (cause=openrouter_error)
+/root/async-sdpo/.venv/lib/python3.12/site-packages/torch/_inductor/compile_fx.py:322: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+  warnings.warn(
+2026-08-25 21:42:44,760 WARNING sdpo: dropping rollout for task 2: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:42:44,767 WARNING sdpo: dropping rollout for task 6: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 21:42:44 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 21:42:45 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 21:42:45 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 21:42:45,218 INFO train.trainer: step 1 | loss -0.0513 | teacher-student gap -0.3748 | adv_clip 7.3% | ratio_clip lo 0.5% hi 0.1% | staleness 0.00 (max 0) | grad 8.562 | lr 1.00e-06 | tokens 3048 | hint_drop 25.0% | sandbox_fail 0 | empty_eps 0
+2026-08-25 21:43:11,262 WARNING sdpo: dropping rollout for task 129: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:43:30,923 WARNING sdpo: dropping rollout for task 35: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:43:33,043 WARNING sdpo: dropping rollout for task 56: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:43:36,401 WARNING sdpo: dropping rollout for task 138: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:43:38,090 WARNING sdpo: dropping rollout for task 140: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:44:00,842 WARNING sdpo: dropping rollout for task 130: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:44:00,893 WARNING sdpo: dropping rollout for task 36: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:44:14,124 WARNING sdpo: dropping rollout for task 123: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:44:18,355 WARNING sdpo: dropping rollout for task 43: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:44:25,852 WARNING sdpo: dropping rollout for task 97: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:44:28,082 WARNING sdpo: dropping rollout for task 90: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:44:35,506 WARNING sdpo: dropping rollout for task 45: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:44:50,236 WARNING sdpo: dropping rollout for task 41: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:44:52,897 WARNING sdpo: dropping rollout for task 149: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:45:00,486 WARNING sdpo: dropping rollout for task 101: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:45:05,061 WARNING sdpo: dropping rollout for task 37: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:45:14,035 WARNING sdpo: dropping rollout for task 117: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 21:48:26 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 21:48:26 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 21:48:26 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 21:48:26,620 INFO train.trainer: step 2 | loss -0.0163 | teacher-student gap -0.1783 | adv_clip 4.8% | ratio_clip lo 1.1% hi 0.2% | staleness 0.50 (max 1) | grad 4.469 | lr 1.00e-06 | tokens 6901 | hint_drop 62.9% | sandbox_fail 0 | empty_eps 0
+2026-08-25 21:48:49,818 WARNING sdpo: dropping rollout for task 3: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:48:50,034 WARNING sdpo: dropping rollout for task 86: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:48:50,393 WARNING sdpo: dropping rollout for task 144: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:48:51,945 WARNING sdpo: dropping rollout for task 128: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:48:52,574 WARNING sdpo: dropping rollout for task 19: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:49:10,498 WARNING sdpo: dropping rollout for task 113: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:49:15,368 WARNING sdpo: dropping rollout for task 91: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:49:39,847 WARNING sdpo: dropping rollout for task 122: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:50:03,566 WARNING sdpo: dropping rollout for task 110: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:50:05,069 WARNING sdpo: dropping rollout for task 143: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:50:05,779 WARNING sdpo: dropping rollout for task 57: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:50:17,365 WARNING sdpo: dropping rollout for task 148: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:50:18,041 WARNING sdpo: dropping rollout for task 89: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:50:31,630 WARNING sdpo: dropping rollout for task 29: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:50:39,517 WARNING sdpo: dropping rollout for task 59: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:50:58,732 WARNING sdpo: dropping rollout for task 98: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:50:58,734 WARNING sdpo: dropping rollout for task 95: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:50:58,735 WARNING sdpo: dropping rollout for task 68: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 21:50:58 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 21:50:59 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 21:50:59 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 21:50:59,129 INFO train.trainer: step 3 | loss -0.0223 | teacher-student gap -0.2100 | adv_clip 6.5% | ratio_clip lo 2.3% hi 0.6% | staleness 0.81 (max 2) | grad 4.094 | lr 1.00e-06 | tokens 7098 | hint_drop 81.6% | sandbox_fail 0 | empty_eps 0
+2026-08-25 21:51:20,434 WARNING sdpo: dropping rollout for task 83: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:51:51,523 WARNING sdpo: dropping rollout for task 121: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:51:56,235 WARNING sdpo: dropping rollout for task 137: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:52:06,873 WARNING sdpo: dropping rollout for task 58: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:52:06,907 WARNING sdpo: dropping rollout for task 108: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:52:30,519 WARNING sdpo: dropping rollout for task 53: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:55:57,146 WARNING sdpo: dropping rollout for task 93: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:55:57,148 WARNING sdpo: dropping rollout for task 9: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:55:57,150 WARNING sdpo: dropping rollout for task 70: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 21:55:57 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 21:55:57 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 21:55:57 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 21:55:57,573 INFO train.trainer: step 4 | loss -0.0137 | teacher-student gap -0.1653 | adv_clip 6.1% | ratio_clip lo 2.0% hi 0.4% | staleness 1.00 (max 2) | grad 4.062 | lr 1.00e-06 | tokens 6479 | hint_drop 76.6% | sandbox_fail 0 | empty_eps 0
+2026-08-25 21:56:21,294 WARNING sdpo: dropping rollout for task 80: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:56:21,935 WARNING sdpo: dropping rollout for task 139: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:56:22,280 WARNING sdpo: dropping rollout for task 49: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:56:23,362 WARNING sdpo: dropping rollout for task 74: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:56:47,073 WARNING sdpo: dropping rollout for task 79: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:56:47,973 WARNING sdpo: dropping rollout for task 107: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:57:10,017 WARNING sdpo: dropping rollout for task 38: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:57:10,977 WARNING sdpo: dropping rollout for task 140: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:57:11,041 WARNING sdpo: dropping rollout for task 1: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:57:34,082 WARNING sdpo: dropping rollout for task 117: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:57:37,330 WARNING sdpo: dropping rollout for task 35: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:57:59,173 WARNING sdpo: dropping rollout for task 2: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 21:57:59 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 21:57:59 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 21:57:59 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 21:57:59,538 INFO train.trainer: step 5 | loss -0.0110 | teacher-student gap -0.2778 | adv_clip 10.3% | ratio_clip lo 0.3% hi 0.1% | staleness 1.12 (max 2) | grad 5.969 | lr 1.00e-06 | tokens 3870 | hint_drop 76.2% | sandbox_fail 0 | empty_eps 0
+2026-08-25 21:58:28,328 WARNING sdpo: dropping rollout for task 41: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:58:41,436 WARNING sdpo: dropping rollout for task 130: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:58:43,139 WARNING sdpo: dropping rollout for task 36: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:58:45,280 WARNING sdpo: dropping rollout for task 104: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:58:45,868 WARNING sdpo: dropping rollout for task 8: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:58:55,349 WARNING sdpo: dropping rollout for task 134: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:59:05,263 WARNING sdpo: dropping rollout for task 138: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:59:31,752 WARNING sdpo: dropping rollout for task 6: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:59:34,808 WARNING sdpo: dropping rollout for task 72: no hint could be generated (cause=openrouter_error)
+2026-08-25 21:59:57,964 WARNING sdpo: dropping rollout for task 27: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:00:00,368 WARNING sdpo: dropping rollout for task 56: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:00:07,423 WARNING sdpo: dropping rollout for task 43: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:00:28,332 WARNING sdpo: dropping rollout for task 101: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:00:28,337 WARNING sdpo: dropping rollout for task 144: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:00:28 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:00:30 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:00:30 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:00:30,306 INFO train.trainer: step 6 | loss -0.0177 | teacher-student gap -0.2556 | adv_clip 8.5% | ratio_clip lo 1.8% hi 0.4% | staleness 1.22 (max 2) | grad 5.406 | lr 1.00e-06 | tokens 5414 | hint_drop 75.8% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:01:12,898 WARNING sdpo: dropping rollout for task 3: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:01:15,031 WARNING sdpo: dropping rollout for task 86: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:01:19,405 WARNING sdpo: dropping rollout for task 111: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:01:41,145 WARNING sdpo: dropping rollout for task 113: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:05:18,159 WARNING sdpo: dropping rollout for task 131: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:05:18,163 WARNING sdpo: dropping rollout for task 47: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:05:19 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:05:20 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:05:20 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:05:20,369 INFO train.trainer: step 7 | loss -0.0268 | teacher-student gap -0.2252 | adv_clip 7.3% | ratio_clip lo 1.6% hi 0.4% | staleness 1.30 (max 3) | grad 4.094 | lr 1.00e-06 | tokens 6459 | hint_drop 70.4% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:05:43,556 WARNING sdpo: dropping rollout for task 12: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:05:45,082 WARNING sdpo: dropping rollout for task 143: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:05:45,741 WARNING sdpo: dropping rollout for task 89: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:06:05,293 WARNING sdpo: dropping rollout for task 148: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:06:09,737 WARNING sdpo: dropping rollout for task 95: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:06:10,777 WARNING sdpo: dropping rollout for task 11: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:06:32,518 WARNING sdpo: dropping rollout for task 98: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:06:51,904 WARNING sdpo: dropping rollout for task 78: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:06:57,576 WARNING sdpo: dropping rollout for task 83: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:07:20,186 WARNING sdpo: dropping rollout for task 31: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:07:21,685 WARNING sdpo: dropping rollout for task 9: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:07:41,340 WARNING sdpo: dropping rollout for task 53: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:07:41 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:07:41 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:07:41 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:07:41,731 INFO train.trainer: step 8 | loss -0.0225 | teacher-student gap -0.1736 | adv_clip 5.9% | ratio_clip lo 3.0% hi 0.6% | staleness 1.38 (max 3) | grad 3.328 | lr 1.00e-06 | tokens 7334 | hint_drop 72.7% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:07:45,131 WARNING sdpo: dropping rollout for task 50: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:08:08,216 WARNING sdpo: dropping rollout for task 108: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:08:08,546 WARNING sdpo: dropping rollout for task 46: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:08:15,306 WARNING sdpo: dropping rollout for task 137: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:08:32,822 WARNING sdpo: dropping rollout for task 74: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:08:40,845 WARNING sdpo: dropping rollout for task 58: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:08:58,603 WARNING sdpo: dropping rollout for task 13: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:09:31 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:09:31 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:09:31 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:09:31,697 INFO train.trainer: step 9 | loss -0.0219 | teacher-student gap -0.2364 | adv_clip 7.4% | ratio_clip lo 1.0% hi 0.2% | staleness 1.41 (max 3) | grad 4.656 | lr 1.00e-06 | tokens 5477 | hint_drop 69.4% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:09:37,983 WARNING sdpo: dropping rollout for task 66: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:09:46,576 WARNING sdpo: dropping rollout for task 2: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:09:57,884 WARNING sdpo: dropping rollout for task 140: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:10:07,529 WARNING sdpo: dropping rollout for task 82: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:10:07,986 WARNING sdpo: dropping rollout for task 70: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:10:18,839 WARNING sdpo: dropping rollout for task 35: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:10:29,338 WARNING sdpo: dropping rollout for task 134: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:10:45,792 WARNING sdpo: dropping rollout for task 38: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:10:49,827 WARNING sdpo: dropping rollout for task 104: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:10:56,722 WARNING sdpo: dropping rollout for task 138: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:11:17,635 WARNING sdpo: dropping rollout for task 130: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:11:27,902 WARNING sdpo: dropping rollout for task 19: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:14:43,141 WARNING sdpo: dropping rollout for task 72: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:14:43 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:14:43 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:14:43 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:14:43,573 INFO train.trainer: step 10 | loss -0.0079 | teacher-student gap -0.2627 | adv_clip 9.6% | ratio_clip lo 0.3% hi 0.1% | staleness 1.44 (max 3) | grad 5.625 | lr 1.00e-06 | tokens 4554 | hint_drop 69.3% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:15:06,335 WARNING sdpo: dropping rollout for task 43: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:15:08,177 WARNING sdpo: dropping rollout for task 41: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:15:08,185 WARNING sdpo: dropping rollout for task 6: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:15:08,593 WARNING sdpo: dropping rollout for task 129: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:15:32,488 WARNING sdpo: dropping rollout for task 45: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:15:32,592 WARNING sdpo: dropping rollout for task 8: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:15:35,242 WARNING sdpo: dropping rollout for task 101: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:15:58,475 WARNING sdpo: dropping rollout for task 149: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:16:00,639 WARNING sdpo: dropping rollout for task 75: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:16:22,599 WARNING sdpo: dropping rollout for task 27: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:16:25,813 WARNING sdpo: dropping rollout for task 86: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:16:39,968 WARNING sdpo: dropping rollout for task 113: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:16:42,625 WARNING sdpo: dropping rollout for task 42: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:16:49,848 WARNING sdpo: dropping rollout for task 131: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:17:29,239 WARNING sdpo: dropping rollout for task 56: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:17:29,240 WARNING sdpo: dropping rollout for task 97: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:17:29 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:17:29 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:17:29 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:17:29,696 INFO train.trainer: step 11 | loss -0.0100 | teacher-student gap -0.2107 | adv_clip 7.8% | ratio_clip lo 0.9% hi 0.3% | staleness 1.45 (max 3) | grad 4.844 | lr 1.00e-06 | tokens 6069 | hint_drop 72.5% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:17:54,277 WARNING sdpo: dropping rollout for task 37: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:18:03,615 WARNING sdpo: dropping rollout for task 3: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:18:06,788 WARNING sdpo: dropping rollout for task 32: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:18:17,710 WARNING sdpo: dropping rollout for task 12: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:18:23,593 WARNING sdpo: dropping rollout for task 11: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:18:45,153 WARNING sdpo: dropping rollout for task 143: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:18:54,258 WARNING sdpo: dropping rollout for task 118: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:19:08,846 WARNING sdpo: dropping rollout for task 14: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:19:28,890 WARNING sdpo: dropping rollout for task 98: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:19:28 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:19:29 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:19:29 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:19:29,285 INFO train.trainer: step 12 | loss -0.0195 | teacher-student gap -0.2015 | adv_clip 7.4% | ratio_clip lo 1.1% hi 0.2% | staleness 1.46 (max 3) | grad 3.828 | lr 1.00e-06 | tokens 5342 | hint_drop 71.5% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:19:34,351 WARNING sdpo: dropping rollout for task 23: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:19:57,160 WARNING sdpo: dropping rollout for task 68: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:20:15,647 WARNING sdpo: dropping rollout for task 108: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:20:24,661 WARNING sdpo: dropping rollout for task 121: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:20:29,369 WARNING sdpo: dropping rollout for task 83: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:24:06 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:24:07 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:24:07 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:24:07,834 INFO train.trainer: step 13 | loss -0.0157 | teacher-student gap -0.1684 | adv_clip 6.7% | ratio_clip lo 1.1% hi 0.3% | staleness 1.50 (max 3) | grad 4.312 | lr 1.00e-06 | tokens 6239 | hint_drop 66.8% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:24:32,220 WARNING sdpo: dropping rollout for task 74: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:24:33,841 WARNING sdpo: dropping rollout for task 1: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:24:54,567 WARNING sdpo: dropping rollout for task 102: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:25:01,928 WARNING sdpo: dropping rollout for task 87: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:25:09,466 WARNING sdpo: dropping rollout for task 117: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:25:19,424 WARNING sdpo: dropping rollout for task 80: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:25:23,608 WARNING sdpo: dropping rollout for task 82: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:25:47,011 WARNING sdpo: dropping rollout for task 64: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:25:50,065 WARNING sdpo: dropping rollout for task 2: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:25:50,270 WARNING sdpo: dropping rollout for task 66: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:26:07,502 WARNING sdpo: dropping rollout for task 134: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:26:16,839 WARNING sdpo: dropping rollout for task 104: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:26:36 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:26:36 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:26:36 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:26:36,750 INFO train.trainer: step 14 | loss -0.0228 | teacher-student gap -0.2644 | adv_clip 8.7% | ratio_clip lo 0.2% hi 0.1% | staleness 1.53 (max 3) | grad 4.719 | lr 1.00e-06 | tokens 4137 | hint_drop 69.2% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:27:00,460 WARNING sdpo: dropping rollout for task 126: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:27:10,132 WARNING sdpo: dropping rollout for task 41: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:27:25,806 WARNING sdpo: dropping rollout for task 138: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:27:34,122 WARNING sdpo: dropping rollout for task 123: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:28:00,542 WARNING sdpo: dropping rollout for task 130: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:28:17 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:28:18 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:28:18 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:28:18,157 INFO train.trainer: step 15 | loss -0.0115 | teacher-student gap -0.2012 | adv_clip 8.4% | ratio_clip lo 0.2% hi 0.0% | staleness 1.55 (max 3) | grad 5.000 | lr 1.00e-06 | tokens 5167 | hint_drop 66.7% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:28:31,459 WARNING sdpo: dropping rollout for task 140: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:28:32,213 WARNING sdpo: dropping rollout for task 63: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:28:54,718 WARNING sdpo: dropping rollout for task 45: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:29:01,438 WARNING sdpo: dropping rollout for task 101: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:29:20,220 WARNING sdpo: dropping rollout for task 86: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:29:27,431 WARNING sdpo: dropping rollout for task 27: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:29:35,216 WARNING sdpo: dropping rollout for task 43: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:29:37,129 WARNING sdpo: dropping rollout for task 144: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:29:46,050 WARNING sdpo: dropping rollout for task 128: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:29:46,491 WARNING sdpo: dropping rollout for task 42: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:29:48,293 WARNING sdpo: dropping rollout for task 56: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:30:28,561 WARNING sdpo: dropping rollout for task 3: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:30:43,478 WARNING sdpo: dropping rollout for task 47: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:30:43 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:30:43 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:30:43 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:30:43,861 INFO train.trainer: step 16 | loss -0.0115 | teacher-student gap -0.1482 | adv_clip 5.9% | ratio_clip lo 1.9% hi 0.4% | staleness 1.58 (max 3) | grad 4.000 | lr 1.00e-06 | tokens 6602 | hint_drop 67.6% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:31:09,514 WARNING sdpo: dropping rollout for task 77: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:31:23,701 WARNING sdpo: dropping rollout for task 148: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:31:28,647 WARNING sdpo: dropping rollout for task 143: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:31:48,888 WARNING sdpo: dropping rollout for task 29: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:31:54,679 WARNING sdpo: dropping rollout for task 89: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:32:03,960 WARNING sdpo: dropping rollout for task 57: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:32:15,106 WARNING sdpo: dropping rollout for task 118: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:32:22,308 WARNING sdpo: dropping rollout for task 98: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:32:34,663 WARNING sdpo: dropping rollout for task 106: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:32:59 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:33:00 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:33:00 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:33:00,235 INFO train.trainer: step 17 | loss -0.0274 | teacher-student gap -0.1979 | adv_clip 7.4% | ratio_clip lo 0.7% hi 0.2% | staleness 1.58 (max 3) | grad 3.859 | lr 1.00e-06 | tokens 6219 | hint_drop 66.4% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:33:22,238 WARNING sdpo: dropping rollout for task 58: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:33:23,732 WARNING sdpo: dropping rollout for task 137: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:33:27,315 WARNING sdpo: dropping rollout for task 78: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:33:27,806 WARNING sdpo: dropping rollout for task 50: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:33:28,303 WARNING sdpo: dropping rollout for task 23: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:33:30,823 WARNING sdpo: dropping rollout for task 14: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:33:48,063 WARNING sdpo: dropping rollout for task 46: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:34:09,953 WARNING sdpo: dropping rollout for task 83: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:34:12,830 WARNING sdpo: dropping rollout for task 108: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:34:15,985 WARNING sdpo: dropping rollout for task 139: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:34:19,335 WARNING sdpo: dropping rollout for task 74: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:34:21,187 WARNING sdpo: dropping rollout for task 25: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:34:36,939 WARNING sdpo: dropping rollout for task 65: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:34:37,491 WARNING sdpo: dropping rollout for task 9: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:35:08,685 WARNING sdpo: dropping rollout for task 1: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:35:33,621 WARNING sdpo: dropping rollout for task 66: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:35:33 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:35:33 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:35:33 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:35:33,999 INFO train.trainer: step 18 | loss -0.0307 | teacher-student gap -0.2320 | adv_clip 9.3% | ratio_clip lo 1.8% hi 0.6% | staleness 1.58 (max 3) | grad 5.156 | lr 1.00e-06 | tokens 5375 | hint_drop 68.5% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:35:47,586 WARNING sdpo: dropping rollout for task 2: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:35:58,267 WARNING sdpo: dropping rollout for task 117: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:35:58,484 WARNING sdpo: dropping rollout for task 82: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:35:58,816 WARNING sdpo: dropping rollout for task 79: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:36:04,203 WARNING sdpo: dropping rollout for task 140: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:36:13,924 WARNING sdpo: dropping rollout for task 38: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:36:36,899 WARNING sdpo: dropping rollout for task 134: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:36:43,095 WARNING sdpo: dropping rollout for task 36: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:36:49,030 WARNING sdpo: dropping rollout for task 138: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:37:24,877 WARNING sdpo: dropping rollout for task 41: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:37:32 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:37:33 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:37:33 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:37:33,301 INFO train.trainer: step 19 | loss -0.0270 | teacher-student gap -0.2543 | adv_clip 9.1% | ratio_clip lo 0.4% hi 0.0% | staleness 1.57 (max 3) | grad 4.500 | lr 1.00e-06 | tokens 5283 | hint_drop 68.0% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:37:34,173 WARNING sdpo: dropping rollout for task 123: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:37:38,578 WARNING sdpo: dropping rollout for task 130: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:38:14,975 WARNING sdpo: dropping rollout for task 16: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:38:22,310 WARNING sdpo: dropping rollout for task 85: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:38:23,415 WARNING sdpo: dropping rollout for task 45: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:38:25,023 WARNING sdpo: dropping rollout for task 43: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:38:33,989 WARNING sdpo: dropping rollout for task 72: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:38:42,884 WARNING sdpo: dropping rollout for task 101: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:38:45,409 WARNING sdpo: dropping rollout for task 111: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:39:37,561 WARNING sdpo: dropping rollout for task 122: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:39:37,564 WARNING sdpo: dropping rollout for task 42: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:39:37 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:39:38 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:39:38 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:39:38,076 INFO train.trainer: step 20 | loss -0.0245 | teacher-student gap -0.2413 | adv_clip 8.0% | ratio_clip lo 0.7% hi 0.2% | staleness 1.58 (max 3) | grad 4.156 | lr 1.00e-06 | tokens 6309 | hint_drop 68.0% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:39:40,230 WARNING sdpo: dropping rollout for task 135: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:40:04,531 WARNING sdpo: dropping rollout for task 131: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:40:14,767 WARNING sdpo: dropping rollout for task 37: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:40:24,811 WARNING sdpo: dropping rollout for task 128: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:40:24,955 WARNING sdpo: dropping rollout for task 113: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:40:41,538 WARNING sdpo: dropping rollout for task 32: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:40:48,201 WARNING sdpo: dropping rollout for task 3: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:40:54,612 WARNING sdpo: dropping rollout for task 47: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:40:56,973 WARNING sdpo: dropping rollout for task 110: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:41:05,240 WARNING sdpo: dropping rollout for task 11: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:41:21,244 WARNING sdpo: dropping rollout for task 29: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:41:38,878 WARNING sdpo: dropping rollout for task 31: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:41:40,306 WARNING sdpo: dropping rollout for task 39: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:41:45,663 WARNING sdpo: dropping rollout for task 18: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:42:01,239 WARNING sdpo: dropping rollout for task 98: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:42:16,016 WARNING sdpo: dropping rollout for task 137: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:42:16 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:42:16 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:42:16 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:42:16,404 INFO train.trainer: step 21 | loss -0.0232 | teacher-student gap -0.1872 | adv_clip 7.5% | ratio_clip lo 1.2% hi 0.3% | staleness 1.58 (max 3) | grad 4.656 | lr 1.00e-06 | tokens 5629 | hint_drop 69.9% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:42:29,368 WARNING sdpo: dropping rollout for task 95: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:42:41,970 WARNING sdpo: dropping rollout for task 14: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:42:43,281 WARNING sdpo: dropping rollout for task 106: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:42:55,940 WARNING sdpo: dropping rollout for task 118: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:43:04,835 WARNING sdpo: dropping rollout for task 121: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:43:29,590 WARNING sdpo: dropping rollout for task 94: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:43:30,322 WARNING sdpo: dropping rollout for task 58: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:43:49,319 WARNING sdpo: dropping rollout for task 46: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:44:09,637 WARNING sdpo: dropping rollout for task 87: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:44:13,512 WARNING sdpo: dropping rollout for task 23: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:44:16,691 WARNING sdpo: dropping rollout for task 9: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:44:41,156 WARNING sdpo: dropping rollout for task 140: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:44:56,666 WARNING sdpo: dropping rollout for task 38: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:44:56 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:44:57 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:44:57 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:44:57,049 INFO train.trainer: step 22 | loss -0.0136 | teacher-student gap -0.2031 | adv_clip 7.2% | ratio_clip lo 1.5% hi 0.1% | staleness 1.57 (max 3) | grad 4.312 | lr 1.00e-06 | tokens 5366 | hint_drop 70.3% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:45:03,632 WARNING sdpo: dropping rollout for task 74: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:45:05,166 WARNING sdpo: dropping rollout for task 25: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:45:43,794 WARNING sdpo: dropping rollout for task 117: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:45:49,680 WARNING sdpo: dropping rollout for task 2: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:45:53,003 WARNING sdpo: dropping rollout for task 66: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:46:16,767 WARNING sdpo: dropping rollout for task 134: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:46:31,334 WARNING sdpo: dropping rollout for task 119: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:46:31 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:46:31 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:46:31 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:46:31,711 INFO train.trainer: step 23 | loss -0.0174 | teacher-student gap -0.2391 | adv_clip 9.2% | ratio_clip lo 1.5% hi 0.4% | staleness 1.58 (max 3) | grad 4.656 | lr 1.00e-06 | tokens 5522 | hint_drop 69.1% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:46:39,872 WARNING sdpo: dropping rollout for task 126: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:46:56,705 WARNING sdpo: dropping rollout for task 85: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:47:02,459 WARNING sdpo: dropping rollout for task 123: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:47:05,137 WARNING sdpo: dropping rollout for task 19: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:47:13,254 WARNING sdpo: dropping rollout for task 130: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:47:19,159 WARNING sdpo: dropping rollout for task 8: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:47:21,788 WARNING sdpo: dropping rollout for task 41: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:47:27,552 WARNING sdpo: dropping rollout for task 149: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:47:28,474 WARNING sdpo: dropping rollout for task 10: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:47:40,771 WARNING sdpo: dropping rollout for task 6: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:47:47,427 WARNING sdpo: dropping rollout for task 138: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:47:56,334 WARNING sdpo: dropping rollout for task 129: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:48:11,995 WARNING sdpo: dropping rollout for task 16: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:48:24,484 WARNING sdpo: dropping rollout for task 63: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:48:31,320 WARNING sdpo: dropping rollout for task 72: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:48:33,233 WARNING sdpo: dropping rollout for task 43: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:48:45,821 WARNING sdpo: dropping rollout for task 101: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:49:17,868 WARNING sdpo: dropping rollout for task 42: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:49:32,964 WARNING sdpo: dropping rollout for task 86: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:49:38,681 WARNING sdpo: dropping rollout for task 27: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:49:38 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:49:39 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:49:39 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:49:39,052 INFO train.trainer: step 24 | loss -0.0154 | teacher-student gap -0.1881 | adv_clip 7.2% | ratio_clip lo 0.2% hi 0.0% | staleness 1.58 (max 3) | grad 3.844 | lr 1.00e-06 | tokens 5380 | hint_drop 71.6% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:49:41,243 WARNING sdpo: dropping rollout for task 113: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:49:47,535 WARNING sdpo: dropping rollout for task 37: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:50:05,564 WARNING sdpo: dropping rollout for task 97: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:50:05,835 WARNING sdpo: dropping rollout for task 128: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:50:08,064 WARNING sdpo: dropping rollout for task 3: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:50:23,025 WARNING sdpo: dropping rollout for task 32: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:50:23,053 WARNING sdpo: dropping rollout for task 144: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:50:32,445 WARNING sdpo: dropping rollout for task 131: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:50:59,713 WARNING sdpo: dropping rollout for task 12: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:51:20,179 WARNING sdpo: dropping rollout for task 47: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:51:31 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:51:32 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:51:32 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:51:32,177 INFO train.trainer: step 25 | loss -0.0245 | teacher-student gap -0.1833 | adv_clip 7.1% | ratio_clip lo 0.1% hi 0.1% | staleness 1.57 (max 3) | grad 3.312 | lr 1.00e-06 | tokens 6095 | hint_drop 71.2% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:51:48,161 WARNING sdpo: dropping rollout for task 23: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:51:48,238 WARNING sdpo: dropping rollout for task 95: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:51:52,475 WARNING sdpo: dropping rollout for task 118: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:51:57,702 WARNING sdpo: dropping rollout for task 78: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:52:33,022 WARNING sdpo: dropping rollout for task 83: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:52:38,533 INFO train.logger: EVAL launched at step 25 (policy 25): {'judge_score': 0.0, 'judge_errors': 30.0}
+2026-08-25 22:52:38,955 WARNING sdpo: dropping rollout for task 121: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:52:46,938 WARNING sdpo: dropping rollout for task 108: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:52:52,899 WARNING sdpo: dropping rollout for task 93: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:52:55,430 WARNING sdpo: dropping rollout for task 58: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:52:55,603 WARNING sdpo: dropping rollout for task 34: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:52:56,147 WARNING sdpo: dropping rollout for task 94: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:53:04,211 WARNING sdpo: dropping rollout for task 46: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:53:52,493 WARNING sdpo: dropping rollout for task 102: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:53:52 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:53:53 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:53:53 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:53:53,074 INFO train.trainer: step 26 | loss -0.0042 | teacher-student gap -0.2486 | adv_clip 8.6% | ratio_clip lo 1.5% hi 0.5% | staleness 1.57 (max 3) | grad 4.375 | lr 1.00e-06 | tokens 4811 | hint_drop 71.3% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:53:54,143 WARNING sdpo: dropping rollout for task 38: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:54:17,441 WARNING sdpo: dropping rollout for task 140: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:54:20,018 WARNING sdpo: dropping rollout for task 70: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:54:22,982 WARNING sdpo: dropping rollout for task 139: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:54:22,983 WARNING sdpo: dropping rollout for task 74: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:54:38,603 WARNING sdpo: dropping rollout for task 82: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:54:42,963 WARNING sdpo: dropping rollout for task 49: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:54:57,926 WARNING sdpo: dropping rollout for task 61: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:55:03,189 WARNING sdpo: dropping rollout for task 117: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:55:08,823 WARNING sdpo: dropping rollout for task 35: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:55:12,376 WARNING sdpo: dropping rollout for task 76: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:55:28,036 WARNING sdpo: dropping rollout for task 2: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:55:56,704 WARNING sdpo: dropping rollout for task 85: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 22:55:56 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 22:55:57 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 22:55:57 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 22:55:57,076 INFO train.trainer: step 27 | loss -0.0173 | teacher-student gap -0.2313 | adv_clip 8.0% | ratio_clip lo 0.2% hi 0.0% | staleness 1.56 (max 3) | grad 4.875 | lr 1.00e-06 | tokens 4411 | hint_drop 72.0% | sandbox_fail 0 | empty_eps 0
+2026-08-25 22:55:58,257 WARNING sdpo: dropping rollout for task 8: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:56:00,040 WARNING sdpo: dropping rollout for task 138: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:56:03,232 WARNING sdpo: dropping rollout for task 130: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:56:17,094 WARNING sdpo: dropping rollout for task 36: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:56:45,511 WARNING sdpo: dropping rollout for task 41: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:56:48,920 WARNING sdpo: dropping rollout for task 10: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:56:54,285 WARNING sdpo: dropping rollout for task 149: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:57:04,657 WARNING sdpo: dropping rollout for task 6: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:57:11,704 WARNING sdpo: dropping rollout for task 90: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:57:22,727 WARNING sdpo: dropping rollout for task 16: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:57:36,608 WARNING sdpo: dropping rollout for task 67: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:57:47,718 WARNING sdpo: dropping rollout for task 72: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:57:49,865 WARNING sdpo: dropping rollout for task 56: no hint could be generated (cause=openrouter_error)
+2026-08-25 22:57:53,633 WARNING sdpo: dropping rollout for task 101: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:01:17,857 WARNING sdpo: dropping rollout for task 97: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:01:17,863 WARNING sdpo: dropping rollout for task 45: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:01:17 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:01:18 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:01:18 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:01:18,249 INFO train.trainer: step 28 | loss -0.0148 | teacher-student gap -0.1792 | adv_clip 7.9% | ratio_clip lo 0.3% hi 0.0% | staleness 1.56 (max 3) | grad 4.562 | lr 1.00e-06 | tokens 6085 | hint_drop 72.7% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:01:41,987 WARNING sdpo: dropping rollout for task 43: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:01:44,431 WARNING sdpo: dropping rollout for task 144: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:01:46,811 WARNING sdpo: dropping rollout for task 37: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:02:03,939 WARNING sdpo: dropping rollout for task 3: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:02:04,498 WARNING sdpo: dropping rollout for task 32: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:02:16,417 WARNING sdpo: dropping rollout for task 113: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:02:35,227 WARNING sdpo: dropping rollout for task 131: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:02:58,386 WARNING sdpo: dropping rollout for task 12: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:03:14,728 WARNING sdpo: dropping rollout for task 110: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:03:20 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:03:20 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:03:20 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:03:20,494 INFO train.trainer: step 29 | loss -0.0081 | teacher-student gap -0.2180 | adv_clip 8.3% | ratio_clip lo 0.2% hi 0.0% | staleness 1.56 (max 3) | grad 5.000 | lr 1.00e-06 | tokens 5338 | hint_drop 72.4% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:03:21,988 WARNING sdpo: dropping rollout for task 98: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:03:24,008 WARNING sdpo: dropping rollout for task 106: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:03:28,072 WARNING sdpo: dropping rollout for task 47: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:03:46,422 WARNING sdpo: dropping rollout for task 89: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:04:05,152 WARNING sdpo: dropping rollout for task 95: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:04:17,297 WARNING sdpo: dropping rollout for task 83: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:04:17,750 WARNING sdpo: dropping rollout for task 68: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:04:18,804 WARNING sdpo: dropping rollout for task 31: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:04:34,573 WARNING sdpo: dropping rollout for task 14: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:04:48,974 WARNING sdpo: dropping rollout for task 18: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:05:07,659 WARNING sdpo: dropping rollout for task 121: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:05:14,490 WARNING sdpo: dropping rollout for task 108: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:05:41,326 WARNING sdpo: dropping rollout for task 93: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:05:41 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:05:41 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:05:41 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:05:41,700 INFO train.trainer: step 30 | loss 0.0030 | teacher-student gap -0.1513 | adv_clip 6.2% | ratio_clip lo 2.0% hi 0.5% | staleness 1.56 (max 3) | grad 3.984 | lr 1.00e-06 | tokens 6151 | hint_drop 72.4% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:05:45,417 WARNING sdpo: dropping rollout for task 58: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:06:06,818 WARNING sdpo: dropping rollout for task 65: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:06:07,452 WARNING sdpo: dropping rollout for task 46: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:06:31,643 WARNING sdpo: dropping rollout for task 139: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:06:32,573 WARNING sdpo: dropping rollout for task 74: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:06:37,030 WARNING sdpo: dropping rollout for task 82: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:06:56,213 WARNING sdpo: dropping rollout for task 140: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:06:58,430 WARNING sdpo: dropping rollout for task 38: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:07:04,332 WARNING sdpo: dropping rollout for task 87: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:07:51,052 WARNING sdpo: dropping rollout for task 117: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:07:51 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:07:51 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:07:51 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:07:51,427 INFO train.trainer: step 31 | loss -0.0059 | teacher-student gap -0.1813 | adv_clip 6.8% | ratio_clip lo 0.9% hi 0.3% | staleness 1.56 (max 3) | grad 4.250 | lr 1.00e-06 | tokens 4450 | hint_drop 72.2% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:07:54,464 WARNING sdpo: dropping rollout for task 123: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:07:57,223 WARNING sdpo: dropping rollout for task 2: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:08:13,617 WARNING sdpo: dropping rollout for task 35: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:08:15,720 WARNING sdpo: dropping rollout for task 104: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:08:40,758 WARNING sdpo: dropping rollout for task 138: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:08:41,520 WARNING sdpo: dropping rollout for task 130: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:09:06,127 WARNING sdpo: dropping rollout for task 41: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:09:18,481 WARNING sdpo: dropping rollout for task 6: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:09:22 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:09:22 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:09:22 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:09:22,444 INFO train.trainer: step 32 | loss -0.0262 | teacher-student gap -0.2193 | adv_clip 8.3% | ratio_clip lo 0.3% hi 0.1% | staleness 1.57 (max 3) | grad 4.531 | lr 1.00e-06 | tokens 5645 | hint_drop 71.5% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:09:56,216 WARNING sdpo: dropping rollout for task 72: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:10:07,756 WARNING sdpo: dropping rollout for task 45: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:10:07,934 WARNING sdpo: dropping rollout for task 144: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:10:08,248 WARNING sdpo: dropping rollout for task 43: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:10:33,694 WARNING sdpo: dropping rollout for task 101: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:10:41,886 WARNING sdpo: dropping rollout for task 86: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:11:02,250 WARNING sdpo: dropping rollout for task 42: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:11:11,036 WARNING sdpo: dropping rollout for task 91: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:11:19,652 WARNING sdpo: dropping rollout for task 3: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:11:31 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:11:31,474 WARNING sdpo: dropping rollout for task 12: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) WARNING 08-25 23:11:31 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:11:31 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:11:31,745 INFO train.trainer: step 33 | loss -0.0156 | teacher-student gap -0.1664 | adv_clip 7.1% | ratio_clip lo 1.0% hi 0.2% | staleness 1.58 (max 3) | grad 3.922 | lr 1.00e-06 | tokens 6327 | hint_drop 71.1% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:11:59,510 WARNING sdpo: dropping rollout for task 122: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:12:08,746 WARNING sdpo: dropping rollout for task 47: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:12:10,427 WARNING sdpo: dropping rollout for task 113: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:12:26,676 WARNING sdpo: dropping rollout for task 143: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:12:27,650 WARNING sdpo: dropping rollout for task 29: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:12:49,679 WARNING sdpo: dropping rollout for task 37: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:13:01,498 WARNING sdpo: dropping rollout for task 118: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:13:02,044 WARNING sdpo: dropping rollout for task 95: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:13:14,307 WARNING sdpo: dropping rollout for task 98: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:13:18,131 WARNING sdpo: dropping rollout for task 68: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:13:28 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:13:28 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:13:28 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:13:28,655 INFO train.trainer: step 34 | loss 0.0050 | teacher-student gap -0.1553 | adv_clip 7.1% | ratio_clip lo 0.2% hi 0.1% | staleness 1.59 (max 3) | grad 4.312 | lr 1.00e-06 | tokens 5412 | hint_drop 71.1% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:13:36,205 WARNING sdpo: dropping rollout for task 34: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:13:54,240 WARNING sdpo: dropping rollout for task 137: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:14:04,639 WARNING sdpo: dropping rollout for task 58: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:14:24,158 WARNING sdpo: dropping rollout for task 78: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:14:27,146 WARNING sdpo: dropping rollout for task 121: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:14:29,790 WARNING sdpo: dropping rollout for task 108: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:14:52,401 WARNING sdpo: dropping rollout for task 46: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:14:56,865 WARNING sdpo: dropping rollout for task 139: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:14:59,086 WARNING sdpo: dropping rollout for task 49: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:15:06,766 WARNING sdpo: dropping rollout for task 74: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:15:35,960 WARNING sdpo: dropping rollout for task 1: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:15:35 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:15:36 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:15:36 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:15:36,329 INFO train.trainer: step 35 | loss -0.0122 | teacher-student gap -0.2129 | adv_clip 7.8% | ratio_clip lo 1.1% hi 0.3% | staleness 1.59 (max 3) | grad 4.094 | lr 1.00e-06 | tokens 4364 | hint_drop 71.1% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:16:00,978 WARNING sdpo: dropping rollout for task 84: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:16:02,512 WARNING sdpo: dropping rollout for task 87: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:16:03,786 WARNING sdpo: dropping rollout for task 140: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:16:23,335 WARNING sdpo: dropping rollout for task 82: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:16:23,810 WARNING sdpo: dropping rollout for task 117: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:16:44,721 WARNING sdpo: dropping rollout for task 38: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:16:44,868 WARNING sdpo: dropping rollout for task 35: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:16:53,790 WARNING sdpo: dropping rollout for task 2: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:16:55,735 WARNING sdpo: dropping rollout for task 147: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:17:27,566 WARNING sdpo: dropping rollout for task 104: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:17:43 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:17:43 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:17:43 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:17:43,444 INFO train.trainer: step 36 | loss -0.0227 | teacher-student gap -0.2073 | adv_clip 8.6% | ratio_clip lo 0.4% hi 0.1% | staleness 1.59 (max 3) | grad 4.344 | lr 1.00e-06 | tokens 5140 | hint_drop 70.8% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:17:50,755 WARNING sdpo: dropping rollout for task 119: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:18:11,140 WARNING sdpo: dropping rollout for task 126: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:18:21,530 WARNING sdpo: dropping rollout for task 41: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:18:31,591 WARNING sdpo: dropping rollout for task 8: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:18:39,397 WARNING sdpo: dropping rollout for task 130: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:18:56,948 WARNING sdpo: dropping rollout for task 138: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:19:02,515 WARNING sdpo: dropping rollout for task 129: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:19:24,589 WARNING sdpo: dropping rollout for task 63: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:19:26,572 WARNING sdpo: dropping rollout for task 43: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:19:27,120 WARNING sdpo: dropping rollout for task 45: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:20:08,347 WARNING sdpo: dropping rollout for task 56: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:20:08 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:20:08 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:20:08 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:20:08,820 INFO train.trainer: step 37 | loss -0.0009 | teacher-student gap -0.1262 | adv_clip 6.7% | ratio_clip lo 0.7% hi 0.2% | staleness 1.60 (max 3) | grad 3.922 | lr 1.00e-06 | tokens 5905 | hint_drop 70.7% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:20:36,571 WARNING sdpo: dropping rollout for task 97: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:20:36,865 WARNING sdpo: dropping rollout for task 144: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:20:49,723 WARNING sdpo: dropping rollout for task 111: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:21:17,501 WARNING sdpo: dropping rollout for task 32: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:21:21,299 WARNING sdpo: dropping rollout for task 3: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:21:23,196 WARNING sdpo: dropping rollout for task 86: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:21:26,091 WARNING sdpo: dropping rollout for task 113: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:21:32,110 WARNING sdpo: dropping rollout for task 62: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:21:41,153 WARNING sdpo: dropping rollout for task 122: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:22:16,254 WARNING sdpo: dropping rollout for task 12: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:22:22,476 WARNING sdpo: dropping rollout for task 110: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:22:35,145 WARNING sdpo: dropping rollout for task 98: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:22:36,205 WARNING sdpo: dropping rollout for task 95: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:22:43 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:22:43 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:22:43 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:22:43,845 INFO train.trainer: step 38 | loss -0.0105 | teacher-student gap -0.1771 | adv_clip 8.0% | ratio_clip lo 0.2% hi 0.0% | staleness 1.60 (max 3) | grad 4.562 | lr 1.00e-06 | tokens 4987 | hint_drop 70.9% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:22:52,387 WARNING sdpo: dropping rollout for task 11: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:23:03,967 WARNING sdpo: dropping rollout for task 59: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:23:08,890 WARNING sdpo: dropping rollout for task 89: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:23:10,907 WARNING sdpo: dropping rollout for task 143: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:23:28,366 WARNING sdpo: dropping rollout for task 106: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:23:28,914 WARNING sdpo: dropping rollout for task 23: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:23:41,246 WARNING sdpo: dropping rollout for task 118: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:23:59,401 WARNING sdpo: dropping rollout for task 31: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:24:20 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:24:21 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:24:21 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:24:21,326 INFO train.trainer: step 39 | loss -0.0013 | teacher-student gap -0.1477 | adv_clip 6.9% | ratio_clip lo 0.2% hi 0.0% | staleness 1.60 (max 3) | grad 3.750 | lr 1.00e-06 | tokens 5651 | hint_drop 70.5% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:24:47,785 WARNING sdpo: dropping rollout for task 46: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:24:50,398 WARNING sdpo: dropping rollout for task 34: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:25:00,462 WARNING sdpo: dropping rollout for task 58: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:25:11,828 WARNING sdpo: dropping rollout for task 139: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:25:20,677 WARNING sdpo: dropping rollout for task 108: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:25:52,522 WARNING sdpo: dropping rollout for task 82: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:25:59,779 WARNING sdpo: dropping rollout for task 38: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:26:05,019 WARNING sdpo: dropping rollout for task 140: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:26:29 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:26:30 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:26:30 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:26:30,521 INFO train.trainer: step 40 | loss -0.0097 | teacher-student gap -0.1464 | adv_clip 7.7% | ratio_clip lo 1.2% hi 0.4% | staleness 1.61 (max 3) | grad 4.156 | lr 1.00e-06 | tokens 5517 | hint_drop 69.9% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:26:30,720 WARNING sdpo: dropping rollout for task 117: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:26:55,208 WARNING sdpo: dropping rollout for task 2: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:26:56,377 WARNING sdpo: dropping rollout for task 64: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:26:57,192 WARNING sdpo: dropping rollout for task 66: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:27:06,617 WARNING sdpo: dropping rollout for task 35: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:27:43,918 WARNING sdpo: dropping rollout for task 104: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:27:45,606 WARNING sdpo: dropping rollout for task 138: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:27:47,985 WARNING sdpo: dropping rollout for task 134: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:27:52,695 WARNING sdpo: dropping rollout for task 123: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:27:52,697 WARNING sdpo: dropping rollout for task 147: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:27:54,698 WARNING sdpo: dropping rollout for task 130: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:28:02,365 WARNING sdpo: dropping rollout for task 85: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:28:18,158 WARNING sdpo: dropping rollout for task 92: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:28:37,401 WARNING sdpo: dropping rollout for task 19: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:28:42,757 WARNING sdpo: dropping rollout for task 99: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:28:44,485 WARNING sdpo: dropping rollout for task 41: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:28:46,154 WARNING sdpo: dropping rollout for task 63: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:28:51,916 WARNING sdpo: dropping rollout for task 6: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:29:09,549 WARNING sdpo: dropping rollout for task 72: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:29:27,716 WARNING sdpo: dropping rollout for task 149: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:29:29,083 WARNING sdpo: dropping rollout for task 45: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:29:42,774 WARNING sdpo: dropping rollout for task 43: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:29:42,776 WARNING sdpo: dropping rollout for task 101: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:29:42 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:29:43 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:29:43 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:29:43,145 INFO train.trainer: step 41 | loss -0.0229 | teacher-student gap -0.1892 | adv_clip 7.7% | ratio_clip lo 0.6% hi 0.3% | staleness 1.61 (max 3) | grad 3.250 | lr 1.00e-06 | tokens 5751 | hint_drop 71.8% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:29:45,011 WARNING sdpo: dropping rollout for task 90: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:30:13,803 WARNING sdpo: dropping rollout for task 125: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:30:20,606 WARNING sdpo: dropping rollout for task 86: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:31:10,075 WARNING sdpo: dropping rollout for task 122: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:31:10,729 WARNING sdpo: dropping rollout for task 110: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:31:16,372 WARNING sdpo: dropping rollout for task 42: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:31:39,540 WARNING sdpo: dropping rollout for task 91: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:31:53,742 WARNING sdpo: dropping rollout for task 113: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:31:55,516 WARNING sdpo: dropping rollout for task 131: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:31:59,268 WARNING sdpo: dropping rollout for task 132: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:32:07,103 WARNING sdpo: dropping rollout for task 47: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:32:07,110 WARNING sdpo: dropping rollout for task 3: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:32:09 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:32:10 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:32:10 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:32:10,221 INFO train.trainer: step 42 | loss -0.0085 | teacher-student gap -0.1395 | adv_clip 6.8% | ratio_clip lo 0.1% hi 0.1% | staleness 1.60 (max 3) | grad 3.500 | lr 1.00e-06 | tokens 6127 | hint_drop 71.8% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:32:31,228 WARNING sdpo: dropping rollout for task 59: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:32:46,979 WARNING sdpo: dropping rollout for task 143: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:33:02,318 WARNING sdpo: dropping rollout for task 95: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:33:03,208 WARNING sdpo: dropping rollout for task 118: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:33:09,129 WARNING sdpo: dropping rollout for task 98: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:33:29,701 WARNING sdpo: dropping rollout for task 23: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:33:41,575 WARNING sdpo: dropping rollout for task 65: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:33:59,372 WARNING sdpo: dropping rollout for task 46: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:34:12,189 WARNING sdpo: dropping rollout for task 50: no hint could be generated (cause=openrouter_error)
+(EngineCore pid=25904) INFO 08-25 23:34:21 [block_pool.py:790] Successfully reset prefix cache
+(EngineCore pid=25904) WARNING 08-25 23:34:22 [layerwise.py:268] RotaryEmbedding: Failed to load weights
+(EngineCore pid=25904) INFO 08-25 23:34:22 [block_pool.py:790] Successfully reset prefix cache
+2026-08-25 23:34:22,111 INFO train.trainer: step 43 | loss -0.0085 | teacher-student gap -0.1602 | adv_clip 8.3% | ratio_clip lo 0.1% hi 0.0% | staleness 1.61 (max 3) | grad 4.344 | lr 1.00e-06 | tokens 4924 | hint_drop 71.5% | sandbox_fail 0 | empty_eps 0
+2026-08-25 23:34:26,788 WARNING sdpo: dropping rollout for task 18: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:34:39,276 WARNING sdpo: dropping rollout for task 14: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:34:45,887 WARNING sdpo: dropping rollout for task 121: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:34:56,291 WARNING sdpo: dropping rollout for task 58: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:34:57,962 WARNING sdpo: dropping rollout for task 139: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:35:07,498 WARNING sdpo: dropping rollout for task 94: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:35:17,096 WARNING sdpo: dropping rollout for task 74: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:35:32,384 WARNING sdpo: dropping rollout for task 108: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:35:35,876 WARNING sdpo: dropping rollout for task 93: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:35:58,390 WARNING sdpo: dropping rollout for task 34: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:36:20,300 WARNING sdpo: dropping rollout for task 79: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:36:20,764 WARNING sdpo: dropping rollout for task 102: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:36:25,530 WARNING sdpo: dropping rollout for task 82: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:36:29,517 WARNING sdpo: dropping rollout for task 38: no hint could be generated (cause=openrouter_error)
+2026-08-25 23:36:31,911 WARNING sdpo: dropping rollout for task 87: no hint could be generated (cause=openrouter_error)
