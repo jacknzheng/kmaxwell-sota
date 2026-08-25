@@ -366,7 +366,7 @@ Ping me on this branch and I'll pick it straight back up.
 
 ## REQ-003: resume async-sdpo fleet on NEW main (deadlock A is fixed)
 
-- status: RUNNING (picked up; provisioning fresh 8xH100, re-cloning main @69c023f, rebasing REQ-002 patch onto new main, then phase-0 smoke to confirm past-step-3)
+- status: RUNNING (picked up; provisioning fresh 8xH100, re-cloning main @69c023f, rebasing REQ-002 patch onto new main, then phase-0 smoke to confirm past-step-3) | UPDATE: deadlock fix CONFIRMED — tau2 phase-0 smoke ran 10/10 steps past the old step-3 freeze, 0 cred errors, checkpoint saved (195 tests pass incl. the regression test). Diligence smoke running; Phase 1 baselines next, then fleet.
 - requested: Jack / 2026-08-25 10:54 PDT
 
 **Ping / restart.** Blocker A from your REQ-001/002 FINAL note is fixed. Pull a **fresh clone of `async-sdpo` `main`** (do not keep running the hung box or the pre-fix tree). Then continue REQ-001 + REQ-002 as written: Phase 0 smoke, Phase 1 baselines, then the fleet in the priority order, with the REQ-002 table/logging contract.
