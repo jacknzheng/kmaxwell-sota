@@ -1,21 +1,42 @@
 """
-train_gpt_cwd_kmaxwell.py
+train_gpt_cwd_SOTA.py
 
-Record #46 (SOAP-Muon + Tail-EMA + RowFloor + CWD, 2690-step WR) with the K6_a35
-K-Maxwell kernel stacked on Muon momentum only. SOAP / RowFloor / CWD / Tail-EMA
-are unchanged. Grad is not mutated so SOAP still sees the raw gradient.
+This file descends from the [NanoGPT speedrun](https://github.com/KellerJordan/modded-nanogpt).
 
-K6_a35 default: k=6, tau in [3, 56], rising w=0.03673,...,0.44911, mean age 35,
-switch at step 1000 (identity with the #46 single-EMA path until then).
+SOTA optimizer for a PR. It is the clean SOAP-Muon base from PR #321 (the 2750/2755
+"aux-b2 + SOAP-f1 clean" record) with THREE additional levers stacked on top, each on a
+different axis chosen to survive the radius pin (which re-pins global Frobenius magnitude
+every step, so only directional / shape / readout changes persist):
+
+  (A) Tail-EMA eval readout (PR #325): an eval-time-only weight blend. Over the cooldown
+      tail [2400, 2900] maintain a slow EMA  ema += (w - ema) / TAU  (TAU=150) of every
+      parameter except the token embedding; at validation, evaluate the partial blend
+      w_eval = (1-L)*w + L*ema  (L=0.6). Training is untouched; only the weights used for
+      the val forward change. The partial (not full) blend cancels the late cross-valley
+      oscillation while still tracking the descending floor.
+
+  (B) RowFloor (per-output-row u/w-floor): replace the SCALAR u/w-floor with a per-row
+      floor on the orthogonalized update -- each output row whose update norm is below
+      TARGET_UW * ||row|| is lifted to that target (RHO=1.0, no Frobenius renorm). A
+      per-row SHAPE change, so it survives the radius pin.
+
+  (C) Cautious Weight Decay (CWD=0.025, POST-pin; Cautious Optimizers arXiv:2411.16085):
+      anisotropic per-coordinate decay  p *= 1 - lr*CWD*mask  with mask = 1[update*p > 0]
+      (only the coords the optimizer step already shrinks; never fights coords it wants to
+      grow), applied AFTER rescale_to_radius so the per-coord SHAPE change is not
+      re-normalized away.
+
+The clean PR #321 base retains:
+  - SOAP preconditioning on all hidden matrices (all_hidden, freq=1)
+  - u/w-floor hyperball constraint (TARGET_UW=0.3825); here per-row (RowFloor)
+  - radial scaling + rescale-to-radius (the radius pin)
+  - EMA-Nesterov outer wrapper
+  - PowerCool LR schedule, mu schedule, val schedule
+  - aux-Adam beta2 split, depth-scaled mlp.fc init
+
+All hyperparameters are hardcoded; only --seed is a command-line argument. Set CWD=0.0,
+ROWFLOOR=False and TAILEMA_TAU=0 below to recover the clean PR #321 base.
 """
-
-# This file descends from the [NanoGPT speedrun](https://github.com/KellerJordan/modded-nanogpt).
-#
-# SOTA optimizer for a PR. It is the clean SOAP-Muon base from PR #321 (the 2750/2755
-# "aux-b2 + SOAP-f1 clean" record) with THREE additional levers stacked on top, each on a
-# different axis chosen to survive the radius pin (which re-pins global Frobenius magnitude
-# every step, so only directional / shape / readout changes persist).
-# Levers: Tail-EMA readout, RowFloor, post-pin CWD. Parent is record #46.
 
 import os
 import sys
@@ -38,21 +59,9 @@ import torch.distributed as dist
 # enabled and only remove the cuDNN backend from consideration.
 torch.backends.cuda.enable_cudnn_sdp(False)
 
-KM_DIR = Path(__file__).resolve().parent.parent / "20260715_bimaxwell_baseline_3210"
-sys.path.insert(0, str(KM_DIR))
-from kmaxwell_kernel import build_kmaxwell_kernel, format_kmaxwell_recipe, parse_weights
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--seed", type=int, default=0)
-parser.add_argument("--k", type=int, default=6)
-parser.add_argument("--tau-min", type=float, default=3.0)
-parser.add_argument("--tau-max", type=float, default=56.0)
-parser.add_argument("--weights", type=str,
-                    default="0.03673,0.07345,0.11018,0.14690,0.18363,0.44911")
-parser.add_argument("--start", type=int, default=1000)
 args = parser.parse_args()
-_km_tau, _km_betas, _km_weights, _km_age = build_kmaxwell_kernel(
-    args.k, args.tau_min, args.tau_max, 1.0, weights=parse_weights(args.weights))
 
 
 SEED = args.seed
@@ -82,7 +91,7 @@ ATTN_TRUST_FLOOR_FADE_END_STEP = 1625
 ATTN_TRUST_MIN_AGREE = 0.20
 ATTN_TRUST_MIN_GRAD_ALIGN = 0.00
 ATTN_TRUST_POWER = 1.00
-TRAIN_PROGRESS_INTERVAL = 1
+TRAIN_PROGRESS_INTERVAL = 1   # logging-only diff vs PR #339 upstream: every-step train-time lines
 LOG_DIR = Path("logs")
 RADIAL_OUTWARD_SCALE = 0.5
 RADIAL_INWARD_SCALE = 1.0
@@ -103,6 +112,26 @@ TAILEMA_TAU = 150.0
 TAILEMA_START = 2400
 TAILEMA_END = 2900
 TAILEMA_LAMBDA = 0.6
+
+# Bi-Maxwell dual-timescale stress memory (this record's single new component,
+# -25 steps vs #46 at n=8). Physics: treating the linear layer as a response
+# medium, Muon's momentum is an exponential stress memory with one relaxation
+# time (mean age nbar = mu/(1-mu) = 19 steps). Real relaxation spectra are not
+# single-exponential; two fixed-rate Maxwell buffers (fast/slow) combined
+# convexly give the first moment a fat-tailed memory kernel. The mixing weight
+# w = 0.4385 sets the kernel's mean age to ~30 steps (0.4385*nbar(0.85) +
+# 0.5615*nbar(0.98) ~= 30) -- the peak of a measured single-peaked dose-response
+# curve over mean age (15 and 42 both regress; 19, the Muon-parity age, is
+# left of the peak). Betas are fixed; the
+# scheduled mu applies only to the Nesterov mix, unchanged. Early-phase slow
+# memory hurts (+15 steps from scratch, measured), so the kernel switches on
+# at step 1000 -- an ordinary hyperparameter schedule (from-scratch twin of a
+# fork@700 resume; the switch step's update is bit-equal to baseline by
+# construction of the lazy init).
+BM_BETA_F = 0.85
+BM_BETA_S = 0.98
+BM_W = 0.4385
+BM_START = 1000
 
 
 ########################################
@@ -425,27 +454,13 @@ def muon_update(update):
     return update
 
 
-def kmaxwell_nesterov(grad, m, betas, weights, mu):
-    """K-EMA mix + Nesterov. Does not mutate grad (SOAP still needs the raw grad)."""
-    lerp_coeff = (1 - betas).reshape(-1, *([1] * grad.ndim))
-    m.lerp_(grad.unsqueeze(0), lerp_coeff)
-    w = weights.reshape(-1, *([1] * grad.ndim))
-    return grad.lerp((w * m).sum(dim=0), mu)
-
-
 class Muon(torch.optim.Optimizer):
-    def __init__(self, named_params, lr=0.02, weight_decay=0, mu=0.95,
-                 kmaxwell_betas=None, kmaxwell_weights=None, kmaxwell_start=1000):
+    def __init__(self, named_params, lr=0.02, weight_decay=0, mu=0.95):
         assert isinstance(named_params, list) and len(named_params) >= 1
         self.soap_params = {p for n, p in named_params if should_soap_param(n)}
         self.attn_soap_params = {p for n, p in named_params if should_soap_param(n) and is_attn_param(n)}
         self.attn_proj_soap_params = {p for n, p in named_params if should_soap_param(n) and is_attn_proj_param(n)}
         self.step_count = 0
-        assert kmaxwell_betas is not None and kmaxwell_weights is not None
-        self.km_betas = torch.as_tensor(kmaxwell_betas, dtype=torch.float32).cpu()
-        self.km_weights = torch.as_tensor(kmaxwell_weights, dtype=torch.float32).cpu()
-        self.km_k = int(self.km_betas.numel())
-        self.km_start = int(kmaxwell_start)
         params = sorted([p for _, p in named_params], key=lambda x: x.size(), reverse=True)
         defaults = dict(lr=lr, weight_decay=weight_decay, mu=mu)
         super().__init__(params, defaults)
@@ -471,19 +486,20 @@ class Muon(torch.optim.Optimizer):
                             state["q_col"] = None
                             state["soap_step"] = 0
                     grad = p.grad
-                    if self.step_count >= self.km_start:
-                        if "m" not in state:
-                            state["momentum"].lerp_(grad, 1 - group["mu"])
-                            momentum_update = grad.lerp(state["momentum"], group["mu"])
-                            state["m"] = state["momentum"].unsqueeze(0).repeat(self.km_k, *([1] * p.ndim))
+                    state["momentum"].lerp_(grad, 1 - group["mu"])
+                    momentum_update = grad.lerp(state["momentum"], group["mu"])
+                    if self.step_count >= BM_START:
+                        mf = state.get("bm_mf")
+                        if mf is None:
+                            # lazy init: buffers = current momentum; no own-rate
+                            # lerp this step (update stays bit-equal to baseline)
+                            state["bm_mf"] = state["momentum"].detach().clone()
+                            state["bm_ms"] = state["momentum"].detach().clone()
                         else:
-                            betas = self.km_betas.to(device=p.device, dtype=p.dtype)
-                            weights = self.km_weights.to(device=p.device, dtype=p.dtype)
-                            momentum_update = kmaxwell_nesterov(
-                                grad, state["m"], betas, weights, group["mu"])
-                    else:
-                        state["momentum"].lerp_(grad, 1 - group["mu"])
-                        momentum_update = grad.lerp(state["momentum"], group["mu"])
+                            mf.lerp_(grad, 1.0 - BM_BETA_F)
+                            state["bm_ms"].lerp_(grad, 1.0 - BM_BETA_S)
+                        m_eff = torch.lerp(state["bm_ms"], state["bm_mf"], BM_W)
+                        momentum_update = grad.lerp(m_eff, group["mu"])
                     is_attn_soap = p in self.attn_soap_params
                     use_soap = p in self.soap_params
                     if use_soap:
@@ -706,9 +722,6 @@ print0(f"Run UTC timestamp={time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}"
 print0(f"Using seed={SEED}")
 print0(f"Experiment={EXPERIMENT_NAME}")
 print0(f"Intuition={EXPERIMENT_INTUITION}")
-print0(format_kmaxwell_recipe(
-    args.k, args.tau_min, args.tau_max, 1.0, args.start, SEED, False,
-    _km_tau, _km_betas, _km_weights, _km_age, weights_explicit=True))
 print0("SOAP runs on all all_hidden matrices for the whole run at frequency 1.")
 print0(f"Schedule uses hardcoded PR 287 cooldown constants with train_steps={FINAL_TRAIN_STEPS}, schedule_steps={FINAL_SCHEDULE_STEPS}.")
 print0(f"Using mu={MU}")
@@ -750,16 +763,11 @@ train_steps = FINAL_TRAIN_STEPS
 # Speed: stop the loop early (trajectory-preserving -- schedule constants stay at FINAL_TRAIN_STEPS,
 # so evals at steps <= STOP_STEP are IDENTICAL to the full run). Target boundary ~2775 only needs evals
 # up to ~2800-2850, so STOP_STEP=2850 saves the unused 2850-2900 tail. Default = full run.
-# Default 2720 covers the 2690 WR window plus a short tail. Trajectory is
-# identical to a 2900-step run at every step <= STOP_STEP. Override with STOP_STEP=.
-STOP_STEP = int(os.environ.get("STOP_STEP", "2720"))
+STOP_STEP = int(os.environ.get("STOP_STEP", FINAL_TRAIN_STEPS))   # default: full schedule; set env to early-stop
 val_regular_interval = 125
-extra_val_steps = set(range(2580, 2725, 5)) | {
-    2700, 2705, 2710, 2715, 2720, 2725, 2730, 2735, 2740, 2745, 2750, 2755, 2760, 2765,
-    2770, 2775, 2780, 2785, 2790, 2795, 2800, 2805, 2810, 2820, 2830, 2840, 2850, 2860,
-    2870, 2880, 2890, 2895, 2900, 2910, 2920, 2930, 2940, 2950, 2960, 2965, 2970, 2975,
-    2980, 2985, 2990, 2995, 2999, 3000, 3010, 3020,
-}
+# dense val every 5 steps over [2500, 2800] (this record's target zone; the same
+# fixed schedule for every seed, per the track-3 val-printing rule), then sparser to 2900.
+extra_val_steps = set(range(2500, 2805, 5)) | {2810, 2820, 2830, 2840, 2850, 2860, 2870, 2880, 2890, 2895, 2900}
 
 # initialize model parameters
 for name, p in model.named_parameters():
@@ -849,9 +857,7 @@ optimizer3 = Adam([
     lr=0.01, betas=(0.8, 0.99), eps=1e-10)
 # Skylight-001: NorMuon-lite (per-row variance) + u/w-floor + lr=0.0375.
 optimizer2 = Muon([(n, p) for n, p in model.blocks.named_parameters() if p.ndim >= 2],
-                  lr=MUON_LR, mu=MU,
-                  kmaxwell_betas=_km_betas, kmaxwell_weights=_km_weights,
-                  kmaxwell_start=args.start)
+                  lr=MUON_LR, mu=MU)
 optimizers = [optimizer1, optimizer2, optimizer3]
 optimizers = [EMA_Nesterov(
         [p for p in model.parameters()],

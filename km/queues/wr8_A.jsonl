@@ -1,0 +1,3 @@
+{"name": "CWDf_s1", "trainer": "cwd", "seed": 1, "k": 6, "tmin": 3, "tmax": 56, "age": 35}
+{"name": "CWDf_s7", "trainer": "cwd", "seed": 7, "k": 6, "tmin": 3, "tmax": 56, "age": 35}
+{"name": "CWDa_s6", "trainer": "cwd", "seed": 6, "k": 6, "tmin": 3, "tmax": 56, "age": 38, "age_end": 34}

@@ -1,0 +1,3 @@
+{"name":"K8_a38_rlinear","seed":0,"k":8,"tmin":3,"tmax":56,"age":38,"shape":"rlinear"}
+{"name":"K8_a38_rquad","seed":0,"k":8,"tmin":3,"tmax":56,"age":38,"shape":"rquad"}
+{"name":"K10_a36_rlinear","seed":0,"k":10,"tmin":3,"tmax":56,"age":36,"shape":"rlinear"}

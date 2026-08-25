@@ -1,0 +1,3 @@
+{"name":"K10_a36_tmax48","seed":0,"k":10,"tmin":3,"tmax":48,"age":36,"shape":"linear"}
+{"name":"K10_a36_tmax64","seed":0,"k":10,"tmin":3,"tmax":64,"age":36,"shape":"linear"}
+{"name":"K10_a36_tmin25","seed":0,"k":10,"tmin":2.5,"tmax":56,"age":36,"shape":"linear"}

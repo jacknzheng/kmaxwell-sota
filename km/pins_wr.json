@@ -1,0 +1,10 @@
+{
+  "cwd_trainer_sha256": "77e74b7ed0e37d50722af80382253c6f8d4d696be5baa4ca9792662c8444d84d",
+  "bm339_trainer_sha256": "36ccf76ec83b1e9aa6c91b0acb8117c09c137f9d58786cc55b59f09b7cdc0859",
+  "kernel_sha256": "38c1d65d35bdf2ae97858aafca22c6b5bb7c8e8c4dc1e6d40d6480c851ef20a2",
+  "notes": {
+    "cwd": "train_gpt_cwd_kmaxwell.py (#46 stack) + logging-only diffs: TRAIN_PROGRESS_INTERVAL 0->1, extra_val_steps 2620->2580 start, step lines logged to uuid file. Optimizer math untouched.",
+    "bm339": "train_gpt_bimaxwell_st1000.py from orange4664/modded-nanogpt@track3-bimaxwell-2635 (PR #339). Upstream sha256 07e064a0f75c110aa7556df744ef15a1eb6b0e41ed62866cacc5d9580db316dc; logging-only diffs: TRAIN_PROGRESS_INTERVAL 0->1, step lines logged to uuid file.",
+    "kernel": "kmaxwell_kernel.py, byte-identical copy placed in 20260823_kmaxwell_wr_stack/ (cwd trainer imports from script dir)."
+  }
+}

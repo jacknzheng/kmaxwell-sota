@@ -1,0 +1,705 @@
+"""
+train_gpt_kmaxwell.py
+
+K-Maxwell generalization of the Track-3 bi-Maxwell Muon baseline
+(records/track_3_optimization/results/20260715_bimaxwell_baseline_3210).
+
+From --start onward, Muon's single-EMA first moment is replaced by a mix of K
+fixed-rate EMA buffers whose ages are log-spaced in [tau_min, tau_max]. Mix
+weights are a deterministic bell-curve score on log(tau), centered at the
+geometric midpoint of the window, then normalized. Mean age is derived, not
+pinned.
+
+K=2 with --bimaxwell-exact recovers the submission recipe bit-identically:
+
+    M_fast <- lerp(M_fast, g, 1 - 0.85)
+    M_slow <- lerp(M_slow, g, 1 - 0.98)
+    M_eff  = 0.4385 * M_fast + 0.5615 * M_slow
+    update = g.lerp(M_eff, mu)
+
+Stage 0 identity:
+    torchrun --standalone --nproc_per_node=1 \\
+        records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell.py \\
+        --seed 0 --k 2 --bimaxwell-exact
+
+Sweeps: kmaxwell_sweep.py / scripts/kmaxwell_sweep.sh
+
+Val-time --probe-ema (default on) scores each live EMA unit against a holdout
+grad. It does not change the Muon update; --no-probe-ema disables it.
+"""
+
+import argparse
+import os
+import sys
+import time
+import uuid
+from pathlib import Path
+
+import torch
+from torch import Tensor, nn
+from torch.optim import AdamW
+import torch.nn.functional as F
+import torch.distributed as dist
+
+# torchrun executes this file with cwd = repo root; keep sibling imports working
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from kmaxwell_kernel import (
+    BIMAXWELL_START,
+    BIMAXWELL_TAU_MAX,
+    BIMAXWELL_TAU_MIN,
+    build_kmaxwell_kernel,
+    format_kmaxwell_recipe,
+    parse_weights,
+)
+
+
+def parse_kmaxwell_args(argv=None):
+    parser = argparse.ArgumentParser(description="K-Maxwell Muon training")
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--k", type=int, default=2, help="number of EMA units")
+    parser.add_argument("--tau-min", type=float, default=BIMAXWELL_TAU_MIN)
+    parser.add_argument("--tau-max", type=float, default=BIMAXWELL_TAU_MAX)
+    parser.add_argument("--sigma", type=float, default=1.0,
+                        help="width of the log(tau) scoring bump (not a sampling stddev)")
+    parser.add_argument("--start", type=int, default=BIMAXWELL_START,
+                        help="first Muon step on the K-Maxwell path")
+    parser.add_argument("--bimaxwell-exact", action="store_true",
+                        help="K=2 only: use the exact bi-Maxwell betas/weights")
+    parser.add_argument("--weights", default=None,
+                        help="comma mix weights, e.g. 0.35,0.25,0.25,0.15 (overrides Gaussian sigma)")
+    parser.add_argument("--weights-end", default=None,
+                        help="ANNEAL: comma mix weights at end of training; --weights is the start")
+    parser.add_argument("--anneal-frac", type=float, default=1.0,
+                        help="ANNEAL: fraction of (train-start) steps over which to interpolate weights")
+    parser.add_argument("--probe-ema", action=argparse.BooleanOptionalAction, default=True,
+                        help="val-time holdout grad vs live EMA units (no change to the update)")
+    parser.add_argument("--probe-ema-mbs", type=int, default=4,
+                        help="holdout val microbatches for --probe-ema")
+    args, _unknown = parser.parse_known_args(argv)
+    return args
+
+
+########################################
+#              Dataloader              #
+########################################
+
+def _load_data_shard(file: Path):
+    header = torch.from_file(str(file), False, 256, dtype=torch.int32) # header is 256 int32
+    assert header[0] == 20240520, "magic number mismatch in the data .bin file"
+    assert header[1] == 1, "unsupported version"
+    num_tokens = int(header[2]) # number of tokens (claimed)
+    with file.open("rb", buffering=0) as f:
+        tokens = torch.empty(num_tokens, dtype=torch.uint16, pin_memory=True)
+        f.seek(256 * 4)
+        nbytes = f.readinto(tokens.numpy()) # avoid bytes->array copy
+        assert nbytes == 2 * num_tokens, "number of tokens read does not match header"
+    return tokens
+
+def distributed_data_generator(filename_pattern: str, batch_size: int, seq_len=1024):
+    files = sorted(Path.cwd().glob(filename_pattern))
+    assert batch_size % dist.get_world_size() == 0
+    local_batch_size = batch_size // dist.get_world_size()
+    file_iter = iter(files)
+    tokens, pos = _load_data_shard(next(file_iter)), 0
+    while True:
+        if pos + batch_size + 1 >= len(tokens):
+            tokens, pos = _load_data_shard(next(file_iter)), 0
+        buf = tokens[pos + dist.get_rank() * local_batch_size:][:local_batch_size + 1]
+        inputs = buf[:-1].to(device="cuda", dtype=torch.int32, non_blocking=True)
+        targets = buf[1:].to(device="cuda", dtype=torch.int64, non_blocking=True)
+        pos += batch_size
+        yield inputs.view(-1, seq_len), targets.view(-1, seq_len)
+
+
+########################################
+#             Architecture             #
+########################################
+
+class RMSNorm(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.gains = nn.Parameter(torch.ones(dim))
+
+    def forward(self, x):
+        return F.rms_norm(x, (x.size(-1),), weight=self.gains.type_as(x))
+
+class Linear(nn.Linear):
+    def __init__(self, in_features, out_features):
+        super().__init__(in_features, out_features, bias=True)
+
+    def forward(self, x):
+        return F.linear(x, self.weight.type_as(x), self.bias.type_as(x))
+
+class Rotary(nn.Module):
+    def __init__(self, dim: int):
+        super().__init__()
+        # half-truncate RoPE (w/ base freq tuning)
+        angular_freq = (1 / 1024) ** torch.linspace(0, 1, steps=dim//4, dtype=torch.float32)
+        self.register_buffer("angular_freq", torch.cat([angular_freq, angular_freq.new_zeros(dim//4)]))
+
+    def forward(self, x_BTHD: Tensor):
+        pos = torch.arange(x_BTHD.size(1), dtype=torch.float32, device=x_BTHD.device)
+        theta = torch.outer(pos, self.angular_freq)[None, :, None, :]
+        cos, sin = theta.cos(), theta.sin()
+        x1, x2 = x_BTHD.to(dtype=torch.float32).chunk(2, dim=-1)
+        y1 = x1 * cos + x2 * sin
+        y2 = x1 * (-sin) + x2 * cos
+        return torch.cat((y1, y2), 3).type_as(x_BTHD)
+
+class CausalSelfAttention(nn.Module):
+    def __init__(self, dim: int, head_dim=128):
+        super().__init__()
+        self.num_heads = dim // head_dim
+        self.head_dim = head_dim
+        hdim = self.num_heads * self.head_dim
+        self.q = Linear(dim, hdim)
+        self.k = Linear(dim, hdim)
+        self.v = Linear(dim, hdim)
+        self.proj = Linear(hdim, dim)
+        self.rotary = Rotary(head_dim)
+
+    def forward(self, x: Tensor):
+        B, T = x.size(0), x.size(1)
+        q = self.q(x).view(B, T, self.num_heads, self.head_dim)
+        k = self.k(x).view(B, T, self.num_heads, self.head_dim)
+        v = self.v(x).view(B, T, self.num_heads, self.head_dim)
+        q, k = F.rms_norm(q, (q.size(-1),)), F.rms_norm(k, (k.size(-1),))
+        q, k = self.rotary(q), self.rotary(k)
+        y = F.scaled_dot_product_attention(q.transpose(1, 2), k.transpose(1, 2),
+                                           v.transpose(1, 2), scale=0.12, is_causal=True).transpose(1, 2)
+        y = y.contiguous().view(B, T, self.num_heads * self.head_dim)
+        y = self.proj(y)
+        return y
+
+class MLP(nn.Module):
+    def __init__(self, dim: int):
+        super().__init__()
+        hdim = 4 * dim
+        self.fc = Linear(dim, hdim)
+        self.proj = Linear(hdim, dim)
+
+    def forward(self, x: Tensor):
+        x = self.fc(x)
+        x = x.relu().square()
+        x = self.proj(x)
+        return x
+
+class Block(nn.Module):
+    def __init__(self, dim: int):
+        super().__init__()
+        self.attn = CausalSelfAttention(dim)
+        self.mlp = MLP(dim)
+        self.norm1 = RMSNorm(dim)
+        self.norm2 = RMSNorm(dim)
+
+    def forward(self, x: Tensor):
+        x = x + self.attn(self.norm1(x))
+        x = x + self.mlp(self.norm2(x))
+        return x
+
+class GPT(nn.Module):
+    def __init__(self, vocab_size: int, num_layers: int, model_dim: int):
+        super().__init__()
+        self.embed = nn.Embedding(vocab_size, model_dim).bfloat16()
+        self.blocks = nn.ModuleList([Block(model_dim) for _ in range(num_layers)])
+        self.proj = Linear(model_dim, vocab_size)
+        self.norm1 = RMSNorm(model_dim)
+        self.norm2 = RMSNorm(model_dim)
+
+    def forward(self, inputs: Tensor, targets: Tensor):
+        x = self.norm1(self.embed(inputs))
+        for block in self.blocks:
+            x = block(x)
+        logits = self.proj(self.norm2(x)).float()
+        logits = 15 * logits * (logits.square() + 15**2).rsqrt()
+        return F.cross_entropy(logits.view(targets.numel(), -1), targets.view(-1), reduction="sum")
+
+
+########################################
+#              Optimizer               #
+########################################
+
+def zeropower_via_newtonschulz5(G: Tensor) -> Tensor:
+    assert G.ndim >= 2
+    X = G.bfloat16()
+    if G.size(-2) > G.size(-1):
+        X = X.mT
+
+    # Ensure spectral norm is at most 1
+    X = X / (X.norm(dim=(-2, -1), keepdim=True) + 1e-7)
+    # Perform the NS iterations, not optimizing for wallclock speed
+    a, b, c = 2, -1.5, 0.5
+    for _ in range(12):
+        A = X @ X.mT
+        B = b * A + c * A @ A
+        X = a * X + B @ X
+
+    if G.size(-2) > G.size(-1):
+        X = X.mT
+    return X
+
+@torch.compile
+def muon_update(grad, momentum, mu=0.95, nesterov=True):
+    momentum.lerp_(grad, 1 - mu)
+    update = grad.lerp_(momentum, mu) if nesterov else momentum
+    update = zeropower_via_newtonschulz5(update)
+    update *= max(1, grad.size(-2) / grad.size(-1))**0.5
+    return update
+
+def kmaxwell_momentum(grad, m, betas, weights, mu=0.95):
+    """In-place K-EMA mix. m has shape (K, *grad.shape). Mutates m and grad."""
+    lerp_coeff = (1 - betas).reshape(-1, *([1] * grad.ndim))
+    m.lerp_(grad.unsqueeze(0), lerp_coeff)
+    w = weights.reshape(-1, *([1] * grad.ndim))
+    m_eff = (w * m).sum(dim=0)
+    return grad.lerp_(m_eff, mu)
+
+@torch.compile
+def muon_update_kmaxwell(grad, m, betas, weights, mu=0.95):
+    update = kmaxwell_momentum(grad, m, betas, weights, mu)
+    update = zeropower_via_newtonschulz5(update)
+    update *= max(1, grad.size(-2) / grad.size(-1))**0.5
+    return update
+
+class Muon(torch.optim.Optimizer):
+    def __init__(self, params, lr=0.02, weight_decay=0, mu=0.95,
+                 kmaxwell_betas=None, kmaxwell_weights=None, kmaxwell_start=BIMAXWELL_START,
+                 kmaxwell_weights_end=None, kmaxwell_anneal_steps=0):
+        assert isinstance(params, list) and len(params) >= 1 and isinstance(params[0], torch.nn.Parameter)
+        params = sorted(params, key=lambda x: x.size(), reverse=True)
+        defaults = dict(lr=lr, weight_decay=weight_decay, mu=mu)
+        super().__init__(params, defaults)
+        self._step = 0
+        assert kmaxwell_betas is not None and kmaxwell_weights is not None
+        self.km_betas = torch.as_tensor(kmaxwell_betas, dtype=torch.float32).cpu()
+        self.km_weights = torch.as_tensor(kmaxwell_weights, dtype=torch.float32).cpu()
+        self.km_k = int(self.km_betas.numel())
+        self.km_start = int(kmaxwell_start)
+        # annealing: interpolate weights from km_weights -> km_weights_end over
+        # km_anneal_steps steps after km_start. None/0 => frozen (baseline).
+        self.km_weights_end = (torch.as_tensor(kmaxwell_weights_end, dtype=torch.float32).cpu()
+                               if kmaxwell_weights_end is not None else None)
+        self.km_anneal_steps = int(kmaxwell_anneal_steps)
+
+    @torch.no_grad()
+    def step(self):
+        world_size = dist.get_world_size()
+        rank = dist.get_rank()
+        for group in self.param_groups:
+            params = group["params"]
+            params_pad = params + [torch.empty_like(params[-1])] * (world_size - len(params) % world_size)
+            for base_i in range(0, len(params), world_size):
+                if base_i + rank < len(params):
+                    p = params[base_i + rank]
+                    state = self.state[p]
+                    if len(state) == 0:
+                        state["momentum"] = torch.zeros_like(p)
+                    if self._step >= self.km_start:
+                        if "m" not in state:
+                            # switch step: advance the single-EMA momentum once more and
+                            # lazy-init all K units from it -> this step's update is
+                            # bit-identical to the baseline's, by construction
+                            update = muon_update(p.grad, state["momentum"], mu=group["mu"])
+                            state["m"] = state["momentum"].unsqueeze(0).repeat(self.km_k, *([1] * p.ndim))
+                        else:
+                            betas = self.km_betas.to(device=p.device, dtype=p.dtype)
+                            if self.km_weights_end is not None and self.km_anneal_steps > 0:
+                                frac = min(1.0, max(0.0, (self._step - self.km_start) / self.km_anneal_steps))
+                                cur = self.km_weights.lerp(self.km_weights_end, frac)
+                                weights = cur.to(device=p.device, dtype=p.dtype)
+                            else:
+                                weights = self.km_weights.to(device=p.device, dtype=p.dtype)
+                            update = muon_update_kmaxwell(
+                                p.grad, state["m"], betas, weights, mu=group["mu"])
+                    else:
+                        update = muon_update(p.grad, state["momentum"], mu=group["mu"])
+                    p.mul_(1 - group["lr"] * group["weight_decay"])
+                    p.add_(update, alpha=-group["lr"])
+                dist.all_gather(params_pad[base_i:base_i + world_size], params_pad[base_i + rank])
+        self._step += 1
+
+
+def probe_kmaxwell_ema(muon_opt, model, val_inputs, val_targets, mbs, probe_mbs, print0):
+    """Score each live EMA unit against a holdout val grad. Does not step the opt.
+
+    Runs only after K-Maxwell buffers exist. Clock must already be stopped.
+    """
+    device = val_inputs.device
+    has = torch.zeros((), device=device, dtype=torch.int32)
+    for group in muon_opt.param_groups:
+        for p in group["params"]:
+            if "m" in muon_opt.state.get(p, {}):
+                has.fill_(1)
+                break
+        if int(has.item()) == 1:
+            break
+    dist.all_reduce(has, op=dist.ReduceOp.MAX)
+    if int(has.item()) == 0:
+        return
+
+    n_mbs = min(int(probe_mbs), len(val_inputs) // mbs)
+    if n_mbs < 1:
+        return
+    model.zero_grad(set_to_none=True)
+    with torch.enable_grad():
+        for i in range(n_mbs):
+            model(val_inputs[i * mbs:(i + 1) * mbs], val_targets[i * mbs:(i + 1) * mbs]).backward()
+    for p in model.parameters():
+        if p.grad is not None:
+            dist.all_reduce(p.grad, op=dist.ReduceOp.SUM)
+
+    k_dim = int(muon_opt.km_k)
+    acc_align = torch.zeros(k_dim, device=device, dtype=torch.float64)
+    acc_mse = torch.zeros(k_dim, device=device, dtype=torch.float64)
+    acc_n = torch.zeros((), device=device, dtype=torch.float64)
+    for group in muon_opt.param_groups:
+        for p in group["params"]:
+            state = muon_opt.state.get(p, {})
+            if "m" not in state or p.grad is None:
+                continue
+            m = state["m"].float()
+            g = p.grad.float()
+            g_norm = torch.linalg.vector_norm(g)
+            g_norm_sq = g_norm * g_norm
+            flat = m.reshape(k_dim, -1)
+            dots = (flat * g.reshape(1, -1)).sum(-1)
+            m_norms = torch.linalg.vector_norm(flat, dim=-1)
+            n = float(p.numel())
+            acc_n += n
+            acc_align += n * (dots / (m_norms * g_norm + 1e-12)).double()
+            acc_mse += n * ((flat - g.reshape(1, -1)).pow(2).sum(-1) / (g_norm_sq + 1e-12)).double()
+    dist.all_reduce(acc_align, op=dist.ReduceOp.SUM)
+    dist.all_reduce(acc_mse, op=dist.ReduceOp.SUM)
+    dist.all_reduce(acc_n, op=dist.ReduceOp.SUM)
+    model.zero_grad(set_to_none=True)
+    if float(acc_n.item()) <= 0:
+        return
+    acc_align /= acc_n
+    acc_mse /= acc_n
+    align_s = ",".join(f"{x:.5f}" for x in acc_align.tolist())
+    mse_s = ",".join(f"{x:.5f}" for x in acc_mse.tolist())
+    print0(f"probe_ema: n={int(acc_n.item())} align={align_s} rel_mse={mse_s}", console=True)
+
+
+def main():
+    with open(sys.argv[0]) as f:
+        code = f.read() # read the code of this file ASAP, for logging
+
+    args = parse_kmaxwell_args()
+    SEED = args.seed
+    explicit = parse_weights(args.weights) if args.weights else None
+    tau, betas, weights, mean_age = build_kmaxwell_kernel(
+        args.k, args.tau_min, args.tau_max, args.sigma, args.bimaxwell_exact,
+        weights=explicit)
+    weights_end = parse_weights(args.weights_end) if args.weights_end else None
+
+    # torchrun sets these env variables
+    device = torch.device("cuda", int(os.environ["LOCAL_RANK"]))
+    torch.cuda.set_device(device)
+    dist.init_process_group(backend="nccl", device_id=device)
+    dist.barrier()
+    # this code can be run equivalently with 1, 2, 4, or 8 gpus.
+    assert 8 % dist.get_world_size() == 0
+
+    # logging setup
+    if dist.get_rank() == 0:
+        os.makedirs("logs", exist_ok=True)
+        logfile = f"logs/{uuid.uuid4()}.txt"
+        print(logfile)
+    def print0(s, console=False, log=True):
+        if dist.get_rank() == 0:
+            if console:
+                print(s)
+            if log:
+                with open(logfile, "a") as f:
+                    print(s, file=f)
+
+    # we begin by logging this file itself
+    print0(code)
+    print0("="*100)
+    print0(f"Running PyTorch {torch.version.__version__} compiled for CUDA {torch.version.cuda}"
+           + f" on {torch.cuda.get_device_name(device)} with world_size {dist.get_world_size()}")
+    print0(format_kmaxwell_recipe(
+        args.k, args.tau_min, args.tau_max, args.sigma, args.start, SEED,
+        args.bimaxwell_exact, tau, betas, weights, mean_age,
+        weights_explicit=explicit is not None))
+    print0(f"probe_ema={args.probe_ema} probe_ema_mbs={args.probe_ema_mbs}")
+    print0("="*100)
+
+    val_tokens = 20 * 524288
+    batch_size = 8 * 64 * 1024
+    mbs = 64
+    val_inputs, val_targets = next(distributed_data_generator("data/fineweb10B/fineweb_val_*.bin", val_tokens))
+
+    model = GPT(vocab_size=50304, num_layers=12, model_dim=768).cuda()
+    model.compile(dynamic=False)
+
+
+    num_trials = 1
+
+    for _ in range(num_trials):
+
+
+        ########################################
+        #       Init & Optim Hyperparams       #
+        ########################################
+
+        # we want to minimize this while still reaching 3.28 val loss
+        train_steps = 3250
+
+        # deterministic paired trials: seed the global RNG right before param init
+        torch.manual_seed(1337 + SEED)
+
+        # initialize model parameters
+        for name, p in model.named_parameters():
+            w = p.data
+            if name.endswith("weight"):
+                if "proj" in name:
+                    w.zero_()
+                elif "embed" in name:
+                    w.normal_()  # default torch init
+                else:
+                    w.normal_(std=0.33**0.5 / w.size(-1)**0.5)  # default torch init
+            elif name.endswith("bias"):
+                w.zero_()
+            elif name.endswith("gains"):
+                w.normal_(mean=1, std=0)
+            else:
+                raise Exception(f"Uninitialized parameter: {name}")
+
+        # create the optimizer(s)
+        optimizer1 = AdamW([dict(params=[model.embed.weight], lr=0.7),
+                            dict(params=[model.proj.weight], lr=0.004),
+                            dict(params=[p for p in model.parameters() if p.ndim < 2], lr=0.015)],
+                           betas=(0.8, 0.95), eps=1e-10, weight_decay=0.001, fused=True)
+        optimizer2 = Muon([p for p in model.blocks.parameters() if p.ndim >= 2],
+                          lr=0.025, weight_decay=0.05,
+                          kmaxwell_betas=betas, kmaxwell_weights=weights, kmaxwell_start=args.start,
+                          kmaxwell_weights_end=weights_end,
+                          kmaxwell_anneal_steps=int(args.anneal_frac * (train_steps - args.start)))
+        optimizers = [optimizer1, optimizer2]
+        assert set(p for opt in optimizers for group in opt.param_groups
+                   for p in group["params"]) == set(model.parameters())
+        for opt in optimizers:
+            for group in opt.param_groups:
+                group["initial_lr"] = group["lr"]
+
+        # learning rate schedule: stable then decay
+        def set_hparams(step, cooldown_frac=0.7):
+            progress = step / train_steps
+            assert 0 <= progress < 1
+            if progress < 1 - cooldown_frac:
+                eta = 1.0
+            else:
+                eta = (1 - progress) / cooldown_frac
+            for opt in optimizers:
+                for group in opt.param_groups:
+                    group["lr"] = group["initial_lr"] * eta
+
+
+        ########################################
+        #        Training and Validation       #
+        ########################################
+
+        train_loader = distributed_data_generator("data/fineweb10B/fineweb_train_*.bin", batch_size)
+        for p in model.parameters():
+            dist.broadcast(p.detach(), 0)
+        # start the clock
+        training_time = 0
+        last_val_step = 0
+        dist.barrier()
+        t0 = time.perf_counter()
+        for step in range(train_steps + 1):
+
+            # --------------- VALIDATION SECTION -----------------
+            # dense eval-only validation over the crossing zone (uniform across all seeds;
+            # the earliest formally-passing step is selected the same way for every trial)
+            dense = 2900 <= step <= 3250 and step % 10 == 0
+            val_step_freq = 125 if step / train_steps < 0.9 else 25
+            if step == train_steps or step % val_step_freq == 0 or dense:
+                # stop the clock
+                dist.barrier()
+                time_since_last_val = time.perf_counter() - t0
+                step_avg = time_since_last_val / (step - last_val_step) if step > 0 else float("nan")
+                last_val_step = step
+                training_time += time_since_last_val
+                model.eval()
+                val_loss = 0
+                with torch.no_grad():
+                    assert len(val_inputs) % mbs == 0
+                    for i in range(len(val_inputs) // mbs):
+                        val_loss += model(val_inputs[i*mbs:(i+1)*mbs], val_targets[i*mbs:(i+1)*mbs])
+                dist.all_reduce(val_loss, op=dist.ReduceOp.SUM)
+                val_loss /= val_tokens
+                print0(f"step:{step}/{train_steps} val_loss:{val_loss:.5f} train_time:{training_time:.3f}s"
+                       + f" step_avg:{1000*step_avg:.2f}ms", console=True)
+                if args.probe_ema:
+                    probe_kmaxwell_ema(
+                        optimizer2, model, val_inputs, val_targets, mbs,
+                        args.probe_ema_mbs, print0)
+                model.train()
+                # start the clock again
+                dist.barrier()
+                t0 = time.perf_counter()
+
+            if step == train_steps:
+                break
+
+            # --------------- TRAINING SECTION -----------------
+            inputs, targets = next(train_loader)
+            # accumulate across microbatches in case we are running with fewer than 8 gpus
+            assert len(inputs) % mbs == 0
+            for i in range(len(inputs) // mbs):
+                model(inputs[i*mbs:(i+1)*mbs], targets[i*mbs:(i+1)*mbs]).backward()
+            for name, p in model.named_parameters():
+                assert p.grad is not None, name
+                dist.all_reduce(p.grad, op=dist.ReduceOp.SUM)
+            # set optimization hyperparameters and take a step
+            set_hparams(step)
+            for opt in optimizers:
+                opt.step()
+            model.zero_grad(set_to_none=True)
+            approx_training_time = training_time + (time.perf_counter() - t0)
+            print0(f"step:{step+1}/{train_steps} train_time:{approx_training_time:.3f}s"
+                   + f" step_avg:{1000*approx_training_time/(step + 1):.2f}ms", console=True, log=False)
+
+    dist.destroy_process_group()
+
+
+if __name__ == "__main__":
+    main()
+
+====================================================================================================
+Running PyTorch 2.10.0+cu128 compiled for CUDA 12.8 on NVIDIA H100 80GB HBM3 with world_size 8
+K-Maxwell recipe: mode=explicit-weights k=8 tau_min=3 tau_max=72 sigma=1 start=1000 seed=0 mean_age=62
+  tau=[3, 4.72383, 7.43819, 11.7123, 18.4422, 29.0393, 45.7256, 72]
+  beta=[0.75, 0.825292, 0.881491, 0.921336, 0.948566, 0.96671, 0.978598, 0.986301]
+  w=[0.007419, 0.014838, 0.022257, 0.029677, 0.037096, 0.044515, 0.051934, 0.792264]
+  filter: mu=0.95 lag_m=62 lag_x=58.9 noise_gain=0.0129361
+probe_ema=True probe_ema_mbs=4
+====================================================================================================
+step:0/3250 val_loss:10.82584 train_time:0.001s step_avg:nanms
+step:125/3250 val_loss:4.58645 train_time:21.792s step_avg:174.33ms
+step:250/3250 val_loss:4.09714 train_time:41.247s step_avg:155.64ms
+step:375/3250 val_loss:3.92231 train_time:60.549s step_avg:154.42ms
+step:500/3250 val_loss:3.82547 train_time:79.884s step_avg:154.68ms
+step:625/3250 val_loss:3.76205 train_time:99.226s step_avg:154.73ms
+step:750/3250 val_loss:3.72247 train_time:118.525s step_avg:154.40ms
+step:875/3250 val_loss:3.68531 train_time:137.860s step_avg:154.68ms
+step:1000/3250 val_loss:3.65222 train_time:157.204s step_avg:154.75ms
+step:1125/3250 val_loss:3.64925 train_time:178.095s step_avg:167.13ms
+probe_ema: n=84934656 align=-0.53461,-0.49162,-0.44825,-0.40590,-0.36509,-0.32424,-0.28549,-0.25992 rel_mse=1.06877,1.04664,1.03120,1.02069,1.01364,1.00890,1.00579,1.00398
+step:1250/3250 val_loss:3.59504 train_time:198.296s step_avg:161.61ms
+probe_ema: n=84934656 align=-0.51288,-0.46940,-0.42762,-0.38865,-0.35315,-0.32097,-0.29049,-0.25958 rel_mse=1.06587,1.04474,1.03001,1.01998,1.01325,1.00880,1.00585,1.00392
+step:1375/3250 val_loss:3.56122 train_time:218.503s step_avg:161.65ms
+probe_ema: n=84934656 align=-0.47280,-0.43156,-0.39332,-0.35930,-0.32874,-0.29957,-0.26906,-0.23383 rel_mse=1.06580,1.04583,1.03125,1.02093,1.01382,1.00901,1.00578,1.00364
+step:1500/3250 val_loss:3.52597 train_time:238.665s step_avg:161.29ms
+probe_ema: n=84934656 align=-0.40588,-0.37002,-0.33673,-0.30641,-0.27883,-0.25313,-0.22784,-0.20088 rel_mse=1.05400,1.03652,1.02442,1.01622,1.01072,1.00705,1.00461,1.00298
+step:1625/3250 val_loss:3.50339 train_time:258.889s step_avg:161.80ms
+probe_ema: n=84934656 align=-0.38404,-0.35131,-0.32099,-0.29199,-0.26380,-0.23667,-0.20991,-0.18148 rel_mse=1.05009,1.03447,1.02343,1.01575,1.01047,1.00689,1.00447,1.00284
+step:1750/3250 val_loss:3.47769 train_time:279.108s step_avg:161.74ms
+probe_ema: n=84934656 align=-0.40787,-0.37477,-0.34339,-0.31408,-0.28658,-0.26026,-0.23405,-0.20610 rel_mse=1.06358,1.04359,1.02952,1.01983,1.01321,1.00873,1.00571,1.00368
+step:1875/3250 val_loss:3.45759 train_time:299.221s step_avg:160.91ms
+probe_ema: n=84934656 align=-0.42193,-0.39008,-0.35919,-0.33006,-0.30313,-0.27827,-0.25481,-0.23156 rel_mse=1.05970,1.04123,1.02809,1.01894,1.01268,1.00844,1.00560,1.00370
+step:2000/3250 val_loss:3.43602 train_time:319.444s step_avg:161.78ms
+probe_ema: n=84934656 align=-0.33456,-0.31336,-0.29330,-0.27458,-0.25721,-0.24089,-0.22506,-0.20913 rel_mse=1.05834,1.04094,1.02849,1.01967,1.01348,1.00918,1.00621,1.00419
+step:2125/3250 val_loss:3.41793 train_time:339.686s step_avg:161.94ms
+probe_ema: n=84934656 align=-0.32055,-0.29864,-0.27873,-0.26020,-0.24242,-0.22506,-0.20773,-0.18970 rel_mse=1.05381,1.03791,1.02641,1.01823,1.01248,1.00846,1.00569,1.00379
+step:2250/3250 val_loss:3.39866 train_time:359.828s step_avg:161.13ms
+probe_ema: n=84934656 align=-0.27405,-0.25897,-0.24619,-0.23487,-0.22407,-0.21302,-0.20125,-0.18853 rel_mse=1.05620,1.03990,1.02819,1.01983,1.01388,1.00964,1.00664,1.00453
+step:2375/3250 val_loss:3.38123 train_time:380.027s step_avg:161.59ms
+probe_ema: n=84934656 align=-0.25007,-0.24042,-0.23241,-0.22427,-0.21522,-0.20519,-0.19419,-0.18218 rel_mse=1.05589,1.04028,1.02888,1.02056,1.01448,1.01008,1.00694,1.00473
+step:2500/3250 val_loss:3.36412 train_time:400.215s step_avg:161.50ms
+probe_ema: n=84934656 align=-0.25815,-0.25198,-0.24511,-0.23683,-0.22687,-0.21504,-0.20129,-0.18556 rel_mse=1.06663,1.04753,1.03357,1.02346,1.01621,1.01106,1.00746,1.00495
+step:2625/3250 val_loss:3.34596 train_time:420.346s step_avg:161.05ms
+probe_ema: n=84934656 align=-0.19156,-0.18862,-0.18634,-0.18328,-0.17863,-0.17213,-0.16386,-0.15353 rel_mse=1.04852,1.03558,1.02592,1.01869,1.01331,1.00934,1.00647,1.00443
+step:2750/3250 val_loss:3.32860 train_time:440.527s step_avg:161.44ms
+probe_ema: n=84934656 align=-0.15572,-0.15886,-0.16114,-0.16175,-0.16030,-0.15674,-0.15098,-0.14321 rel_mse=1.04458,1.03373,1.02520,1.01854,1.01343,1.00957,1.00671,1.00464
+step:2875/3250 val_loss:3.31144 train_time:460.713s step_avg:161.49ms
+probe_ema: n=84934656 align=-0.08877,-0.10517,-0.11893,-0.12891,-0.13477,-0.13670,-0.13507,-0.13039 rel_mse=1.03665,1.02943,1.02315,1.01776,1.01328,1.00969,1.00691,1.00483
+step:2900/3250 val_loss:3.30808 train_time:464.745s step_avg:161.29ms
+probe_ema: n=84934656 align=-0.05964,-0.07916,-0.09534,-0.10775,-0.11597,-0.11983,-0.11962,-0.11598 rel_mse=1.03121,1.02595,1.02085,1.01626,1.01232,1.00907,1.00651,1.00455
+step:2910/3250 val_loss:3.30638 train_time:466.353s step_avg:160.81ms
+probe_ema: n=84934656 align=-0.08349,-0.09550,-0.10619,-0.11451,-0.11967,-0.12134,-0.11957,-0.11468 rel_mse=1.03374,1.02641,1.02045,1.01562,1.01170,1.00857,1.00613,1.00428
+step:2920/3250 val_loss:3.30499 train_time:467.966s step_avg:161.34ms
+probe_ema: n=84934656 align=-0.09732,-0.10761,-0.11694,-0.12430,-0.12894,-0.13047,-0.12887,-0.12448 rel_mse=1.04110,1.03152,1.02389,1.01788,1.01319,1.00958,1.00683,1.00479
+step:2925/3250 val_loss:3.30439 train_time:468.778s step_avg:162.34ms
+probe_ema: n=84934656 align=-0.08989,-0.10109,-0.11131,-0.11922,-0.12420,-0.12595,-0.12445,-0.12002 rel_mse=1.03734,1.02886,1.02217,1.01682,1.01254,1.00917,1.00657,1.00461
+step:2930/3250 val_loss:3.30417 train_time:469.589s step_avg:162.21ms
+probe_ema: n=84934656 align=-0.11048,-0.12210,-0.13091,-0.13645,-0.13873,-0.13803,-0.13466,-0.12899 rel_mse=1.03900,1.03033,1.02311,1.01724,1.01261,1.00906,1.00641,1.00447
+step:2940/3250 val_loss:3.30270 train_time:471.205s step_avg:161.63ms
+probe_ema: n=84934656 align=-0.05154,-0.07188,-0.08994,-0.10376,-0.11257,-0.11661,-0.11650,-0.11296 rel_mse=1.02992,1.02470,1.02001,1.01576,1.01203,1.00890,1.00640,1.00449
+step:2950/3250 val_loss:3.30140 train_time:472.820s step_avg:161.47ms
+probe_ema: n=84934656 align=-0.12641,-0.13644,-0.14313,-0.14670,-0.14724,-0.14491,-0.14004,-0.13297 rel_mse=1.04334,1.03359,1.02543,1.01886,1.01373,1.00982,1.00690,1.00477
+step:2960/3250 val_loss:3.30002 train_time:474.429s step_avg:160.90ms
+probe_ema: n=84934656 align=-0.07712,-0.09074,-0.10280,-0.11206,-0.11775,-0.11975,-0.11845,-0.11441 rel_mse=1.03482,1.02746,1.02137,1.01634,1.01222,1.00893,1.00638,1.00447
+step:2970/3250 val_loss:3.29875 train_time:476.041s step_avg:161.17ms
+probe_ema: n=84934656 align=-0.06697,-0.08097,-0.09335,-0.10326,-0.10992,-0.11301,-0.11263,-0.10916 rel_mse=1.03555,1.02753,1.02115,1.01609,1.01205,1.00884,1.00634,1.00444
+step:2975/3250 val_loss:3.29825 train_time:476.851s step_avg:162.02ms
+probe_ema: n=84934656 align=-0.04797,-0.06882,-0.08523,-0.09733,-0.10521,-0.10907,-0.10935,-0.10656 rel_mse=1.03024,1.02536,1.02040,1.01587,1.01199,1.00883,1.00635,1.00446
+step:2980/3250 val_loss:3.29757 train_time:477.662s step_avg:162.26ms
+probe_ema: n=84934656 align=-0.05396,-0.07129,-0.08621,-0.09773,-0.10547,-0.10941,-0.10985,-0.10734 rel_mse=1.03062,1.02478,1.01975,1.01540,1.01172,1.00869,1.00628,1.00444
+step:2990/3250 val_loss:3.29666 train_time:479.274s step_avg:161.16ms
+probe_ema: n=84934656 align=-0.16075,-0.16342,-0.16573,-0.16669,-0.16540,-0.16156,-0.15534,-0.14707 rel_mse=1.06480,1.04703,1.03378,1.02407,1.01700,1.01189,1.00822,1.00562
+step:3000/3250 val_loss:3.29524 train_time:480.888s step_avg:161.41ms
+probe_ema: n=84934656 align=-0.03691,-0.05677,-0.07422,-0.08792,-0.09733,-0.10258,-0.10414,-0.10262 rel_mse=1.02713,1.02281,1.01875,1.01497,1.01156,1.00865,1.00630,1.00447
+step:3010/3250 val_loss:3.29394 train_time:482.498s step_avg:161.08ms
+probe_ema: n=84934656 align=-0.06425,-0.08045,-0.09410,-0.10446,-0.11112,-0.11402,-0.11348,-0.11008 rel_mse=1.03618,1.02892,1.02261,1.01728,1.01293,1.00946,1.00677,1.00474
+step:3020/3250 val_loss:3.29236 train_time:484.111s step_avg:161.27ms
+probe_ema: n=84934656 align=-0.06409,-0.07875,-0.09154,-0.10125,-0.10740,-0.10997,-0.10936,-0.10618 rel_mse=1.03344,1.02645,1.02062,1.01576,1.01182,1.00868,1.00624,1.00440
+step:3025/3250 val_loss:3.29164 train_time:484.921s step_avg:162.04ms
+probe_ema: n=84934656 align=-0.08516,-0.09488,-0.10394,-0.11103,-0.11530,-0.11648,-0.11479,-0.11077 rel_mse=1.03860,1.02963,1.02260,1.01703,1.01264,1.00921,1.00659,1.00463
+step:3030/3250 val_loss:3.29096 train_time:485.731s step_avg:161.85ms
+probe_ema: n=84934656 align=-0.07753,-0.09065,-0.10125,-0.10885,-0.11321,-0.11438,-0.11270,-0.10873 rel_mse=1.03626,1.02850,1.02196,1.01658,1.01227,1.00891,1.00636,1.00446
+step:3040/3250 val_loss:3.28975 train_time:487.346s step_avg:161.59ms
+probe_ema: n=84934656 align=-0.01430,-0.03450,-0.05302,-0.06802,-0.07856,-0.08465,-0.08685,-0.08593 rel_mse=1.02428,1.02029,1.01675,1.01346,1.01046,1.00786,1.00573,1.00408
+step:3050/3250 val_loss:3.28873 train_time:489.019s step_avg:167.22ms
+probe_ema: n=84934656 align=-0.13359,-0.13934,-0.14456,-0.14771,-0.14790,-0.14495,-0.13925,-0.13148 rel_mse=1.06054,1.04381,1.03169,1.02281,1.01624,1.01141,1.00791,1.00541
+step:3060/3250 val_loss:3.28780 train_time:490.634s step_avg:161.51ms
+probe_ema: n=84934656 align=0.00551,-0.02959,-0.05840,-0.07923,-0.09234,-0.09893,-0.10057,-0.09871 rel_mse=1.01697,1.01804,1.01701,1.01459,1.01163,1.00879,1.00639,1.00452
+step:3070/3250 val_loss:3.28655 train_time:492.254s step_avg:162.08ms
+probe_ema: n=84934656 align=-0.06021,-0.07567,-0.08929,-0.10026,-0.10755,-0.11065,-0.10997,-0.10644 rel_mse=1.03306,1.02652,1.02094,1.01625,1.01233,1.00911,1.00655,1.00460
+step:3075/3250 val_loss:3.28582 train_time:493.066s step_avg:162.35ms
+probe_ema: n=84934656 align=-0.04433,-0.06055,-0.07467,-0.08627,-0.09467,-0.09924,-0.10013,-0.09806 rel_mse=1.03255,1.02625,1.02075,1.01611,1.01225,1.00909,1.00657,1.00464
+step:3080/3250 val_loss:3.28533 train_time:493.877s step_avg:162.07ms
+probe_ema: n=84934656 align=-0.00467,-0.03062,-0.05275,-0.07009,-0.08248,-0.08987,-0.09269,-0.09194 rel_mse=1.02177,1.01959,1.01685,1.01386,1.01095,1.00832,1.00611,1.00436
+step:3090/3250 val_loss:3.28430 train_time:495.489s step_avg:161.20ms
+probe_ema: n=84934656 align=-0.09985,-0.11242,-0.12170,-0.12740,-0.12978,-0.12900,-0.12519,-0.11889 rel_mse=1.05017,1.03804,1.02833,1.02074,1.01497,1.01064,1.00743,1.00511
+step:3100/3250 val_loss:3.28318 train_time:497.108s step_avg:161.91ms
+probe_ema: n=84934656 align=0.02631,-0.00108,-0.02732,-0.04913,-0.06519,-0.07550,-0.08069,-0.08179 rel_mse=1.01586,1.01535,1.01436,1.01259,1.01036,1.00807,1.00602,1.00434
+step:3110/3250 val_loss:3.28227 train_time:498.724s step_avg:161.67ms
+probe_ema: n=84934656 align=-0.02376,-0.04742,-0.06741,-0.08267,-0.09283,-0.09816,-0.09932,-0.09726 rel_mse=1.02898,1.02531,1.02113,1.01689,1.01299,1.00965,1.00695,1.00489
+step:3120/3250 val_loss:3.28128 train_time:500.345s step_avg:162.05ms
+probe_ema: n=84934656 align=-0.02407,-0.04681,-0.06544,-0.07924,-0.08845,-0.09350,-0.09488,-0.09333 rel_mse=1.03135,1.02656,1.02166,1.01700,1.01292,1.00955,1.00688,1.00485
+step:3125/3250 val_loss:3.28071 train_time:501.157s step_avg:162.48ms
+probe_ema: n=84934656 align=-0.00679,-0.02657,-0.04631,-0.06257,-0.07403,-0.08084,-0.08359,-0.08306 rel_mse=1.02478,1.02067,1.01741,1.01427,1.01125,1.00854,1.00626,1.00446
+step:3130/3250 val_loss:3.28022 train_time:501.965s step_avg:161.46ms
+probe_ema: n=84934656 align=-0.00007,-0.02264,-0.04213,-0.05768,-0.06882,-0.07550,-0.07816,-0.07755 rel_mse=1.02064,1.01830,1.01564,1.01288,1.01021,1.00779,1.00574,1.00409
+step:3140/3250 val_loss:3.27922 train_time:503.575s step_avg:161.04ms
+probe_ema: n=84934656 align=0.01130,-0.00873,-0.02874,-0.04603,-0.05916,-0.06766,-0.07183,-0.07248 rel_mse=1.01940,1.01648,1.01412,1.01179,1.00948,1.00733,1.00546,1.00393
+step:3150/3250 val_loss:3.27833 train_time:505.190s step_avg:161.53ms
+probe_ema: n=84934656 align=-0.01215,-0.02550,-0.03836,-0.05000,-0.05957,-0.06621,-0.06946,-0.06950 rel_mse=1.02765,1.02164,1.01690,1.01314,1.01011,1.00763,1.00561,1.00400
+step:3160/3250 val_loss:3.27746 train_time:506.803s step_avg:161.24ms
+probe_ema: n=84934656 align=0.06049,0.03429,0.01013,-0.01014,-0.02598,-0.03742,-0.04468,-0.04829 rel_mse=1.00654,1.00775,1.00810,1.00759,1.00656,1.00534,1.00413,1.00306
+step:3170/3250 val_loss:3.27672 train_time:508.417s step_avg:161.45ms
+probe_ema: n=84934656 align=0.01064,-0.00938,-0.02755,-0.04234,-0.05323,-0.06036,-0.06402,-0.06464 rel_mse=1.01931,1.01656,1.01401,1.01149,1.00908,1.00693,1.00512,1.00367
+step:3175/3250 val_loss:3.27632 train_time:509.225s step_avg:161.64ms
+probe_ema: n=84934656 align=0.03001,0.01073,-0.00875,-0.02580,-0.03907,-0.04833,-0.05391,-0.05632 rel_mse=1.01593,1.01348,1.01169,1.00992,1.00810,1.00634,1.00478,1.00348
+step:3180/3250 val_loss:3.27598 train_time:510.038s step_avg:162.50ms
+probe_ema: n=84934656 align=-0.02623,-0.03646,-0.04726,-0.05728,-0.06517,-0.07026,-0.07252,-0.07227 rel_mse=1.03024,1.02332,1.01805,1.01391,1.01058,1.00788,1.00574,1.00408
+step:3190/3250 val_loss:3.27522 train_time:511.652s step_avg:161.42ms
+probe_ema: n=84934656 align=-0.00648,-0.01897,-0.03098,-0.04106,-0.04883,-0.05416,-0.05703,-0.05771 rel_mse=1.02422,1.01910,1.01506,1.01167,1.00888,1.00664,1.00486,1.00348
+step:3200/3250 val_loss:3.27460 train_time:513.264s step_avg:161.18ms
+probe_ema: n=84934656 align=0.03421,0.01607,-0.00182,-0.01724,-0.02927,-0.03785,-0.04330,-0.04606 rel_mse=1.01406,1.01212,1.01050,1.00881,1.00710,1.00550,1.00413,1.00301
+step:3210/3250 val_loss:3.27405 train_time:514.887s step_avg:162.34ms
+probe_ema: n=84934656 align=0.07615,0.05242,0.02862,0.00828,-0.00738,-0.01865,-0.02625,-0.03087 rel_mse=1.00226,1.00367,1.00480,1.00508,1.00466,1.00390,1.00307,1.00231
+step:3220/3250 val_loss:3.27352 train_time:516.504s step_avg:161.66ms
+probe_ema: n=84934656 align=0.01429,0.01174,0.00729,0.00086,-0.00658,-0.01376,-0.01978,-0.02421 rel_mse=1.02194,1.01463,1.00994,1.00704,1.00518,1.00390,1.00292,1.00216
+step:3225/3250 val_loss:3.27331 train_time:517.312s step_avg:161.57ms
+probe_ema: n=84934656 align=0.00899,0.00213,-0.00430,-0.01033,-0.01617,-0.02155,-0.02601,-0.02925 rel_mse=1.02257,1.01629,1.01174,1.00849,1.00619,1.00453,1.00331,1.00239
+step:3230/3250 val_loss:3.27317 train_time:518.121s step_avg:161.95ms
+probe_ema: n=84934656 align=0.06396,0.04440,0.02661,0.01212,0.00065,-0.00840,-0.01535,-0.02037 rel_mse=1.00552,1.00560,1.00544,1.00483,1.00402,1.00321,1.00247,1.00185
+step:3240/3250 val_loss:3.27291 train_time:519.794s step_avg:167.24ms
+probe_ema: n=84934656 align=-0.01084,-0.00981,-0.01122,-0.01419,-0.01773,-0.02130,-0.02457,-0.02728 rel_mse=1.02776,1.01917,1.01330,1.00930,1.00653,1.00461,1.00325,1.00230
+step:3250/3250 val_loss:3.27278 train_time:521.411s step_avg:161.69ms
+probe_ema: n=84934656 align=0.11497,0.12037,0.11759,0.10778,0.09379,0.07846,0.06374,0.05067 rel_mse=0.99090,0.98691,0.98697,0.98926,0.99214,0.99469,0.99662,0.99794

@@ -1,0 +1,4 @@
+{"name":"ANL_oy_start800","seed":0,"k":8,"tmin":3,"tmax":56,"age_start":44,"age_end":30,"anneal_frac":1.0,"start":800}
+{"name":"ANL_oy_tmax64","seed":0,"k":8,"tmin":3,"tmax":64,"age_start":44,"age_end":30,"anneal_frac":1.0}
+{"name":"ANL_oy_wide_s1","seed":1,"k":8,"tmin":3,"tmax":56,"age_start":44,"age_end":30,"anneal_frac":1.0}
+{"name":"ANL_oy_wide_s2","seed":2,"k":8,"tmin":3,"tmax":56,"age_start":48,"age_end":28,"anneal_frac":1.0}

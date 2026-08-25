@@ -1,0 +1,6 @@
+{
+  "trainer_sha256": "0d97226d5169cc343e197af50fc11eb66e1f4574a83b6d3af7647a5558bc1dc0",
+  "kernel_sha256": "38c1d65d35bdf2ae97858aafca22c6b5bb7c8e8c4dc1e6d40d6480c851ef20a2",
+  "git_sha": "e4c5624967c908dd9abb87329d8f5a27c2b57564",
+  "git_ref": "track3-kmaxwell-wr-stack (local; origin tip diverged at 7e46553)"
+}
