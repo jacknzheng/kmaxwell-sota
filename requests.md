@@ -306,3 +306,59 @@ retail+airline + diligence) and the two main arms (tau2 gold, diligence
 answer_free) per your priority order. Full 6-arm fleet is many GPU-hours; will
 cut from the bottom of your priority list and say what was cut.
 
+---
+
+### REQ-001/002 FINAL status (jerry-agent) — pipeline validated, blocked on a step-3 deadlock
+
+**Where it got to:** the SDPO training loop is proven correct — teacher-student gap
+clearly nonzero (e.g. steps 1-3: -0.13, -0.07, -0.08), weight syncs succeed, all LLM
+routing works (0 credential errors after the fixes), logging + per-step scalars emit.
+Then it **deadlocks reproducibly after ~3 steps**: 37+ min of total silence, all 8
+GPUs at 0%, last activity is tau2 `evaluator_env.calculate_reward`. Not slowness — a
+hard hang. It correlates with the K=3 staleness bound (freezes as the first
+trajectories age out), so it smells like an async producer/consumer or weight-sync
+coordination deadlock, NOT the user-sim LLM call (I added a 90s litellm timeout +
+retries; zero timeouts fired, so the hang is elsewhere).
+
+**Why I stopped instead of running the fleet:** I cannot pinpoint the deadlock —
+py-spy/ptrace is blocked by the same container policy that blocks the bwrap sandbox
+(`Operation not permitted`). Fanning out the 6-arm fleet (6 boxes x many hours of
+27B rollouts) into a pipeline that freezes after 3 steps would burn a large amount of
+GPU with no results while you're asleep. The box is **stopped**. This is a NEEDS-INPUT,
+not a failure: the mechanics are validated and every fix is committed.
+
+**What you get (all committed):** `patches/async-sdpo/req002-logging.patch` (also
+branch jerry-agent-req002; 192/192 tests green) with the REQ-002 §4 logging contract
++ SIX real bug fixes found during bringup:
+ 1-2. per-thread CUDA device in setup_weight_sync + send_weight_bucket (NCCL bound to
+      GPU 0 under asyncio.to_thread -> "Duplicate GPU" / "unhandled cuda error"; broke
+      every run).
+ 3.  build_dataloader: cfg.trainer.training_batch_size -> batch_size.
+ 4.  tau2 evaluate_simulation: solo_mode passed twice -> zeroed retail/airline reward.
+ 5.  data.user_llm default lacked tool-calling via litellm -> user-sim tool turns fell
+     back to the openai provider.
+ 6.  make_user: 90s litellm timeout + retries (hardening; did not fix the deadlock).
+
+**Baseten bringup recipe (documented, reusable):** vLLM 0.26.0 is imported but in no
+dependency file (must `uv pip install`; it drags cu13 torchvision/torchaudio that must
+be re-pinned to cu128 / torchaudio removed); `OPENAI_API_KEY=$OPENROUTER_API_KEY` +
+`OPENAI_API_BASE=https://openrouter.ai/api/v1` (tau2/litellm collapses models to bare
+names on the openai provider); `NCCL_CUMEM_ENABLE=0 NCCL_P2P_DISABLE=1`; sparse-clone
+tau2-bench@a2c02472 for data; image lacks sudo/python3-dev; kill orphaned vLLM
+EngineCore procs between runs (they pin GPU 0 VRAM).
+
+**Two HARD blockers needing you:**
+ A. **Step-3 deadlock** — the gating issue. You know the async store/weight-sync code;
+    a py-spy dump on a hung process would localize it in seconds, but this workstation
+    image forbids ptrace. Options: reproduce on a ptrace-enabled/privileged box, or
+    eyeball run.py's run_loop/sync_weights + store.get_batch interaction around the
+    staleness-eviction path (freeze coincides with K=3 eviction).
+ B. **banking sandbox** — bwrap can't create namespaces on this image; `truss train
+    workstation` has no --privileged. banking_knowledge is unrunnable here (retail/
+    airline/step_hint/all diligence are fine). Your upstream 1235bfa targets the same
+    thing; my patch applies on top.
+
+**My recommendation:** fix (A) (likely a small coordination fix on your side), then I
+can run the whole fleet cleanly — the recipe + fixes make bringup a non-event now.
+Ping me on this branch and I'll pick it straight back up.
+
