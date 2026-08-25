@@ -6,7 +6,7 @@ Unlike the main NanoGPT speedrun which seeks to minimize *wallclock time* by any
 [Longform announcement](https://x.com/kellerjordan0/status/2049193527440187494)
 
 Thank you to everyone who's contributed results so far:
-[@kaiyue-wen](https://github.com/kaiyue-wen), [@nilin](https://github.com/nilin), [@alint77](https://github.com/alint77), [@wilsoncwu](https://github.com/wilsoncwu), [@kumarkrishna](https://github.com/kumarkrishna), [@lliu606](https://github.com/lliu606), [@zhenghaoxu-gatech](https://github.com/zhenghaoxu-gatech), [@bentherien](https://github.com/bentherien), [@Sam_Acqua](https://x.com/Sam_Acqua), [@zhehangdu](https://github.com/zhehangdu), [@SPThole](https://github.com/SPThole), [@liyang2019](https://github.com/liyang2019), [@zzp1012](https://github.com/zzp1012), Yash Pande, [@fhueb](https://github.com/fhueb), [@kcc-lion](https://github.com/kcc-lion), [@zhiweixx](https://github.com/zhiweixx), [@chenchenygu](https://github.com/chenchenygu), [@breskanu](https://github.com/breskanu), [@fangzhou_wu](https://x.com/fangzhou_wu), [@eliebak](https://github.com/eliebak), [@wakamex](https://github.com/wakamex), [@varunneal](https://github.com/varunneal), [@tomoqt](https://github.com/tomoqt), [@rohan-anil](https://github.com/rohan-anil), [@konstmish](https://github.com/konstmish), [@jn2clark](https://github.com/jn2clark), [@OscarYau525](https://github.com/OscarYau525), [@ypwang61](https://github.com/ypwang61), [@nooraovo](https://github.com/nooraovo), [@jeffreyscheng](https://github.com/jeffreyscheng), [@jerryhong21](https://github.com/jerryhong21), and [@jacknzheng](https://github.com/jacknzheng).
+[@kaiyue-wen](https://github.com/kaiyue-wen), [@nilin](https://github.com/nilin), [@alint77](https://github.com/alint77), [@wilsoncwu](https://github.com/wilsoncwu), [@kumarkrishna](https://github.com/kumarkrishna), [@lliu606](https://github.com/lliu606), [@zhenghaoxu-gatech](https://github.com/zhenghaoxu-gatech), [@bentherien](https://github.com/bentherien), [@Sam_Acqua](https://x.com/Sam_Acqua), [@zhehangdu](https://github.com/zhehangdu), [@SPThole](https://github.com/SPThole), [@liyang2019](https://github.com/liyang2019), [@zzp1012](https://github.com/zzp1012), Yash Pande, [@fhueb](https://github.com/fhueb), [@kcc-lion](https://github.com/kcc-lion), [@zhiweixx](https://github.com/zhiweixx), [@chenchenygu](https://github.com/chenchenygu), [@breskanu](https://github.com/breskanu), [@fangzhou_wu](https://x.com/fangzhou_wu), [@eliebak](https://github.com/eliebak), [@wakamex](https://github.com/wakamex), [@varunneal](https://github.com/varunneal), [@tomoqt](https://github.com/tomoqt), [@rohan-anil](https://github.com/rohan-anil), [@konstmish](https://github.com/konstmish), [@jn2clark](https://github.com/jn2clark), [@OscarYau525](https://github.com/OscarYau525), [@ypwang61](https://github.com/ypwang61), and [@nooraovo](https://github.com/nooraovo).
 
 **Table of Contents**
 
@@ -101,8 +101,6 @@ Note: [Beware that](https://github.com/KellerJordan/modded-nanogpt/issues/268) o
 | 44 | 2750(!) | 3.2789 (n=20)✓ | Setup from #41, plus SOAP-Muon on all hidden matrices w/ precondition_frequency=1 (prev. had SOAP on MLP + attn.proj w/ precond_freq=1), tune auxiliary β2's, double mu cooldown, set rademacher init CGI α=.125, and remove neutral geometry modules including (Circuit,Contra)Muon and Aurora | 2026/06/10 | [log](results/20260609_soap_f1_auxb2_clean/H100_ff29b392-e7b7-453e-b9d5-a7dfe0605dd0.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/321) by [@ypwang61](https://github.com/ypwang61) and [@nooraovo](https://github.com/nooraovo) |
 | 45 | 2720(!) | 3.2786 (n=10)✓ | Setup from #44, plus at the final step blend the weights towards EMA(horizon = 150 steps) | 2026/06/12 | [log](results/20260611_tailema_2720_submission/8878c81f-5f73-461f-a41e-c0887e15c1ca.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/325) by [@jn2clark](https://github.com/jn2clark) |
 | 46 | 2690(!) | 3.2783 (n=8)✓ | Setup from #45, plus RowUpdateFloor per-output-row u/w-floor, and Cautious Weight Decay `CWD=0.025` | 2026/06/19 | [log](results/20260619_cwd_rowfloor_tailema/A40_seed0_5c87fa44-7ca7-4d54-971d-d952f9b15792.txt) | [PR](https://github.com/KellerJordan/modded-nanogpt/pull/328) by [@ypwang61](https://github.com/ypwang61) |
-| 47 | 3160 | 3.2779 (n=8)✓ | Setup from #36, plus K-Maxwell (k=8 log-spaced EMA buffers on τ∈[3,64]) with mix weights annealed from mean age 58→26 starting at step 1000 | 2026/08/24 | [log](results/20260824_kmaxwell_3160/H100_seed0.txt) | [@jeffreyscheng](https://github.com/jeffreyscheng), [@jerryhong21](https://github.com/jerryhong21), and [@jacknzheng](https://github.com/jacknzheng) |
-| 48 | 2680(!) | 3.2785 (n=8)✓ | Setup from #46, plus frozen K-Maxwell (k=6, τ∈[3,56], mean age 35) on Muon momentum (note: not pairwise vs #46) | 2026/08/24 | [log](results/20260824_kmaxwell_2680/H100_seed0.txt) | [@jeffreyscheng](https://github.com/jeffreyscheng), [@jerryhong21](https://github.com/jerryhong21), and [@jacknzheng](https://github.com/jacknzheng) |
 
 
 Notes:
@@ -114,11 +112,11 @@ If it fails to reproduce (i.e., there's an error or we get statistical evidence 
 
 ## Active techniques in current record
 
-Codex offers the following description of the techniques used in the current record (#48).
+Codex offers the following description of the techniques used in the current record (#46).
 Note that it is not entirely known which of these techniques is most beneficial.
 Several techniques that were considered beneficial in the past have now been abandoned.
 
-Record #48 is: **#46’s SOAP-Muon + Tail-EMA + RowFloor + post-pin CWD stack, plus a frozen K-Maxwell mix on Muon momentum** (k=6, τ∈[3,56], mean age 35, enabled at step 1000). It is **not pairwise** vs #46 (same situation as #16 vs #14). A separate per-optimizer result, #47, is K-Maxwell annealing (58→26) on the #36 Muon baseline (3160 vs 3250).
+Record #46 is: **#44’s clean SOAP-Muon stack, plus Tail-EMA eval readout, RowFloor, and post-pin Cautious Weight Decay**.
 
 Active techniques:
 
@@ -162,10 +160,6 @@ Active techniques:
 10. **Tail-EMA final readout**:
    Starting at step `2400`, it keeps an EMA of every non-embedding parameter with horizon of 150 steps. At validation time, it evaluates `theta_eval = 0.4 * theta + 0.6 * EMA(theta)`.
    (Introduced in result #45, following the earlier fixed final-readout lineage from #38 and #43; the current #46 variant starts at step `2400` and excludes the token embedding.)
-
-11. **K-Maxwell momentum mix**:
-   From step 1000, Muon's single-EMA first moment is replaced by a convex mix of K log-spaced EMA buffers. #48 uses a frozen k=6 mix on `[3, 56]` with mean age 35 (linear ramp on the fast ticks, leftover on the slow tick). #47 (Muon-family, not the SOAP WR stack) instead anneals k=8 on `[3, 64]` from mean age 58→26. At the switch step the buffers lazy-initialize from the current single-EMA momentum, so that step is bit-identical to the parent.
-   (Introduced in results #47 / #48.)
 
 What it explicitly does **not** use: Contra-Muon, Soft-Muon, Circuit-Muon, Aurora, TrailDelta, fixed-anchor readout, Muon-history forecasting, CenterShrinkAdam, or NorMuon-lite row/column variance preconditioning. Some stale comments mention older machinery, but these paths are off or removed in the #46 submission defaults.
 
