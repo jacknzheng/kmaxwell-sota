@@ -158,7 +158,7 @@ Make this robust: install the tools in the image, fail loud at startup if they'r
 
 ## REQ-002: reporting contract for REQ-001 — comparable ablations, explicit reward, mandatory logging
 
-- status: OPEN
+- status: RUNNING (applied to REQ-001 in flight; §4 logging patch lands on an async-sdpo branch before any Phase-2 arm launches, so the table will not mix logging builds. Capacity note: only ~3 free H100 nodes right now — arms will run in your §Priority order, serialized as boxes free up.)
 - requested: Jack / 2026-08-25 01:45 PDT
 
 Companion to REQ-001, not a replacement. Same fleet, same arms, same repo. This block pins down **what you must report and log** so the arms are actually comparable to each other. REQ-001 said what to run; this says what a finished answer looks like. If REQ-001 is already RUNNING, apply this to it in flight — do not relaunch anything just to satisfy this block.
