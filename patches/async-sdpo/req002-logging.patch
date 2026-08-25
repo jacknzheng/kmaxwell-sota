@@ -1,0 +1,580 @@
+From 74191d9502f0e0a42efcb8e6ed5b527cc77f1db2 Mon Sep 17 00:00:00 2001
+From: Jerry Hong <jerry.hong@baseten.co>
+Date: Tue, 25 Aug 2026 02:00:32 -0700
+Subject: [PATCH] =?UTF-8?q?REQ-002=20=C2=A74=20logging:=20hint-cause=20+?=
+ =?UTF-8?q?=20sandbox/episode=20accounting,=20eval=20JSONL=20dump,=20sampl?=
+ =?UTF-8?q?e=20transcripts,=20per-step=20scalars?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- StoreStats: hint_ok + hint_drop_{openrouter_error,timeout,empty,parse_fail,other},
+  sandbox_fail (+ by-exception Counter), episodes_total, episodes_empty — all in
+  as_metrics so they reach train.log + wandb every step.
+- hint.py: build_error_hint returns (text, cause); Hints carries cause;
+  generate_hint normalizes bare-string test doubles.
+- run.py: episode accounting in generate_trajectory (sandbox failures classified
+  by exception name and counted, empty transcripts rejected — an all-masked row
+  nan-poisons the batch mean), per-cause hint-drop counting, fail-loud startup
+  check for srt/rg/bwrap/socat when banking_knowledge is in scope, eval dump wiring.
+- logger.py: evaluate/evaluate_pass1 guard per-task episode errors (a banking
+  SandboxRuntimeError used to crash baseline mode entirely), score errored tau2
+  tasks 0.0, and append per-task rows to eval_dump.jsonl.
+- trainer.py: lr + tokens in step metrics, extended per-step log line, and 3
+  teacher/student sample transcripts with per-token gap to samples.jsonl.
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01YKPwGqPuEuP2wzzHuCEhok
+---
+ data/hint.py     | 62 +++++++++++++++++++++++-----------
+ run.py           | 62 ++++++++++++++++++++++++++++++----
+ train/logger.py  | 88 ++++++++++++++++++++++++++++++++++++++++--------
+ train/store.py   | 29 ++++++++++++++++
+ train/trainer.py | 50 ++++++++++++++++++++++++++-
+ 5 files changed, 250 insertions(+), 41 deletions(-)
+
+diff --git a/data/hint.py b/data/hint.py
+index a4d492a..371795d 100644
+--- a/data/hint.py
++++ b/data/hint.py
+@@ -21,10 +21,16 @@ ERROR_HINT_PROMPTS: dict[str, str] = {
+ 
+ @dataclass(frozen=True)
+ class Hints:
+-    """One rollout's teacher contexts. Mixture fills both; a single arm fills one."""
++    """One rollout's teacher contexts. Mixture fills both; a single arm fills one.
++
++    `cause` says WHY generation failed when `ok()` is False (REQ-002 §4 hint
++    accounting): one of openrouter_error | timeout | empty | parse_fail | other.
++    Empty string when ok.
++    """
+ 
+     free: str = ""
+     bearing: str = ""
++    cause: str = ""
+ 
+     def ok(self, mode: str) -> bool:
+         if mode == "mixture":
+@@ -69,7 +75,7 @@ async def build_error_hint(
+ 
+     api_key = os.environ.get("OPENROUTER_API_KEY")
+     if not api_key:
+-        return ""
++        return "", "openrouter_error"
+ 
+     if user_prompt is None:
+         user_prompt = (
+@@ -88,16 +94,19 @@ async def build_error_hint(
+             timeout=timeout,
+             max_retries=max_retries,
+         )
++    except (asyncio.TimeoutError, TimeoutError):
++        logger.warning("error-hint generation timed out (variant=%s)", prompt_variant)
++        return "", "timeout"
+     except Exception:  # noqa: BLE001 -- a hint failure must never break a rollout
+-        logger.debug("error-hint generation failed", exc_info=True)
+-        return ""
++        logger.warning("error-hint generation failed (variant=%s)", prompt_variant, exc_info=True)
++        return "", "openrouter_error"
+ 
+     generated = generated.strip()
+     if not generated:
+-        return ""
++        return "", "empty"
+     if prompt_variant == "step_hint":
+-        return generated
+-    return f"Guidance for answering this question:\n{generated}\n"
++        return generated, ""
++    return f"Guidance for answering this question:\n{generated}\n", ""
+ 
+ # initialize hint rate limiter to None
+ _HINT_SEM: asyncio.Semaphore | None = None
+@@ -109,16 +118,28 @@ def _hint_sem(concurrency: int) -> asyncio.Semaphore:
+     return _HINT_SEM
+ 
+ 
+-async def _one_hint(config: Config, task: Task, response_text: str, variant: str) -> str:
++def _norm(result) -> tuple[str, str]:
++    """Accept (text, cause) from the real build_error_hint or a bare string from
++    test doubles; infer 'empty' when a bare empty string comes back."""
++    if isinstance(result, tuple):
++        text, cause = result
++    else:
++        text, cause = result, ""
++    if not text and not cause:
++        cause = "empty"
++    return text, cause
++
++
++async def _one_hint(config: Config, task: Task, response_text: str, variant: str) -> tuple[str, str]:
+     async with _hint_sem(config.generator.hint.concurrency):
+-        return await build_error_hint(
++        return _norm(await build_error_hint(
+             query=task.query,
+             sections=task.sections,
+             response_text=response_text,
+             prompt_variant=variant,
+             model=config.generator.hint.model,
+             timeout=config.generator.hint.timeout,
+-        )
++        ))
+ 
+ 
+ async def generate_hint(config: Config, task: Task, response_text: str) -> Hints:
+@@ -127,12 +148,13 @@ async def generate_hint(config: Config, task: Task, response_text: str) -> Hints
+         if mode == "gold":
+             from data.tau_harness import gold_suffix
+ 
+-            return Hints(free=gold_suffix(task))
++            suffix = gold_suffix(task)
++            return Hints(free=suffix, cause="" if suffix else "empty")
+         if mode == "step_hint":
+             from data.tau_harness import gold_material
+ 
+             async with _hint_sem(config.generator.hint.concurrency):
+-                text = await build_error_hint(
++                text, cause = _norm(await build_error_hint(
+                     prompt_variant="step_hint",
+                     user_prompt=(
+                         f"<gold>\n{gold_material(task)}\n</gold>\n\n"
+@@ -140,17 +162,19 @@ async def generate_hint(config: Config, task: Task, response_text: str) -> Hints
+                     ),
+                     model=config.generator.hint.model,
+                     timeout=config.generator.hint.timeout,
+-                )
+-            return Hints(free=text)
++                ))
++            return Hints(free=text, cause=cause)
+         if mode == "mixture":
+-            free, bearing = await asyncio.gather(
++            (free, fc), (bearing, bc) = await asyncio.gather(
+                 _one_hint(config, task, response_text, "answer_free"),
+                 _one_hint(config, task, response_text, "answer_bearing"),
+             )
+-            return Hints(free=free, bearing=bearing)
++            return Hints(free=free, bearing=bearing, cause=fc or bc)
+         if mode == "answer_bearing":
+-            return Hints(bearing=await _one_hint(config, task, response_text, "answer_bearing"))
+-        return Hints(free=await _one_hint(config, task, response_text, "answer_free"))
++            text, cause = await _one_hint(config, task, response_text, "answer_bearing")
++            return Hints(bearing=text, cause=cause)
++        text, cause = await _one_hint(config, task, response_text, "answer_free")
++        return Hints(free=text, cause=cause)
+     except Exception:
+         logger.exception("error-hint failed for task %s", task.task_id)
+-        return Hints()
++        return Hints(cause="other")
+diff --git a/run.py b/run.py
+index c3a2314..057640f 100644
+--- a/run.py
++++ b/run.py
+@@ -253,22 +253,40 @@ async def generate_trajectory(
+     Produce one trajectory. Success is silent - get_batch() marks it accepted.
+     Failures never reach the store, so they reject here to free the submission slot.
+     """
++    store.stats.episodes_total += 1
+     try:
+         result = await engine.generate_tir(task)
+-    except Exception:
+-        logger.exception("rollout failed for task %s", task.task_id)
++    except Exception as exc:
++        exc_name = type(exc).__name__
++        if "sandbox" in exc_name.lower():
++            store.stats.sandbox_fail += 1
++            store.stats.sandbox_fail_by_exc[exc_name] += 1
++            logger.error(
++                "sandbox failure (%s) for task %s — episode dropped, training continues "
++                "(cumulative sandbox_fail=%d)", exc_name, task.task_id, store.stats.sandbox_fail,
++            )
++        else:
++            logger.exception("rollout failed for task %s (%s)", task.task_id, exc_name)
++        await staleness_manager.on_rollout_rejected()
++        return
++    if not result.response_token_ids:
++        # An empty transcript would contribute an all-masked row (nan-poisoning the
++        # batch mean) and its teacher==student, so it carries no signal either way.
++        store.stats.episodes_empty += 1
++        logger.warning("empty transcript for task %s — episode dropped", task.task_id)
+         await staleness_manager.on_rollout_rejected()
+         return
+     # generate the hint before adding to the store!
+     hints = await generate_hint(config, task, result.text)
+     if not hints.ok(config.generator.hint.prompt):
+-        store.stats.hint_dropped += 1
++        store.stats.count_hint_drop(hints.cause or "other")
+         logger.warning(
+-            "dropping rollout for task %s: no hint could be generated",
+-            task.task_id,
++            "dropping rollout for task %s: no hint could be generated (cause=%s)",
++            task.task_id, hints.cause or "other",
+         )
+         await staleness_manager.on_rollout_rejected()
+         return
++    store.stats.hint_ok += 1
+     await store.add(
+         Trajectory(
+             task_id=result.task_id,
+@@ -328,12 +346,37 @@ async def run_loop(
+     if pending_trajectories:
+         await asyncio.gather(*pending_trajectories, return_exceptions=True)
+ 
++def _require_sandbox_binaries(config: Config) -> None:
++    """Fail loud at startup (REQ-002 §4): banking_knowledge's shell tool needs the
++    srt sandbox stack. Discovering a missing binary 40 steps in looks like a dead
++    store, not a missing dep."""
++    import shutil as _shutil
++
++    if config.data.dataset != "tau2":
++        return
++    domains = getattr(config.data, "domains", None) or []
++    if "banking_knowledge" not in domains:
++        return
++    missing = [b for b in ("srt", "rg", "bwrap", "socat") if _shutil.which(b) is None]
++    if missing:
++        raise RuntimeError(
++            f"banking_knowledge requires sandbox binaries {missing} on PATH — "
++            "run scripts/setup_tau2_sandbox.sh (and include node_modules/.bin in PATH) "
++            "before launching, or drop banking from data.domains."
++        )
++
++
+ async def train(config: Config, smoke: bool = False, ctx: RunContext | None = None) -> None:
+     """Every trainer rank runs this. Rank 0 also owns rollout + eval."""
+     rank, world = _dist_info()
+     wandb = None
+     if rank == 0 and ctx is not None:
+         wandb = init_wandb(config, ctx)
++    if rank == 0:
++        _require_sandbox_binaries(config)
++        if ctx is not None:
++            # samples/<run>.jsonl teacher/student dumps + per-task eval JSONL (REQ-002 §4)
++            os.environ.setdefault("SDPO_SAMPLES_PATH", str(ctx.log_dir / "samples.jsonl"))
+ 
+     train_tasks, heldout_tasks = load_split(config.data)
+     if smoke:
+@@ -448,6 +491,7 @@ async def train(config: Config, smoke: bool = False, ctx: RunContext | None = No
+                                 launched_version,
+                                 dataset=config.data.dataset,
+                                 max_concurrency=config.judge.max_concurrency,
++                                dump_path=(ctx.log_dir / "eval_dump.jsonl") if ctx is not None else None,
+                             )
+                         )
+                         eval_task.add_done_callback(
+@@ -485,6 +529,8 @@ async def baseline(config: Config, ctx: RunContext | None = None) -> None:
+     wandb = None
+     if ctx is not None:
+         wandb = init_wandb(config, ctx)
++    _require_sandbox_binaries(config)
++    dump = (ctx.log_dir / "eval_dump.jsonl") if ctx is not None else None
+     _, heldout = load_split(config.data)
+     engine_cls, _ = get_backend(config.generator.engine.backend)
+     engine = engine_cls(config)
+@@ -492,7 +538,8 @@ async def baseline(config: Config, ctx: RunContext | None = None) -> None:
+     try:
+         if config.data.dataset == "tau2":
+             metrics = await evaluate_pass1(
+-                engine, heldout, max_concurrency=config.judge.max_concurrency
++                engine, heldout, max_concurrency=config.judge.max_concurrency,
++                dump_path=dump, step=0,
+             )
+         else:
+             judge = RubricJudge(
+@@ -502,7 +549,8 @@ async def baseline(config: Config, ctx: RunContext | None = None) -> None:
+                 config.judge.timeout,
+             )
+             metrics = await evaluate(
+-                engine, judge, heldout, max_concurrency=config.judge.max_concurrency
++                engine, judge, heldout, max_concurrency=config.judge.max_concurrency,
++                dump_path=dump, step=0,
+             )
+         logger.info("ZERO-SHOT BASELINE: %s", metrics)
+         if wandb is not None:
+diff --git a/train/logger.py b/train/logger.py
+index fbd9ee0..fc08836 100644
+--- a/train/logger.py
++++ b/train/logger.py
+@@ -183,48 +183,105 @@ def init_wandb(config: Config, ctx: RunContext):
+     return run
+ 
+ 
++def _dump_eval_rows(dump_path, rows) -> None:
++    """Append per-task eval rows as JSONL (REQ-002 §4). Aggregate means hide a
++    collapsed domain; per-task rows do not. Never raises."""
++    if dump_path is None:
++        return
++    try:
++        import json as _json
++
++        p = Path(dump_path)
++        p.parent.mkdir(parents=True, exist_ok=True)
++        with p.open("a", encoding="utf-8") as f:
++            for row in rows:
++                f.write(_json.dumps(row) + "\n")
++    except Exception:
++        logger.exception("eval dump failed (non-fatal)")
++
++
+ async def evaluate(
+     engine: InferenceEngine,
+     judge: RubricJudge,
+     tasks,
+     max_concurrency: int = 8,
++    dump_path=None,
++    step: int | None = None,
+ ) -> dict[str, float]:
+     """Generate on held-out tasks (with web search) and score with the rubric judge.
+ 
+     Held-out only: these tasks are never trained on, so the gap between this score and
+-    train-set performance is the overfitting signal.
++    train-set performance is the overfitting signal. Per-task generation failures are
++    recorded (errored in the dump) and excluded from the judged mean rather than
++    crashing the whole eval.
+     """
+     sem = asyncio.Semaphore(max(1, max_concurrency))
+ 
+     async def one(task):
+         async with sem:
+-            return await engine.generate_tir(task)
+-
+-    results = await asyncio.gather(*(one(task) for task in tasks))
+-    scored = await judge.score_all(
+-        [(task, result.text) for task, result in zip(tasks, results)]
+-    )
++            try:
++                return task, await engine.generate_tir(task), None
++            except Exception as exc:  # noqa: BLE001 — one bad task must not kill the eval
++                logger.warning("eval generation failed for task %s (%s)",
++                               getattr(task, "task_id", "?"), type(exc).__name__)
++                return task, None, type(exc).__name__
++
++    triples = await asyncio.gather(*(one(task) for task in tasks))
++    ok = [(task, result) for task, result, err in triples if err is None]
++    scored = await judge.score_all([(task, result.text) for task, result in ok])
++    judged = {id(task): r for (task, _), r in zip(ok, scored)}
++    rows = []
++    for task, result, err in triples:
++        r = judged.get(id(task))
++        rows.append({
++            "task_id": getattr(task, "task_id", "?"),
++            "section": getattr(task, "section", None) or getattr(task, "domain", None),
++            "score": (float(r.score) if r is not None and r.error is None else None),
++            "errored": err or (r.error if r is not None else None),
++            "step": step,
++        })
++    _dump_eval_rows(dump_path, rows)
+     return summarize(scored)
+ 
+ 
+ async def evaluate_pass1(
+-    engine: InferenceEngine, tasks, max_concurrency: int = 8
++    engine: InferenceEngine, tasks, max_concurrency: int = 8,
++    dump_path=None, step: int | None = None,
+ ) -> dict[str, float]:
+-    """Held-out tau2 pass^1 overall and per domain."""
++    """Held-out tau2 pass^1 overall and per domain.
++
++    A task whose episode errors (e.g. SandboxRuntimeError from banking's shell tool)
++    scores 0.0 — same semantics as a failed episode — and is marked errored in the
++    per-task dump instead of crashing the whole eval (this used to kill baseline mode).
++    """
+     sem = asyncio.Semaphore(max_concurrency)
+ 
+     async def one(task):
+         async with sem:
+-            return task, await engine.generate_tir(task)
++            try:
++                return task, await engine.generate_tir(task), None
++            except Exception as exc:  # noqa: BLE001 — one bad task must not kill the eval
++                logger.warning("eval episode failed for task %s (%s)",
++                               getattr(task, "task_id", "?"), type(exc).__name__)
++                return task, None, type(exc).__name__
+ 
+     pairs = await asyncio.gather(*(one(task) for task in tasks))
+     overall: list[float] = []
+     by_domain: dict[str, list[float]] = defaultdict(list)
+-    for task, result in pairs:
+-        score = float(result.judge_score or 0.0)
++    rows = []
++    for task, result, err in pairs:
++        score = 0.0 if err is not None else float(result.judge_score or 0.0)
+         overall.append(score)
+         domain = getattr(task, "domain", None) or "unknown"
+         by_domain[domain].append(score)
++        rows.append({
++            "task_id": getattr(task, "task_id", "?"),
++            "section": domain,
++            "score": score if err is None else None,
++            "errored": err,
++            "step": step,
++        })
++    _dump_eval_rows(dump_path, rows)
+ 
+     def _mean(xs: list[float]) -> float:
+         return sum(xs) / len(xs) if xs else 0.0
+@@ -247,14 +304,17 @@ async def evaluate_and_log(
+     policy_version: int,
+     dataset: str = "diligence",
+     max_concurrency: int = 8,
++    dump_path=None,
+ ) -> None:
+     """Fire-and-forget wrapper: eval, then wandb.log against the step that *launched* it."""
+     try:
+         if dataset == "tau2" or judge is None:
+-            metrics = await evaluate_pass1(engine, tasks, max_concurrency=max_concurrency)
++            metrics = await evaluate_pass1(engine, tasks, max_concurrency=max_concurrency,
++                                           dump_path=dump_path, step=step)
+         else:
+             metrics = await evaluate(
+-                engine, judge, tasks, max_concurrency=max_concurrency
++                engine, judge, tasks, max_concurrency=max_concurrency,
++                dump_path=dump_path, step=step,
+             )
+         logger.info("EVAL launched at step %d (policy %d): %s", step, policy_version, metrics)
+         payload = {f"eval/{k}": v for k, v in metrics.items()}
+diff --git a/train/store.py b/train/store.py
+index 188639f..c39ed29 100644
+--- a/train/store.py
++++ b/train/store.py
+@@ -13,8 +13,28 @@ class StoreStats:
+     evicted_stale: int = 0
+     evicted_capacity: int = 0
+     hint_dropped:int = 0
++    # hint accounting by cause (REQ-002 §4): dropped-hint totals must be explainable
++    hint_ok: int = 0
++    hint_drop_openrouter_error: int = 0
++    hint_drop_timeout: int = 0
++    hint_drop_empty: int = 0
++    hint_drop_parse_fail: int = 0
++    hint_drop_other: int = 0
++    # episode/sandbox accounting (REQ-002 §4)
++    sandbox_fail: int = 0
++    episodes_total: int = 0
++    episodes_empty: int = 0
++    sandbox_fail_by_exc: Counter[str] = field(default_factory=Counter)
+     staleness_histogram: Counter[int] = field(default_factory=Counter)
+ 
++    def count_hint_drop(self, cause: str) -> None:
++        self.hint_dropped += 1
++        key = f"hint_drop_{cause}"
++        if hasattr(self, key):
++            setattr(self, key, getattr(self, key) + 1)
++        else:
++            self.hint_drop_other += 1
++
+     def as_metrics(self) -> dict[str, float]:
+         total = sum(self.staleness_histogram.values())
+         mean_staleness = (
+@@ -30,6 +50,15 @@ class StoreStats:
+             "store_hint_dropped_percent": float(
+                 self.hint_dropped / self.added if self.added else 0.0
+             ),
++            "hint_ok": float(self.hint_ok),
++            "hint_drop_openrouter_error": float(self.hint_drop_openrouter_error),
++            "hint_drop_timeout": float(self.hint_drop_timeout),
++            "hint_drop_empty": float(self.hint_drop_empty),
++            "hint_drop_parse_fail": float(self.hint_drop_parse_fail),
++            "hint_drop_other": float(self.hint_drop_other),
++            "sandbox_fail_count": float(self.sandbox_fail),
++            "episodes_total": float(self.episodes_total),
++            "episodes_empty": float(self.episodes_empty),
+         }
+ 
+ 
+diff --git a/train/trainer.py b/train/trainer.py
+index ca8da02..5a30147 100644
+--- a/train/trainer.py
++++ b/train/trainer.py
+@@ -338,6 +338,7 @@ class SDPOTrainer:
+         self.config = config
+         self.tasks_by_id = tasks_by_id
+         self.device = device
++        self._samples_dumped = 0  # REQ-002 §4: dump 3 teacher/student pairs per run
+         # Full activations at mini-batch x ~3.5k tokens exceed 80 GB; checkpointing trades
+         # them for recompute
+         if config.trainer.gradient_checkpointing:
+@@ -552,6 +553,8 @@ class SDPOTrainer:
+                     (lp_bearing - student_lp).detach(), micro.response_mask
+                 ).item()
+ 
++            self._maybe_dump_samples(trajectories[start:end], micro, student_lp, teacher_lp)
++
+             # Scale so the summed gradient equals the full-batch mean. Still correct with
+             # per-chunk sync: reduce-scatter sums across ranks and each rank accumulates
+             # into its own shard, so the arithmetic is unchanged.
+@@ -576,11 +579,49 @@ class SDPOTrainer:
+         averaged = {k: v / max(n_micro, 1) for k, v in accumulated.items()} # average stats across all microbatches
+         averaged["grad_norm"] = float(grad_norm)
+         averaged["step"] = float(self.state.step)
++        averaged["lr"] = float(self.optimizer.param_groups[0]["lr"])
++        averaged["tokens"] = float(batch.response_mask.sum().item())
+         averaged["mean_batch_staleness"] = float(
+             (self.state.policy_version - batch.policy_versions.float()).mean() # tracks staleness average by comparing our trainer state's policy version (updated through weight syncs) and each labelled sample's policy
+         )
+         return averaged
+ 
++    def _maybe_dump_samples(self, trajs, micro, student_lp, teacher_lp) -> None:
++        """Dump up to 3 full teacher/student pairs with per-token gap to
++        SDPO_SAMPLES_PATH (REQ-002 §4). A mean gap can look fine while the hint does
++        nothing; the per-token trace is how a human tells 'real hint' from 'cosmetic'."""
++        import json
++        import os as _os
++
++        path = _os.environ.get("SDPO_SAMPLES_PATH")
++        if not path or self._samples_dumped >= 3:
++            return
++        if dist.is_available() and dist.is_initialized() and dist.get_rank() != 0:
++            return
++        try:
++            with torch.no_grad():
++                gaps = (teacher_lp - student_lp).detach()
++            with open(path, "a", encoding="utf-8") as f:
++                for i, t in enumerate(trajs):
++                    if self._samples_dumped >= 3:
++                        break
++                    mask = micro.response_mask[i].bool()
++                    row_gap = gaps[i][mask].float().cpu().tolist()
++                    rec = {
++                        "step": int(self.state.step),
++                        "task_id": t.task_id,
++                        "hint_free": t.hint_free,
++                        "hint_bearing": t.hint_bearing,
++                        "prompt_text": self.tokenizer.decode(t.prompt_token_ids),
++                        "response_text": self.tokenizer.decode(t.response_token_ids),
++                        "per_token_gap": [round(g, 5) for g in row_gap],
++                        "gap_mean": (round(sum(row_gap) / len(row_gap), 6) if row_gap else None),
++                    }
++                    f.write(json.dumps(rec) + "\n")
++                    self._samples_dumped += 1
++        except Exception:
++            logger.exception("sample dump failed (non-fatal)")
++
+     def _sync_clipper(self) -> None:
+         """All-reduce the advantage EMA so every trainer rank clips identically."""
+         if not (dist.is_available() and dist.is_initialized()):
+@@ -780,7 +821,8 @@ def log_metrics(metrics: dict[str, float], store: TrajectoryStore) -> None:
+     gap = combined.get("teacher_minus_student_logp", 0.0)
+     logger.info(
+         "step %d | loss %.4f | teacher-student gap %+.4f | adv_clip %.1f%% | "
+-        "ratio_clip lo %.1f%% hi %.1f%% | staleness %.2f | grad %.3f",
++        "ratio_clip lo %.1f%% hi %.1f%% | staleness %.2f (max %d) | grad %.3f | "
++        "lr %.2e | tokens %d | hint_drop %.1f%% | sandbox_fail %d | empty_eps %d",
+         int(combined.get("step", 0)),
+         combined.get("loss", 0.0),
+         gap,
+@@ -788,7 +830,13 @@ def log_metrics(metrics: dict[str, float], store: TrajectoryStore) -> None:
+         100 * combined.get("ratio_clip_frac_low", 0.0),
+         100 * combined.get("ratio_clip_frac_high", 0.0),
+         combined.get("store_mean_staleness", 0.0),
++        int(combined.get("store_max_staleness_seen", 0)),
+         combined.get("grad_norm", 0.0),
++        combined.get("lr", 0.0),
++        int(combined.get("tokens", 0)),
++        100 * combined.get("store_hint_dropped_percent", 0.0),
++        int(combined.get("sandbox_fail_count", 0)),
++        int(combined.get("episodes_empty", 0)),
+     )
+     if abs(gap) < 1e-3:
+         logger.warning(
+-- 
+2.50.1 (Apple Git-155)
+
