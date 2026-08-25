@@ -153,3 +153,106 @@ Make this robust: install the tools in the image, fail loud at startup if they'r
 - For each arm: mean `teacher_minus_student_logp`, hint-drop rate, sandbox-fail count, any code you changed and why.
 - Pointers to logs (console + `train.log`) and wandb URLs.
 - If you branched `async-sdpo`, the branch URL and a 5-line summary of the diff.
+
+---
+
+## REQ-002: reporting contract for REQ-001 — comparable ablations, explicit reward, mandatory logging
+
+- status: OPEN
+- requested: Jack / 2026-08-25 01:45 PDT
+
+Companion to REQ-001, not a replacement. Same fleet, same arms, same repo. This block pins down **what you must report and log** so the arms are actually comparable to each other. REQ-001 said what to run; this says what a finished answer looks like. If REQ-001 is already RUNNING, apply this to it in flight — do not relaunch anything just to satisfy this block.
+
+### Why this exists
+
+Six arms across two benchmarks are only an ablation if they differ in exactly one axis and are scored identically. Right now nothing pins the seed, the held-out split, or the metric table, so six arms could come back mutually incomparable and we would have to rerun the fleet. Fix that up front.
+
+### 1. Controlled comparison (the "one axis" rule)
+
+Within each benchmark, every arm must be identical except the teacher-hint condition:
+
+- Same base model, same `trainer.total_steps`, same `judge.eval_interval=25`, same `max_staleness=3`, same `group_size=1`, `keep_failures=True`, same clip window, same GPU split.
+- **Same seed set.** Pick one seed list and use it for every arm in that benchmark; state it explicitly. If you can only afford one seed per arm, say so and label the whole table single-seed — do not quietly imply replication.
+- **Same held-out eval set**, frozen before Phase 2 and never trained on. State how many tasks it holds and how it was split (per domain for tau2).
+- If any arm deviates (OOM fallback to `Qwen/Qwen3-8B`, fewer steps because a box died), mark that row `DEVIATED` with the reason. A deviated row is not deleted, it is labeled.
+
+Tau2 arms differ only in hint condition: `gold` vs `step_hint` vs `gold_banking`. Note `gold_banking` also differs in domain scope (banking only) — so it is **not** a clean hint ablation against `gold`; it is the sandbox canary. Report it in its own section and compare it only to `gold`'s banking-domain sub-score, never to `gold` overall.
+
+Diligence arms differ only in teacher: `answer_free` vs `answer_bearing` vs `mixture`.
+
+### 2. Baselines — what "beats baseline" means
+
+Every held-out number needs its untrained counterpart on the **same eval set**. Report all four:
+
+1. `base` — the stock model, no training, no hints. The real floor.
+2. `baseline` — Phase 1 run (`run_taubench.sh baseline` / `run_diligencebench.sh baseline`), i.e. the stack with no teacher hint.
+3. `arm @ step 0` — first eval of the arm itself (sanity: should match `base` within noise).
+4. `arm @ final`.
+
+A win is `arm @ final` over **`baseline`**, not over `base`. Say the delta in absolute points and state the eval-set size so we can eyeball whether it clears noise. If you have >1 seed, give mean ± std across seeds and note that with n<5 we are not claiming statistical significance — just report the numbers honestly rather than dressing them up. **Do not import the Track 3 statsig protocol here** (margin=(3.28−mean)×√n is a nanogpt val-loss rule and is meaningless for pass^1 / judge scores).
+
+### 3. Required metrics table
+
+One TSV, `summary.tsv`, committed under this block. One row per (benchmark, arm, seed). Exact column names, exact metric keys — all of these already exist in the code, do not invent new ones:
+
+```
+
+benchmark arm seed box status steps model
+base_metric baseline_metric step0_metric final_metric delta_vs_baseline
+gap_mean gap_abs_mean gap_p10 gap_p90 gap_dead_frac
+adv_clip_frac ratio_clip_frac_low ratio_clip_frac_high
+store_mean_staleness store_max_staleness_seen store_hint_dropped_percent
+sandbox_fail_count episodes_total episodes_empty
+wandb_url log_path
+
+```
+
+Metric-key mapping (from the code, so we are talking about the same numbers):
+
+- tau2 `*_metric` = `pass1` from `train/logger.py:evaluate_pass1`. Also give per-domain `pass1_retail`, `pass1_airline`, `pass1_banking` as extra columns.
+- diligence `*_metric` = `judge_score` from `reward/judge.py`. Also give the three section scores: `judge_factual-accuracy`, `judge_analytical-reasoning`, `judge_risk-awareness`.
+- `gap_*` = `teacher_minus_student_logp` (`train/loss.py:195`), aggregated over all training steps of that run.
+- `gap_dead_frac` = fraction of logged steps where `|teacher_minus_student_logp| < 1e-3`. **This is the single most important diagnostic in the table.** If it is high the arm learned nothing and the held-out delta is luck.
+- clip fractions = `adv_clip_frac`, `ratio_clip_frac_low`, `ratio_clip_frac_high` (`train/loss.py:204,218,219`).
+- store metrics = `store_mean_staleness`, `store_max_staleness_seen`, `store_hint_dropped_percent` (`train/store.py:28-30`).
+
+Round floats to 4 decimals. Use literal `NA` for anything you genuinely could not measure — never leave a cell blank and never guess a plausible-looking number.
+
+### 4. Required logging (add it if it does not exist)
+
+This is a code change, not just a reporting ask. Commit it to the branch.
+
+**Per-step scalar log**, every step, to `train.log` and wandb: `step`, `teacher_minus_student_logp`, the three clip fractions, the three store metrics, loss, LR, tokens, `sandbox_fail_count` cumulative. If any of these are currently computed but not logged, wire them up.
+
+**Hint accounting.** `store_hint_dropped_percent` tells us *that* a hint died, not *why*. Add a counter broken out by cause and log it every step: `hint_ok`, `hint_drop_openrouter_error`, `hint_drop_timeout`, `hint_drop_empty`, `hint_drop_parse_fail`, `hint_drop_other`. REQ-001 already asks for logging that shows *why* a hint failed — this is the concrete schema for it. An arm whose hints mostly failed is not a teacher ablation, it is an accidental second baseline, and we need to be able to see that from the log alone.
+
+**Sandbox accounting.** Per-episode `sandbox_fail` counter with the exception class name, plus `episodes_total` and `episodes_empty` (transcripts with no usable steps). Fail loud at startup if `rg` / `bwrap` / `socat` are missing, per REQ-001.
+
+**Eval dump.** At each `eval_interval`, write a JSONL row per held-out task: task id, domain/section, score, and whether it errored. Aggregate numbers are not enough — if banking collapses because the sandbox died we need to see it per task rather than infer it from a mean.
+
+**Sample transcripts.** For each arm, dump 3 full teacher/student pairs (prompt, hint, student rollout, teacher rollout, per-token gap) to `samples/<arm>.jsonl`. This is the fastest way for us to tell "the hint was real" from "the hint was cosmetic" — a mean gap can look fine while the hint is doing nothing interesting.
+
+### 5. Interpretation you must write, not just numbers
+
+Under the table, for each benchmark, 5–10 lines answering:
+
+- Which arm won, by how much, and is that inside or outside seed noise as far as you can tell?
+- Did the ranking of arms match the ranking of `gap_mean`? If a low-gap arm "won", say so plainly and call the result unexplained rather than picking a story to fit it.
+- For diligence: `answer_bearing` is the stronger teacher. If it wins, label it distillation-flavored per REQ-001 and say whether `answer_free` moved at all — `answer_free` moving is the more interesting result even if it is smaller.
+- Anything you changed in code mid-fleet, which arms ran before vs after the change, and whether the table mixes both. Mixed rows must be marked.
+
+### 6. Negative results are a pass, not a failure
+
+If gap is dead everywhere and no arm beats baseline, that is a **DONE** with a clear negative result, not a FAILED — provided the table and logs above are complete and you fixed what was fixable. Report it straight. A well-logged null result is worth more to us than a win we cannot trace to a mechanism. Do not tune toward a positive number by changing the eval set, the baseline, or the metric definition partway through.
+
+### Priority if you are short on boxes or time
+
+Do not silently drop arms. In order:
+
+1. Phase 0 smoke + Phase 1 baselines + logging from §4 — without these nothing else is interpretable.
+2. tau2 `gold`, diligence `answer_free` — the two main arms, with `base` and `baseline` on the same eval set.
+3. diligence `answer_bearing` — the contrast that tells us whether the gap mechanism works at all.
+4. `step_hint`, `mixture`, `gold_banking`.
+
+Cutting from the bottom is fine and expected. Say explicitly in the writeup which arms were cut and why.
+
