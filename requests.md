@@ -256,3 +256,53 @@ Do not silently drop arms. In order:
 
 Cutting from the bottom is fine and expected. Say explicitly in the writeup which arms were cut and why.
 
+---
+
+### REQ-001/002 progress note (jerry-agent, phase 0 VALIDATED)
+
+Phase 0 is functionally proven on 1×8×H100 (job q8y11gw). The SDPO loop runs
+end-to-end: **teacher-student gap clearly nonzero** (steps 1-3: -0.13, -0.08,
+-0.05), weight syncs succeed, all LLM routing works (0 credential errors), logging
++ per-step scalars emit. Smoke is slow only because a 0.6B model flails through
+tau2 multi-turn episodes — not a bug.
+
+**Bugs fixed (all in the attached patch `patches/async-sdpo/req002-logging.patch`,
+also branch jerry-agent-req002; 192/192 tests green):**
+1. `setup_weight_sync` bound NCCL to GPU 0 (per-thread CUDA device under
+   asyncio.to_thread) → "Duplicate GPU detected". Broke EVERY run, not just smoke.
+2. `send_weight_bucket` had the same per-thread-device bug → "unhandled cuda error"
+   mid weight-broadcast. Both fixed with a `_pin_device()` helper.
+3. `build_dataloader` referenced `cfg.trainer.training_batch_size` (field is
+   `batch_size`) → AttributeError at loop start.
+4. tau2 `evaluate_simulation` got `solo_mode` twice (in kwarg + env_kwargs) →
+   TypeError that zeroed every retail/airline reward.
+5. `data.user_llm` default (`stealth/ox-alpha`) doesn't support tool-calling via
+   litellm → user-sim tool turns silently fell back to the openai provider. Set to
+   a tool-capable model.
+
+**Env/infra required on Baseten (baked into the launch recipe):**
+- vLLM 0.26.0 is imported but in NO dependency file — must `uv pip install` it;
+  it drags in cu13 torchvision/torchaudio that must be re-pinned to cu128 (torch
+  is cu128). torchaudio is unused → removed.
+- tau2/litellm collapses every model to a bare name on the openai provider, so
+  set `OPENAI_API_KEY=$OPENROUTER_API_KEY` + `OPENAI_API_BASE=https://openrouter.ai/api/v1`
+  (bare `gpt-4o-mini` works against OpenRouter's OpenAI-compat endpoint).
+- NCCL needs `NCCL_CUMEM_ENABLE=0 NCCL_P2P_DISABLE=1` on this container.
+- tau2 data isn't shipped with the pip package — sparse-clone tau2-bench@pinned-rev.
+- `sudo`/`python3-dev` missing from the image; kill orphaned vLLM EngineCore procs
+  between runs (they pin GPU 0 VRAM).
+
+**HARD BLOCKER (not code, cannot fix from here):** the banking_knowledge srt/bwrap
+sandbox cannot run on the Baseten workstation image — `bwrap` can't create a mount
+namespace (Operation not permitted), and `truss train workstation` has no
+`--privileged`. This blocks `gold_banking` and the banking sub-domain of `gold`
+only; retail/airline, step_hint, and all diligence arms are unaffected, and the
+patch makes banking degrade gracefully (per-episode sandbox_fail, process survives).
+Your new upstream commit (1235bfa "Fail tau2 startup if b[wrap]...") looks aimed at
+the same thing — my patch applies cleanly on top of it.
+
+Next: let the smoke finish for the checkpoint, then Phase 1 baselines (tau2
+retail+airline + diligence) and the two main arms (tau2 gold, diligence
+answer_free) per your priority order. Full 6-arm fleet is many GPU-hours; will
+cut from the bottom of your priority list and say what was cut.
+
