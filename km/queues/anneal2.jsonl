@@ -1,0 +1,7 @@
+{"name":"ANL_oy_s1","seed":1,"k":8,"tmin":3,"tmax":56,"age_start":44,"age_end":30,"anneal_frac":1.0}
+{"name":"ANL_oy_s2","seed":2,"k":8,"tmin":3,"tmax":56,"age_start":44,"age_end":30,"anneal_frac":1.0}
+{"name":"ANL_oy_wide","seed":0,"k":8,"tmin":3,"tmax":56,"age_start":48,"age_end":28,"anneal_frac":1.0}
+{"name":"ANL_oy_xwide","seed":0,"k":8,"tmin":3,"tmax":56,"age_start":52,"age_end":26,"anneal_frac":1.0}
+{"name":"ANL_oy_k10","seed":0,"k":10,"tmin":3,"tmax":56,"age_start":44,"age_end":30,"anneal_frac":1.0}
+{"name":"ANL_oy_f70","seed":0,"k":8,"tmin":3,"tmax":56,"age_start":44,"age_end":30,"anneal_frac":0.7}
+{"name":"ANL_oy_s3","seed":3,"k":8,"tmin":3,"tmax":56,"age_start":44,"age_end":30,"anneal_frac":1.0}

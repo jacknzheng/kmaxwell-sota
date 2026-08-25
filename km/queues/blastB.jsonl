@@ -1,0 +1,5 @@
+{"name": "K10_a36_s9", "seed": 9, "k": 10, "tmin": 3, "tmax": 56, "age": 36, "shape": "linear"}
+{"name": "K10_a36_s14", "seed": 14, "k": 10, "tmin": 3, "tmax": 56, "age": 36, "shape": "linear"}
+{"name": "K10_a36_s19", "seed": 19, "k": 10, "tmin": 3, "tmax": 56, "age": 36, "shape": "linear"}
+{"name": "K10_a36_s24", "seed": 24, "k": 10, "tmin": 3, "tmax": 56, "age": 36, "shape": "linear"}
+{"name": "K8_a38_s11", "seed": 11, "k": 8, "tmin": 3, "tmax": 56, "age": 38, "shape": "linear"}

@@ -1,0 +1,2 @@
+{"name": "C1_s62e30", "seed": 0, "k": 8, "tmin": 3, "tmax": 56, "age_start": 62, "age_end": 30, "anneal_frac": 1.0, "start": 1000, "fleet": "ablation_anneal_n8"}
+{"name": "C1_s44e32", "seed": 0, "k": 8, "tmin": 3, "tmax": 56, "age_start": 44, "age_end": 32, "anneal_frac": 1.0, "start": 1000, "fleet": "ablation_anneal_n8"}

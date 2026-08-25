@@ -1,0 +1,5 @@
+{"name": "ANL_frozen_ctl", "seed": 0, "k": 8, "tmin": 3, "tmax": 56, "age_start": 38, "age_end": 38, "anneal_frac": 1.0}
+{"name": "ANL_young2old", "seed": 0, "k": 8, "tmin": 3, "tmax": 56, "age_start": 30, "age_end": 44, "anneal_frac": 1.0}
+{"name": "ANL_old2young", "seed": 0, "k": 8, "tmin": 3, "tmax": 56, "age_start": 44, "age_end": 30, "anneal_frac": 1.0}
+{"name": "ANL_mild_up", "seed": 0, "k": 8, "tmin": 3, "tmax": 56, "age_start": 34, "age_end": 42, "anneal_frac": 1.0}
+{"name": "ANL_mild_dn", "seed": 0, "k": 8, "tmin": 3, "tmax": 56, "age_start": 42, "age_end": 34, "anneal_frac": 1.0}

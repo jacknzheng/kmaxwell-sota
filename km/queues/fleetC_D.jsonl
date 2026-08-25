@@ -1,0 +1,5 @@
+{"name": "ANL64_s3", "seed": 3, "k": 8, "tmin": 3, "tmax": 64, "age_start": 58, "age_end": 26, "anneal_frac": 1.0, "start": 1000, "fleet": "ablation_anneal_n8"}
+{"name": "ANL64_s7", "seed": 7, "k": 8, "tmin": 3, "tmax": 64, "age_start": 58, "age_end": 26, "anneal_frac": 1.0, "start": 1000, "fleet": "ablation_anneal_n8"}
+{"name": "C1_s58e30", "seed": 0, "k": 8, "tmin": 3, "tmax": 56, "age_start": 58, "age_end": 30, "anneal_frac": 1.0, "start": 1000, "fleet": "ablation_anneal_n8"}
+{"name": "C1_s44e28", "seed": 0, "k": 8, "tmin": 3, "tmax": 56, "age_start": 44, "age_end": 28, "anneal_frac": 1.0, "start": 1000, "fleet": "ablation_anneal_n8"}
+{"name": "C1_s58e28", "seed": 0, "k": 8, "tmin": 3, "tmax": 56, "age_start": 58, "age_end": 28, "anneal_frac": 1.0, "start": 1000, "fleet": "ablation_anneal_n8"}

@@ -1,0 +1,3 @@
+{"name":"K8_a38_sqrt","seed":0,"k":8,"tmin":3,"tmax":56,"age":38,"shape":"sqrt"}
+{"name":"K8_a38_flat","seed":0,"k":8,"tmin":3,"tmax":56,"age":38,"shape":"flat"}
+{"name":"K8_a38_cub","seed":0,"k":8,"tmin":3,"tmax":56,"age":38,"shape":"cub"}

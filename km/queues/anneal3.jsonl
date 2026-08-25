@@ -1,0 +1,6 @@
+{"name":"ANL_oy_xxwide","seed":0,"k":8,"tmin":3,"tmax":56,"age_start":54,"age_end":28,"anneal_frac":1.0}
+{"name":"ANL_oy_f50","seed":0,"k":8,"tmin":3,"tmax":56,"age_start":44,"age_end":30,"anneal_frac":0.5}
+{"name":"ANL_oy_f85","seed":0,"k":8,"tmin":3,"tmax":56,"age_start":44,"age_end":30,"anneal_frac":0.85}
+{"name":"ANL_oy_k10r","seed":0,"k":10,"tmin":3,"tmax":56,"age_start":42,"age_end":30,"anneal_frac":1.0}
+{"name":"ANL_oy_k10w","seed":0,"k":10,"tmin":3,"tmax":56,"age_start":46,"age_end":28,"anneal_frac":1.0}
+{"name":"ANL_oy_mild","seed":0,"k":8,"tmin":3,"tmax":56,"age_start":42,"age_end":32,"anneal_frac":1.0}

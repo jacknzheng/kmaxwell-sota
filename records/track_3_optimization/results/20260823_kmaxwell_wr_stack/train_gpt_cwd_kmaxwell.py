@@ -82,7 +82,7 @@ ATTN_TRUST_FLOOR_FADE_END_STEP = 1625
 ATTN_TRUST_MIN_AGREE = 0.20
 ATTN_TRUST_MIN_GRAD_ALIGN = 0.00
 ATTN_TRUST_POWER = 1.00
-TRAIN_PROGRESS_INTERVAL = 0
+TRAIN_PROGRESS_INTERVAL = 1
 LOG_DIR = Path("logs")
 RADIAL_OUTWARD_SCALE = 0.5
 RADIAL_INWARD_SCALE = 1.0
@@ -754,7 +754,7 @@ train_steps = FINAL_TRAIN_STEPS
 # identical to a 2900-step run at every step <= STOP_STEP. Override with STOP_STEP=.
 STOP_STEP = int(os.environ.get("STOP_STEP", "2720"))
 val_regular_interval = 125
-extra_val_steps = set(range(2620, 2725, 5)) | {
+extra_val_steps = set(range(2580, 2725, 5)) | {
     2700, 2705, 2710, 2715, 2720, 2725, 2730, 2735, 2740, 2745, 2750, 2755, 2760, 2765,
     2770, 2775, 2780, 2785, 2790, 2795, 2800, 2805, 2810, 2820, 2830, 2840, 2850, 2860,
     2870, 2880, 2890, 2895, 2900, 2910, 2920, 2930, 2940, 2950, 2960, 2965, 2970, 2975,
@@ -1004,6 +1004,6 @@ for step in range(train_steps + 1):
     if TRAIN_PROGRESS_INTERVAL > 0 and (step + 1) % TRAIN_PROGRESS_INTERVAL == 0:
         approx_training_time = training_time + (time.perf_counter() - t0)
         print0(f"step:{step+1}/{train_steps} train_time:{approx_training_time:.3f}s"
-               + f" step_avg:{1000*approx_training_time/(step + 1):.2f}ms", console=True, log=False)
+               + f" step_avg:{1000*approx_training_time/(step + 1):.2f}ms", console=True)
 
 dist.destroy_process_group()

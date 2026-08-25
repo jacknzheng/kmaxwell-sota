@@ -1,0 +1,3 @@
+{"name":"ANL_54_24","seed":0,"k":8,"tmin":3,"tmax":56,"age_start":54,"age_end":24,"anneal_frac":1.0}
+{"name":"ANL_54_22","seed":0,"k":8,"tmin":3,"tmax":56,"age_start":54,"age_end":22,"anneal_frac":1.0}
+{"name":"ANL_64w_58_26","seed":0,"k":8,"tmin":3,"tmax":64,"age_start":58,"age_end":26,"anneal_frac":1.0}

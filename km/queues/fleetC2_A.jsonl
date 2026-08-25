@@ -1,0 +1,1 @@
+{"name": "C1_s58e22_t64", "seed": 0, "k": 8, "tmin": 3, "tmax": 64, "age_start": 58, "age_end": 22, "anneal_frac": 1.0, "start": 1000, "fleet": "ablation_anneal_n8"}

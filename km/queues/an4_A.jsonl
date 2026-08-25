@@ -1,0 +1,3 @@
+{"name":"ANL_xw_s1","seed":1,"k":8,"tmin":3,"tmax":56,"age_start":54,"age_end":28,"anneal_frac":1.0}
+{"name":"ANL_xw_s2","seed":2,"k":8,"tmin":3,"tmax":56,"age_start":54,"age_end":28,"anneal_frac":1.0}
+{"name":"ANL_xw_s3","seed":3,"k":8,"tmin":3,"tmax":56,"age_start":54,"age_end":28,"anneal_frac":1.0}

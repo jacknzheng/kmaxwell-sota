@@ -1,0 +1,4 @@
+{"name":"ANL_best_s5","seed":5,"k":8,"tmin":3,"tmax":64,"age_start":58,"age_end":26,"anneal_frac":1.0}
+{"name":"ANL_best_s6","seed":6,"k":8,"tmin":3,"tmax":64,"age_start":58,"age_end":26,"anneal_frac":1.0}
+{"name":"ANL_best_s7","seed":7,"k":8,"tmin":3,"tmax":64,"age_start":58,"age_end":26,"anneal_frac":1.0}
+{"name":"ANL_best_s0","seed":0,"k":8,"tmin":3,"tmax":64,"age_start":58,"age_end":26,"anneal_frac":1.0}
