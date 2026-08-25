@@ -448,3 +448,108 @@ diligence answer_free + answer_bearing at step 1, tau2 gold running rollouts. 8B
 Will let the arms run to 200, score with the committed summary.tsv scorer, and post the
 table + interpretation. All fixes are in patches/async-sdpo/req002-logging.patch.
 
+---
+
+## REQ-004: k=20 power-law EMA kernels — γ sweep + range ablation (seed 0)
+
+- status: OPEN
+- requested: Jack / 2026-08-25 12:15 PDT
+
+**Do not preempt REQ-003.** This is a modded-nanogpt / K-Maxwell job. Queue it
+until a box is free (or spin a 4th 8×H100 if capacity exists). Do not touch
+async-sdpo.
+
+### Why
+
+Closed-form fit of 20 log-spaced unit EMAs onto `k^{γ-1}` (lags 1..3249, relative
+L2, measure dk/k):
+
+- Best NNLS shape for γ=0.5 is 1.89% error, but it is degenerate: 81% of mass on
+  the slowest tick, mean age 5939, K_eff≈2.2. k=8 already hits 2.01%. **Do not
+  train the unconstrained NNLS mix.**
+- The live object is the 1-parameter Laplace family `w_i ∝ τ_i^γ` on a
+  log-spaced grid (every buffer stays alive). On τ∈[3,64] this lands at mean
+  age 21–36, next to the KM k=8 winners (age 35–38).
+- Range is the actual lever: NNLS error at γ=0.5 goes 58% → 5.7% as τ_max goes
+  64 → 3300. γ>1 (rising kernels) cannot be approximated by nonnegative EMAs.
+
+Control to beat: K8_a38 on this same trainer, val@3250 = 3.27379 (seed 0).
+
+### Trainer
+
+Frozen K-Maxwell on the #36 stack (not CWD, not anneal):
+
+```
+records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell.py
+```
+
+`--start 1000 --seed 0`. `--no-probe-ema` is fine if val time hurts; it does not
+change the update. If k=20 OOMs, rerun the same γs at k=8 with the L8 weights
+below and mark the rows DEVIATED.
+
+### Phase 1 — γ sweep, k=20, τ∈[3, 64], Laplace w∝τ^γ (run these)
+
+Fair test of the 1-hyperparameter hypothesis at KM timescales. γ=1 is the
+age-matched arm (mean age 36.0 vs K8_a38's 38).
+
+```bash
+# L20_g0_t64     mean age 20.7
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell.py \
+  --seed 0 --start 1000 --k 20 --tau-min 3 --tau-max 64 \
+  --weights 0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05
+
+# L20_g0.5_t64   mean age 28.6
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell.py \
+  --seed 0 --start 1000 --k 20 --tau-min 3 --tau-max 64 \
+  --weights 0.020934,0.0226897,0.0245926,0.026655,0.0288904,0.0313133,0.0339394,0.0367858,0.0398708,0.0432146,0.0468388,0.0507669,0.0550245,0.0596391,0.0646407,0.0700618,0.0759376,0.0823061,0.0892087,0.0966902
+
+# L20_g1_t64     mean age 36.0  (age-matched to KM)
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell.py \
+  --seed 0 --start 1000 --k 20 --tau-min 3 --tau-max 64 \
+  --weights 0.00726317,0.0085325,0.0100237,0.0117754,0.0138334,0.0162509,0.019091,0.0224274,0.0263469,0.0309514,0.0363606,0.0427151,0.0501801,0.0589497,0.069252,0.0813547,0.0955726,0.112275,0.131897,0.154948
+```
+
+### Phase 2 — range at γ=0.5 (after Phase 1, same box is fine)
+
+```bash
+# L20_g0.5_t256  mean age 106
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell.py \
+  --seed 0 --start 1000 --k 20 --tau-min 3 --tau-max 256 \
+  --weights 0.013228,0.0148701,0.016716,0.0187911,0.0211237,0.023746,0.0266937,0.0300073,0.0337323,0.0379197,0.042627,0.0479185,0.0538669,0.0605538,0.0680707,0.0765207,0.0860197,0.0966978,0.108702,0.122195
+
+# L20_g0.5_t512  mean age 208
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell.py \
+  --seed 0 --start 1000 --k 20 --tau-min 3 --tau-max 512 \
+  --weights 0.0103776,0.0118806,0.0136012,0.0155711,0.0178262,0.020408,0.0233636,0.0267474,0.0306212,0.035056,0.0401332,0.0459456,0.0525999,0.0602179,0.0689393,0.0789237,0.0903541,0.10344,0.118421,0.135572
+```
+
+### Phase 3 — k ablation (does 20 vs 8 matter when weights are Laplace?)
+
+```bash
+# L8_g0.5_t64    mean age 31.5
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell.py \
+  --seed 0 --start 1000 --k 8 --tau-min 3 --tau-max 64 \
+  --weights 0.0514657,0.0640399,0.0796863,0.0991554,0.123381,0.153526,0.191036,0.23771
+```
+
+### Do not
+
+- Launch CWD / anneal / n=8 fleets unless a Phase-1 arm pairwise-beats K8_a38
+  at 3250 on seed 0 (LHS-style: just report val@3150/3160/3200/3250 and first
+  crossing of 3.28).
+- Train γ>1 or the unconstrained NNLS [1.5, 7192] mix (mean age 5939).
+- Change MUON_LR / MU / architecture / batch.
+
+### Write back
+
+Table: arm × val@3150 × val@3160 × val@3200 × val@3250 × first step with
+val<3.28, vs K8_a38 seed 0. Logs under `logs/kmaxwell/powerlaw20/`. One
+paragraph: did γ ranking match the shape-error ranking, and did stretching
+τ_max help or just make momentum too old?
+
