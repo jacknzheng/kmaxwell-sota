@@ -553,3 +553,44 @@ val<3.28, vs K8_a38 seed 0. Logs under `logs/kmaxwell/powerlaw20/`. One
 paragraph: did γ ranking match the shape-error ranking, and did stretching
 τ_max help or just make momentum too old?
 
+---
+
+### REQ-004 RESULTS — k=20 power-law EMA γ-sweep (seed 0, COMPLETE)
+
+Frozen K-Maxwell on the #36 stack, seed 0, --start 1000, --no-probe-ema. Control:
+**K8_a38 val@3250 = 3.27379**. Logs: logs/kmaxwell/powerlaw20/.
+
+| arm | k | τmax | mean_age | val@3150 | val@3160 | val@3200 | val@3250 | first<3.28 |
+|---|---|---|---|---|---|---|---|---|
+| L20_g0_t64   | 20 | 64  | 20.7 | 3.28300 | 3.28203 | 3.27875 | 3.27667 | 3190 |
+| L20_g0.5_t64 | 20 | 64  | 28.6 | 3.28196 | 3.28097 | 3.27767 | 3.27559 | 3175 |
+| L20_g1_t64   | 20 | 64  | 36.0 | 3.28089 | 3.27994 | 3.27666 | **3.27460** | 3160 |
+| L20_g0.5_t256| 20 | 256 | 106  | 3.28081 | 3.28002 | 3.27716 | 3.27534 | 3170 |
+| L20_g0.5_t512| 20 | 512 | 208  | 3.29673 | 3.29606 | 3.29367 | 3.29219 | **none** |
+| L8_g0.5_t64  | 8  | 64  | 31.5 | 3.28072 | 3.27974 | 3.27648 | **3.27442** | 3160 |
+| **K8_a38 (control)** | 8 | 56 | 38 | — | — | — | **3.27379** | — |
+
+**Interpretation.** The γ ranking *does* match the shape-error / age story: at k=20
+τ64, val@3250 falls monotonically as γ raises mean age toward the KM optimum —
+γ=0 (age 20.7) 3.27667 → γ=0.5 (28.6) 3.27559 → γ=1 (36.0) 3.27460. So "older is
+better" holds right up to the age-matched arm. **But nothing in the sweep beats the
+k=8 KM control (3.27379).** The age-matched γ=1 k=20 is still +0.0008; the best
+single sweep arm is **L8_g0.5 = 3.27442** (+0.0006), i.e. still short.
+
+Two sharper reads:
+1. **k=20 does NOT help — k=8 is better at matched shape.** L8_g0.5_t64 (3.27442)
+   beats L20_g0.5_t64 (3.27559) by 0.0012, and even edges the best k=20 arm
+   (L20_g1, 3.27460). Spreading the same Laplace mass over 20 log-spaced buffers is
+   slightly worse than concentrating it in 8 — more buffers is not the lever.
+2. **Stretching τ_max helps only to a point, then makes momentum too old.**
+   γ=0.5: t64 (age 28.6) 3.27559 → t256 (106) 3.27534 (marginal, ~0.0002 better) →
+   t512 (208) **3.29219 and never crosses 3.28**. The wide range is catastrophic;
+   the mild t256 gain is within seed noise (σ≈0.001).
+
+**Verdict:** the 1-parameter Laplace power-law family is competitive with KM but
+does not beat K8_a38 at seed 0 — no arm pairwise-clears the control, so per your
+"do not escalate unless a Phase-1 arm beats K8_a38" gate, **no CWD/anneal/n=8
+fleet is launched.** Clean negative result. (Single seed; σ≈0.001, so the
+sub-0.001 gaps to control are not resolved — a multi-seed pass on L8_g0.5 vs
+K8_a38 would be the only way to call it a true tie vs a loss.)
+
