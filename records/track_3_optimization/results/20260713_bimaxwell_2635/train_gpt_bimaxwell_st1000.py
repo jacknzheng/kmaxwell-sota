@@ -34,7 +34,7 @@ The clean PR #321 base retains:
   - PowerCool LR schedule, mu schedule, val schedule
   - aux-Adam beta2 split, depth-scaled mlp.fc init
 
-All hyperparameters are hardcoded; only --seed is a command-line argument. Set CWD=0.0,
+All hyperparameters are hardcoded; --seed and --mu (Nesterov plateau, default 0.95) are CLI. Set CWD=0.0,
 ROWFLOOR=False and TAILEMA_TAU=0 below to recover the clean PR #321 base.
 """
 
@@ -61,6 +61,8 @@ torch.backends.cuda.enable_cudnn_sdp(False)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--seed", type=int, default=0)
+parser.add_argument("--mu", type=float, default=0.95,
+                    help="Muon Nesterov mu plateau (default 0.95, #339). Also sets _MU_MAX.")
 args = parser.parse_args()
 
 
@@ -76,7 +78,7 @@ ADAM_OTHER_POWER_C = 1.6589351369335795e-06
 MUON_POWER_C = 3.3169534699576625e-06
 EXPERIMENT_NAME = "clean-simplified-soaph"
 EXPERIMENT_INTUITION = "SOTA SOAP-all_hidden (freq=1) + u/w-floor + radial scale + EMA-Nesterov, with Soft-Muon / Contra-Muon / Circuit-Muon / CenterShrink / Aurora removed."
-MU = 0.95
+MU = args.mu  # Nesterov plateau; default 0.95 matches #339
 MUON_LR = 0.0375
 TARGET_UW = 0.3825
 SOAP_TARGET_UW = TARGET_UW
@@ -887,9 +889,9 @@ def _lr(step, initial_lr, power_c, power=1.0):
     downward_lr = power_c * max(0.0, t_end - step) ** power
     return min(flat_lr, downward_lr)
 
-# v49: v15 Muon mu schedule (warmup 0.85->0.95 over 300 steps, cooldown 0.95->0.85 over last 50)
+# v49: v15 Muon mu schedule (warmup 0.85->_MU_MAX over 300 steps, cooldown _MU_MAX->0.85 over last 200)
 _MU_MIN = 0.85
-_MU_MAX = 0.95
+_MU_MAX = MU  # --mu sweeps the plateau; warmup/cooldown still 0.85 <-> plateau
 _MU_WARMUP_STEPS = 300
 # Muon-momentum cooldown horizon (mu 0.95->0.85 over the last N steps).
 _MU_COOLDOWN_STEPS = 200   # tuned (mu-cooldown extended; original 100)
