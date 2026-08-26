@@ -50,6 +50,8 @@ parser.add_argument("--tau-max", type=float, default=56.0)
 parser.add_argument("--weights", type=str,
                     default="0.03673,0.07345,0.11018,0.14690,0.18363,0.44911")
 parser.add_argument("--start", type=int, default=1000)
+parser.add_argument("--mu", type=float, default=0.95,
+                    help="Muon Nesterov mu plateau (default 0.95). Also sets _MU_MAX.")
 args = parser.parse_args()
 _km_tau, _km_betas, _km_weights, _km_age = build_kmaxwell_kernel(
     args.k, args.tau_min, args.tau_max, 1.0, weights=parse_weights(args.weights))
@@ -67,7 +69,7 @@ ADAM_OTHER_POWER_C = 1.6589351369335795e-06
 MUON_POWER_C = 3.3169534699576625e-06
 EXPERIMENT_NAME = "clean-simplified-soaph"
 EXPERIMENT_INTUITION = "SOTA SOAP-all_hidden (freq=1) + u/w-floor + radial scale + EMA-Nesterov, with Soft-Muon / Contra-Muon / Circuit-Muon / CenterShrink / Aurora removed."
-MU = 0.95
+MU = args.mu
 MUON_LR = 0.0375
 TARGET_UW = 0.3825
 SOAP_TARGET_UW = TARGET_UW
@@ -881,9 +883,9 @@ def _lr(step, initial_lr, power_c, power=1.0):
     downward_lr = power_c * max(0.0, t_end - step) ** power
     return min(flat_lr, downward_lr)
 
-# v49: v15 Muon mu schedule (warmup 0.85->0.95 over 300 steps, cooldown 0.95->0.85 over last 50)
+# v49: v15 Muon mu schedule (warmup 0.85->_MU_MAX over 300 steps, cooldown _MU_MAX->0.85 over last 200)
 _MU_MIN = 0.85
-_MU_MAX = 0.95
+_MU_MAX = MU  # --mu sweeps the plateau; warmup/cooldown still 0.85 <-> plateau
 _MU_WARMUP_STEPS = 300
 # Muon-momentum cooldown horizon (mu 0.95->0.85 over the last N steps).
 _MU_COOLDOWN_STEPS = 200   # tuned (mu-cooldown extended; original 100)
