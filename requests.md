@@ -789,7 +789,7 @@ isolated_from_torchrun, my eager/env-isolation dropped): patches/async-sdpo/req0
 
 ## REQ-006: resume 4+4 fleet — FSDP2 embed/lm_head stay replicated
 
-- status: RUNNING (fresh clone @3f9bdef, rebasing patch, 4+4 proof must reach a train_step; then fleet)
+- status: BLOCKED-NEEDS-YOU (embed fix works; 4+4 now reaches grad-clip; new mixed-DTensor _foreach_norm blocker at trainer.py:580 — see below; box stopped)
 - requested: Jack / 2026-08-25 22:20 PDT
 
 **Ping / restart.** The first-step crash you reported is fixed. Pull a **fresh clone of `async-sdpo` `main` @ `3f9bdef`** (`Keep FSDP2 off embed_tokens so the packed logprob path can run on 4+4.`). Rebase `patches/async-sdpo/req002-logging.patch` onto this SHA (not `6fb7088`). Do **not** fall back to 4B / NPROC=1.
@@ -1013,4 +1013,37 @@ val<3.28, vs the mu=0.95 control. Logs under `logs/kmaxwell/mu_sweep_cwd/`.
 One paragraph: did moving μ off 0.95 help on the K-Maxwell SOAP stack, and in
 which direction.
 
+---
+
+### REQ-006 STATUS: FSDP2 embed fix WORKS — next blocker is grad-clip over mixed DTensor (needs you)
+
+Progress on @3f9bdef (201 tests green incl. your packed-logprob FSDP test). The 4+4 path now
+gets *much* further:
+- `starting rollout engine isolated from torchrun` ✓ (your isolation fix)
+- `trainer process group ready` ranks 0–3 ✓
+- forward through embed_tokens ✓ — **the DTensor embedding crash is GONE** (embed/lm_head
+  replicated worked).
+- forward + backward complete; it dies at the **optimizer grad-clip**.
+
+**New blocker (compiled AND uncompiled — not a torch.compile issue):**
+`train/trainer.py:580  torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_grad_norm)`
+→ `RuntimeError: aten._foreach_norm.Scalar: got mixed torch.Tensor and DTensor, need to
+convert all torch.Tensor to DTensor before calling distributed operators!`
+
+Direct consequence of the 3f9bdef design: transformer blocks are DTensors (fully_shard'd),
+but embed_tokens + lm_head are now plain replicated tensors. `clip_grad_norm_`'s foreach path
+runs `_foreach_norm` over the *whole* param list at once → mixed DTensor + plain tensor → fail.
+Only shows on the real FSDP2 trainer (n_trainer_gpus≥2); smoke is single-GPU.
+
+Fix is yours (grad-norm correctness under sharding needs the right cross-shard all-reduce, so
+I won't guess-patch it). Options: (a) compute the total norm in two groups — DTensor params
+and plain params — and combine (`total = sqrt(norm_dtensor**2 + norm_plain**2)`), each with
+its own reduction; (b) make embed/lm_head replicated *DTensors* (on the same mesh, replicate
+placement) so the whole list is uniform DTensor and clip_grad_norm_ just works; (c) fall back
+to a non-foreach clip. (b) is usually the cleanest with FSDP2. There may be a similar spot in
+the optimizer step if it also foreach-iterates mixed params.
+
+Init + rollout + forward + backward are all proven now; this grad-clip is the only thing left
+before real 4+4 training. Box stopped. Ping and I resume immediately. Meanwhile I'm running
+REQ-008 (kmaxwell μ-sweep, separate modded-nanogpt box — does not touch async-sdpo).
 
