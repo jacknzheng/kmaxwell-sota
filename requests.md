@@ -366,7 +366,7 @@ Ping me on this branch and I'll pick it straight back up.
 
 ## REQ-003: resume async-sdpo fleet on NEW main (deadlock A is fixed)
 
-- status: DONE (partial — see RESULTS + CLOSED below; all boxes stopped) | UPDATE: deadlock fix CONFIRMED — tau2 phase-0 smoke ran 10/10 steps past the old step-3 freeze, 0 cred errors, checkpoint saved (195 tests pass incl. the regression test). Diligence smoke running; Phase 1 baselines next, then fleet.
+- status: SUPERSEDED by REQ-005 (DONE partial — 4B workaround only; 4+4 spawn now fixed on async-sdpo main @6fb7088)
 - requested: Jack / 2026-08-25 10:54 PDT
 
 **Ping / restart.** Blocker A from your REQ-001/002 FINAL note is fixed. Pull a **fresh clone of `async-sdpo` `main`** (do not keep running the hung box or the pre-fix tree). Then continue REQ-001 + REQ-002 as written: Phase 0 smoke, Phase 1 baselines, then the fleet in the priority order, with the REQ-002 table/logging contract.
@@ -672,4 +672,64 @@ the 4-trainer + TP=4 launch is unrunnable on the Baseten image (torchrun breaks 
 TP rendezvous) — fix that and the full 8B/27B 4+4 fleet + diligence judge (swap to a
 strict-json-schema-capable judge model/provider) become runnable, and I can resume the
 full-scale arms.** Ping on this branch to continue.
+
+---
+
+## REQ-005: resume 4+4 8B/27B fleet — torchrun/vLLM spawn is fixed
+
+- status: OPEN
+- requested: Jack / 2026-08-25 21:45 PDT
+
+**Ping / restart.** The blocker you closed REQ-003 on is fixed. Pull a **fresh clone of `async-sdpo` `main` @ `6fb7088`** (`Isolate vLLM TP spawn from torchrun so 4+4 can launch on Baseten.`). Do not reuse the 4B / NPROC=1 boxes or the pre-fix tree. Rebase `patches/async-sdpo/req002-logging.patch` onto this SHA (not `69c023f`). Then continue REQ-001 + REQ-002 as written: Phase 0, Phase 1 baselines, then the fleet in the priority order, with the REQ-002 table/logging contract.
+
+Same repo, same secrets as REQ-001 (already in this file). Same launch scripts. Same reporting contract (REQ-002). REQ-003/004 stay closed; this is the resume.
+
+### What changed on https://github.com/jacknzheng/async-sdpo.git `main` (`6fb7088`)
+
+These are exactly the two client-side items from your REQ-003 CLOSED note.
+
+1. **vLLM TP spawn is isolated from torchrun.** Rank 0 starts the rollout engine *before* `init_process_group`. `isolated_from_torchrun()` strips `RANK` / `WORLD_SIZE` / `LOCAL_RANK` / `MASTER_*` / all `TORCHELASTIC_*` (including `TORCHELASTIC_USE_AGENT_STORE`) / `PET_*` for the duration of `AsyncLLM.from_engine_args`, then restores them so the trainer group can still join. Logs: `starting rollout engine isolated from torchrun (stripped ...)`. Starting the engine *after* a live default process group is now a hard `RuntimeError` — that was the Baseten hang (`TCPStore` timeout to `127.0.0.1:<port>` at engine init, reproduced on all 3 boxes). Clearing only RANK/WORLD_SIZE/MASTER_PORT was not enough; the elastic agent-store flag kept workers pinned to torchrun's port.
+
+2. **Diligence judge.** Strict `json_schema` + `require_parameters` still goes first. OpenRouter 404 / "No endpoints found that can handle the requested parameters" falls back to `json_object` (no provider filter) and still validates `OneShotOutput`. Held-out diligence should be usable again. Do not swap the judge model just to dodge this.
+
+3. **Weight-sync port.** If `51216` is still held (`Address already in use` — what killed `answer_bearing` on `q9762x3`), we bind an ephemeral port instead of dying. Still kill leftover EngineCore processes between runs; this is the backup.
+
+Do **not** move `engine.start()` to after the trainer group. README documents this.
+
+### Phase 0 — prove 4+4, not just 1+1 smoke
+
+`--smoke` is still NPROC=1 / TP=1 and will not catch the hang. Do both:
+
+- `bash scripts/run_taubench.sh smoke` and `bash scripts/run_diligencebench.sh smoke` (loop still works on new main).
+- **4+4 init proof (mandatory before the fleet).** Launch the real script path with the default GPU split (`torchrun --nproc-per-node=4` + vLLM TP=4). Suggested: `bash scripts/run_taubench.sh gold trainer.total_steps=2` on `Qwen/Qwen3-8B` if 27B is not cached yet. Confirm in `console.log` / `train.log`:
+  - `starting rollout engine isolated from torchrun`
+  - `trainer process group ready`
+  - at least **1 training step** with a nonzero `teacher_minus_student_logp`
+  If this hangs on TCPStore again: **FAIL LOUD**, dump the log, status=FAILED. Do **not** silently fall back to `n_rollout_gpus=1 n_trainer_gpus=1` / Qwen3-4B. That workaround is retired unless 4+4 is still broken after `6fb7088`.
+
+### Phase 1 — baselines
+
+Same held-out sets as REQ-003 if you still have them; otherwise freeze new ones and say so. Run:
+
+- `bash scripts/run_taubench.sh baseline`
+- `bash scripts/run_diligencebench.sh baseline`
+
+on the **same model the fleet will train** (27B default; 8B if 27B OOMs). Diligence baseline should no longer be 30/30 `judge_errors`. If the json_object fallback still 404s, say so with the response body — do not invent scores.
+
+### Phase 2 — fleet (4 trainer + TP=4)
+
+One 8×H100 per arm. Default model `Qwen/Qwen3.8-27B`. If that OOMs after a real shrink of `mini_batch_size`, fall back to `Qwen/Qwen3-8B` and mark the row `DEVIATED`. **Not 4B.** `trainer.total_steps=200`, `judge.eval_interval=25`, `max_staleness=3`.
+
+Priority if short on boxes (do not silently drop; cut from the bottom):
+
+1. tau2 `gold`, diligence `answer_free`
+2. diligence `answer_bearing` (port conflict should be gone; this is the stronger-teacher contrast)
+3. `step_hint`, `mixture`, `gold_banking`
+
+Do not change the SDPO loss sign, clip window, `group_size=1`, or `keep_failures=True`.
+
+### Write back
+
+Same `summary.tsv` schema as REQ-002. Confirm 4+4 actually initialized (quote the isolation log line). If you branched or rebased the logging patch, the branch URL and a 5-line diff summary.
+
 
