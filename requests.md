@@ -789,7 +789,7 @@ isolated_from_torchrun, my eager/env-isolation dropped): patches/async-sdpo/req0
 
 ## REQ-006: resume 4+4 fleet — FSDP2 embed/lm_head stay replicated
 
-- status: BLOCKED-NEEDS-YOU (embed fix works; 4+4 now reaches grad-clip; new mixed-DTensor _foreach_norm blocker at trainer.py:580 — see below; box stopped)
+- status: SUPERSEDED by REQ-009 (embed fix CONFIRMED; mixed-DTensor grad-clip fix is on main @c3f6139)
 - requested: Jack / 2026-08-25 22:20 PDT
 
 **Ping / restart.** The first-step crash you reported is fixed. Pull a **fresh clone of `async-sdpo` `main` @ `3f9bdef`** (`Keep FSDP2 off embed_tokens so the packed logprob path can run on 4+4.`). Rebase `patches/async-sdpo/req002-logging.patch` onto this SHA (not `6fb7088`). Do **not** fall back to 4B / NPROC=1.
@@ -1078,4 +1078,31 @@ candidate rather than noise — but "2635" is a seed-0 first-cross, NOT a statsi
 **Recommended next step: n=8 seeds of μ=0.94 vs the μ=0.95 control**, scored the REQ-002
 way, to see if μ=0.94 moves the K-Maxwell record from 2680. I did not launch that (n=8 is
 a bigger spend + you gated escalation on results); flagging it as the clear follow-up.
+
+---
+
+## REQ-009: resume 4+4 fleet — mixed DTensor/plain grad-clip is fixed
+
+- status: OPEN
+- requested: Jack / 2026-08-26 06:05 PDT
+
+**Ping / restart.** The grad-clip crash after the first backward is fixed. Pull a **fresh clone of `async-sdpo` `main` @ `c3f6139`** (`Clip mixed FSDP DTensor and plain grads without foreach.`). Rebase `patches/async-sdpo/req002-logging.patch` onto this SHA (not `3f9bdef`). Do **not** fall back to 4B / NPROC=1.
+
+REQ-005 isolation and REQ-006 embed-replication still stand. 4+4 now inits, forwards, and backprops; this is the clip + AdamW foreach hole.
+
+### What changed (`c3f6139`)
+
+`clip_grad_norm_` foreach ran `_foreach_norm` over FSDP layer grads (DTensor) and replicated embed/lm_head grads (plain Tensor). We split the two groups, combine `sqrt(norm_dtensor² + norm_plain²)` (DTensor.norm all-reduces shards), then scale every grad by the same coefficient. AdamW is constructed with `foreach=False` so the optimizer step does not hit the same mixed-type foreach.
+
+CPU regression: `tests/test_trainer.py::test_train_step_clips_mixed_dtensor_and_plain_grads`.
+
+### Do this now
+
+1. Fresh 8×H100. Clone `main` @ `c3f6139`. Rebase logging patch.
+2. **4+4 proof:** `bash scripts/run_taubench.sh gold trainer.total_steps=2` (8B if 27B uncached). Must complete **2 training steps** with finite `teacher_minus_student_logp` and `grad_norm`. Init-only or forward-only is not enough. If `_foreach_norm` / mixed DTensor comes back: FAIL LOUD. Do not NPROC=1.
+3. If green, continue to 200 and the REQ-002 fleet (tau2 `gold`, diligence `answer_free`, then `answer_bearing`, then the rest). 27B default; 8B on OOM after shrinking `mini_batch_size`; **not 4B**.
+4. Same secrets as REQ-001. Same reporting. REQ-008 is DONE and must not preempt this.
+
+Go.
+
 
