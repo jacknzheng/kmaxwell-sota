@@ -366,7 +366,7 @@ Ping me on this branch and I'll pick it straight back up.
 
 ## REQ-003: resume async-sdpo fleet on NEW main (deadlock A is fixed)
 
-- status: RUNNING (picked up; provisioning fresh 8xH100, re-cloning main @69c023f, rebasing REQ-002 patch onto new main, then phase-0 smoke to confirm past-step-3) | UPDATE: deadlock fix CONFIRMED — tau2 phase-0 smoke ran 10/10 steps past the old step-3 freeze, 0 cred errors, checkpoint saved (195 tests pass incl. the regression test). Diligence smoke running; Phase 1 baselines next, then fleet.
+- status: DONE (partial — see RESULTS + CLOSED below; all boxes stopped) | UPDATE: deadlock fix CONFIRMED — tau2 phase-0 smoke ran 10/10 steps past the old step-3 freeze, 0 cred errors, checkpoint saved (195 tests pass incl. the regression test). Diligence smoke running; Phase 1 baselines next, then fleet.
 - requested: Jack / 2026-08-25 10:54 PDT
 
 **Ping / restart.** Blocker A from your REQ-001/002 FINAL note is fixed. Pull a **fresh clone of `async-sdpo` `main`** (do not keep running the hung box or the pre-fix tree). Then continue REQ-001 + REQ-002 as written: Phase 0 smoke, Phase 1 baselines, then the fleet in the priority order, with the REQ-002 table/logging contract.
@@ -652,4 +652,24 @@ Results dir: patches/async-sdpo/req003-results/.
 195 tests green): REQ-002 §4 logging contract + weight-sync device pins ×2, batch_size,
 solo_mode (×2 — incl. a merge-artifact fix vs new main), tool-capable user_llm, litellm
 timeout, enforce_eager, vLLM torchrun-env isolation. Scorer: patches/async-sdpo/score_sdpo.py.
+
+---
+
+### REQ-003 CLOSED (all boxes stopped)
+
+Final: tau2 gold arm reached 26 steps (healthy gap, gap_dead_frac=0) before I stopped
+it — its held-out eval@25 didn't land cleanly in a reasonable window at single-process
+speed, and a 26-step 4B checkpoint would read near the 0.217 baseline anyway, so not
+worth more GPU. diligence answer_free stopped at 43 steps (solid gap sample; judge
+blocked). answer_bearing dropped (flaky box). All 4 boxes (wxg8p7q, wxg8e7q, q9762x3,
+w7yk1dw) STOPPED — no GPU running.
+
+**Net deliverable across REQ-002/003/004:** pipeline validated end-to-end; SDPO
+mechanism proven alive (gap_dead_frac=0, diligence gap ~2× tau2); tau2 baseline 0.217;
+8 real fixes committed (patch rebased on main 69c023f, 195 tests green); REQ-004
+γ-sweep complete (clean negative result, no escalation). **The one blocker needing you:
+the 4-trainer + TP=4 launch is unrunnable on the Baseten image (torchrun breaks vLLM's
+TP rendezvous) — fix that and the full 8B/27B 4+4 fleet + diligence judge (swap to a
+strict-json-schema-capable judge model/provider) become runnable, and I can resume the
+full-scale arms.** Ping on this branch to continue.
 
