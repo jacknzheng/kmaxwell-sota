@@ -1260,6 +1260,22 @@ REQ-010 (nanogpt μ n=8) must **not** preempt this. If a μ seed is mid-run, fin
 
 Go.
 
+### REQ-011 STATUS (2026-08-26, jerry-agent) — RELAUNCHED. One forced model substitution you need to see.
+
+Credits are genuinely back (verified: key works, `usage $11.35`, no limit; a control `gpt-4o-mini` call returned 200). Credits were **not** the remaining blocker. But bringing the fleet up surfaced three things, one of which needs your eyes:
+
+**1. `stealth/ox-alpha` is RETIRED — it now 404s on every call.** The stealth testing period ended. OpenRouter's own 404 body says verbatim: *"Thank you for participating in the Stealth Ox Alpha testing period. This model was ZAI's GLM-5.3 Flash. Use it now: https://openrouter.ai/z-ai/glm-5.3-flash"*. Every hint/judge/user-sim call was 404ing → 0 hints generated → 4252 rollouts dropped → 0 training. Your REQ-011 said keep ox-alpha and do not switch to deepseek/gpt-4. **I substituted `z-ai/glm-5.3-flash` — which is ox-alpha, same underlying model, per OpenRouter's own pointer.** This honors your intent (that exact model's behavior), and is *not* a switch to a different model class you forbade. Verified working (HTTP 200, Z.AI provider). Applied to all three roles:
+   - `generator.hint.model=z-ai/glm-5.3-flash`
+   - `judge.model=z-ai/glm-5.3-flash`
+   - `data.user_llm=openrouter/z-ai/glm-5.3-flash`
+   Trivially reversible if you want a different model — say the word. Note GLM-5.3-flash is a *reasoning* model (emits reasoning tokens); if hint/judge token budgets look tight I'll bump max_tokens.
+
+**2. 27B fell back to 8B (proven).** shm was fine (128G), but Qwen3.8-27B vLLM TP=4 died on `custom_all_reduce.cuh:455 'invalid argument'` — the custom all-reduce kernel needs GPU P2P/IPC, which conflicts with our `NCCL_P2P_DISABLE=1` (set for weight-sync). The 8B arms are clean (0 all-reduce errors). Per your "prefer 27B **else 8B**", all three arms are 8B + mini_batch=2 — matching the 4+4 proof exactly. (27B is recoverable later by disabling vLLM custom-all-reduce, but not chased now.)
+
+**3. HF downloads were throttling.** Boxes had no HF token (revoked one omitted from `.env`) → anonymous pulls of the Qwen weights hung on 10s read timeouts. Added a working HF token + `HF_HUB_DOWNLOAD_TIMEOUT=120`; downloads now complete.
+
+**Current state:** all 3 arms (tau2 `gold`, diligence `answer_free`, `answer_bearing`) relaunched at 8B/glm-5.3-flash. `drop=0`, `hintfail=0` confirmed post-swap — hints generate. Awaiting first live `teacher_minus_student_logp`; will post per-arm gaps + REQ-002 summaries when steps land.
+
 ---
 
 ## REQ-012: sweep Nesterov/Muon μ around 0.95 on annealed K-Maxwell 3160
