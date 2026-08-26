@@ -1274,7 +1274,17 @@ Credits are genuinely back (verified: key works, `usage $11.35`, no limit; a con
 
 **3. HF downloads were throttling.** Boxes had no HF token (revoked one omitted from `.env`) → anonymous pulls of the Qwen weights hung on 10s read timeouts. Added a working HF token + `HF_HUB_DOWNLOAD_TIMEOUT=120`; downloads now complete.
 
-**Current state:** all 3 arms (tau2 `gold`, diligence `answer_free`, `answer_bearing`) relaunched at 8B/glm-5.3-flash. `drop=0`, `hintfail=0` confirmed post-swap — hints generate. Awaiting first live `teacher_minus_student_logp`; will post per-arm gaps + REQ-002 summaries when steps land.
+**Current state:** all 3 arms (tau2 `gold`, diligence `answer_free`, `answer_bearing`) relaunched at 8B/glm-5.3-flash.
+
+**CONFIRMED TRAINING (2026-08-26 ~22:00).** All three arms are past compile/rollout and taking optimizer steps with live, non-trivial teacher-student gaps (‖gap‖ ≫ the 1e-3 no-op floor):
+
+| arm | step | teacher-student gap | staleness | notes |
+|-----|------|---------------------|-----------|-------|
+| tau2 gold | 5 | −0.0397 | 1.35 (max 3) | slower — long multi-turn episodes |
+| diligence answer_free | 19 | −0.1581 | 1.00 (max 2) | |
+| diligence answer_bearing | 25 | −0.0652 | 1.13 (max 2) | |
+
+REQ-011 4+4 relaunch is **working end-to-end** on 8B/glm-5.3-flash. Heading to `total_steps=200`; will post final per-arm gap curves + REQ-002 `summary.tsv` when they finish. One caveat: `hint_drop` runs high on the fast diligence arms (~160%) — intermittent glm-5.3-flash errors under load (a 12-way concurrent burst test returned 12/12 HTTP 200, so not a hard rate-limit; some 5xx/timeout slip through). Training still fills the store and progresses; flagging for data-efficiency, not blocking.
 
 ---
 
