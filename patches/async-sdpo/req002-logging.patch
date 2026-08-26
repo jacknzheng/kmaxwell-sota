@@ -1,4 +1,4 @@
-From c8b7b59f315ebeec811dd4b037d122b298388488 Mon Sep 17 00:00:00 2001
+From a15b41f782e426eba86d9f87af0ff245531324b2 Mon Sep 17 00:00:00 2001
 From: Jerry Hong <jerry.hong@baseten.co>
 Date: Tue, 25 Aug 2026 02:00:32 -0700
 Subject: [PATCH] =?UTF-8?q?REQ-002=20=C2=A74=20logging=20+=202=20runtime?=
@@ -556,10 +556,10 @@ index bb1b2e4..25e138a 100644
  
  
 diff --git a/train/trainer.py b/train/trainer.py
-index b91ae54..d49d443 100644
+index aa64bec..7a3051d 100644
 --- a/train/trainer.py
 +++ b/train/trainer.py
-@@ -341,6 +341,7 @@ class SDPOTrainer:
+@@ -374,6 +374,7 @@ class SDPOTrainer:
          self.config = config
          self.tasks_by_id = tasks_by_id
          self.device = device
@@ -567,7 +567,7 @@ index b91ae54..d49d443 100644
          # Full activations at mini-batch x ~3.5k tokens exceed 80 GB; checkpointing trades
          # them for recompute
          if config.trainer.gradient_checkpointing:
-@@ -563,6 +564,8 @@ class SDPOTrainer:
+@@ -599,6 +600,8 @@ class SDPOTrainer:
                      (lp_bearing - student_lp).detach(), micro.response_mask
                  ).item()
  
@@ -576,7 +576,7 @@ index b91ae54..d49d443 100644
              # Scale so the summed gradient equals the full-batch mean. Still correct with
              # per-chunk sync: reduce-scatter sums across ranks and each rank accumulates
              # into its own shard, so the arithmetic is unchanged.
-@@ -587,11 +590,49 @@ class SDPOTrainer:
+@@ -623,11 +626,49 @@ class SDPOTrainer:
          averaged = {k: v / max(n_micro, 1) for k, v in accumulated.items()} # average stats across all microbatches
          averaged["grad_norm"] = float(grad_norm)
          averaged["step"] = float(self.state.step)
@@ -626,7 +626,7 @@ index b91ae54..d49d443 100644
      def _sync_clipper(self) -> None:
          """All-reduce the advantage EMA so every trainer rank clips identically."""
          if not (dist.is_available() and dist.is_initialized()):
-@@ -797,7 +838,8 @@ def log_metrics(metrics: dict[str, float], store: TrajectoryStore) -> None:
+@@ -833,7 +874,8 @@ def log_metrics(metrics: dict[str, float], store: TrajectoryStore) -> None:
      gap = combined.get("teacher_minus_student_logp", 0.0)
      logger.info(
          "step %d | loss %.4f | teacher-student gap %+.4f | adv_clip %.1f%% | "
@@ -636,7 +636,7 @@ index b91ae54..d49d443 100644
          int(combined.get("step", 0)),
          combined.get("loss", 0.0),
          gap,
-@@ -805,7 +847,13 @@ def log_metrics(metrics: dict[str, float], store: TrajectoryStore) -> None:
+@@ -841,7 +883,13 @@ def log_metrics(metrics: dict[str, float], store: TrajectoryStore) -> None:
          100 * combined.get("ratio_clip_frac_low", 0.0),
          100 * combined.get("ratio_clip_frac_high", 0.0),
          combined.get("store_mean_staleness", 0.0),
