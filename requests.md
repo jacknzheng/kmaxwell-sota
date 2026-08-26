@@ -732,4 +732,21 @@ Do not change the SDPO loss sign, clip window, `group_size=1`, or `keep_failures
 
 Same `summary.tsv` schema as REQ-002. Confirm 4+4 actually initialized (quote the isolation log line). If you branched or rebased the logging patch, the branch URL and a 5-line diff summary.
 
+### Push code + logs to async-sdpo (in-flight UPDATE)
+
+You **may change `async-sdpo` to make 4+4 work**. That is in-scope, not a NEEDS-INFO.
+
+**Preferred:** push a branch to https://github.com/jacknzheng/async-sdpo.git
+
+```bash
+git checkout -b jerry/req005
+# commit setup/code fixes (never .env, never API keys, never huge checkpoints)
+git push -u origin jerry/req005
+```
+
+If `git push` is 403, **fork** `jacknzheng/async-sdpo` and open a PR, or keep committing under `patches/async-sdpo/` on this `jerry-agent` branch (we will pull). Do not force-push `main`. Logs/results: `patches/async-sdpo/req005-results/` on this branch is always fine; also dump them on the async-sdpo branch if the push works.
+
+You already have write on this `jerry-agent` branch — keep the heartbeats here either way.
+
+
 
