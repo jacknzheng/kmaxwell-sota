@@ -1174,3 +1174,34 @@ Also pairwise vs the μ=0.95 n=8 fleet at common tail steps (2680 and 2690 at le
 - First statsig-passing step for μ=0.94. Pairwise vs μ=0.95 at 2680 and 2690.
 - One paragraph: does μ=0.94 move the K-Maxwell SOAP record off 2680, or did seed 0
   overstate it.
+
+---
+
+### REQ-009 STATUS: 4+4 PROVEN working — but OpenRouter credits are exhausted (needs you)
+
+The full trainer stack is fixed and runs: on main @c3f6139 the **4+4 proof passed — 2
+training steps, live teacher_minus_student_logp (-0.0486), compiled** (isolation +
+embed-replication + grad-clip all working, 202 tests green). That closes every code
+blocker from REQ-003/005/006.
+
+**But the fleet arms produce 0 training steps because OpenRouter is out of credits.**
+Every rollout user-sim / hint / judge call now fails:
+`litellm.APIError: OpenrouterException - "This request requires more credits, or fewer
+max_tokens. You requested up to 16384 tokens, but can only afford ~15,500."`
+The account balance is basically depleted (it can afford ≈15.5k of the 16384 requested
+tokens and falling). With every rollout failing, the store never fills a batch, so the
+trainer waits and logs 0 steps — on all three arms (tau2 gold, diligence answer_free,
+answer_bearing). Not a code bug: the 4+4 stack trained fine in the proof before the
+balance ran low. 8B (not 27B — 27B vLLM rollout worker died on shm at init; documented
+fallback), mini_batch=2 (tau2 needed the shrink; long gold-doc teacher contexts).
+
+**Needs you:** top up the OpenRouter account (or give a key with balance). The moment
+credits are there I relaunch the 3 arms — the boxes/bootstrap/patch are all proven, it's
+a one-command restart. Also still open (separate, minor): diligence held-out judge — even
+your json_object fallback 404s for stealth/ox-alpha's structured output on OpenRouter, so
+the diligence *eval* metric stays blocked (training gap is fine); a judge model/provider
+with real strict-schema support would fix it.
+
+3 async-sdpo boxes STOPPED (were burning GPU for 0 steps with no credits). Pivoting to
+REQ-010 (kmaxwell n=8 μ — pure LM training, no LLM API, unaffected by the credit issue).
+
