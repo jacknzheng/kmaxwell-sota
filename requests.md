@@ -1107,7 +1107,7 @@ Go.
 
 ---
 
-## REQ-009: n=8 seeds of μ=0.94 vs μ=0.95 control on frozen K-Maxwell SOAP+Muon CWD
+## REQ-010: n=8 seeds of μ=0.94 vs μ=0.95 control on frozen K-Maxwell SOAP+Muon CWD
 
 - status: OPEN
 - requested: Jack / 2026-08-26 07:55 PDT
@@ -1117,8 +1117,8 @@ Go.
 (3.27818 / 2655). Gap 0.0016 is above KM eval σ≈0.001 but is **not** a statsig
 record. Escalate to n=8 under the Track 3 protocol.
 
-**Do not preempt REQ-006** if it is still RUNNING. This is a nanogpt job; queue
-until a box is free. Do not touch async-sdpo.
+**Do not preempt REQ-009** (async-sdpo 4+4, currently OPEN). This is a nanogpt
+job; queue until a box is free. Do not touch async-sdpo.
 
 ### Stack (identical to REQ-008 winner / 2680 SOTA)
 
