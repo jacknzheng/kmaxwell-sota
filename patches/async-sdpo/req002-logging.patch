@@ -1,37 +1,47 @@
-From 5d517f4560c3d4b7082a7d7dcb00665a2d3e28ef Mon Sep 17 00:00:00 2001
+From 19f4444a676baf14e2e4b6bebe71831c3ac50e99 Mon Sep 17 00:00:00 2001
 From: Jerry Hong <jerry.hong@baseten.co>
 Date: Tue, 25 Aug 2026 02:00:32 -0700
-Subject: [PATCH] =?UTF-8?q?REQ-002=20=C2=A74=20logging:=20hint-cause=20+?=
- =?UTF-8?q?=20sandbox/episode=20accounting,=20eval=20JSONL=20dump,=20sampl?=
- =?UTF-8?q?e=20transcripts,=20per-step=20scalars?=
+Subject: [PATCH] =?UTF-8?q?REQ-002=20=C2=A74=20logging=20+=202=20runtime?=
+ =?UTF-8?q?=20bug=20fixes=20found=20during=20phase-0=20bringup?=
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-- StoreStats: hint_ok + hint_drop_{openrouter_error,timeout,empty,parse_fail,other},
-  sandbox_fail (+ by-exception Counter), episodes_total, episodes_empty — all in
-  as_metrics so they reach train.log + wandb every step.
-- hint.py: build_error_hint returns (text, cause); Hints carries cause;
-  generate_hint normalizes bare-string test doubles.
-- run.py: episode accounting in generate_trajectory (sandbox failures classified
-  by exception name and counted, empty transcripts rejected — an all-masked row
-  nan-poisons the batch mean), per-cause hint-drop counting, fail-loud startup
-  check for srt/rg/bwrap/socat when banking_knowledge is in scope, eval dump wiring.
+LOGGING (REQ-002 §4):
+- StoreStats: hint_ok + per-cause hint_drop_{openrouter_error,timeout,empty,
+  parse_fail,other}, sandbox_fail (+by-exception), episodes_total/empty — all
+  surfaced in as_metrics -> train.log + wandb every step.
+- hint.py: per-cause classification via a ContextVar (build_error_hint keeps its
+  pinned bare-string return; cause rides out-of-band, concurrency-safe).
+- run.py: episode accounting + sandbox-failure classification in
+  generate_trajectory, empty-transcript rejection, fail-loud sandbox-binary
+  check when banking is in scope, eval-dump wiring.
 - logger.py: evaluate/evaluate_pass1 guard per-task episode errors (a banking
-  SandboxRuntimeError used to crash baseline mode entirely), score errored tau2
-  tasks 0.0, and append per-task rows to eval_dump.jsonl.
-- trainer.py: lr + tokens in step metrics, extended per-step log line, and 3
-  teacher/student sample transcripts with per-token gap to samples.jsonl.
+  SandboxRuntimeError used to crash baseline mode) and append per-task eval
+  JSONL rows.
+- trainer.py: lr+tokens metrics, extended per-step log line, 3 sample
+  teacher/student transcripts with per-token gap.
+
+BUG FIXES (blocked all training on Baseten; found running phase-0 smoke):
+- trainer.py setup_weight_sync: pin torch.cuda.set_device(self.device) before
+  the vLLM weight-transfer rendezvous. It runs under asyncio.to_thread and
+  CUDA's current device is per-thread, so the sender bound NCCL to GPU 0 and
+  collided with the rollout worker ("Duplicate GPU detected: rank 0 and rank 1
+  both on <bus>"). Affected every run, not just smoke.
+- trainer.py build_dataloader: cfg.trainer.training_batch_size -> batch_size
+  (the field is batch_size; the old name raised AttributeError at loop start).
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01YKPwGqPuEuP2wzzHuCEhok
 ---
- data/hint.py     | 54 +++++++++++++++++++++++------
- run.py           | 62 ++++++++++++++++++++++++++++++----
- train/logger.py  | 88 ++++++++++++++++++++++++++++++++++++++++--------
- train/store.py   | 29 ++++++++++++++++
- train/trainer.py | 50 ++++++++++++++++++++++++++-
- 5 files changed, 251 insertions(+), 32 deletions(-)
+ data/hint.py        | 54 ++++++++++++++++++++++------
+ data/tau_harness.py | 15 ++++++--
+ run.py              | 62 ++++++++++++++++++++++++++++----
+ train/config.py     |  7 +++-
+ train/logger.py     | 88 +++++++++++++++++++++++++++++++++++++--------
+ train/store.py      | 29 +++++++++++++++
+ train/trainer.py    | 50 +++++++++++++++++++++++++-
+ 7 files changed, 270 insertions(+), 35 deletions(-)
 
 diff --git a/data/hint.py b/data/hint.py
 index a4d492a..b5f77c5 100644
@@ -169,11 +179,53 @@ index a4d492a..b5f77c5 100644
          logger.exception("error-hint failed for task %s", task.task_id)
 -        return Hints()
 +        return Hints(cause="other")
+diff --git a/data/tau_harness.py b/data/tau_harness.py
+index 7962588..8e6d39a 100644
+--- a/data/tau_harness.py
++++ b/data/tau_harness.py
+@@ -335,11 +335,16 @@ def make_user(task: Task, llm: str, llm_args: dict | None = None, env=None):
+     if env is not None and getattr(env, "user_tools", None) is not None:
+         include = getattr(task.tau2_task, "user_tools", None)
+         tools = env.get_user_tools(include=include)
++    # timeout + num_retries flow through tau2's llm_utils into litellm.completion. Without
++    # a client-side timeout a hung OpenRouter/HTTP call freezes the whole rollout loop
++    # (no store-starvation warning, just silence) — the episode never returns and training
++    # stops advancing. Fail fast instead; a dropped episode is handled by the rollout guard.
++    default_args = {"temperature": 0.0, "timeout": 90, "num_retries": 2}
+     return UserSimulator(
+         llm=llm,
+         instructions=str(task.tau2_task.user_scenario),
+         tools=tools,
+-        llm_args=llm_args or {"temperature": 0.0},
++        llm_args={**default_args, **(llm_args or {})},
+     )
+ 
+ 
+@@ -362,12 +367,18 @@ def evaluate_episode(task: Task, tau_messages: list, termination: str, retrieval
+         termination_reason=reason,
+         messages=tau_messages,
+     )
++    # evaluate_simulation passes solo_mode to get_environment itself, so it must not also
++    # appear in env_kwargs -- otherwise get_environment() gets solo_mode twice (TypeError:
++    # got multiple values for keyword argument 'solo_mode'), which zeroed every retail/
++    # airline reward. make_env still needs it, so only strip it here.
++    eval_env_kwargs = {k: v for k, v in env_kwargs_for(task, retrieval).items() if k != "solo_mode"}
+     info = evaluate_simulation(
+         simulation=sim,
+         task=task.tau2_task,
+         evaluation_type=EvaluationType.ALL,
++        solo_mode=False,
+         domain=task.domain,
+-        env_kwargs=env_kwargs_for(task, retrieval),
++        env_kwargs=eval_env_kwargs,
+     )
+     return float(info.reward)
+ 
 diff --git a/run.py b/run.py
-index c3a2314..057640f 100644
+index 2a59b44..87bc6e5 100644
 --- a/run.py
 +++ b/run.py
-@@ -253,22 +253,40 @@ async def generate_trajectory(
+@@ -264,22 +264,40 @@ async def generate_trajectory(
      Produce one trajectory. Success is silent - get_batch() marks it accepted.
      Failures never reach the store, so they reject here to free the submission slot.
      """
@@ -219,9 +271,9 @@ index c3a2314..057640f 100644
      await store.add(
          Trajectory(
              task_id=result.task_id,
-@@ -328,12 +346,37 @@ async def run_loop(
-     if pending_trajectories:
-         await asyncio.gather(*pending_trajectories, return_exceptions=True)
+@@ -381,12 +399,37 @@ def _init_trainer_process_group(config: Config) -> None:
+     logger.info("trainer process group ready: rank %d / %d", rank, world)
+ 
  
 +def _require_sandbox_binaries(config: Config) -> None:
 +    """Fail loud at startup (REQ-002 §4): banking_knowledge's shell tool needs the
@@ -257,7 +309,7 @@ index c3a2314..057640f 100644
  
      train_tasks, heldout_tasks = load_split(config.data)
      if smoke:
-@@ -448,6 +491,7 @@ async def train(config: Config, smoke: bool = False, ctx: RunContext | None = No
+@@ -511,6 +554,7 @@ async def train(config: Config, smoke: bool = False, ctx: RunContext | None = No
                                  launched_version,
                                  dataset=config.data.dataset,
                                  max_concurrency=config.judge.max_concurrency,
@@ -265,7 +317,7 @@ index c3a2314..057640f 100644
                              )
                          )
                          eval_task.add_done_callback(
-@@ -485,6 +529,8 @@ async def baseline(config: Config, ctx: RunContext | None = None) -> None:
+@@ -548,6 +592,8 @@ async def baseline(config: Config, ctx: RunContext | None = None) -> None:
      wandb = None
      if ctx is not None:
          wandb = init_wandb(config, ctx)
@@ -274,7 +326,7 @@ index c3a2314..057640f 100644
      _, heldout = load_split(config.data)
      engine_cls, _ = get_backend(config.generator.engine.backend)
      engine = engine_cls(config)
-@@ -492,7 +538,8 @@ async def baseline(config: Config, ctx: RunContext | None = None) -> None:
+@@ -555,7 +601,8 @@ async def baseline(config: Config, ctx: RunContext | None = None) -> None:
      try:
          if config.data.dataset == "tau2":
              metrics = await evaluate_pass1(
@@ -284,7 +336,7 @@ index c3a2314..057640f 100644
              )
          else:
              judge = RubricJudge(
-@@ -502,7 +549,8 @@ async def baseline(config: Config, ctx: RunContext | None = None) -> None:
+@@ -565,7 +612,8 @@ async def baseline(config: Config, ctx: RunContext | None = None) -> None:
                  config.judge.timeout,
              )
              metrics = await evaluate(
@@ -294,6 +346,24 @@ index c3a2314..057640f 100644
              )
          logger.info("ZERO-SHOT BASELINE: %s", metrics)
          if wandb is not None:
+diff --git a/train/config.py b/train/config.py
+index 5953b1b..58ae331 100644
+--- a/train/config.py
++++ b/train/config.py
+@@ -267,7 +267,12 @@ class DataConfig(BaseConfig):
+     n_heldout: int = 27
+     split_seed: int = 0
+     retrieval: str = "alltools-qwen"
+-    user_llm: str = "openrouter/stealth/ox-alpha"
++    # tau2 user simulator. Must support tool-calling through litellm: the sim issues
++    # tool calls (transfer, etc.), and the default cloaked model (stealth/ox-alpha) does
++    # not support tools on OpenRouter, so litellm silently falls back to the openai
++    # provider -> "Missing OPENAI_API_KEY" and every tool-using user turn is dropped. The
++    # hint model (raw OpenRouter API, no tools) can still be stealth/ox-alpha.
++    user_llm: str = "openrouter/openai/gpt-4o-mini"
+     # Parallel Search (diligence TIR only). https://docs.parallel.ai/search/search-quickstart
+     search_mode: str = "fast"
+     search_timeout: float = 30.0
 diff --git a/train/logger.py b/train/logger.py
 index fbd9ee0..fc08836 100644
 --- a/train/logger.py
@@ -437,7 +507,7 @@ index fbd9ee0..fc08836 100644
          logger.info("EVAL launched at step %d (policy %d): %s", step, policy_version, metrics)
          payload = {f"eval/{k}": v for k, v in metrics.items()}
 diff --git a/train/store.py b/train/store.py
-index 188639f..c39ed29 100644
+index bb1b2e4..25e138a 100644
 --- a/train/store.py
 +++ b/train/store.py
 @@ -13,8 +13,28 @@ class StoreStats:
@@ -486,10 +556,10 @@ index 188639f..c39ed29 100644
  
  
 diff --git a/train/trainer.py b/train/trainer.py
-index ca8da02..5a30147 100644
+index fe06569..c720aa9 100644
 --- a/train/trainer.py
 +++ b/train/trainer.py
-@@ -338,6 +338,7 @@ class SDPOTrainer:
+@@ -341,6 +341,7 @@ class SDPOTrainer:
          self.config = config
          self.tasks_by_id = tasks_by_id
          self.device = device
@@ -497,7 +567,7 @@ index ca8da02..5a30147 100644
          # Full activations at mini-batch x ~3.5k tokens exceed 80 GB; checkpointing trades
          # them for recompute
          if config.trainer.gradient_checkpointing:
-@@ -552,6 +553,8 @@ class SDPOTrainer:
+@@ -558,6 +559,8 @@ class SDPOTrainer:
                      (lp_bearing - student_lp).detach(), micro.response_mask
                  ).item()
  
@@ -506,7 +576,7 @@ index ca8da02..5a30147 100644
              # Scale so the summed gradient equals the full-batch mean. Still correct with
              # per-chunk sync: reduce-scatter sums across ranks and each rank accumulates
              # into its own shard, so the arithmetic is unchanged.
-@@ -576,11 +579,49 @@ class SDPOTrainer:
+@@ -582,11 +585,49 @@ class SDPOTrainer:
          averaged = {k: v / max(n_micro, 1) for k, v in accumulated.items()} # average stats across all microbatches
          averaged["grad_norm"] = float(grad_norm)
          averaged["step"] = float(self.state.step)
@@ -556,7 +626,7 @@ index ca8da02..5a30147 100644
      def _sync_clipper(self) -> None:
          """All-reduce the advantage EMA so every trainer rank clips identically."""
          if not (dist.is_available() and dist.is_initialized()):
-@@ -780,7 +821,8 @@ def log_metrics(metrics: dict[str, float], store: TrajectoryStore) -> None:
+@@ -792,7 +833,8 @@ def log_metrics(metrics: dict[str, float], store: TrajectoryStore) -> None:
      gap = combined.get("teacher_minus_student_logp", 0.0)
      logger.info(
          "step %d | loss %.4f | teacher-student gap %+.4f | adv_clip %.1f%% | "
@@ -566,7 +636,7 @@ index ca8da02..5a30147 100644
          int(combined.get("step", 0)),
          combined.get("loss", 0.0),
          gap,
-@@ -788,7 +830,13 @@ def log_metrics(metrics: dict[str, float], store: TrajectoryStore) -> None:
+@@ -800,7 +842,13 @@ def log_metrics(metrics: dict[str, float], store: TrajectoryStore) -> None:
          100 * combined.get("ratio_clip_frac_low", 0.0),
          100 * combined.get("ratio_clip_frac_high", 0.0),
          combined.get("store_mean_staleness", 0.0),
