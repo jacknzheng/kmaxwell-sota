@@ -817,7 +817,7 @@ The 10-minute watch is still on. Go.
 
 ## REQ-007: sweep Muon Nesterov μ on #339 bi-Maxwell SOAP-CWD (seed 0)
 
-- status: OPEN
+- status: SUPERSEDED by REQ-008 (wrong stack — this was #339 bi-Maxwell k=2, not frozen K-Maxwell on SOAP+Muon)
 - requested: Jack / 2026-08-25 22:50 PDT
 
 **Do not preempt REQ-006** (async-sdpo 4+4 fleet, currently OPEN). This is a
@@ -916,4 +916,101 @@ Beat = first val<3.28 ≤2635 **and/or** val@2635 beating the #339 seed-0 number
 Table: arm × mu × val@2620 × val@2635 × val@2645 × val@2690 × first step
 val<3.28, vs the mu=0.95 control. Logs under `logs/kmaxwell/mu_sweep339/`.
 One paragraph: did moving μ off 0.95 help, and in which direction.
+
+---
+
+## REQ-008: sweep Muon Nesterov μ on frozen K-Maxwell SOAP+Muon CWD (seed 0)
+
+- status: OPEN
+- requested: Jack / 2026-08-25 22:55 PDT
+
+**Correction of REQ-007.** Do **not** run the #339 bi-Maxwell k=2 μ sweep. That
+was the wrong stack. This is frozen **K-Maxwell on the SOAP-Muon + Tail-EMA +
+RowFloor + CWD record** (#46 / master 2680 / `track3-kmaxwell-sota`). Same
+Nesterov μ=0.95, different momentum kernel (k=6 log-spaced, mean age 35).
+
+**Do not preempt REQ-006** (async-sdpo 4+4). Queue until a box is free. If
+REQ-007 already started #339 μ runs, stop them and switch to this trainer.
+
+### Stack (frozen except --mu)
+
+```
+records/track_3_optimization/results/20260823_kmaxwell_wr_stack/train_gpt_cwd_kmaxwell.py
+```
+
+Defaults already match the 2680 SOTA recipe: `--k 6 --tau-min 3 --tau-max 56
+--weights 0.03673,0.07345,0.11018,0.14690,0.18363,0.44911 --start 1000`.
+`--mu` was added on this branch (default 0.95). It sets both Muon init `mu` and
+the schedule plateau `_MU_MAX` (warmup still 0.85→plateau over 300 steps,
+cooldown plateau→0.85 over the last 200). Do **not** change SOAP_BETA2=0.90,
+CWD, Tail-EMA, RowFloor, bi-Maxwell constants, or EMA_Nesterov lookahead (0.99).
+Only Muon Nesterov μ.
+
+Control: frozen KM k6 a35, mu=0.95, seed 0 from `logs/kmaxwell/cwd_frozen_n8/`:
+
+| step | seed-0 val |
+|------|------------|
+| 2655 | 3.27991 (first <3.28) |
+| 2670 | 3.27887 |
+| 2680 | 3.27818 |
+| 2690 | 3.27753 |
+| 2720 | 3.27579 |
+
+n=8 first statsig pass = **2680** (mean 3.27847, margin 0.00432). #46 = 2690.
+
+### Phase 1 — μ sweep, seed 0 (run these)
+
+```bash
+# mu=0.90
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260823_kmaxwell_wr_stack/train_gpt_cwd_kmaxwell.py \
+  --seed 0 --mu 0.90
+
+# mu=0.92
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260823_kmaxwell_wr_stack/train_gpt_cwd_kmaxwell.py \
+  --seed 0 --mu 0.92
+
+# mu=0.94
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260823_kmaxwell_wr_stack/train_gpt_cwd_kmaxwell.py \
+  --seed 0 --mu 0.94
+
+# mu=0.95  (control — must match seed-0 above; rerun so the CLI path is in the table)
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260823_kmaxwell_wr_stack/train_gpt_cwd_kmaxwell.py \
+  --seed 0 --mu 0.95
+
+# mu=0.96
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260823_kmaxwell_wr_stack/train_gpt_cwd_kmaxwell.py \
+  --seed 0 --mu 0.96
+
+# mu=0.98
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260823_kmaxwell_wr_stack/train_gpt_cwd_kmaxwell.py \
+  --seed 0 --mu 0.98
+```
+
+Confirm each log prints `Using mu=<value>`. Sequential on one box is fine.
+
+### Do not
+
+- Run #339 `train_gpt_bimaxwell_st1000.py` or the ablation `train_gpt_kmaxwell.py`.
+- Preempt REQ-006 / stop async-sdpo boxes.
+- Change SOAP betas, CWD, Tail-EMA, RowFloor, k/τ/weights, MUON_LR, architecture, batch.
+- Launch n=8 unless a seed-0 arm **clearly** beats mu=0.95 (not within σ≈0.001).
+
+### Beat / escalate
+
+Beat = first val<3.28 **earlier than 2655** and/or val@2680 beating seed-0 **3.27818**.
+n=8 only if a seed-0 arm clearly beats mu=0.95 on that rule.
+
+### Write back
+
+Table: arm × mu × val@2655 × val@2680 × val@2690 × val@2720 × first step
+val<3.28, vs the mu=0.95 control. Logs under `logs/kmaxwell/mu_sweep_cwd/`.
+One paragraph: did moving μ off 0.95 help on the K-Maxwell SOAP stack, and in
+which direction.
+
 
