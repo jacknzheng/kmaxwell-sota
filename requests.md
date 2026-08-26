@@ -1175,6 +1175,36 @@ Also pairwise vs the μ=0.95 n=8 fleet at common tail steps (2680 and 2690 at le
 - One paragraph: does μ=0.94 move the K-Maxwell SOAP record off 2680, or did seed 0
   overstate it.
 
+### REQ-010 RESULT — n=8 NULL: seed 0 overstated it; μ=0.94 ≈ μ=0.95, record stays at 2680
+
+**Verdict: seed 0 overstated the μ=0.94 lead. At n=8, μ=0.94 and μ=0.95 are statistically
+indistinguishable and μ=0.94 does NOT move the K-Maxwell SOAP record earlier than 2680.**
+
+Ran all 16 (μ=0.94 seeds 0–7 on box `w5y85j3`, μ=0.95 seeds 0–7 on `qkpzjew`) — control
+**re-run** (the `--mu` CLI / `_MU_MAX=MU` wiring makes the old `cwd_frozen_n8/` logs
+incomparable, so both arms are fresh under one trainer). Boxes stopped. val_ema scored.
+Summaries: `logs/kmaxwell/mu94_n8/summary.tsv`, `logs/kmaxwell/mu95_n8/summary.tsv`.
+
+n=8 means (val_ema):
+
+| step | μ=0.94 mean | μ=0.95 mean | Δ(0.95−0.94) | 0.94 margin vs 3.28 | 0.95 margin |
+|------|-------------|-------------|--------------|---------------------|-------------|
+| 2655 | 3.27996 | 3.28000 | +0.00004 | +0.00012 fail | +0.00001 fail |
+| 2680 | 3.27827 | 3.27826 | **−0.00001** | +0.00488 **PASS** | +0.00491 **PASS** |
+| 2690 | 3.27764 | 3.27762 | −0.00003 | +0.00667 PASS | +0.00674 PASS |
+| 2720 | 3.27595 | 3.27587 | −0.00008 | +0.01146 PASS | +0.01168 PASS |
+
+- **First statsig-passing step: 2680 for BOTH μ** (2655 fails for both; margin ≥0.004 first met at 2680). μ=0.94 does not pass earlier. Record stays 2680 (both beat #46's 2690, consistent with REQ-008).
+- **Pairwise @2680:** (mean_095 − mean_094)/√(1/8+1/8) = −0.00001/0.5 = **−0.00002** — vs the ≥0.004 bar, ~200× short. @2690: −0.00006. No effect.
+- **Paired t-test** (same seed = paired init/data order): @2680 t=−0.026, @2720 t=−0.183, cross-step t=+0.096, all df=7. |t| ≪ 2.365 → p≈0.98. No difference.
+- REQ-008 seed-0 gap (0.0016) was noise: within one seed's std (σ≈0.0011–0.0014). Seed 0 alone: μ=0.94 @2680=3.27840, μ=0.95=3.27867 — a 0.00027 draw, not the 0.0016 REQ-008 reported (REQ-008 used K6_a35; this is the current SOTA stack).
+
+**Recommendation: keep the default μ. 0.94 and 0.95 are equivalent on this stack — no reason to change it, and no record movement.**
+
+Caveat: eval grid captured val_ema at 2655/2680/2690/2720 + per-seed 3.28-crossing (not
+every 5 steps); boxes now stopped, so the exact 5-step boundary in (2655,2680] isn't pinned.
+Verdict is grid-independent — the two μ are identical, so μ=0.94 can't first-pass before μ=0.95.
+
 ---
 
 ### REQ-009 STATUS: 4+4 PROVEN working — but OpenRouter credits are exhausted (needs you)
