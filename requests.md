@@ -677,7 +677,7 @@ full-scale arms.** Ping on this branch to continue.
 
 ## REQ-005: resume 4+4 8B/27B fleet — torchrun/vLLM spawn is fixed
 
-- status: RUNNING (fresh clone main @6fb7088, rebasing logging patch (dropping my superseded vllm.py isolation/eager for your isolated_from_torchrun), provisioning fresh boxes, then MANDATORY 4+4 init proof before fleet)
+- status: BLOCKED-NEEDS-YOU (4+4 init fix CONFIRMED working; new FSDP2 embedding/DTensor blocker at first train step — see below; box stopped)
 - requested: Jack / 2026-08-25 21:45 PDT
 
 **Ping / restart.** The blocker you closed REQ-003 on is fixed. Pull a **fresh clone of `async-sdpo` `main` @ `6fb7088`** (`Isolate vLLM TP spawn from torchrun so 4+4 can launch on Baseten.`). Do not reuse the 4B / NPROC=1 boxes or the pre-fix tree. Rebase `patches/async-sdpo/req002-logging.patch` onto this SHA (not `69c023f`). Then continue REQ-001 + REQ-002 as written: Phase 0, Phase 1 baselines, then the fleet in the priority order, with the REQ-002 table/logging contract.
@@ -748,5 +748,40 @@ If `git push` is 403, **fork** `jacknzheng/async-sdpo` and open a PR, or keep co
 
 You already have write on this `jerry-agent` branch — keep the heartbeats here either way.
 
+---
 
+### REQ-005 STATUS: isolation fix CONFIRMED working — but a NEW trainer FSDP2 blocker (needs you)
+
+Ran the mandatory 4+4 init proof on fresh main @6fb7088 + rebased patch (200 tests green).
+Two clean results:
+
+**1. Your torchrun/vLLM isolation fix WORKS.** The 4+4 launch (torchrun --nproc-per-node=4
++ vLLM TP=4) now initializes on Baseten — log shows `starting rollout engine isolated from
+torchrun (stripped ...)` and all four `trainer process group ready: rank 0..3 / 4`. No
+TCPStore hang. The REQ-003 init blocker is closed. Rollouts run (many tau2 episodes
+generated). Confirmed on 8B, retail+airline (banking sandbox still unavailable).
+
+**2. New blocker at the first training step — FSDP2 shards the embedding into a DTensor.**
+It reaches `train_step` → `_response_logprobs` (trainer.py:412) → `backbone(input_ids=...)`
+and dies in the model's own embed_tokens:
+`RuntimeError: aten.embedding.default got mixed torch.Tensor and DTensor, need to convert
+all torch.Tensor to DTensor before calling distributed operators!`
+- With `compile_trainer=true` (default) the same op fails earlier as a Dynamo error
+  (`Unsupported: Dynamo failed to run FX node ... call_function embedding`).
+- With `compile_trainer=false` it's the raw DTensor/plain-tensor mismatch above.
+- The smoke never caught it: `--smoke` is single-GPU (no FSDP2, no DTensor). This only
+  appears on the real FSDP2 trainer (n_trainer_gpus≥2), i.e. exactly the 4+4 path.
+
+This is inherent to your FSDP2 wrapping (`fully_shard` on the root includes embed_tokens →
+its weight becomes a DTensor, but input_ids stay a plain tensor). It's in the trainer
+forward, not something I should guess-patch (you said don't change architecture; FSDP
+sharding policy is load-bearing). Likely fix on your side: exclude `embed_tokens` from
+`fully_shard` (keep it replicated — it's ~1.2GB, cheap), or convert input_ids to the
+embedding's DTensor mesh before the backbone call, or route logprobs through the module
+rather than raw F.embedding. Once that lands I can run the full 27B 4+4 fleet immediately —
+init + rollout are proven, this is the only thing between here and training steps.
+
+Per your instruction I did NOT fall back to 4B/NPROC=1. Box stopped. Proof key lines:
+patches/async-sdpo/req005-proof/. Rebased logging patch (on 6fb7088, uses YOUR
+isolated_from_torchrun, my eager/env-isolation dropped): patches/async-sdpo/req002-logging.patch.
 
