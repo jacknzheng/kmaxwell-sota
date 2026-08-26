@@ -1334,3 +1334,36 @@ backward-compatible override and report the patch.
   n=8 per-seed/mean/margin table.
 - State clearly whether any μ value improves on the 3160 recipe and whether
   that improvement is statistically confirmed rather than a seed-0 fluctuation.
+
+### REQ-012 RESULT — seed-0 screen: NO material improvement; μ=0.95 already near-optimal. STOPPED (no n=8, no fishing).
+
+**Verdict: no μ materially beats the recorded 0.95. The screen is a clean unimodal curve centered on 0.95–0.96, so the recorded coefficient is already at/near the optimum. Per your instruction I stopped — did not escalate to n=8 (it would be futile; see below).**
+
+**Setup / patch.** Recorded winner = the "58→26" anneal (k=8, τ[3,64], start=1000, anneal-frac=1.0, `train_steps=3250`; "3160" = its first statsig-passing step). Recorded trainer path in your REQ (`.../20260824_kmaxwell_3160/...`) does not exist; the real recorded trainer is `records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/train_gpt_kmaxwell_anneal.py` (sha256 `8c9ccc4…`, matches `pins_anneal.json`). It had **no `--mu`** — added the minimal backward-compatible override (default 0.95 = recorded behaviour, verified the pre-edit file was byte-identical to the pin):
+```diff
++ parser.add_argument("--mu", type=float, default=0.95, help="Muon/Nesterov momentum coefficient (default 0.95 = recorded recipe)")
+- optimizer2 = Muon(..., lr=0.025, weight_decay=0.05,
++ optimizer2 = Muon(..., lr=0.025, weight_decay=0.05, mu=args.mu,
+```
+(This trainer has **no `_MU_MAX` coupling** — `mu` is a single coeff used in `muon_update`/`muon_update_kmaxwell` via `group["mu"]`.) All 7 μ ran seed 0, full 3250 steps, dense val every 10 in [2900,3250], everything else frozen. Command per μ:
+`torchrun --standalone --nproc_per_node=8 -- <trainer> --seed 0 --start 1000 --k 8 --tau-min 3 --tau-max 64 --weights <age58> --weights-end <age26> --anneal-frac 1.0 --mu <MU>`
+
+**Metric note (important):** the recorded 3160 result is scored on **plain `val_loss`**, not "val_ema" — `km/solve.py` `STEP_RE` pulls `val_loss` at 3150/3250 (this anneal trainer prints `val_loss` + a separate `probe_ema:` grad-alignment diagnostic; it has no `val_ema_loss` field). Scored accordingly.
+
+**Seed-0 screen (val_loss):**
+
+| μ | v3150 | v3160 | v3250 | first val<3.28 |
+|------|---------|---------|---------|------|
+| 0.92 | 3.28134 | 3.28053 | 3.27575 | 3170 |
+| 0.93 | 3.28004 | 3.27918 | 3.27442 | 3160 |
+| 0.94 | 3.27852 | 3.27766 | 3.27299 | 3140 |
+| **0.95 (control)** | 3.27784 | 3.27701 | 3.27240 | 3130 |
+| **0.96 (best non-ctrl)** | **3.27764** | **3.27685** | **3.27232** | 3130 |
+| 0.97 | 3.27896 | 3.27818 | 3.27365 | 3140 |
+| 0.98 | 3.28178 | 3.28102 | 3.27659 | 3175 |
+
+- Best non-control = **μ=0.96**: beats 0.95 by **0.00020** @v3150, **0.00016** @v3160, **ties** first-crossing (3130). Directionally consistent across the tail, but the magnitude is ~5× *below* single-seed noise (σ≈0.001–0.0014, established in REQ-010).
+- **n=8 would be futile, not just unlikely:** even if the 0.0002 seed-0 gap held perfectly at n=8, the pairwise statistic (mean₀.₉₅−mean₀.₉₆)/√(1/8+1/8) = 0.0002/0.5 = **0.0004**, which is **10× under** the ≥0.004 Track-3 bar. A confirmed win is arithmetically impossible from this screen. (REQ-010 precedent: a *larger* 0.0016 seed-0 μ lead evaporated to +0.00001 at n=8.)
+- The curve is unimodal, minimum at 0.95–0.96, rising on both sides (0.92/0.93 and 0.97/0.98 clearly worse) → **the recorded μ=0.95 is already sitting on the optimum.**
+
+**Recommendation: keep μ=0.95 on the 3160 anneal. No improvement available; not escalating.** Logs + `summary.tsv` under `logs/kmaxwell/mu_sweep_3160/`. Boxes stopped.

@@ -1,0 +1,12 @@
+# REQ-012 seed-0 mu screen on annealed K-Maxwell 3160 "58->26" (recorded recipe, pinned 8c9ccc4 + minimal --mu).
+# Metric = plain val_loss (matches km/solve.py STEP_RE), dense eval every 10 steps 2900-3250. train_steps=3250.
+mu	seed	v3140	v3150	v3160	v3170	v3200	v3250	first_val<3.28
+0.92	0	3.28230	3.28134	3.28053	3.27979	3.27762	3.27575	3170
+0.93	0	3.28092	3.28004	3.27918	3.27841	3.27625	3.27442	3160
+0.94	0	3.27949	3.27852	3.27766	3.27693	3.27481	3.27299	3140
+0.95	0	3.27880	3.27784	3.27701	3.27630	3.27415	3.27240	3130
+0.96	0	3.27856	3.27764	3.27685	3.27605	3.27409	3.27232	3130
+0.97	0	3.27984	3.27896	3.27818	3.27746	3.27537	3.27365	3140
+0.98	0	3.28261	3.28178	3.28102	3.28030	3.27824	3.27659	3175
+# best non-control @v3150 = mu=0.96 (3.27764), beats mu=0.95 ctrl (3.27784) by 0.00020 -- within single-seed noise (sigma~0.001).
+# unimodal curve centered 0.95-0.96; recorded mu=0.95 already near-optimal. No material improvement -> no n=8 (per REQ-012).
