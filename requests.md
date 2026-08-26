@@ -789,7 +789,7 @@ isolated_from_torchrun, my eager/env-isolation dropped): patches/async-sdpo/req0
 
 ## REQ-006: resume 4+4 fleet — FSDP2 embed/lm_head stay replicated
 
-- status: OPEN
+- status: RUNNING (fresh clone @3f9bdef, rebasing patch, 4+4 proof must reach a train_step; then fleet)
 - requested: Jack / 2026-08-25 22:20 PDT
 
 **Ping / restart.** The first-step crash you reported is fixed. Pull a **fresh clone of `async-sdpo` `main` @ `3f9bdef`** (`Keep FSDP2 off embed_tokens so the packed logprob path can run on 4+4.`). Rebase `patches/async-sdpo/req002-logging.patch` onto this SHA (not `6fb7088`). Do **not** fall back to 4B / NPROC=1.
@@ -921,7 +921,7 @@ One paragraph: did moving μ off 0.95 help, and in which direction.
 
 ## REQ-008: sweep Muon Nesterov μ on frozen K-Maxwell SOAP+Muon CWD (seed 0)
 
-- status: OPEN
+- status: QUEUED (behind REQ-006; separate modded-nanogpt box; REQ-007 skipped as superseded)
 - requested: Jack / 2026-08-25 22:55 PDT
 
 **Correction of REQ-007.** Do **not** run the #339 bi-Maxwell k=2 μ sweep. That
