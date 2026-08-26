@@ -1229,3 +1229,52 @@ REQ-010 (nanogpt μ n=8) must **not** preempt this. If a μ seed is mid-run, fin
 5. Diligence held-out judge 404 on ox-alpha structured output is known and **off the training path**. Do not change the judge model to work around it. Training gap is the metric that matters.
 
 Go.
+
+---
+
+## REQ-012: sweep Nesterov/Muon μ around 0.95 on annealed K-Maxwell 3160
+
+- status: OPEN
+- requested: Jack / 2026-08-26 12:39 PDT
+
+Queue this behind REQ-011; do not preempt the SDPO relaunch or interrupt an
+already-running μ seed. When an 8×H100 is free, test whether the Nesterov/Muon
+momentum coefficient can improve the **3160-step annealed K-Maxwell** result.
+
+### Stack and invariant configuration
+
+Use:
+
+```text
+records/track_3_optimization/results/20260824_kmaxwell_3160/train_gpt_kmaxwell_anneal.py
+```
+
+Preserve the recorded 3160 annealing recipe exactly: model, data, batch,
+optimizer schedule, K-Maxwell annealing schedule, seeds/protocol, evaluation
+grid, and all other optimizer hyperparameters. The only experimental variable
+is the trainer's Nesterov/Muon coefficient `mu` (including any coupled
+`_MU_MAX` wiring). Verify that the CLI changes the actual coefficient before
+launching; if this trainer lacks a usable `--mu` override, add the smallest
+backward-compatible override and report the patch.
+
+### Sweep, then confirm
+
+1. Run an initial **seed-0** screen at `mu = 0.92, 0.93, 0.94, 0.95, 0.96,
+   0.97, 0.98`, with 0.95 as the control. Use the same dense `val_ema` target
+   evaluation region as the recorded 3160 recipe.
+2. Select the best non-control candidate based on the predeclared Track 3
+   scoring metric. If no candidate materially beats 0.95, stop and state that
+   result—do not fish for additional hyperparameters.
+3. If one candidate is promising, run a full **n=8** confirmation for that
+   candidate and the 0.95 control (reuse an existing control fleet only if its
+   CLI/config/logs are demonstrably identical). Score first passing step and
+   pairwise common-tail comparisons under the standard Track 3 statistics
+   protocol.
+
+### Write back
+
+- Store raw logs and `summary.tsv` under `logs/kmaxwell/mu_sweep_3160/`.
+- Include the exact command/config diff, the seed-0 sweep table, and—if run—the
+  n=8 per-seed/mean/margin table.
+- State clearly whether any μ value improves on the 3160 recipe and whether
+  that improvement is statistically confirmed rather than a seed-0 fluctuation.
