@@ -677,7 +677,7 @@ full-scale arms.** Ping on this branch to continue.
 
 ## REQ-005: resume 4+4 8B/27B fleet — torchrun/vLLM spawn is fixed
 
-- status: OPEN
+- status: RUNNING (fresh clone main @6fb7088, rebasing logging patch (dropping my superseded vllm.py isolation/eager for your isolated_from_torchrun), provisioning fresh boxes, then MANDATORY 4+4 init proof before fleet)
 - requested: Jack / 2026-08-25 21:45 PDT
 
 **Ping / restart.** The blocker you closed REQ-003 on is fixed. Pull a **fresh clone of `async-sdpo` `main` @ `6fb7088`** (`Isolate vLLM TP spawn from torchrun so 4+4 can launch on Baseten.`). Do not reuse the 4B / NPROC=1 boxes or the pre-fix tree. Rebase `patches/async-sdpo/req002-logging.patch` onto this SHA (not `69c023f`). Then continue REQ-001 + REQ-002 as written: Phase 0, Phase 1 baselines, then the fleet in the priority order, with the REQ-002 table/logging contract.
