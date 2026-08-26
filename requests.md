@@ -1105,4 +1105,72 @@ CPU regression: `tests/test_trainer.py::test_train_step_clips_mixed_dtensor_and_
 
 Go.
 
+---
 
+## REQ-009: n=8 seeds of μ=0.94 vs μ=0.95 control on frozen K-Maxwell SOAP+Muon CWD
+
+- status: OPEN
+- requested: Jack / 2026-08-26 07:55 PDT
+
+**Follow-up to REQ-008.** Seed-0 μ sweep on frozen K6_a35 SOAP-Muon CWD peaked at
+μ=0.94 (val_ema@2680 = 3.27661, first ema<3.28 at 2635) vs μ=0.95 control
+(3.27818 / 2655). Gap 0.0016 is above KM eval σ≈0.001 but is **not** a statsig
+record. Escalate to n=8 under the Track 3 protocol.
+
+**Do not preempt REQ-006** if it is still RUNNING. This is a nanogpt job; queue
+until a box is free. Do not touch async-sdpo.
+
+### Stack (identical to REQ-008 winner / 2680 SOTA)
+
+```
+records/track_3_optimization/results/20260823_kmaxwell_wr_stack/train_gpt_cwd_kmaxwell.py
+```
+
+Frozen: `--k 6 --tau-min 3 --tau-max 56 --weights 0.03673,0.07345,0.11018,0.14690,0.18363,0.44911 --start 1000`.
+Only `--mu` and `--seed` vary. `--mu` already exists on this trainer (default 0.95;
+sets Muon init mu and `_MU_MAX`). Do not change SOAP_BETA2, CWD, Tail-EMA, RowFloor,
+EMA_Nesterov lookahead, MUON_LR, architecture, or batch.
+
+### Fleet
+
+**Arm A — winner:** `--mu 0.94`, seeds **0–7** (re-run seed 0 so the n=8 table is one CLI).
+**Arm B — control:** `--mu 0.95`, seeds 0–7. Prefer **reuse** `logs/kmaxwell/cwd_frozen_n8/`
+if those logs are byte-identical to this trainer at mu=0.95 (same k/τ/weights/start).
+If `--mu` CLI / `_MU_MAX = MU` wiring makes them incomparable, re-run all 8. Say
+which you did.
+
+```bash
+for s in 0 1 2 3 4 5 6 7; do
+  torchrun --standalone --nproc_per_node=8 \
+    records/track_3_optimization/results/20260823_kmaxwell_wr_stack/train_gpt_cwd_kmaxwell.py \
+    --seed $s --mu 0.94
+done
+```
+
+Score **val_ema** (same as #46 / REQ-008). Dense eval over the target zone (at least
+every 5 steps on [2620, 2720], same grid for every seed).
+
+### Scoring (Track 3, n=8)
+
+margin = (3.28 − mean) × √n  with n=8. First-passing step = smallest 5-step
+boundary with margin ≥ 0.004. Control reference: frozen KM μ=0.95 n=8 first pass
+**2680** (mean 3.27847, margin 0.00432); #46 = 2690.
+
+Also pairwise vs the μ=0.95 n=8 fleet at common tail steps (2680 and 2690 at least):
+(mean_095 − mean_094) / √(1/8+1/8) ≥ 0.004.
+
+### Do not
+
+- Sweep other μ values. Winner is 0.94; control is 0.95.
+- Run #339 bi-Maxwell or the ablation (non-SOAP) trainer.
+- Cherry-pick seeds. All 8, nothing held back.
+- Stop at seed 0.
+
+### Write back
+
+- `logs/kmaxwell/mu94_n8/summary.tsv` (and mu95_n8/ if you re-ran the control).
+- Table: seed × val_ema@2635 × @2655 × @2680 × @2690 × @2720 × first ema<3.28, plus
+  mean and margin rows, for μ=0.94 and μ=0.95.
+- First statsig-passing step for μ=0.94. Pairwise vs μ=0.95 at 2680 and 2690.
+- One paragraph: does μ=0.94 move the K-Maxwell SOAP record off 2680, or did seed 0
+  overstate it.
