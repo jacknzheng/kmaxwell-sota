@@ -1083,7 +1083,7 @@ a bigger spend + you gated escalation on results); flagging it as the clear foll
 
 ## REQ-009: resume 4+4 fleet — mixed DTensor/plain grad-clip is fixed
 
-- status: OPEN
+- status: SUPERSEDED by REQ-011 (4+4 proven; fleet was credit-blocked; credits restored)
 - requested: Jack / 2026-08-26 06:05 PDT
 
 **Ping / restart.** The grad-clip crash after the first backward is fixed. Pull a **fresh clone of `async-sdpo` `main` @ `c3f6139`** (`Clip mixed FSDP DTensor and plain grads without foreach.`). Rebase `patches/async-sdpo/req002-logging.patch` onto this SHA (not `3f9bdef`). Do **not** fall back to 4B / NPROC=1.
@@ -1117,7 +1117,7 @@ Go.
 (3.27818 / 2655). Gap 0.0016 is above KM eval σ≈0.001 but is **not** a statsig
 record. Escalate to n=8 under the Track 3 protocol.
 
-**Do not preempt REQ-009** (async-sdpo 4+4, currently OPEN). This is a nanogpt
+**Do not preempt REQ-011** (async-sdpo 4+4 relaunch, currently OPEN). This is a nanogpt
 job; queue until a box is free. Do not touch async-sdpo.
 
 ### Stack (identical to REQ-008 winner / 2680 SOTA)
@@ -1205,3 +1205,27 @@ with real strict-schema support would fix it.
 3 async-sdpo boxes STOPPED (were burning GPU for 0 steps with no credits). Pivoting to
 REQ-010 (kmaxwell n=8 μ — pure LM training, no LLM API, unaffected by the credit issue).
 
+## REQ-011: relaunch 4+4 fleet — OpenRouter credits restored; keep stealth/ox-alpha
+
+- status: OPEN
+- requested: Jack / 2026-08-26 12:25 PDT
+
+**Ping / restart.** REQ-009's 4+4 proof is done (2 compiled steps, live `teacher_minus_student_logp` −0.0486 on `async-sdpo` `main` @ `c3f6139`). You stopped the three boxes because OpenRouter was overdrawn. **Credits are back** (same REQ-001 key; account is no longer empty). Relaunch the fleet. Do not re-prove isolation / embed-replication / grad-clip unless something new crashes.
+
+All OpenRouter call LLMs stay **`stealth/ox-alpha`**. That is already the default on this SHA — do not switch to deepseek, gpt-4, or anything else:
+
+- hints: `generator.hint.model=stealth/ox-alpha`
+- diligence judge: `judge.model=stealth/ox-alpha`
+- tau2 user simulator: `data.user_llm=openrouter/stealth/ox-alpha` (litellm needs the `openrouter/` prefix)
+
+REQ-010 (nanogpt μ n=8) must **not** preempt this. If a μ seed is mid-run, finish that seed then free the box. Do not start new μ seeds until the SDPO arms below are launched.
+
+### Do this now
+
+1. Fresh 8×H100 (or reuse the proven bootstrap). Clone `async-sdpo` `main` @ `c3f6139`. Rebase `patches/async-sdpo/req002-logging.patch` if it is not already on that SHA.
+2. 8B + `trainer.mini_batch_size=2` is the documented fallback (27B vLLM died on shm). Prefer 27B if shm is large enough; else 8B. **Not 4B / NPROC=1.**
+3. Launch in REQ-002 priority: tau2 `gold`, diligence `answer_free`, then `answer_bearing`, then `step_hint` / `mixture` / `gold_banking` as boxes free. `trainer.total_steps=200`.
+4. Same secrets as REQ-001. Same reporting. Confirm logs show the ox-alpha slugs above, not deepseek.
+5. Diligence held-out judge 404 on ox-alpha structured output is known and **off the training path**. Do not change the judge model to work around it. Training gap is the metric that matters.
+
+Go.
