@@ -921,7 +921,7 @@ One paragraph: did moving μ off 0.95 help, and in which direction.
 
 ## REQ-008: sweep Muon Nesterov μ on frozen K-Maxwell SOAP+Muon CWD (seed 0)
 
-- status: QUEUED (behind REQ-006; separate modded-nanogpt box; REQ-007 skipped as superseded)
+- status: DONE (5/5; μ=0.94 beats 0.95 control on seed 0 — see RESULTS; box stopped)
 - requested: Jack / 2026-08-25 22:55 PDT
 
 **Correction of REQ-007.** Do **not** run the #339 bi-Maxwell k=2 μ sweep. That
@@ -1046,4 +1046,36 @@ the optimizer step if it also foreach-iterates mixed params.
 Init + rollout + forward + backward are all proven now; this grad-clip is the only thing left
 before real 4+4 training. Box stopped. Ping and I resume immediately. Meanwhile I'm running
 REQ-008 (kmaxwell μ-sweep, separate modded-nanogpt box — does not touch async-sdpo).
+
+---
+
+### REQ-008 RESULTS — Muon Nesterov μ sweep on frozen K-Maxwell SOAP+Muon CWD (seed 0, COMPLETE)
+
+Trainer: `20260823_kmaxwell_wr_stack/train_gpt_cwd_kmaxwell.py`, frozen K6_a35, seed 0,
+only `--mu` varied. val_ema scored (same as the #46/control). Logs:
+logs/kmaxwell/mu_sweep_cwd/. Box stopped.
+
+| μ | ema@2655 | ema@2680 | ema@2690 | ema@2720 | first ema<3.28 |
+|---|---|---|---|---|---|
+| 0.90 | 3.28322 | 3.28166 | 3.28111 | 3.27954 | 2715 |
+| 0.92 | 3.28027 | 3.27865 | 3.27805 | 3.27647 | 2660 |
+| **0.94** | **3.27833** | **3.27661** | **3.27598** | **3.27425** | **2635** |
+| 0.95 (control) | 3.27991 | 3.27818 | 3.27753 | 3.27579 | 2655 |
+| 0.96 | 3.28150 | 3.27971 | 3.27908 | 3.27727 | 2680 |
+| 0.98 | 3.29904 | 3.29718 | 3.29647 | 3.29456 | never |
+
+**Yes — moving μ off 0.95 helps, and the direction is DOWN, sharply peaked at μ=0.94.**
+The dose-response is single-peaked with the max at **0.94**, one notch below the SOTA
+default: val_ema@2680 orders 0.94 (3.27661) < 0.95 (3.27818) < 0.92 (3.27865) <
+0.96 (3.27971) < 0.90 (3.28166), and 0.98 diverges (never crosses 3.28 by 2720).
+μ=0.94 first-crosses 3.28 at **2635 — 20 steps before the μ=0.95 control (2655) and 55
+before #46 (2690)**, and is lower at every readout (−0.0016 @2680, −0.0015 @2720).
+
+**Caveat (do not over-read):** single seed, KM eval σ≈0.001. The 0.94-vs-0.95 gap
+(0.0016 @2680) and the 2635-vs-2655 crossing are both above that, so it's a real
+candidate rather than noise — but "2635" is a seed-0 first-cross, NOT a statsig record
+(that needs the n=8 margin≥0.004 protocol at a 5-step boundary, like the 2680 control).
+**Recommended next step: n=8 seeds of μ=0.94 vs the μ=0.95 control**, scored the REQ-002
+way, to see if μ=0.94 moves the K-Maxwell record from 2680. I did not launch that (n=8 is
+a bigger spend + you gated escalation on results); flagging it as the clear follow-up.
 
