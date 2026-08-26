@@ -815,4 +815,105 @@ There is a CPU regression test: `tests/test_trainer.py::test_packed_logprobs_for
 
 The 10-minute watch is still on. Go.
 
+## REQ-007: sweep Muon Nesterov μ on #339 bi-Maxwell SOAP-CWD (seed 0)
+
+- status: OPEN
+- requested: Jack / 2026-08-25 22:50 PDT
+
+**Do not preempt REQ-006** (async-sdpo 4+4 fleet, currently OPEN). This is a
+modded-nanogpt / Track 3 job. Queue it until a box is free. Do not touch
+async-sdpo, do not stop the 4+4 fleet, do not reuse those boxes.
+
+### Why
+
+PR #339 (SOAP-Muon + Tail-EMA + RowFloor + CWD / #328/#46 stack) replaces the
+Muon first moment from step 1000 with a bi-Maxwell mix:
+
+    M_eff = 0.4385 * EMA(β=0.85) + 0.5615 * EMA(β=0.98)
+
+The Nesterov wrap is unchanged: `update = grad.lerp(M_eff, mu)` with **mu=0.95**.
+Jerry already reproduced #339 at ~2640 on this branch (`logs/kmaxwell/bimaxwell339_n8/`).
+This request only sweeps that Nesterov μ. Everything else stays frozen.
+
+Control: #339 / #46 CWD stack, mu=0.95, seed 0. From the n=8 ledger:
+
+| step | seed-0 val |
+|------|------------|
+| 2620 | 3.279690 |
+| 2635 | 3.278590 |
+| 2645 | 3.277890 |
+| 2690 | 3.275130 |
+
+Seed-0 first val<3.28 is **2620**. n=8 first-passing step is 2640.
+
+### Trainer
+
+Exact #339 bi-Maxwell recipe (k=2), **not** K-Maxwell k=6. `--mu` was added on
+this branch (default 0.95 = #339). It sets both the Muon init `mu` and the
+schedule plateau `_MU_MAX` (warmup still 0.85→plateau over 300 steps, cooldown
+plateau→0.85 over the last 200). Do not change SOAP betas or bi-Maxwell
+constants (`BM_BETA_F=0.85`, `BM_BETA_S=0.98`, `BM_W=0.4385`, `BM_START=1000`).
+
+```
+records/track_3_optimization/results/20260713_bimaxwell_2635/train_gpt_bimaxwell_st1000.py
+```
+
+### Phase 1 — μ sweep, seed 0 (run these)
+
+Frozen: bi-Maxwell β_fast=0.85, β_slow=0.98, w=0.4385, enable@1000, SOAP /
+Tail-EMA / RowFloor / CWD unchanged. Only `--mu` varies.
+
+```bash
+# mu=0.90
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260713_bimaxwell_2635/train_gpt_bimaxwell_st1000.py \
+  --seed 0 --mu 0.90
+
+# mu=0.92
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260713_bimaxwell_2635/train_gpt_bimaxwell_st1000.py \
+  --seed 0 --mu 0.92
+
+# mu=0.94
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260713_bimaxwell_2635/train_gpt_bimaxwell_st1000.py \
+  --seed 0 --mu 0.94
+
+# mu=0.95  (control — must match #339 seed-0 above; rerun so the CLI path is in the table)
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260713_bimaxwell_2635/train_gpt_bimaxwell_st1000.py \
+  --seed 0 --mu 0.95
+
+# mu=0.96
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260713_bimaxwell_2635/train_gpt_bimaxwell_st1000.py \
+  --seed 0 --mu 0.96
+
+# mu=0.98
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/results/20260713_bimaxwell_2635/train_gpt_bimaxwell_st1000.py \
+  --seed 0 --mu 0.98
+```
+
+Confirm each log prints `Using mu=<value>`. Sequential on one box is fine.
+
+### Do not
+
+- Preempt REQ-006 / stop the async-sdpo 4+4 boxes.
+- Change SOAP betas, bi-Maxwell kernel constants, MUON_LR, architecture, batch,
+  Tail-EMA, RowFloor, or CWD.
+- Run K-Maxwell k=6 (the 2680 CWD trainer) — this is the #339 k=2 recipe.
+- Launch n=8 unless a seed-0 arm **clearly** beats mu=0.95.
+
+### Beat / escalate
+
+Beat = first val<3.28 ≤2635 **and/or** val@2635 beating the #339 seed-0 number
+(3.278590). n=8 only if a seed-0 arm clearly beats mu=0.95 on that rule
+(not within σ≈0.001 noise).
+
+### Write back
+
+Table: arm × mu × val@2620 × val@2635 × val@2645 × val@2690 × first step
+val<3.28, vs the mu=0.95 control. Logs under `logs/kmaxwell/mu_sweep339/`.
+One paragraph: did moving μ off 0.95 help, and in which direction.
 
