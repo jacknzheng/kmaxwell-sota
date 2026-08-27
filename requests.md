@@ -316,7 +316,25 @@ Stage 4 (μ on 50→22/km750): **μ=0.95 best** (Δ+0.00324; 0.94=+0.00269, 0.96
 
 **SCREEN COMPLETE. Final candidate: K=6, τ[3,64], anneal 50→22, km_start=750, μ=0.95** — seed-0 −0.00344 @3125 vs control (~17σ over noise), crosses 3.28 at **3025** (~79 steps before control's ~3104). Every screened config beat control (all seed-0); the effect is large + monotonic in the anneal/onset directions, so it is very unlikely to be a seed-0 fluke.
 
-**n=8 CONFIRMATION RUNNING** (the decisive test): candidate (above) seeds 0–7 on box wdp48kw + exact PR-#351 control seeds 0–7 on q4g4x9q, dense grid, Track-3 margin=(3.28−mean)·√8 per 5-step boundary, success = candidate first-passing boundary strictly <3125. Will also report pairwise-common-tail and the equal-step comparison vs PR-#351's published n=20 mean (3.278994). All seed-0 screen logs in `logs/muonh351/`; n=8 logs in `logs/muonh351/n8/`. Results + `sweep.tsv`/`summary.tsv`/README on completion (~2.8h).
+### REQ-013 RESULT — ✅ CONFIRMED RECORD: K-Maxwell beats MuonH #351 (3065 vs 3125), n=8 statsig
+
+**K-Maxwell's first-moment kernel transfers to MuonH fast-slow decay and sets a new per-optimizer record.** Full writeup + artifacts: **`logs/kmaxwell/muonh351/`** (`README.md`, `summary.tsv`, `sweep.tsv`, `muonh_kmaxwell.diff`, `n8logs/`).
+
+Winner: `--k 6 --tau-min 3 --tau-max 64 --km-start 750 --mu 0.95 --anneal-frac 1.0 --age 50 --age-end 22` (only MuonH's first moment changed; NS/scale_invariant/hyperball/schedule untouched).
+
+n=8 (candidate + exact PR#351 control, seeds 0–7, Track-3 `margin=(3.28−mean)·√8 ≥0.004`):
+
+| | candidate | control (PR#351) |
+|---|---|---|
+| 8-seed mean val_loss @3125 | **3.27627** | 3.27912 |
+| first statsig-passing boundary | **3065** ✅ (<3125) | 3125 (n=8 margin 0.00250, fails) |
+
+- **First-pass 3065 → new record, 60 steps below PR#351's 3125.** Success criterion (strictly <3125) met.
+- Paired Δ(ctrl−cand)@3125 = **+0.00284, t=+21.2** (df=7, p≪0.001); all 8 seeds beat control, no outlier.
+- vs PR#351 published n=20 mean 3.278994: equal-step `(pub−cand)/√(1/20+1/8) = +0.00650` (≫0.004).
+- 3065 is 12 notches below 3125 → no seeds 0–19 extension needed. **The gain is driven by anneal 50→22 + early onset km_start=750; μ=0.95 & K∈{4,6,8} are ~tied.**
+
+Reproduction gate passed (variant `--k1` reproduces PR#351 within nondeterminism; lazy-init switch bit-identical). REQ-013 boxes stopped. **Recommend cutting a record folder/PR from the winning config** (I've staged the trainer + minimal diff; say the word and I'll prep the PR artifact). All seed-0 screen logs in `logs/muonh351/`.
 
 ---
 
