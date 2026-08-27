@@ -1,0 +1,201 @@
+### STEP LINES ###
+step 1 | loss -0.0098 | teacher-student gap -0.2414 | adv_clip 8.5% | ratio_clip lo 0.5% hi 0.0% | staleness 0.00 (max 0) | grad 5.817 | lr 1.00e-06 | tokens 683 | hint_drop 10.0% | sandbox_fail 0 | empty_eps 0
+step 2 | loss 0.0006 | teacher-student gap -0.1667 | adv_clip 6.3% | ratio_clip lo 2.0% hi 0.7% | staleness 0.50 (max 1) | grad 3.419 | lr 1.00e-06 | tokens 1256 | hint_drop 20.0% | sandbox_fail 0 | empty_eps 0
+step 3 | loss -0.0905 | teacher-student gap -0.1834 | adv_clip 6.9% | ratio_clip lo 0.1% hi 0.0% | staleness 0.98 (max 2) | grad 2.030 | lr 1.00e-06 | tokens 2331 | hint_drop 28.6% | sandbox_fail 0 | empty_eps 0
+step 4 | loss -0.0549 | teacher-student gap -0.1410 | adv_clip 6.4% | ratio_clip lo 13.1% hi 3.7% | staleness 1.14 (max 2) | grad 2.165 | lr 1.00e-06 | tokens 1967 | hint_drop 50.0% | sandbox_fail 0 | empty_eps 0
+step 5 | loss -0.0616 | teacher-student gap -0.1817 | adv_clip 9.0% | ratio_clip lo 7.7% hi 3.2% | staleness 1.12 (max 2) | grad 3.578 | lr 1.00e-06 | tokens 898 | hint_drop 64.2% | sandbox_fail 0 | empty_eps 0
+step 6 | loss -0.0288 | teacher-student gap -0.1731 | adv_clip 7.3% | ratio_clip lo 9.1% hi 2.7% | staleness 1.17 (max 2) | grad 2.475 | lr 1.00e-06 | tokens 948 | hint_drop 69.8% | sandbox_fail 0 | empty_eps 0
+step 7 | loss -0.0331 | teacher-student gap -0.2190 | adv_clip 10.9% | ratio_clip lo 0.0% hi 0.0% | staleness 1.21 (max 2) | grad 3.116 | lr 1.00e-06 | tokens 960 | hint_drop 81.4% | sandbox_fail 0 | empty_eps 0
+step 8 | loss -0.0556 | teacher-student gap -0.2697 | adv_clip 10.5% | ratio_clip lo 0.0% hi 0.0% | staleness 1.22 (max 2) | grad 2.882 | lr 1.00e-06 | tokens 992 | hint_drop 82.9% | sandbox_fail 0 | empty_eps 0
+step 9 | loss -0.0615 | teacher-student gap -0.1186 | adv_clip 5.5% | ratio_clip lo 0.1% hi 0.0% | staleness 1.26 (max 2) | grad 2.506 | lr 1.00e-06 | tokens 1106 | hint_drop 85.5% | sandbox_fail 0 | empty_eps 0
+step 10 | loss 0.0270 | teacher-student gap -0.1044 | adv_clip 4.4% | ratio_clip lo 0.1% hi 0.0% | staleness 1.27 (max 2) | grad 2.130 | lr 1.00e-06 | tokens 1905 | hint_drop 93.1% | sandbox_fail 0 | empty_eps 0
+step 11 | loss -0.0247 | teacher-student gap -0.1864 | adv_clip 6.7% | ratio_clip lo 8.4% hi 2.8% | staleness 1.26 (max 2) | grad 2.623 | lr 1.00e-06 | tokens 1107 | hint_drop 101.7% | sandbox_fail 0 | empty_eps 0
+step 12 | loss -0.0438 | teacher-student gap -0.2520 | adv_clip 9.6% | ratio_clip lo 0.3% hi 0.1% | staleness 1.23 (max 2) | grad 2.928 | lr 1.00e-06 | tokens 763 | hint_drop 105.2% | sandbox_fail 0 | empty_eps 0
+step 13 | loss -0.0869 | teacher-student gap -0.1489 | adv_clip 9.5% | ratio_clip lo 0.1% hi 0.0% | staleness 1.24 (max 2) | grad 2.446 | lr 1.00e-06 | tokens 1650 | hint_drop 110.6% | sandbox_fail 0 | empty_eps 0
+step 14 | loss -0.0341 | teacher-student gap -0.2110 | adv_clip 6.6% | ratio_clip lo 0.2% hi 0.0% | staleness 1.22 (max 2) | grad 2.833 | lr 1.00e-06 | tokens 1269 | hint_drop 113.8% | sandbox_fail 0 | empty_eps 0
+step 15 | loss -0.0173 | teacher-student gap -0.1304 | adv_clip 6.6% | ratio_clip lo 3.0% hi 0.6% | staleness 1.21 (max 2) | grad 2.535 | lr 1.00e-06 | tokens 1060 | hint_drop 114.6% | sandbox_fail 0 | empty_eps 0
+step 16 | loss -0.0061 | teacher-student gap -0.1317 | adv_clip 6.7% | ratio_clip lo 5.3% hi 2.0% | staleness 1.20 (max 2) | grad 1.827 | lr 1.00e-06 | tokens 1509 | hint_drop 119.8% | sandbox_fail 0 | empty_eps 0
+step 17 | loss -0.0213 | teacher-student gap -0.1551 | adv_clip 8.1% | ratio_clip lo 0.0% hi 0.0% | staleness 1.18 (max 2) | grad 3.055 | lr 1.00e-06 | tokens 1134 | hint_drop 126.1% | sandbox_fail 0 | empty_eps 0
+step 18 | loss -0.0419 | teacher-student gap -0.1312 | adv_clip 4.9% | ratio_clip lo 0.2% hi 0.0% | staleness 1.17 (max 2) | grad 1.932 | lr 1.00e-06 | tokens 1391 | hint_drop 128.5% | sandbox_fail 0 | empty_eps 0
+step 19 | loss -0.0171 | teacher-student gap -0.1049 | adv_clip 5.3% | ratio_clip lo 2.7% hi 1.2% | staleness 1.14 (max 2) | grad 2.043 | lr 1.00e-06 | tokens 1523 | hint_drop 134.9% | sandbox_fail 0 | empty_eps 0
+step 20 | loss 0.0001 | teacher-student gap -0.1159 | adv_clip 5.4% | ratio_clip lo 0.1% hi 0.0% | staleness 1.13 (max 2) | grad 2.075 | lr 1.00e-06 | tokens 1439 | hint_drop 134.2% | sandbox_fail 0 | empty_eps 0
+step 21 | loss -0.0256 | teacher-student gap -0.1550 | adv_clip 9.1% | ratio_clip lo 3.6% hi 0.9% | staleness 1.14 (max 2) | grad 2.614 | lr 1.00e-06 | tokens 1708 | hint_drop 134.2% | sandbox_fail 0 | empty_eps 0
+step 22 | loss -0.0149 | teacher-student gap -0.1019 | adv_clip 5.9% | ratio_clip lo 0.0% hi 0.0% | staleness 1.15 (max 2) | grad 2.099 | lr 1.00e-06 | tokens 1184 | hint_drop 134.6% | sandbox_fail 0 | empty_eps 0
+step 23 | loss -0.0308 | teacher-student gap -0.1964 | adv_clip 12.0% | ratio_clip lo 0.2% hi 0.0% | staleness 1.15 (max 2) | grad 2.744 | lr 1.00e-06 | tokens 1091 | hint_drop 136.9% | sandbox_fail 0 | empty_eps 0
+step 24 | loss -0.0113 | teacher-student gap -0.1451 | adv_clip 7.9% | ratio_clip lo 6.2% hi 2.1% | staleness 1.14 (max 2) | grad 2.207 | lr 1.00e-06 | tokens 1087 | hint_drop 139.8% | sandbox_fail 0 | empty_eps 0
+step 25 | loss 0.0065 | teacher-student gap -0.0652 | adv_clip 3.9% | ratio_clip lo 4.7% hi 1.1% | staleness 1.13 (max 2) | grad 2.007 | lr 1.00e-06 | tokens 1790 | hint_drop 140.5% | sandbox_fail 0 | empty_eps 0
+step 26 | loss -0.0079 | teacher-student gap -0.2004 | adv_clip 10.7% | ratio_clip lo 0.0% hi 0.0% | staleness 1.12 (max 2) | grad 2.799 | lr 1.00e-06 | tokens 519 | hint_drop 147.5% | sandbox_fail 0 | empty_eps 0
+step 27 | loss -0.0187 | teacher-student gap -0.1319 | adv_clip 6.9% | ratio_clip lo 0.1% hi 0.0% | staleness 1.11 (max 2) | grad 1.983 | lr 1.00e-06 | tokens 1049 | hint_drop 149.4% | sandbox_fail 0 | empty_eps 0
+step 28 | loss -0.0028 | teacher-student gap -0.0713 | adv_clip 2.8% | ratio_clip lo 4.6% hi 1.5% | staleness 1.11 (max 2) | grad 2.216 | lr 1.00e-06 | tokens 1698 | hint_drop 151.2% | sandbox_fail 0 | empty_eps 0
+step 29 | loss -0.0370 | teacher-student gap -0.0882 | adv_clip 5.0% | ratio_clip lo 0.1% hi 0.0% | staleness 1.11 (max 2) | grad 1.476 | lr 1.00e-06 | tokens 2027 | hint_drop 151.1% | sandbox_fail 0 | empty_eps 0
+step 30 | loss -0.0337 | teacher-student gap -0.1061 | adv_clip 5.0% | ratio_clip lo 6.4% hi 2.1% | staleness 1.10 (max 2) | grad 1.618 | lr 1.00e-06 | tokens 1263 | hint_drop 151.2% | sandbox_fail 0 | empty_eps 0
+step 31 | loss -0.0532 | teacher-student gap -0.1471 | adv_clip 8.4% | ratio_clip lo 2.2% hi 0.9% | staleness 1.10 (max 2) | grad 2.075 | lr 1.00e-06 | tokens 1253 | hint_drop 151.8% | sandbox_fail 0 | empty_eps 0
+step 32 | loss -0.0337 | teacher-student gap -0.1301 | adv_clip 7.4% | ratio_clip lo 0.1% hi 0.0% | staleness 1.09 (max 2) | grad 1.582 | lr 1.00e-06 | tokens 1382 | hint_drop 156.4% | sandbox_fail 0 | empty_eps 0
+step 33 | loss -0.0210 | teacher-student gap -0.1175 | adv_clip 7.0% | ratio_clip lo 3.3% hi 0.6% | staleness 1.08 (max 2) | grad 2.303 | lr 1.00e-06 | tokens 1239 | hint_drop 156.3% | sandbox_fail 0 | empty_eps 0
+step 34 | loss -0.0163 | teacher-student gap -0.1146 | adv_clip 5.7% | ratio_clip lo 7.5% hi 2.5% | staleness 1.08 (max 2) | grad 1.966 | lr 1.00e-06 | tokens 1186 | hint_drop 157.2% | sandbox_fail 0 | empty_eps 0
+step 35 | loss -0.0466 | teacher-student gap -0.1833 | adv_clip 11.5% | ratio_clip lo 0.3% hi 0.0% | staleness 1.08 (max 2) | grad 2.618 | lr 1.00e-06 | tokens 812 | hint_drop 158.4% | sandbox_fail 0 | empty_eps 0
+step 36 | loss -0.0526 | teacher-student gap -0.1366 | adv_clip 6.6% | ratio_clip lo 0.2% hi 0.0% | staleness 1.07 (max 2) | grad 2.321 | lr 1.00e-06 | tokens 733 | hint_drop 159.4% | sandbox_fail 0 | empty_eps 0
+step 37 | loss -0.0258 | teacher-student gap -0.1366 | adv_clip 7.5% | ratio_clip lo 6.5% hi 1.9% | staleness 1.06 (max 2) | grad 1.729 | lr 1.00e-06 | tokens 1403 | hint_drop 162.7% | sandbox_fail 0 | empty_eps 0
+step 38 | loss -0.0000 | teacher-student gap -0.0935 | adv_clip 5.0% | ratio_clip lo 4.3% hi 1.3% | staleness 1.06 (max 2) | grad 1.868 | lr 1.00e-06 | tokens 1436 | hint_drop 162.1% | sandbox_fail 0 | empty_eps 0
+step 39 | loss -0.0336 | teacher-student gap -0.1511 | adv_clip 10.8% | ratio_clip lo 3.9% hi 1.5% | staleness 1.06 (max 2) | grad 1.755 | lr 1.00e-06 | tokens 1920 | hint_drop 163.0% | sandbox_fail 0 | empty_eps 0
+step 40 | loss -0.0151 | teacher-student gap -0.1101 | adv_clip 6.2% | ratio_clip lo 8.4% hi 1.7% | staleness 1.05 (max 2) | grad 1.789 | lr 1.00e-06 | tokens 1141 | hint_drop 164.0% | sandbox_fail 0 | empty_eps 0
+step 41 | loss -0.0250 | teacher-student gap -0.1854 | adv_clip 13.2% | ratio_clip lo 0.1% hi 0.0% | staleness 1.04 (max 2) | grad 2.122 | lr 1.00e-06 | tokens 938 | hint_drop 165.9% | sandbox_fail 0 | empty_eps 0
+step 42 | loss -0.0260 | teacher-student gap -0.0575 | adv_clip 4.0% | ratio_clip lo 7.9% hi 2.3% | staleness 1.04 (max 2) | grad 1.494 | lr 1.00e-06 | tokens 2342 | hint_drop 169.4% | sandbox_fail 0 | empty_eps 0
+step 43 | loss -0.0926 | teacher-student gap -0.2254 | adv_clip 12.0% | ratio_clip lo 0.2% hi 0.0% | staleness 1.03 (max 2) | grad 2.146 | lr 1.00e-06 | tokens 717 | hint_drop 171.9% | sandbox_fail 0 | empty_eps 0
+step 44 | loss -0.0035 | teacher-student gap -0.1270 | adv_clip 6.6% | ratio_clip lo 3.6% hi 0.2% | staleness 1.02 (max 2) | grad 1.864 | lr 1.00e-06 | tokens 944 | hint_drop 173.8% | sandbox_fail 0 | empty_eps 0
+step 45 | loss -0.0188 | teacher-student gap -0.0799 | adv_clip 5.7% | ratio_clip lo 5.9% hi 2.7% | staleness 1.02 (max 2) | grad 2.111 | lr 1.00e-06 | tokens 1568 | hint_drop 173.8% | sandbox_fail 0 | empty_eps 0
+step 46 | loss 0.0107 | teacher-student gap -0.0903 | adv_clip 6.5% | ratio_clip lo 3.8% hi 1.0% | staleness 1.01 (max 2) | grad 1.913 | lr 1.00e-06 | tokens 1526 | hint_drop 175.3% | sandbox_fail 0 | empty_eps 0
+step 47 | loss -0.0220 | teacher-student gap -0.1512 | adv_clip 10.0% | ratio_clip lo 3.2% hi 1.3% | staleness 1.01 (max 2) | grad 2.023 | lr 1.00e-06 | tokens 1099 | hint_drop 174.5% | sandbox_fail 0 | empty_eps 0
+step 48 | loss -0.0253 | teacher-student gap -0.0975 | adv_clip 6.6% | ratio_clip lo 3.9% hi 0.9% | staleness 1.01 (max 2) | grad 1.611 | lr 1.00e-06 | tokens 1439 | hint_drop 174.3% | sandbox_fail 0 | empty_eps 0
+step 49 | loss -0.0170 | teacher-student gap -0.0732 | adv_clip 6.0% | ratio_clip lo 5.6% hi 1.3% | staleness 1.01 (max 2) | grad 1.560 | lr 1.00e-06 | tokens 1888 | hint_drop 175.6% | sandbox_fail 0 | empty_eps 0
+step 50 | loss 0.0206 | teacher-student gap -0.0723 | adv_clip 5.6% | ratio_clip lo 2.5% hi 0.6% | staleness 1.01 (max 2) | grad 1.844 | lr 1.00e-06 | tokens 1595 | hint_drop 178.1% | sandbox_fail 0 | empty_eps 0
+step 51 | loss -0.0509 | teacher-student gap -0.1113 | adv_clip 7.9% | ratio_clip lo 3.0% hi 1.5% | staleness 1.01 (max 2) | grad 1.948 | lr 1.00e-06 | tokens 1861 | hint_drop 178.9% | sandbox_fail 0 | empty_eps 0
+step 52 | loss -0.0299 | teacher-student gap -0.1284 | adv_clip 6.9% | ratio_clip lo 5.3% hi 1.5% | staleness 1.00 (max 2) | grad 1.847 | lr 1.00e-06 | tokens 1198 | hint_drop 179.7% | sandbox_fail 0 | empty_eps 0
+step 53 | loss -0.0270 | teacher-student gap -0.1605 | adv_clip 9.6% | ratio_clip lo 6.6% hi 1.7% | staleness 0.99 (max 2) | grad 1.524 | lr 1.00e-06 | tokens 1031 | hint_drop 182.2% | sandbox_fail 0 | empty_eps 0
+step 54 | loss -0.0343 | teacher-student gap -0.0966 | adv_clip 7.7% | ratio_clip lo 5.0% hi 2.0% | staleness 0.99 (max 2) | grad 2.050 | lr 1.00e-06 | tokens 1867 | hint_drop 181.2% | sandbox_fail 0 | empty_eps 0
+step 55 | loss -0.0339 | teacher-student gap -0.1016 | adv_clip 4.7% | ratio_clip lo 3.1% hi 1.2% | staleness 1.00 (max 2) | grad 1.429 | lr 1.00e-06 | tokens 1205 | hint_drop 182.0% | sandbox_fail 0 | empty_eps 0
+step 56 | loss -0.0074 | teacher-student gap -0.0636 | adv_clip 4.4% | ratio_clip lo 3.3% hi 1.0% | staleness 1.00 (max 2) | grad 1.377 | lr 1.00e-06 | tokens 1980 | hint_drop 182.0% | sandbox_fail 0 | empty_eps 0
+step 57 | loss -0.0891 | teacher-student gap -0.2007 | adv_clip 12.3% | ratio_clip lo 3.6% hi 1.0% | staleness 0.99 (max 2) | grad 2.184 | lr 1.00e-06 | tokens 1146 | hint_drop 183.1% | sandbox_fail 0 | empty_eps 0
+step 58 | loss 0.0158 | teacher-student gap -0.0758 | adv_clip 4.9% | ratio_clip lo 2.9% hi 1.3% | staleness 0.99 (max 2) | grad 1.769 | lr 1.00e-06 | tokens 1674 | hint_drop 183.4% | sandbox_fail 0 | empty_eps 0
+step 59 | loss -0.0543 | teacher-student gap -0.0986 | adv_clip 6.1% | ratio_clip lo 6.1% hi 2.4% | staleness 0.99 (max 2) | grad 1.440 | lr 1.00e-06 | tokens 1027 | hint_drop 183.1% | sandbox_fail 0 | empty_eps 0
+step 60 | loss -0.0490 | teacher-student gap -0.0710 | adv_clip 5.0% | ratio_clip lo 5.7% hi 1.6% | staleness 0.99 (max 2) | grad 1.470 | lr 1.00e-06 | tokens 2342 | hint_drop 183.7% | sandbox_fail 0 | empty_eps 0
+step 61 | loss -0.0155 | teacher-student gap -0.0776 | adv_clip 7.1% | ratio_clip lo 9.1% hi 3.4% | staleness 0.99 (max 2) | grad 1.647 | lr 1.00e-06 | tokens 1586 | hint_drop 184.0% | sandbox_fail 0 | empty_eps 0
+step 62 | loss -0.0318 | teacher-student gap -0.1120 | adv_clip 7.7% | ratio_clip lo 0.9% hi 0.3% | staleness 0.98 (max 2) | grad 1.647 | lr 1.00e-06 | tokens 1475 | hint_drop 186.7% | sandbox_fail 0 | empty_eps 0
+step 63 | loss -0.0470 | teacher-student gap -0.0772 | adv_clip 4.9% | ratio_clip lo 1.5% hi 0.3% | staleness 0.98 (max 2) | grad 1.393 | lr 1.00e-06 | tokens 1434 | hint_drop 186.6% | sandbox_fail 0 | empty_eps 0
+step 64 | loss -0.0463 | teacher-student gap -0.2206 | adv_clip 12.2% | ratio_clip lo 0.1% hi 0.0% | staleness 0.98 (max 2) | grad 2.167 | lr 1.00e-06 | tokens 801 | hint_drop 186.1% | sandbox_fail 0 | empty_eps 0
+step 65 | loss -0.0089 | teacher-student gap -0.0479 | adv_clip 2.0% | ratio_clip lo 5.9% hi 2.2% | staleness 0.98 (max 2) | grad 1.306 | lr 1.00e-06 | tokens 2850 | hint_drop 186.2% | sandbox_fail 0 | empty_eps 0
+step 66 | loss -0.0209 | teacher-student gap -0.0805 | adv_clip 5.1% | ratio_clip lo 4.5% hi 1.6% | staleness 0.98 (max 2) | grad 1.416 | lr 1.00e-06 | tokens 2379 | hint_drop 185.9% | sandbox_fail 0 | empty_eps 0
+step 67 | loss -0.0537 | teacher-student gap -0.1182 | adv_clip 10.1% | ratio_clip lo 1.9% hi 0.7% | staleness 0.98 (max 2) | grad 1.848 | lr 1.00e-06 | tokens 1358 | hint_drop 187.5% | sandbox_fail 0 | empty_eps 0
+step 68 | loss -0.0144 | teacher-student gap -0.0725 | adv_clip 3.8% | ratio_clip lo 7.1% hi 3.5% | staleness 0.98 (max 2) | grad 1.532 | lr 1.00e-06 | tokens 1624 | hint_drop 188.2% | sandbox_fail 0 | empty_eps 0
+step 69 | loss -0.0230 | teacher-student gap -0.1725 | adv_clip 12.0% | ratio_clip lo 0.0% hi 0.0% | staleness 0.98 (max 2) | grad 1.944 | lr 1.00e-06 | tokens 872 | hint_drop 189.1% | sandbox_fail 0 | empty_eps 0
+step 70 | loss -0.0354 | teacher-student gap -0.1244 | adv_clip 7.4% | ratio_clip lo 3.4% hi 1.0% | staleness 0.97 (max 2) | grad 1.689 | lr 1.00e-06 | tokens 1193 | hint_drop 190.1% | sandbox_fail 0 | empty_eps 0
+step 71 | loss -0.0114 | teacher-student gap -0.0872 | adv_clip 5.4% | ratio_clip lo 0.1% hi 0.0% | staleness 0.97 (max 2) | grad 1.548 | lr 1.00e-06 | tokens 1241 | hint_drop 189.5% | sandbox_fail 0 | empty_eps 0
+step 72 | loss 0.0107 | teacher-student gap -0.0728 | adv_clip 6.7% | ratio_clip lo 2.2% hi 1.1% | staleness 0.97 (max 2) | grad 1.600 | lr 1.00e-06 | tokens 1481 | hint_drop 189.9% | sandbox_fail 0 | empty_eps 0
+step 73 | loss -0.0310 | teacher-student gap -0.1126 | adv_clip 6.4% | ratio_clip lo 1.5% hi 0.4% | staleness 0.97 (max 2) | grad 1.664 | lr 1.00e-06 | tokens 1138 | hint_drop 190.2% | sandbox_fail 0 | empty_eps 0
+step 74 | loss -0.0203 | teacher-student gap -0.0935 | adv_clip 4.3% | ratio_clip lo 3.2% hi 1.2% | staleness 0.97 (max 2) | grad 1.483 | lr 1.00e-06 | tokens 1414 | hint_drop 190.7% | sandbox_fail 0 | empty_eps 0
+step 75 | loss -0.0154 | teacher-student gap -0.0541 | adv_clip 2.2% | ratio_clip lo 8.1% hi 2.6% | staleness 0.97 (max 2) | grad 1.106 | lr 1.00e-06 | tokens 1829 | hint_drop 190.2% | sandbox_fail 0 | empty_eps 0
+step 76 | loss -0.0162 | teacher-student gap -0.0465 | adv_clip 3.7% | ratio_clip lo 5.6% hi 1.8% | staleness 0.97 (max 2) | grad 1.676 | lr 1.00e-06 | tokens 2186 | hint_drop 190.1% | sandbox_fail 0 | empty_eps 0
+step 77 | loss -0.0521 | teacher-student gap -0.1358 | adv_clip 11.9% | ratio_clip lo 10.2% hi 2.2% | staleness 0.97 (max 2) | grad 1.790 | lr 1.00e-06 | tokens 864 | hint_drop 192.1% | sandbox_fail 0 | empty_eps 0
+step 78 | loss -0.0598 | teacher-student gap -0.1590 | adv_clip 12.3% | ratio_clip lo 0.0% hi 0.0% | staleness 0.97 (max 2) | grad 2.465 | lr 1.00e-06 | tokens 793 | hint_drop 192.2% | sandbox_fail 0 | empty_eps 0
+step 79 | loss -0.0334 | teacher-student gap -0.0625 | adv_clip 4.5% | ratio_clip lo 4.3% hi 2.1% | staleness 0.97 (max 2) | grad 1.214 | lr 1.00e-06 | tokens 2700 | hint_drop 192.5% | sandbox_fail 0 | empty_eps 0
+step 80 | loss -0.0329 | teacher-student gap -0.1207 | adv_clip 8.9% | ratio_clip lo 0.0% hi 0.0% | staleness 0.96 (max 2) | grad 1.675 | lr 1.00e-06 | tokens 1086 | hint_drop 192.3% | sandbox_fail 0 | empty_eps 0
+step 81 | loss -0.0483 | teacher-student gap -0.1409 | adv_clip 5.7% | ratio_clip lo 7.7% hi 2.3% | staleness 0.97 (max 2) | grad 2.000 | lr 1.00e-06 | tokens 1445 | hint_drop 193.1% | sandbox_fail 0 | empty_eps 0
+step 82 | loss -0.0131 | teacher-student gap -0.0794 | adv_clip 6.0% | ratio_clip lo 6.9% hi 2.1% | staleness 0.96 (max 2) | grad 1.253 | lr 1.00e-06 | tokens 1518 | hint_drop 193.5% | sandbox_fail 0 | empty_eps 0
+step 83 | loss -0.0352 | teacher-student gap -0.0893 | adv_clip 6.0% | ratio_clip lo 6.0% hi 2.0% | staleness 0.96 (max 2) | grad 1.701 | lr 1.00e-06 | tokens 1906 | hint_drop 196.0% | sandbox_fail 0 | empty_eps 0
+step 84 | loss 0.0010 | teacher-student gap -0.0385 | adv_clip 2.4% | ratio_clip lo 3.1% hi 0.8% | staleness 0.96 (max 2) | grad 1.508 | lr 1.00e-06 | tokens 3039 | hint_drop 196.1% | sandbox_fail 0 | empty_eps 0
+step 85 | loss -0.0508 | teacher-student gap -0.0533 | adv_clip 5.9% | ratio_clip lo 3.7% hi 1.0% | staleness 0.95 (max 2) | grad 1.512 | lr 1.00e-06 | tokens 2324 | hint_drop 199.1% | sandbox_fail 0 | empty_eps 0
+step 86 | loss -0.0222 | teacher-student gap -0.0711 | adv_clip 3.7% | ratio_clip lo 7.0% hi 1.5% | staleness 0.95 (max 2) | grad 1.349 | lr 1.00e-06 | tokens 1384 | hint_drop 198.8% | sandbox_fail 0 | empty_eps 0
+step 87 | loss -0.0371 | teacher-student gap -0.0902 | adv_clip 5.2% | ratio_clip lo 7.0% hi 2.2% | staleness 0.95 (max 2) | grad 1.299 | lr 1.00e-06 | tokens 1318 | hint_drop 200.7% | sandbox_fail 0 | empty_eps 0
+step 88 | loss -0.0303 | teacher-student gap -0.0961 | adv_clip 6.7% | ratio_clip lo 7.8% hi 2.1% | staleness 0.95 (max 2) | grad 1.547 | lr 1.00e-06 | tokens 2211 | hint_drop 200.4% | sandbox_fail 0 | empty_eps 0
+step 89 | loss 0.0084 | teacher-student gap -0.0897 | adv_clip 6.8% | ratio_clip lo 6.4% hi 1.8% | staleness 0.95 (max 2) | grad 1.529 | lr 1.00e-06 | tokens 1260 | hint_drop 201.8% | sandbox_fail 0 | empty_eps 0
+step 90 | loss -0.0479 | teacher-student gap -0.0919 | adv_clip 8.9% | ratio_clip lo 4.4% hi 0.9% | staleness 0.95 (max 2) | grad 1.478 | lr 1.00e-06 | tokens 1197 | hint_drop 201.9% | sandbox_fail 0 | empty_eps 0
+step 91 | loss -0.0050 | teacher-student gap -0.0977 | adv_clip 6.5% | ratio_clip lo 6.6% hi 2.9% | staleness 0.94 (max 2) | grad 1.302 | lr 1.00e-06 | tokens 1218 | hint_drop 203.6% | sandbox_fail 0 | empty_eps 0
+step 92 | loss -0.0384 | teacher-student gap -0.0714 | adv_clip 6.5% | ratio_clip lo 2.1% hi 1.0% | staleness 0.94 (max 2) | grad 1.398 | lr 1.00e-06 | tokens 1319 | hint_drop 202.6% | sandbox_fail 0 | empty_eps 0
+step 93 | loss -0.0374 | teacher-student gap -0.0839 | adv_clip 5.8% | ratio_clip lo 6.5% hi 2.0% | staleness 0.94 (max 2) | grad 1.590 | lr 1.00e-06 | tokens 2012 | hint_drop 202.9% | sandbox_fail 0 | empty_eps 0
+step 94 | loss 0.0178 | teacher-student gap -0.0420 | adv_clip 2.8% | ratio_clip lo 5.5% hi 1.5% | staleness 0.94 (max 2) | grad 1.260 | lr 1.00e-06 | tokens 1892 | hint_drop 207.7% | sandbox_fail 0 | empty_eps 0
+step 95 | loss -0.0192 | teacher-student gap -0.0992 | adv_clip 7.1% | ratio_clip lo 7.2% hi 2.3% | staleness 0.94 (max 2) | grad 1.261 | lr 1.00e-06 | tokens 1979 | hint_drop 207.4% | sandbox_fail 0 | empty_eps 0
+step 96 | loss -0.0468 | teacher-student gap -0.1000 | adv_clip 10.6% | ratio_clip lo 2.0% hi 0.6% | staleness 0.94 (max 2) | grad 1.258 | lr 1.00e-06 | tokens 2034 | hint_drop 206.1% | sandbox_fail 0 | empty_eps 0
+step 97 | loss -0.0513 | teacher-student gap -0.1259 | adv_clip 10.7% | ratio_clip lo 1.6% hi 1.1% | staleness 0.94 (max 2) | grad 1.824 | lr 1.00e-06 | tokens 1945 | hint_drop 206.6% | sandbox_fail 0 | empty_eps 0
+step 98 | loss 0.0068 | teacher-student gap -0.0991 | adv_clip 8.3% | ratio_clip lo 0.1% hi 0.0% | staleness 0.94 (max 2) | grad 1.650 | lr 1.00e-06 | tokens 1376 | hint_drop 206.6% | sandbox_fail 0 | empty_eps 0
+step 99 | loss -0.0486 | teacher-student gap -0.0531 | adv_clip 5.3% | ratio_clip lo 5.8% hi 2.1% | staleness 0.94 (max 2) | grad 1.667 | lr 1.00e-06 | tokens 1994 | hint_drop 205.6% | sandbox_fail 0 | empty_eps 0
+step 100 | loss -0.0408 | teacher-student gap -0.1059 | adv_clip 7.9% | ratio_clip lo 7.3% hi 2.8% | staleness 0.94 (max 2) | grad 1.494 | lr 1.00e-06 | tokens 1370 | hint_drop 207.1% | sandbox_fail 0 | empty_eps 0
+step 101 | loss -0.0128 | teacher-student gap -0.0939 | adv_clip 9.3% | ratio_clip lo 1.5% hi 0.2% | staleness 0.94 (max 2) | grad 1.795 | lr 1.00e-06 | tokens 1447 | hint_drop 205.7% | sandbox_fail 0 | empty_eps 0
+step 102 | loss -0.0328 | teacher-student gap -0.0812 | adv_clip 7.1% | ratio_clip lo 1.7% hi 0.6% | staleness 0.95 (max 2) | grad 1.484 | lr 1.00e-06 | tokens 1788 | hint_drop 204.2% | sandbox_fail 0 | empty_eps 0
+step 103 | loss -0.0144 | teacher-student gap -0.0531 | adv_clip 5.9% | ratio_clip lo 4.3% hi 2.0% | staleness 0.96 (max 3) | grad 1.447 | lr 1.00e-06 | tokens 1623 | hint_drop 202.1% | sandbox_fail 0 | empty_eps 0
+step 104 | loss 0.0099 | teacher-student gap -0.0691 | adv_clip 5.5% | ratio_clip lo 3.6% hi 1.1% | staleness 0.97 (max 3) | grad 1.345 | lr 1.00e-06 | tokens 1143 | hint_drop 201.1% | sandbox_fail 0 | empty_eps 0
+step 105 | loss 0.0139 | teacher-student gap -0.0489 | adv_clip 4.9% | ratio_clip lo 6.2% hi 1.7% | staleness 0.98 (max 3) | grad 1.664 | lr 1.00e-06 | tokens 748 | hint_drop 199.5% | sandbox_fail 0 | empty_eps 0
+step 106 | loss -0.0078 | teacher-student gap -0.0741 | adv_clip 7.9% | ratio_clip lo 1.4% hi 0.4% | staleness 0.99 (max 3) | grad 1.329 | lr 1.00e-06 | tokens 1417 | hint_drop 198.1% | sandbox_fail 0 | empty_eps 0
+step 107 | loss -0.0288 | teacher-student gap -0.0670 | adv_clip 9.0% | ratio_clip lo 3.1% hi 0.7% | staleness 1.00 (max 3) | grad 1.582 | lr 1.00e-06 | tokens 1405 | hint_drop 196.7% | sandbox_fail 0 | empty_eps 0
+step 108 | loss -0.0052 | teacher-student gap -0.0594 | adv_clip 4.4% | ratio_clip lo 4.1% hi 1.2% | staleness 1.01 (max 3) | grad 1.788 | lr 1.00e-06 | tokens 808 | hint_drop 195.5% | sandbox_fail 0 | empty_eps 0
+step 109 | loss -0.0016 | teacher-student gap -0.1080 | adv_clip 7.8% | ratio_clip lo 6.3% hi 1.7% | staleness 1.02 (max 3) | grad 1.533 | lr 1.00e-06 | tokens 1012 | hint_drop 194.0% | sandbox_fail 0 | empty_eps 0
+step 110 | loss 0.0551 | teacher-student gap -0.0411 | adv_clip 4.8% | ratio_clip lo 3.2% hi 1.5% | staleness 1.02 (max 3) | grad 1.350 | lr 1.00e-06 | tokens 1780 | hint_drop 192.6% | sandbox_fail 0 | empty_eps 0
+step 111 | loss -0.0048 | teacher-student gap -0.0608 | adv_clip 4.1% | ratio_clip lo 2.9% hi 1.6% | staleness 1.03 (max 3) | grad 1.129 | lr 1.00e-06 | tokens 1431 | hint_drop 191.6% | sandbox_fail 0 | empty_eps 0
+step 112 | loss -0.0152 | teacher-student gap -0.0519 | adv_clip 4.5% | ratio_clip lo 4.6% hi 1.1% | staleness 1.04 (max 3) | grad 1.453 | lr 1.00e-06 | tokens 1017 | hint_drop 190.2% | sandbox_fail 0 | empty_eps 0
+step 113 | loss -0.0155 | teacher-student gap -0.0443 | adv_clip 6.8% | ratio_clip lo 6.3% hi 1.9% | staleness 1.05 (max 3) | grad 1.464 | lr 1.00e-06 | tokens 1163 | hint_drop 189.3% | sandbox_fail 0 | empty_eps 0
+step 114 | loss -0.0430 | teacher-student gap -0.0634 | adv_clip 5.2% | ratio_clip lo 2.7% hi 1.0% | staleness 1.05 (max 3) | grad 1.465 | lr 1.00e-06 | tokens 1381 | hint_drop 187.9% | sandbox_fail 0 | empty_eps 0
+step 115 | loss 0.0005 | teacher-student gap -0.0604 | adv_clip 6.1% | ratio_clip lo 3.7% hi 1.6% | staleness 1.06 (max 3) | grad 1.368 | lr 1.00e-06 | tokens 1291 | hint_drop 186.7% | sandbox_fail 0 | empty_eps 0
+step 116 | loss -0.0222 | teacher-student gap -0.0501 | adv_clip 7.6% | ratio_clip lo 3.0% hi 1.1% | staleness 1.07 (max 3) | grad 1.404 | lr 1.00e-06 | tokens 1516 | hint_drop 185.7% | sandbox_fail 0 | empty_eps 0
+step 117 | loss -0.0041 | teacher-student gap -0.0675 | adv_clip 8.5% | ratio_clip lo 7.0% hi 1.2% | staleness 1.08 (max 3) | grad 1.515 | lr 1.00e-06 | tokens 800 | hint_drop 184.5% | sandbox_fail 0 | empty_eps 0
+step 118 | loss -0.0227 | teacher-student gap -0.0732 | adv_clip 4.9% | ratio_clip lo 4.4% hi 1.7% | staleness 1.09 (max 3) | grad 1.152 | lr 1.00e-06 | tokens 1358 | hint_drop 183.4% | sandbox_fail 0 | empty_eps 0
+step 119 | loss 0.0052 | teacher-student gap -0.0544 | adv_clip 4.9% | ratio_clip lo 6.1% hi 2.7% | staleness 1.09 (max 3) | grad 1.643 | lr 1.00e-06 | tokens 1130 | hint_drop 182.4% | sandbox_fail 0 | empty_eps 0
+step 120 | loss -0.0129 | teacher-student gap -0.0733 | adv_clip 7.1% | ratio_clip lo 0.8% hi 0.8% | staleness 1.10 (max 3) | grad 1.398 | lr 1.00e-06 | tokens 1122 | hint_drop 181.0% | sandbox_fail 0 | empty_eps 0
+step 121 | loss -0.0284 | teacher-student gap -0.0733 | adv_clip 9.9% | ratio_clip lo 3.4% hi 1.1% | staleness 1.11 (max 3) | grad 1.281 | lr 1.00e-06 | tokens 1314 | hint_drop 179.9% | sandbox_fail 0 | empty_eps 0
+step 122 | loss -0.0132 | teacher-student gap -0.0700 | adv_clip 7.5% | ratio_clip lo 1.8% hi 0.5% | staleness 1.11 (max 3) | grad 1.618 | lr 1.00e-06 | tokens 1088 | hint_drop 179.0% | sandbox_fail 0 | empty_eps 0
+step 123 | loss -0.0083 | teacher-student gap -0.0826 | adv_clip 7.1% | ratio_clip lo 3.7% hi 1.7% | staleness 1.12 (max 3) | grad 1.372 | lr 1.00e-06 | tokens 654 | hint_drop 178.1% | sandbox_fail 0 | empty_eps 0
+step 124 | loss -0.0153 | teacher-student gap -0.0478 | adv_clip 6.6% | ratio_clip lo 3.7% hi 1.7% | staleness 1.12 (max 3) | grad 1.529 | lr 1.00e-06 | tokens 1306 | hint_drop 177.1% | sandbox_fail 0 | empty_eps 0
+step 125 | loss -0.0013 | teacher-student gap -0.0521 | adv_clip 5.6% | ratio_clip lo 4.9% hi 2.4% | staleness 1.13 (max 3) | grad 1.015 | lr 1.00e-06 | tokens 1446 | hint_drop 176.0% | sandbox_fail 0 | empty_eps 0
+step 126 | loss -0.0130 | teacher-student gap -0.0858 | adv_clip 6.0% | ratio_clip lo 2.8% hi 1.6% | staleness 1.14 (max 3) | grad 1.623 | lr 1.00e-06 | tokens 1462 | hint_drop 174.9% | sandbox_fail 0 | empty_eps 0
+step 127 | loss 0.0159 | teacher-student gap -0.0750 | adv_clip 8.2% | ratio_clip lo 2.2% hi 0.5% | staleness 1.14 (max 3) | grad 1.630 | lr 1.00e-06 | tokens 717 | hint_drop 174.3% | sandbox_fail 0 | empty_eps 0
+step 128 | loss 0.0098 | teacher-student gap -0.0570 | adv_clip 8.6% | ratio_clip lo 4.1% hi 1.4% | staleness 1.15 (max 3) | grad 1.285 | lr 1.00e-06 | tokens 870 | hint_drop 173.3% | sandbox_fail 0 | empty_eps 0
+step 129 | loss -0.0240 | teacher-student gap -0.0802 | adv_clip 8.6% | ratio_clip lo 5.6% hi 2.5% | staleness 1.15 (max 3) | grad 1.189 | lr 1.00e-06 | tokens 1129 | hint_drop 172.6% | sandbox_fail 0 | empty_eps 0
+step 130 | loss -0.0202 | teacher-student gap -0.0700 | adv_clip 6.2% | ratio_clip lo 3.7% hi 1.7% | staleness 1.16 (max 3) | grad 1.274 | lr 1.00e-06 | tokens 908 | hint_drop 171.4% | sandbox_fail 0 | empty_eps 0
+step 131 | loss 0.0349 | teacher-student gap -0.0850 | adv_clip 10.1% | ratio_clip lo 2.5% hi 1.3% | staleness 1.16 (max 3) | grad 1.940 | lr 1.00e-06 | tokens 738 | hint_drop 170.7% | sandbox_fail 0 | empty_eps 0
+step 132 | loss -0.0006 | teacher-student gap -0.0793 | adv_clip 9.8% | ratio_clip lo 1.6% hi 0.4% | staleness 1.16 (max 3) | grad 1.203 | lr 1.00e-06 | tokens 1647 | hint_drop 170.0% | sandbox_fail 0 | empty_eps 0
+step 133 | loss -0.0100 | teacher-student gap -0.0738 | adv_clip 6.8% | ratio_clip lo 2.0% hi 1.1% | staleness 1.17 (max 3) | grad 1.293 | lr 1.00e-06 | tokens 1020 | hint_drop 169.2% | sandbox_fail 0 | empty_eps 0
+step 134 | loss -0.0221 | teacher-student gap -0.0685 | adv_clip 8.2% | ratio_clip lo 1.9% hi 0.6% | staleness 1.17 (max 3) | grad 1.328 | lr 1.00e-06 | tokens 1393 | hint_drop 168.2% | sandbox_fail 0 | empty_eps 0
+step 135 | loss -0.0230 | teacher-student gap -0.0869 | adv_clip 6.9% | ratio_clip lo 0.4% hi 0.2% | staleness 1.18 (max 3) | grad 1.499 | lr 1.00e-06 | tokens 1549 | hint_drop 167.5% | sandbox_fail 0 | empty_eps 0
+step 136 | loss -0.0677 | teacher-student gap -0.1534 | adv_clip 11.0% | ratio_clip lo 0.0% hi 0.2% | staleness 1.18 (max 3) | grad 1.620 | lr 1.00e-06 | tokens 823 | hint_drop 166.9% | sandbox_fail 0 | empty_eps 0
+step 137 | loss -0.0029 | teacher-student gap -0.0599 | adv_clip 5.2% | ratio_clip lo 3.5% hi 1.5% | staleness 1.19 (max 3) | grad 1.515 | lr 1.00e-06 | tokens 1409 | hint_drop 166.2% | sandbox_fail 0 | empty_eps 0
+step 138 | loss -0.0305 | teacher-student gap -0.0546 | adv_clip 5.8% | ratio_clip lo 0.0% hi 0.0% | staleness 1.19 (max 3) | grad 1.325 | lr 1.00e-06 | tokens 2010 | hint_drop 165.5% | sandbox_fail 0 | empty_eps 0
+step 139 | loss -0.0008 | teacher-student gap -0.0561 | adv_clip 6.3% | ratio_clip lo 0.9% hi 0.2% | staleness 1.20 (max 3) | grad 1.258 | lr 1.00e-06 | tokens 2428 | hint_drop 164.5% | sandbox_fail 0 | empty_eps 0
+step 140 | loss 0.0009 | teacher-student gap -0.0950 | adv_clip 6.6% | ratio_clip lo 4.2% hi 1.4% | staleness 1.20 (max 3) | grad 1.465 | lr 1.00e-06 | tokens 642 | hint_drop 164.2% | sandbox_fail 0 | empty_eps 0
+step 141 | loss -0.0545 | teacher-student gap -0.0843 | adv_clip 7.5% | ratio_clip lo 2.3% hi 1.1% | staleness 1.20 (max 3) | grad 1.266 | lr 1.00e-06 | tokens 1492 | hint_drop 163.5% | sandbox_fail 0 | empty_eps 0
+step 142 | loss -0.0297 | teacher-student gap -0.0712 | adv_clip 8.0% | ratio_clip lo 6.9% hi 2.6% | staleness 1.20 (max 3) | grad 1.058 | lr 1.00e-06 | tokens 1172 | hint_drop 162.6% | sandbox_fail 0 | empty_eps 0
+step 143 | loss -0.0521 | teacher-student gap -0.1091 | adv_clip 10.2% | ratio_clip lo 5.0% hi 1.8% | staleness 1.21 (max 3) | grad 1.521 | lr 1.00e-06 | tokens 890 | hint_drop 162.0% | sandbox_fail 0 | empty_eps 0
+step 144 | loss -0.0035 | teacher-student gap -0.0664 | adv_clip 7.1% | ratio_clip lo 2.3% hi 0.6% | staleness 1.21 (max 3) | grad 1.395 | lr 1.00e-06 | tokens 898 | hint_drop 161.4% | sandbox_fail 0 | empty_eps 0
+step 145 | loss -0.0047 | teacher-student gap -0.0550 | adv_clip 4.2% | ratio_clip lo 3.8% hi 1.3% | staleness 1.21 (max 3) | grad 1.171 | lr 1.00e-06 | tokens 1317 | hint_drop 160.9% | sandbox_fail 0 | empty_eps 0
+step 146 | loss -0.0015 | teacher-student gap -0.0412 | adv_clip 7.6% | ratio_clip lo 11.8% hi 4.6% | staleness 1.22 (max 3) | grad 1.327 | lr 1.00e-06 | tokens 1489 | hint_drop 160.4% | sandbox_fail 0 | empty_eps 0
+step 147 | loss -0.0019 | teacher-student gap -0.0733 | adv_clip 7.8% | ratio_clip lo 3.0% hi 0.7% | staleness 1.22 (max 3) | grad 1.368 | lr 1.00e-06 | tokens 2010 | hint_drop 159.7% | sandbox_fail 0 | empty_eps 0
+step 148 | loss -0.0280 | teacher-student gap -0.0776 | adv_clip 8.8% | ratio_clip lo 0.8% hi 0.4% | staleness 1.22 (max 3) | grad 1.164 | lr 1.00e-06 | tokens 2030 | hint_drop 158.9% | sandbox_fail 0 | empty_eps 0
+step 149 | loss -0.0252 | teacher-student gap -0.0567 | adv_clip 4.6% | ratio_clip lo 2.2% hi 1.2% | staleness 1.23 (max 3) | grad 1.219 | lr 1.00e-06 | tokens 2413 | hint_drop 158.3% | sandbox_fail 0 | empty_eps 0
+step 150 | loss -0.0211 | teacher-student gap -0.0748 | adv_clip 9.3% | ratio_clip lo 1.6% hi 0.2% | staleness 1.23 (max 3) | grad 1.467 | lr 1.00e-06 | tokens 1371 | hint_drop 158.0% | sandbox_fail 0 | empty_eps 0
+step 151 | loss 0.0035 | teacher-student gap -0.0475 | adv_clip 4.8% | ratio_clip lo 5.8% hi 1.9% | staleness 1.23 (max 3) | grad 1.175 | lr 1.00e-06 | tokens 941 | hint_drop 157.7% | sandbox_fail 0 | empty_eps 0
+step 152 | loss -0.0373 | teacher-student gap -0.0878 | adv_clip 10.8% | ratio_clip lo 2.7% hi 1.4% | staleness 1.23 (max 3) | grad 1.315 | lr 1.00e-06 | tokens 772 | hint_drop 157.1% | sandbox_fail 0 | empty_eps 0
+step 153 | loss -0.0056 | teacher-student gap -0.1215 | adv_clip 10.2% | ratio_clip lo 2.5% hi 1.3% | staleness 1.23 (max 3) | grad 1.350 | lr 1.00e-06 | tokens 1231 | hint_drop 156.5% | sandbox_fail 0 | empty_eps 0
+step 154 | loss 0.0074 | teacher-student gap -0.0745 | adv_clip 13.3% | ratio_clip lo 2.8% hi 0.2% | staleness 1.24 (max 3) | grad 1.572 | lr 1.00e-06 | tokens 592 | hint_drop 156.3% | sandbox_fail 0 | empty_eps 0
+step 155 | loss -0.0203 | teacher-student gap -0.0529 | adv_clip 5.9% | ratio_clip lo 2.1% hi 0.4% | staleness 1.24 (max 3) | grad 1.238 | lr 1.00e-06 | tokens 1009 | hint_drop 155.9% | sandbox_fail 0 | empty_eps 0
+step 156 | loss -0.0067 | teacher-student gap -0.0808 | adv_clip 5.1% | ratio_clip lo 1.4% hi 0.7% | staleness 1.24 (max 3) | grad 1.095 | lr 1.00e-06 | tokens 1614 | hint_drop 155.3% | sandbox_fail 0 | empty_eps 0
+step 157 | loss 0.0006 | teacher-student gap -0.0527 | adv_clip 7.5% | ratio_clip lo 4.6% hi 1.5% | staleness 1.24 (max 3) | grad 1.411 | lr 1.00e-06 | tokens 977 | hint_drop 154.7% | sandbox_fail 0 | empty_eps 0
+step 158 | loss -0.0003 | teacher-student gap -0.0766 | adv_clip 7.9% | ratio_clip lo 3.7% hi 1.1% | staleness 1.24 (max 3) | grad 1.278 | lr 1.00e-06 | tokens 751 | hint_drop 154.6% | sandbox_fail 0 | empty_eps 0
+step 159 | loss -0.0026 | teacher-student gap -0.0665 | adv_clip 5.5% | ratio_clip lo 3.7% hi 1.1% | staleness 1.24 (max 3) | grad 1.220 | lr 1.00e-06 | tokens 930 | hint_drop 154.1% | sandbox_fail 0 | empty_eps 0
+step 160 | loss -0.0717 | teacher-student gap -0.1413 | adv_clip 15.3% | ratio_clip lo 1.7% hi 0.3% | staleness 1.25 (max 3) | grad 1.805 | lr 1.00e-06 | tokens 730 | hint_drop 153.5% | sandbox_fail 0 | empty_eps 0
+step 161 | loss -0.0082 | teacher-student gap -0.0768 | adv_clip 6.1% | ratio_clip lo 4.8% hi 0.7% | staleness 1.25 (max 3) | grad 1.406 | lr 1.00e-06 | tokens 795 | hint_drop 153.2% | sandbox_fail 0 | empty_eps 0
+step 162 | loss -0.0289 | teacher-student gap -0.0699 | adv_clip 5.6% | ratio_clip lo 1.6% hi 0.5% | staleness 1.25 (max 3) | grad 1.135 | lr 1.00e-06 | tokens 1509 | hint_drop 152.7% | sandbox_fail 0 | empty_eps 0
+step 163 | loss -0.0168 | teacher-student gap -0.0768 | adv_clip 8.0% | ratio_clip lo 1.1% hi 0.6% | staleness 1.25 (max 3) | grad 1.369 | lr 1.00e-06 | tokens 1283 | hint_drop 152.4% | sandbox_fail 0 | empty_eps 0
+step 164 | loss -0.0476 | teacher-student gap -0.0883 | adv_clip 11.5% | ratio_clip lo 1.9% hi 0.2% | staleness 1.25 (max 3) | grad 1.321 | lr 1.00e-06 | tokens 1178 | hint_drop 152.2% | sandbox_fail 0 | empty_eps 0
+step 165 | loss -0.0417 | teacher-student gap -0.1072 | adv_clip 13.3% | ratio_clip lo 2.9% hi 0.7% | staleness 1.25 (max 3) | grad 1.699 | lr 1.00e-06 | tokens 1274 | hint_drop 151.7% | sandbox_fail 0 | empty_eps 0
+step 166 | loss -0.0318 | teacher-student gap -0.0526 | adv_clip 8.4% | ratio_clip lo 2.9% hi 1.1% | staleness 1.26 (max 3) | grad 1.363 | lr 1.00e-06 | tokens 1575 | hint_drop 151.4% | sandbox_fail 0 | empty_eps 0
+step 167 | loss -0.0377 | teacher-student gap -0.0635 | adv_clip 6.2% | ratio_clip lo 2.4% hi 0.2% | staleness 1.26 (max 3) | grad 1.244 | lr 1.00e-06 | tokens 1266 | hint_drop 151.3% | sandbox_fail 0 | empty_eps 0
+step 168 | loss -0.0619 | teacher-student gap -0.1300 | adv_clip 13.2% | ratio_clip lo 0.0% hi 0.1% | staleness 1.26 (max 3) | grad 1.682 | lr 1.00e-06 | tokens 1058 | hint_drop 150.8% | sandbox_fail 0 | empty_eps 0
+step 169 | loss -0.0604 | teacher-student gap -0.1202 | adv_clip 11.7% | ratio_clip lo 1.0% hi 0.3% | staleness 1.26 (max 3) | grad 1.391 | lr 1.00e-06 | tokens 1534 | hint_drop 150.2% | sandbox_fail 0 | empty_eps 0
+step 170 | loss -0.0053 | teacher-student gap -0.0625 | adv_clip 7.8% | ratio_clip lo 4.9% hi 1.9% | staleness 1.26 (max 3) | grad 1.694 | lr 1.00e-06 | tokens 937 | hint_drop 150.2% | sandbox_fail 0 | empty_eps 0
+step 171 | loss -0.0268 | teacher-student gap -0.0939 | adv_clip 8.4% | ratio_clip lo 1.7% hi 0.7% | staleness 1.26 (max 3) | grad 0.987 | lr 1.00e-06 | tokens 1571 | hint_drop 149.8% | sandbox_fail 0 | empty_eps 0
+step 172 | loss -0.0226 | teacher-student gap -0.0748 | adv_clip 9.2% | ratio_clip lo 0.0% hi 0.0% | staleness 1.26 (max 3) | grad 1.440 | lr 1.00e-06 | tokens 1153 | hint_drop 149.3% | sandbox_fail 0 | empty_eps 0
+step 173 | loss -0.0379 | teacher-student gap -0.1120 | adv_clip 10.9% | ratio_clip lo 2.5% hi 0.5% | staleness 1.27 (max 3) | grad 1.575 | lr 1.00e-06 | tokens 838 | hint_drop 149.5% | sandbox_fail 0 | empty_eps 0
+step 174 | loss -0.0596 | teacher-student gap -0.1024 | adv_clip 8.6% | ratio_clip lo 0.8% hi 0.5% | staleness 1.26 (max 3) | grad 1.341 | lr 1.00e-06 | tokens 1069 | hint_drop 148.9% | sandbox_fail 0 | empty_eps 0
+step 175 | loss -0.0276 | teacher-student gap -0.0824 | adv_clip 7.4% | ratio_clip lo 0.1% hi 0.0% | staleness 1.27 (max 3) | grad 1.436 | lr 1.00e-06 | tokens 1486 | hint_drop 149.0% | sandbox_fail 0 | empty_eps 0
+step 176 | loss -0.0444 | teacher-student gap -0.0928 | adv_clip 6.2% | ratio_clip lo 0.0% hi 0.0% | staleness 1.27 (max 3) | grad 1.292 | lr 1.00e-06 | tokens 1175 | hint_drop 148.7% | sandbox_fail 0 | empty_eps 0
+### WANDB RUN SUMMARY ###
+wandb: Run summary:
+wandb:               adv_abs_mean 0.16541
+wandb:             adv_clip_bound 0.54001
+wandb:              adv_clip_frac 0.0616
+wandb:                    adv_ema 0.17474
+wandb:             episodes_empty 0
+wandb:             episodes_total 7052
+wandb:                  grad_norm 1.29158
+wandb:            hint_drop_empty 0
+wandb: hint_drop_openrouter_error 4188
+wandb:            hint_drop_other 0
+wandb:                        +26 ...
+wandb: 
+wandb: 🚀 View run diligence-answer_bearing-20260826-210319 at: https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-diligence/runs/4ezawb7w
+wandb: ⭐️ View project at: https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-diligence
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./log/diligence-answer_bearing-20260826-210319/wandb/run-20260826_210330-4ezawb7w/logs
+### CLI ###
+run.py data.dataset=diligence data.n_heldout=30 logging.output_dir=runs/sdpo-diligence logging.wandb_project=sdpo-diligence generator.hint.prompt=answer_bearing trainer.total_steps=200 model.model=Qwen/Qwen3-8B trainer.mini_batch_size=2 generator.hint.model=z-ai/glm-5.3-flash judge.model=z-ai/glm-5.3-flash logging.run_name=diligence-answer_bearing-20260826-210319 logging.log_dir=/root/async-sdpo/log
+### RESOLVED SLUGS ###
+hint.model=z-ai/glm-5.3-flash
+judge.model=z-ai/glm-5.3-flash
+model.model=Qwen/Qwen3-8B
