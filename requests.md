@@ -276,6 +276,26 @@ Put reproducible artifacts under `logs/kmaxwell/muonh351/`:
 If a statistically valid sub-3125 result survives, prepare a clean record
 folder/PR artifact, but do not discard the null or losing sweep runs.
 
+### REQ-013 STATUS (agent, 2026-08-27 ~05:5x) — reproduction gate PASSES; stage-1 transfer check running
+
+**Integration done + verified.** K-Maxwell variant `records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py` (base = PR #351 `train_gpt_muonh_fast_slow_decay.py` @ d7bc799, copied verbatim; only MuonH's first-moment changed to the K-EMA convex mixture + lazy-init switch). `--k`/`--tau-min`/`--tau-max`/`--weights`/`--weights-end`/`--km-start`/`--anneal-frac`/`--mu` exposed; `--k 1` disables K-Maxwell → plain MuonH. `beta_i` kept separate from `mu`. Dense eval every 5 on [3000,3125]. Minimal diff: `logs/muonh351/` (will land with results).
+
+**Reproduction gate: PASS — within nondeterminism (bit-identity is impossible here).** The MuonH trainer is not bit-deterministic across runs (NCCL/cuBLAS atomics). Three seed-0 runs of the *unmodified* PR #351 vs the `--k 1` variant:
+
+| step | base run-1 | base run-2 | variant --k1 | \|base1−base2\| | \|base1−variant\| |
+|------|------|------|------|------|------|
+| 125 | 4.88161 | 4.93710 | 4.89284 | 0.0555 | 0.0112 |
+| 2000 | 3.42408 | 3.42464 | 3.42494 | 0.00056 | 0.00086 |
+| 3125 | **3.27881** | **3.27830** | **3.27853** | **0.00051** | **0.00028** |
+
+`--k 1` reproduces base **more closely than two base runs reproduce each other** → the no-K-Maxwell path is code-faithful to PR #351. (The lazy-init switch was also verified statically: at `km_start` every K-buffer is seeded from the just-advanced single-EMA momentum, and that step's update calls the identical `muon_update` — bit-identical by construction; it only diverges after `km_start` when the K-mixture takes over.)
+
+**⚠️ Noise-floor caveat that matters for scoring:** run-to-run σ at step 3125 is **~5e-4**, which *equals* your seed-0 success bar (`≥0.0005 @3125`). So the seed-0 screen is noise-limited at the threshold — a single-seed win near 0.0005 is indistinguishable from noise. I'm treating seed-0 as *indicative only* and will lean on your n=8 confirmation (statsig margin) for any real claim; I'll also report the candidate against the **control distribution** (I have 3–4 seed-0 control samples: base 3.27881/3.27830, variant-k1 3.27853/…, mean ≈3.2786, σ≈5e-4), not a single control point.
+
+**Now running (stage 1, seed 0):** transfer check `--k 8 --tau-min 3 --tau-max 64 --km-start 1000 --mu 0.95 --anneal-frac 1.0` (mean-age 58→26 weights) vs a 4th control replicate. Will report @3100/@3110/@3120/@3125 + first `val_loss<3.28` and decide (per your rule) whether it clears control by ≥0.0005 @3125 or ≥10 steps earlier — read against the ~5e-4 noise floor.
+
+(REQ-013 is proceeding because REQ-014 is externally blocked on Parallel-Search funding — see below; no boxes contend.)
+
 ---
 
 ## REQ-014: harden and finish the scaling-SDPO fleet
