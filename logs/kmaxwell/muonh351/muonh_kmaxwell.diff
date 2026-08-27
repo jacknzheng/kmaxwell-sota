@@ -1,0 +1,391 @@
+--- /Users/jerryhong/.claude/jobs/e9994aef/tmp/pr351/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_fast_slow_decay.py	2026-08-26 18:42:33
++++ /Users/jerryhong/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py	2026-08-26 18:50:28
+@@ -1,39 +1,51 @@
+ """
+-train_gpt_muonh_fast_slow_decay.py
++train_gpt_muonh_kmaxwell.py
+ 
+-MuonH per-optimizer Track-3 submission. This trainer replaces the single-shape
+-MuonH LR schedule from prior MuonH submissions (linear cooldown in #37;
+-minus-sqrt in #343; power-0.4 in #345) with a four-phase, piecewise
+-"fast-slow-decay" schedule for MuonH:
++K-Maxwell first-moment variant of the PR #351 MuonH fast-slow-decay trainer
++(train_gpt_muonh_fast_slow_decay.py), for speedrun experiment REQ-013.
+ 
+-  Phase 1  Warmup      [0, warmup_end):         linear 0 -> peak_lr
+-  Phase 2  Plateau     [warmup_end, plateau_end): hold at peak_lr (optional)
+-  Phase 3  Fast decay  [plateau_end, fast_decay_end): power schedule
+-                                              peak_lr -> floor_lr with exponent
+-                                              `fast_decay_exponent` (< 1.0
+-                                              gives a concave "fast then slow"
+-                                              descent within this phase)
+-  Phase 4  Slow decay  [fast_decay_end, train_steps]: `slow_decay_schedule`
+-                                              decay floor_lr -> min_lr
+-                                              (long, gentle cooldown)
++This file is a VERBATIM copy of the PR #351 MuonH trainer with exactly ONE
++change to the update math: MuonH's single-EMA first moment is replaced, AFTER a
++configurable lazy-init switch at --km-start, by the deterministic log-spaced
++K-EMA convex mixture from the K-Maxwell anneal reference
++(records/track_3_optimization/results/20260715_bimaxwell_baseline_3210/
++ train_gpt_kmaxwell_anneal.py). Everything else is untouched:
+ 
+-AdamW (aux) schedule is FIXED at the #37 baseline (cooldown_frac=0.85).
++  * the Newton-Schulz orthogonalised direction (zeropower_via_newtonschulz5),
++  * the hyperball / Frobenius-norm-preserving step (scale_invariant_update_),
++  * MuonH's initialization and ALL parameter groups,
++  * the EXACT four-phase fast-slow-decay LR schedule and its args,
++  * the fixed #37-baseline AdamW (aux) schedule.
+ 
+-The MuonH base LR ("initial_lr") is set to 1.0 so that the returned schedule
+-value from `fast_slow_decay_lr` *is* the effective LR (i.e., the schedule
+-returns absolute LRs like 0.030 / 0.006, not ratios of some other peak).
++K-Maxwell schedule (per MuonH matrix param):
++  step  < km_start : plain single-EMA muon_update  (BIT-IDENTICAL to PR #351)
++  step == km_start : advance the single-EMA momentum once more, then lazy-init
++                     every K EMA buffer from it -> this step's update is again
++                     BIT-IDENTICAL to PR #351, by construction
++  step  > km_start : K-EMA convex mixture (muon_update_kmaxwell), with optional
++                     linear anneal of the mix weights --weights -> --weights-end
++                     over int(--anneal-frac * (train_steps - km_start)) steps,
++                     ending at train_steps.
+ 
+-Submitted configuration (best config from the sweep):
+-  --warmup_end 100 --plateau_end 200 --fast_decay_end 1750
+-  --peak_lr 0.030 --floor_lr 0.006 --fast_decay_exponent 0.6
+-  --slow_decay_schedule linear --min_lr 0.0 --train_steps 3125
++Default behavior (no K-Maxwell flags, or --k 1) reproduces the base single-EMA
++MuonH exactly: with k=1 the K-Maxwell path is disabled and every step uses the
++PR #351 muon_update.
+ 
+-Usage:
+-  torchrun --standalone --nproc_per_node=8 train_gpt_muonh_fast_slow_decay.py \
+-      --warmup_end 100 --plateau_end 200 \
+-      --fast_decay_end 1750 --peak_lr 0.030 --floor_lr 0.006 \
+-      --fast_decay_exponent 0.6 --slow_decay_schedule linear \
+-      --min_lr 0.0 --train_steps 3125 --seed 1
++The EMA rates beta_i (log-spaced ages in [--tau-min, --tau-max]) are kept
++SEPARATE from the Nesterov coefficient --mu. If --weights/--weights-end are
++omitted they are derived from ages via the same ramp solver as the reference
++(solve_weights); comma-vectors may also be given directly.
++
++Transfer-check arm (REQ-013), K=8, tau=[3,64], km-start=1000, mu=0.95, linear
++anneal mean age 58 -> 26, train_steps=3125, dense eval on [3000,3125] every 5:
++
++  torchrun --standalone --nproc_per_node=8 train_gpt_muonh_kmaxwell.py \
++      --warmup_end 100 --plateau_end 200 --fast_decay_end 1750 \
++      --peak_lr 0.030 --floor_lr 0.006 --fast_decay_exponent 0.6 \
++      --slow_decay_schedule linear --min_lr 0.0 --train_steps 3125 --seed 1 \
++      --k 8 --tau-min 3 --tau-max 64 --km-start 1000 --mu 0.95 --anneal-frac 1.0 \
++      --weights 0.005094,0.010188,0.015282,0.020376,0.025470,0.030564,0.035658,0.857369 \
++      --weights-end 0.032262,0.064524,0.096786,0.129047,0.161309,0.193571,0.225833,0.096669
+ """
+ 
+ import os
+@@ -51,6 +63,13 @@
+ from torch.optim import AdamW
+ import torch.nn.functional as F
+ import torch.distributed as dist
++
++# --- K-Maxwell kernel constants (inlined from kmaxwell_kernel.py so this stays a
++#     single self-contained trainer file, matching the base file's style) ---
++BIMAXWELL_BF = 0.85
++BIMAXWELL_BS = 0.98
++BIMAXWELL_TAU_MIN = BIMAXWELL_BF / (1.0 - BIMAXWELL_BF)  # 5.666...
++BIMAXWELL_TAU_MAX = BIMAXWELL_BS / (1.0 - BIMAXWELL_BS)  # 49.0
+ 
+ # Parse arguments (must handle torchrun's extra args)
+ parser = argparse.ArgumentParser()
+@@ -73,6 +92,31 @@
+ parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducibility (None = unseeded)")
+ parser.add_argument("--fast_decay_exponent", type=float, default=1.0,
+                     help="Power exponent used in the fast-decay phase (peak_lr -> floor_lr). 1.0 = linear, <1.0 = concave (fast drop then slow), >1.0 = convex.")
++# --- K-Maxwell first-moment args (REQ-013) ---
++parser.add_argument("--k", type=int, default=1,
++                    help="Number of EMA units in the K-Maxwell first-moment mixture. k=1 (default) DISABLES K-Maxwell -> plain single-EMA MuonH (bit-identical to PR #351).")
++parser.add_argument("--tau-min", dest="tau_min", type=float, default=BIMAXWELL_TAU_MIN,
++                    help="Smallest EMA age (in steps) of the log-spaced K-Maxwell window; beta_0 = tau_min/(tau_min+1).")
++parser.add_argument("--tau-max", dest="tau_max", type=float, default=BIMAXWELL_TAU_MAX,
++                    help="Largest EMA age (in steps) of the log-spaced K-Maxwell window; beta_{k-1} = tau_max/(tau_max+1).")
++parser.add_argument("--weights", default=None,
++                    help="Comma mix weights for the K EMA units at km_start (e.g. 0.1,0.2,0.7). Overrides --age/--sigma derivation. Length must equal --k.")
++parser.add_argument("--weights-end", dest="weights_end", default=None,
++                    help="ANNEAL: comma mix weights at the end of training (--weights is the start). Enables the linear weight anneal.")
++parser.add_argument("--km-start", dest="km_start", type=int, default=1000,
++                    help="First MuonH step on the K-Maxwell path. Before this step (and at this step) the update is bit-identical to single-EMA MuonH.")
++parser.add_argument("--anneal-frac", dest="anneal_frac", type=float, default=1.0,
++                    help="ANNEAL: fraction of (train_steps - km_start) steps over which to interpolate weights -> weights_end, ending at train_steps.")
++parser.add_argument("--mu", type=float, default=0.95,
++                    help="Nesterov / Muon momentum coefficient. Kept SEPARATE from the EMA rates beta_i.")
++parser.add_argument("--sigma", type=float, default=1.0,
++                    help="Width of the log(tau) Gaussian score used to derive weights when neither --weights nor --age is given.")
++parser.add_argument("--age", type=float, default=None,
++                    help="If set (and --weights omitted), derive start weights from this mean age via the ramp solver (solve_weights).")
++parser.add_argument("--age-end", dest="age_end", type=float, default=None,
++                    help="ANNEAL: if set (and --weights-end omitted), derive end weights from this mean age via solve_weights.")
++parser.add_argument("--shape", type=str, default="linear",
++                    help="Ramp shape for the age->weights solver (solve_weights): linear/quad/cub/geo/sqrt/flat/rlinear/rquad.")
+ args, _ = parser.parse_known_args()
+ 
+ WARMUP_END = args.warmup_end
+@@ -85,6 +129,19 @@
+ TRAIN_STEPS = args.train_steps
+ SEED = args.seed
+ FAST_DECAY_EXPONENT = args.fast_decay_exponent
++# K-Maxwell knobs
++KM_K = args.k
++TAU_MIN = args.tau_min
++TAU_MAX = args.tau_max
++KM_WEIGHTS = args.weights            # raw comma-string or None
++KM_WEIGHTS_END = args.weights_end    # raw comma-string or None
++KM_START = args.km_start
++ANNEAL_FRAC = args.anneal_frac
++MU = args.mu
++SIGMA = args.sigma
++AGE = args.age
++AGE_END = args.age_end
++SHAPE = args.shape
+ 
+ ########################################
+ #              Dataloader              #
+@@ -253,6 +310,21 @@
+     update *= max(1, grad.size(-2) / grad.size(-1))**0.5
+     return update
+ 
++def kmaxwell_momentum(grad, m, betas, weights, mu=0.95):
++    """In-place K-EMA mix. m has shape (K, *grad.shape). Mutates m and grad."""
++    lerp_coeff = (1 - betas).reshape(-1, *([1] * grad.ndim))
++    m.lerp_(grad.unsqueeze(0), lerp_coeff)
++    w = weights.reshape(-1, *([1] * grad.ndim))
++    m_eff = (w * m).sum(dim=0)
++    return grad.lerp_(m_eff, mu)
++
++@torch.compile
++def muon_update_kmaxwell(grad, m, betas, weights, mu=0.95):
++    update = kmaxwell_momentum(grad, m, betas, weights, mu)
++    update = zeropower_via_newtonschulz5(update)
++    update *= max(1, grad.size(-2) / grad.size(-1))**0.5
++    return update
++
+ def scale_invariant_update_(param: Tensor, update: Tensor, lr: float, eps: float = 1e-10) -> None:
+     """Hyperball-constrained step: take a Muon-orthogonalised update of size lr * ||param||,
+     then renormalise back onto the Frobenius sphere of the parameter's initial radius. Preserves
+@@ -264,15 +336,115 @@
+     new_norm = torch.clamp(new_param.norm(), min=eps)
+     param.copy_(new_param / new_norm * p_norm)
+ 
++# ---- K-Maxwell kernel helpers (inlined & deterministic; see kmaxwell_kernel.py /
++#      jackzhengretardruns/km/solve.py). No torch dependency. ----
++_SOLVE_SHAPES = {
++    "linear": lambda i: float(i),
++    "quad":   lambda i: float(i) ** 2,
++    "cub":    lambda i: float(i) ** 3,
++    "geo":    lambda i: 2.0 ** (i - 1),
++    "sqrt":   lambda i: math.sqrt(i),
++    "flat":   lambda i: 1.0,
++    "rlinear": None,  # decreasing ramps resolved with k in solve_weights
++    "rquad":   None,
++}
++_SOLVE_REVERSED = {"rlinear": 1, "rquad": 2}
++
++def parse_weights(text):
++    """Parse '0.35,0.25,0.25,0.15' into a list that sums to 1."""
++    weights = [float(x) for x in str(text).split(",") if str(x).strip() != ""]
++    if any(w < -1e-12 for w in weights):
++        raise ValueError(f"weights must be nonnegative, got {weights}")
++    z = sum(weights)
++    if z <= 0:
++        raise ValueError(f"weights must sum to a positive number, got {weights}")
++    return [w / z for w in weights]
++
++def solve_weights(k, tmin, tmax, age, shape):
++    """Ramp family: w_i = c*s_i on ticks 1..k-1, leftover on the slow tick,
++    c chosen so mean age Sum(w*tau) == age. Raises if any weight <= 0.
++    Verbatim from jackzhengretardruns/km/solve.py."""
++    if shape not in _SOLVE_SHAPES:
++        raise ValueError(f"unknown shape {shape!r}; known: {sorted(_SOLVE_SHAPES)}")
++    lo, hi = math.log10(tmin), math.log10(tmax)
++    t = [10.0 ** (lo + i * (hi - lo) / (k - 1)) for i in range(k)]
++    if shape in _SOLVE_REVERSED:  # decreasing ramp: score (k-1-i)^p over ticks 1..k-1
++        p = _SOLVE_REVERSED[shape]
++        s = [float(k - 1 - i) ** p + 1e-6 for i in range(k - 1)]
++    else:
++        s = [_SOLVE_SHAPES[shape](i + 1) for i in range(k - 1)]
++    denom = t[-1] * sum(s) - sum(si * ti for si, ti in zip(s, t))
++    c = (t[-1] - age) / denom
++    w = [c * si for si in s] + [1.0 - c * sum(s)]
++    if any(x <= 1e-9 for x in w):
++        raise ValueError(f"infeasible: k={k} [{tmin},{tmax}] age={age} shape={shape} -> {w}")
++    return w
++
++def build_km(k, tau_min, tau_max, weights=None, sigma=1.0, age=None, shape="linear"):
++    """Return (tau, betas, weights, mean_age) for the K-Maxwell mixture.
++
++    Ages tau are log-spaced in [tau_min, tau_max]; EMA rates beta_i = tau_i/(tau_i+1)
++    (kept separate from the Nesterov mu). Mix weights come from, in priority order:
++    explicit `weights` (comma-string or list), else `age` via solve_weights, else a
++    Gaussian score on log(tau) centered at the geometric midpoint (the reference's
++    default). Matches build_kmaxwell_kernel / solve_weights exactly."""
++    if k < 2:
++        raise ValueError(f"--k must be >= 2 for K-Maxwell, got {k}")
++    if not (tau_min > 0 and tau_max > 0 and tau_max >= tau_min):
++        raise ValueError(f"need 0 < tau_min <= tau_max, got {tau_min}, {tau_max}")
++    log_min = math.log10(tau_min)
++    log_max = math.log10(tau_max)
++    tau = [10.0 ** (log_min + i * (log_max - log_min) / (k - 1)) for i in range(k)]
++    betas = [t / (t + 1.0) for t in tau]
++    if weights is not None:
++        w = parse_weights(weights) if isinstance(weights, str) else parse_weights(
++            ",".join(str(x) for x in weights))
++    elif age is not None:
++        w = solve_weights(k, tau_min, tau_max, age, shape)
++    else:
++        if sigma <= 0:
++            raise ValueError(f"--sigma must be > 0, got {sigma}")
++        log_c = math.log(math.sqrt(tau_min * tau_max))
++        scores = [math.exp(- (math.log(t) - log_c) ** 2 / (2.0 * sigma * sigma)) for t in tau]
++        z = sum(scores)
++        w = [s / z for s in scores]
++    if len(w) != k:
++        raise ValueError(f"weights length {len(w)} != k={k}")
++    mean_age = sum(wi * ti for wi, ti in zip(w, tau))
++    return tau, betas, w, mean_age
++
+ class MuonH(torch.optim.Optimizer):
+     """MuonH: same Newton-Schulz orthogonalised direction as Muon, applied via a Frobenius-
+     norm-preserving hyperball projection. Used here for ALL hidden 2D weight matrices —
+-    q, k, v, mlp.fc, attn.proj, mlp.proj — under non-zero (Kaiming-derived) init."""
+-    def __init__(self, params, lr=0.014, mu=0.95):
++    q, k, v, mlp.fc, attn.proj, mlp.proj — under non-zero (Kaiming-derived) init.
++
++    REQ-013: the single-EMA first moment is replaced, from km_start onward, by a K-EMA
++    convex mixture (log-spaced EMA rates, convex mix weights). Before km_start (and at the
++    lazy-init switch step) the update is bit-identical to single-EMA MuonH."""
++    def __init__(self, params, lr=0.014, mu=0.95,
++                 kmaxwell_betas=None, kmaxwell_weights=None, kmaxwell_start=1000,
++                 kmaxwell_weights_end=None, kmaxwell_anneal_steps=0):
+         assert isinstance(params, list) and len(params) >= 1 and isinstance(params[0], torch.nn.Parameter)
+         params = sorted(params, key=lambda x: x.size(), reverse=True)
+         defaults = dict(lr=lr, mu=mu)
+         super().__init__(params, defaults)
++        self._step = 0
++        if kmaxwell_betas is not None and kmaxwell_weights is not None:
++            self.km_betas = torch.as_tensor(kmaxwell_betas, dtype=torch.float32).cpu()
++            self.km_weights = torch.as_tensor(kmaxwell_weights, dtype=torch.float32).cpu()
++            self.km_k = int(self.km_betas.numel())
++        else:
++            self.km_betas = None
++            self.km_weights = None
++            self.km_k = 1
++        self.km_start = int(kmaxwell_start)
++        # annealing: interpolate weights from km_weights -> km_weights_end over
++        # km_anneal_steps steps after km_start. None/0 => frozen (baseline).
++        self.km_weights_end = (torch.as_tensor(kmaxwell_weights_end, dtype=torch.float32).cpu()
++                               if kmaxwell_weights_end is not None else None)
++        self.km_anneal_steps = int(kmaxwell_anneal_steps)
++        # K-Maxwell path active only with >= 2 EMA units (k=1 => plain single-EMA MuonH)
++        self.km_enabled = self.km_betas is not None and self.km_k >= 2
+ 
+     @torch.no_grad()
+     def step(self):
+@@ -287,9 +459,28 @@
+                     state = self.state[p]
+                     if len(state) == 0:
+                         state["momentum"] = torch.zeros_like(p)
+-                    update = muon_update(p.grad, state["momentum"], mu=group["mu"])
++                    if self.km_enabled and self._step >= self.km_start:
++                        if "m" not in state:
++                            # switch step: advance the single-EMA momentum once more and
++                            # lazy-init all K units from it -> this step's update is
++                            # bit-identical to single-EMA MuonH, by construction
++                            update = muon_update(p.grad, state["momentum"], mu=group["mu"])
++                            state["m"] = state["momentum"].unsqueeze(0).repeat(self.km_k, *([1] * p.ndim))
++                        else:
++                            betas = self.km_betas.to(device=p.device, dtype=p.dtype)
++                            if self.km_weights_end is not None and self.km_anneal_steps > 0:
++                                frac = min(1.0, max(0.0, (self._step - self.km_start) / self.km_anneal_steps))
++                                cur = self.km_weights.lerp(self.km_weights_end, frac)
++                                weights = cur.to(device=p.device, dtype=p.dtype)
++                            else:
++                                weights = self.km_weights.to(device=p.device, dtype=p.dtype)
++                            update = muon_update_kmaxwell(
++                                p.grad, state["m"], betas, weights, mu=group["mu"])
++                    else:
++                        update = muon_update(p.grad, state["momentum"], mu=group["mu"])
+                     scale_invariant_update_(p, update, group["lr"])
+                 dist.all_gather(params_pad[base_i:base_i + world_size], params_pad[base_i + rank])
++        self._step += 1
+ 
+ 
+ ########################################
+@@ -389,9 +580,10 @@
+     _steps_tag = f"_steps{TRAIN_STEPS}" if TRAIN_STEPS != 3100 else ""
+     _exp_tag = f"_exp{FAST_DECAY_EXPONENT}" if FAST_DECAY_EXPONENT != 1.0 else ""
+     _plateau_tag = f"_plateauEnd{PLATEAU_END}" if PLATEAU_END != WARMUP_END else ""
++    _km_tag = f"_kmaxwell_k{KM_K}_kmstart{KM_START}" if KM_K >= 2 else ""
+     logfile = (f"logs/muonh_fast_slow_decay_warm{WARMUP_END}{_plateau_tag}_peak{PEAK_LR}"
+                f"_fastEnd{FAST_DECAY_END}_floor{FLOOR_LR}_slow{SLOW_DECAY_SCHEDULE}"
+-               f"{_exp_tag}{_steps_tag}{_seed_tag}.txt")
++               f"{_exp_tag}{_km_tag}{_steps_tag}{_seed_tag}.txt")
+     print(logfile)
+ def print0(s, console=False, log=True):
+     if dist.get_rank() == 0:
+@@ -411,6 +603,9 @@
+        f" min_lr={MIN_LR}, slow_decay_schedule={SLOW_DECAY_SCHEDULE},"
+        f" fast_decay_exponent={FAST_DECAY_EXPONENT},"
+        f" train_steps={TRAIN_STEPS}, seed={SEED}")
++print0(f"K-Maxwell args: k={KM_K}, tau_min={TAU_MIN}, tau_max={TAU_MAX}, km_start={KM_START},"
++       f" mu={MU}, anneal_frac={ANNEAL_FRAC}, weights={KM_WEIGHTS}, weights_end={KM_WEIGHTS_END},"
++       f" sigma={SIGMA}, age={AGE}, age_end={AGE_END}, shape={SHAPE}")
+ print0("="*100)
+ 
+ val_tokens = 20 * 524288
+@@ -459,7 +654,35 @@
+                    betas=(0.8, 0.95), eps=1e-10, weight_decay=0.001, fused=True)
+ # MuonH: base lr set to 1.0 so the fast-slow-decay schedule returns absolute LRs.
+ muonh_params = [p for p in model.blocks.parameters() if p.ndim == 2]
+-optimizer2 = MuonH(muonh_params, lr=1.0)
++# --- K-Maxwell first-moment kernel (REQ-013). k=1 (default) => plain single-EMA MuonH. ---
++if KM_K >= 2:
++    km_tau, km_betas, km_weights, km_mean_age = build_km(
++        KM_K, TAU_MIN, TAU_MAX, weights=KM_WEIGHTS, sigma=SIGMA, age=AGE, shape=SHAPE)
++    if KM_WEIGHTS_END is not None:
++        _, _, km_weights_end, km_mean_age_end = build_km(
++            KM_K, TAU_MIN, TAU_MAX, weights=KM_WEIGHTS_END, sigma=SIGMA, age=None, shape=SHAPE)
++    elif AGE_END is not None:
++        _, _, km_weights_end, km_mean_age_end = build_km(
++            KM_K, TAU_MIN, TAU_MAX, weights=None, sigma=SIGMA, age=AGE_END, shape=SHAPE)
++    else:
++        km_weights_end, km_mean_age_end = None, None
++    km_anneal_steps = int(ANNEAL_FRAC * (train_steps - KM_START))
++    optimizer2 = MuonH(muonh_params, lr=1.0, mu=MU,
++                       kmaxwell_betas=km_betas, kmaxwell_weights=km_weights,
++                       kmaxwell_start=KM_START, kmaxwell_weights_end=km_weights_end,
++                       kmaxwell_anneal_steps=km_anneal_steps)
++    print0("K-Maxwell kernel (REQ-013): ENABLED")
++    print0(f"  tau=[{', '.join(f'{x:.6g}' for x in km_tau)}]")
++    print0(f"  beta=[{', '.join(f'{x:.6g}' for x in km_betas)}]")
++    print0(f"  w_start=[{', '.join(f'{x:.6g}' for x in km_weights)}] mean_age={km_mean_age:.6g}")
++    if km_weights_end is not None:
++        print0(f"  w_end=[{', '.join(f'{x:.6g}' for x in km_weights_end)}] mean_age_end={km_mean_age_end:.6g}"
++               f" anneal_steps={km_anneal_steps} (ends at step {KM_START + km_anneal_steps})")
++    else:
++        print0(f"  w_end=None (frozen mix) anneal_steps={km_anneal_steps}")
++else:
++    optimizer2 = MuonH(muonh_params, lr=1.0, mu=MU)
++    print0("K-Maxwell kernel (REQ-013): DISABLED (k=1) -> plain single-EMA MuonH")
+ optimizers = [optimizer1, optimizer2]
+ assert set(p for opt in optimizers for group in opt.param_groups
+            for p in group["params"]) == set(model.parameters())
+@@ -516,7 +739,11 @@
+ for step in range(train_steps + 1):
+ 
+     # --------------- VALIDATION SECTION -----------------
+-    if step == train_steps or step % 125 == 0:
++    # dense eval-only validation over the crossing zone [3000, 3125] every 5 steps
++    # (REQ-013), in addition to the base cadence; val time is excluded from train time
++    # by the same barrier/bracketing used below.
++    dense = 3000 <= step <= 3125 and step % 5 == 0
++    if step == train_steps or step % 125 == 0 or dense:
+         # stop the clock
+         dist.barrier()
+         time_since_last_val = time.perf_counter() - t0
