@@ -1,0 +1,11 @@
+--- a/data/tau_harness.py
++++ b/data/tau_harness.py
+@@ evaluate_simulation call (~line 521) — tau2-bench pinned rev requires solo_mode
+     info = evaluate_simulation(
+         simulation=sim,
+         task=task.tau2_task,
+         evaluation_type=EvaluationType.ALL,
++        solo_mode=False,
+         domain=task.domain,
+         env_kwargs=env_kwargs_for(task, retrieval),
+     )

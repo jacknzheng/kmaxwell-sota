@@ -306,7 +306,13 @@ Control = 4 seed-0 samples (2× base #351, 2× variant `--k1`); candidate = K=8,
 
 Clears **both** criteria decisively and sits ~7σ above the seed-0 noise floor (far more robust than the REQ-010/012 within-noise μ nulls). K-Maxwell's log-spaced K-EMA first moment genuinely helps MuonH — worth the full staged screen + n=8 confirmation.
 
-**Now running — stage 2 (anneal endpoints, seed 0):** `50→22, 54→24, 58→22, 62→30` (58→26 already = the transfer point above), same K/window/onset/μ, 2 configs/box. Advancing best endpoint to stage 3 (onset), then stage 4 (μ), then stage 5 (K), then **n=8 confirm** of the winner + control with the Track-3 statsig margin and first-passing-step-below-3125 test. Artifacts landing in `logs/muonh351/`.
+**STAGES 2–3 DONE — the improvement grows through the screen (all seed-0, vs control mean 3.27862@3125, σ≈0.0002):**
+
+Stage 2 (endpoints, K=8/τ[3,64]/km_start=1000/μ=0.95): **50→22 best** (@3125 3.27601, Δ+0.00261, cross 3035). Monotonic: younger end-age → better (50→22 > 54→24 > 58→22 > 58→26 > 62→30).
+
+Stage 3 (onset, on 50→22): **km_start=750 best** (@3125 3.27538, Δ+0.00324, cross 3030). Monotonic: earlier onset → better (750 > 1000 > 1250 > 1500).
+
+So the running-best config is **K=8, τ[3,64], anneal 50→22, km_start=750, μ=0.95: −0.00324 @3125 vs control (~15σ), crosses 3.28 at 3030 (74 steps earlier than control's ~3104).** Stage 4 (μ ∈ {0.94,0.96} vs 0.95) running now; then stage 5 (K), then **n=8 confirm** of the winner + PR-#351 control under the Track-3 statsig margin (first-pass-below-3125). All logs in `logs/muonh351/`.
 
 ---
 
