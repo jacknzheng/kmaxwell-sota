@@ -10,3 +10,14 @@ live_hint_>=100_attempt_gate	NOT RUN	blocked on OpenRouter 402
 resume_from_checkpoint	load_state_from_checkpoint defined but never called by run.py	NOT WIRED (decision needed)
 dil_free_latest_checkpoint	runs/sdpo-diligence/step_50 (stopped at step 96)	preserved on-box
 dil_bearing_latest_checkpoint	runs/sdpo-diligence/step_100 (stopped at step 116)	preserved on-box
+
+# Developer follow-up after blocker resolution (2026-08-27T23:17Z).
+followup_code_sha	a075254e96a73c1e1aa12996d6e2b6b95ef95c53	PUSHED
+hint.model	nvidia/nemotron-3-super-120b-a12b:free	OK
+preflight_OpenRouter_Nemotron	HTTP 200	OK
+production_hint_path	nonempty hint	OK
+structured_judge_path	parsed 1 criterion	OK
+preflight_ParallelSearch	nonempty result + session ID	OK
+resume_from_checkpoint	explicit path or latest; restores state and syncs vLLM	WIRED
+offline_test_suite	212 passed, 2 skipped, 2 deselected	OK
+live_hint_>=100_attempt_gate	NOT RUN	pending resumed on-box validation
