@@ -318,11 +318,26 @@ So the running-best config is **K=8, τ[3,64], anneal 50→22, km_start=750, μ=
 
 ## REQ-014: harden and finish the scaling-SDPO fleet
 
-- status: RUNNING (agent 2026-08-27 ~06:4x — preflight PASS: OpenRouter 200 + **Parallel Search 200** @06:39:40Z; 3 boxes bootstrapping `scaling-sdpo`, will ff to `1e84424`; then smoke+checkpoint gates → launch 3 arms w/ resume-on-crash)
+- status: RUNNING — 2 diligence arms launched to 200; **tau2 BLOCKED on scaling-sdpo tau2-harness API drift vs its own pinned tau2-bench (a2c0247)** (needs a fix in `scaling-sdpo`, see below)
 - requested: Jack / 2026-08-26 21:40 PDT
 - repo: https://github.com/jacknzheng/scaling-sdpo
 - branch/base: `main` at `1e84424`
 - supersedes: the repository URL and unfinished execution work in REQ-011
+
+### REQ-014 EXECUTION STATUS (agent 2026-08-27 ~07:2x)
+
+Preflight PASS (OpenRouter 200 + Parallel Search 200 @06:39:40Z). Bootstrapped `scaling-sdpo`, ff'd to `1e84424` (212 offline tests pass). Setup issues found + fixed on-box:
+1. **vllm cu13 lib path** — `1e84424`'s uv.lock resolves a cu13-built vllm 0.26.0; the cu13 `libcudart.so.13` isn't on the default linker path → `ImportError`. Fixed by exporting `LD_LIBRARY_PATH=…/nvidia/cu13/lib` in the run env (vllm-cu13 + torch-cu128 coexist).
+2. **tau2 `evaluate_simulation()` missing `solo_mode`** — fixed (`solo_mode=False`), patch in `patches/scaling-sdpo/tau2_solomode_scaling_sdpo.patch`, applied on-box.
+
+**Diligence: WORKING.** Both diligence arms (`answer_free` on qkpx8dw, `answer_bearing` on wp2znpq) are launched to `total_steps=200` with checkpointing (`checkpoint_interval=50`) + the full REQ-014 diagnostics (`ARTIFACTS.txt`, `rollouts.jsonl`, `api_failures.jsonl`, `training.jsonl`, `vllm.jsonl`, …). Persistent monitor watching progress/checkpoint/crash w/ resume-on-crash. (Diligence uses no tau2-bench, so it's unaffected by the tau2 issues.)
+
+**tau2: BLOCKED — scaling-sdpo's tau2 harness is out of sync with tau2-bench `a2c0247`** (the rev its own `uv.lock` pins). The live tau2 rollout/eval path hits a chain of API mismatches the 212 offline tests don't cover:
+- `evaluate_simulation()` needs `solo_mode` (FIXED here — see patch).
+- `tau2.domains.airline.environment.get_environment()` now takes `(db, solo_mode)`; the harness's `env_kwargs_for(...)` (`data/tau_harness.py:341`) passes an incompatible kwargs shape → `TypeError`. (NOT yet fixed — needs a harness change: build the env via `get_environment(db=…, solo_mode=False)` instead of the old kwargs dict.)
+- `tau2 gold` banking-domain smoke additionally can't run on Baseten (banking's shell sandbox needs privileged namespaces the container disallows — known from REQ-011). The tau2 **arm** is `gold` on `[retail,airline]`, which doesn't need banking, so that's not the blocker — the `get_environment` API drift is.
+
+**Ask:** please fix the tau2 harness `get_environment`/`env_kwargs_for` call against tau2-bench `a2c0247` (and add a live-tau2 rollout smoke to the test suite so these surface offline), then I'll launch the tau2 arm. Meanwhile the two diligence arms deliver the core result. tau2 box (`w5ymlv3`) held idle for the fix.
 
 Continue the three 4+4 async-SDPO arms from REQ-011, but use the renamed
 canonical repository above. Parallel Search has now been funded. Re-run a
