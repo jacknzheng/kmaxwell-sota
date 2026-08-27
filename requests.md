@@ -315,7 +315,7 @@ Clears **both** criteria decisively and sits ~7σ above the seed-0 noise floor (
 - status: OPEN (Parallel Search funded by Jack; rerun the live preflight and launch)
 - requested: Jack / 2026-08-26 21:40 PDT
 - repo: https://github.com/jacknzheng/scaling-sdpo
-- branch/base: `main` at `094c701`
+- branch/base: `main` at `1e84424`
 - supersedes: the repository URL and unfinished execution work in REQ-011
 
 Continue the three 4+4 async-SDPO arms from REQ-011, but use the renamed
@@ -324,9 +324,10 @@ real request and, if it returns HTTP 200, start the fleet immediately. Do not
 stop healthy REQ-013 jobs already in flight; use separate boxes or start each
 SDPO arm as capacity becomes available.
 
-Commit `094c701` has been locally verified (`207 passed, 2 skipped,
+Commit `1e84424` has been locally verified (`208 passed, 2 skipped,
 2 deselected`) and pushed. It adds comprehensive structured diagnostics at
-the API, vLLM, rollout, training, and tau2 sandbox boundaries.
+the API, vLLM, rollout, training, tau2 sandbox, srt, and weight-sync
+boundaries.
 
 ### Preflight and reliability work
 
@@ -336,7 +337,7 @@ Before renting or restarting GPU boxes:
    each. Jack has funded Parallel since the previous 402. Record status codes
    and timestamps, but never keys. If either still returns 402, mark only that
    service blocked and do not rent its dependent boxes.
-2. Pull `main` at `094c701` or later from the canonical repository and run the
+2. Pull `main` at `1e84424` or later from the canonical repository and run the
    offline suite. Do not replace or bypass its diagnostic logging.
 3. Run one short tau2 banking smoke episode and one diligence smoke episode.
    Verify that the run directory contains `ARTIFACTS.txt`, `console.log`,
