@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-014**.
+Next request number: **REQ-015**.
 
 ## Template
 
@@ -275,3 +275,89 @@ Put reproducible artifacts under `logs/kmaxwell/muonh351/`:
 
 If a statistically valid sub-3125 result survives, prepare a clean record
 folder/PR artifact, but do not discard the null or losing sweep runs.
+
+---
+
+## REQ-014: harden and finish the scaling-SDPO fleet
+
+- status: OPEN
+- requested: Jack / 2026-08-26 21:40 PDT
+- repo: https://github.com/jacknzheng/scaling-sdpo
+- branch/base: `main` at `fa6d3d7`
+- supersedes: the repository URL and unfinished execution work in REQ-011
+
+Continue the three 4+4 async-SDPO arms from REQ-011, but use the renamed
+canonical repository above. Run this continuation before REQ-013. Do not use
+the retired `jacknzheng/async-sdpo` URL except to recognize old artifacts.
+
+Commit `fa6d3d7` has been locally verified (`206 passed, 2 skipped,
+2 deselected` in the offline suite) and pushed. It makes failed hint rollouts
+actionable by retaining bounded error details and separating OpenRouter
+credit, authentication, rate-limit, timeout, empty, and generic failures.
+
+### Preflight and reliability work
+
+Before renting or restarting GPU boxes:
+
+1. Confirm both already-provisioned services independently:
+   - Parallel Search must return a successful request; its latest observed
+     failure was HTTP 402 "Insufficient credit".
+   - OpenRouter GLM-5.3 Flash must return a successful completion with enough
+     funded balance for the fleet.
+   If either still returns 402, set this request to `NEEDS-INFO` with the
+   failing service named. Do not burn GPUs in a restart loop.
+2. Pull `main` at or after `fa6d3d7` from the new repository URL and run the
+   offline tests before launch.
+3. Harden every remaining auxiliary-LLM boundary identified by REQ-011:
+   tau2 user simulation, tau2 pass@1 evaluation, and diligence rubric
+   evaluation. A transient provider failure must be bounded, counted by cause,
+   and reported without killing torchrun. It must not be silently converted
+   into a model failure or a zero score.
+4. Add periodic trainer checkpoints and verified resume so an infrastructure
+   or provider failure does not forfeit all completed optimizer steps. Commit
+   and push the hardening, tests, and checkpoint/resume work to
+   `jacknzheng/scaling-sdpo` before launching the full fleet.
+
+### Frozen experiment
+
+Run all three arms to `trainer.total_steps=200`:
+
+1. tau2 `gold`
+2. diligence `answer_free`
+3. diligence `answer_bearing`
+
+Keep the proven REQ-011 runtime:
+
+- 4 vLLM rollout GPUs + 4 FSDP2 trainer ranks per arm
+- `model.model=Qwen/Qwen3-8B`
+- `trainer.mini_batch_size=2`
+- `generator.engine.max_model_len=32768` for tau2
+- hints and diligence judge: `z-ai/glm-5.3-flash`
+- tau2 user simulator: `openrouter/z-ai/glm-5.3-flash`
+- never fall back to 4B, the retired `stealth/ox-alpha` slug, or `NPROC=1`
+
+A rollout without its required hint must still be dropped. Search, hint,
+user-simulator, judge, sandbox, empty-episode, and stale-rollout failures must
+remain separate counters. Do not restart a healthy arm merely to pick up a
+nonessential change; resume from the latest valid checkpoint after a crash.
+
+### Completion
+
+Preserve run directories and write reproducible artifacts under
+`logs/async_sdpo_req014/`. Produce a `summary.tsv` and README containing, for
+each arm:
+
+- exact repository SHA, full CLI, resolved model/hint/judge slugs, wall time,
+  completed steps, checkpoint and resume history
+- mean teacher−student gap, fraction with `abs(gap) < 1e-3`, advantage and
+  low/high ratio clipping, mean/max staleness
+- hint attempts/successes/drops and every drop cause, plus search,
+  user-simulator, judge, sandbox, and empty-episode failures
+- held-out pass@1 for tau2; rubric score and judge-error count for diligence
+- paths or URLs for logs, configs, checkpoints, summaries, and W&B
+
+Success requires all three arms to reach step 200 and auxiliary-service
+failures to be reported separately from policy quality. If a service remains
+unfunded or another definitive external blocker prevents completion, preserve
+all progress, update this block with evidence, and stop rather than repeatedly
+starting from zero.
