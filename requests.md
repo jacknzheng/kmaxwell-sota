@@ -312,7 +312,11 @@ Stage 2 (endpoints, K=8/τ[3,64]/km_start=1000/μ=0.95): **50→22 best** (@3125
 
 Stage 3 (onset, on 50→22): **km_start=750 best** (@3125 3.27538, Δ+0.00324, cross 3030). Monotonic: earlier onset → better (750 > 1000 > 1250 > 1500).
 
-So the running-best config is **K=8, τ[3,64], anneal 50→22, km_start=750, μ=0.95: −0.00324 @3125 vs control (~15σ), crosses 3.28 at 3030 (74 steps earlier than control's ~3104).** Stage 4 (μ ∈ {0.94,0.96} vs 0.95) running now; then stage 5 (K), then **n=8 confirm** of the winner + PR-#351 control under the Track-3 statsig margin (first-pass-below-3125). All logs in `logs/muonh351/`.
+Stage 4 (μ on 50→22/km750): **μ=0.95 best** (Δ+0.00324; 0.94=+0.00269, 0.96=+0.00229) — default μ optimal (consistent w/ REQ-010/012). Stage 5 (K on 50→22/km750/μ0.95): **K=6 best** (@3125 3.27518, Δ+0.00344, cross 3025) but K=4 (+0.00340) and K=8 (+0.00324) are within the ~0.0002 seed-0 noise → K∈{4,6,8} equivalent; K=12 infeasible (negative weights). The improvement is driven by the **anneal 50→22 + early onset km_start=750**, not K.
+
+**SCREEN COMPLETE. Final candidate: K=6, τ[3,64], anneal 50→22, km_start=750, μ=0.95** — seed-0 −0.00344 @3125 vs control (~17σ over noise), crosses 3.28 at **3025** (~79 steps before control's ~3104). Every screened config beat control (all seed-0); the effect is large + monotonic in the anneal/onset directions, so it is very unlikely to be a seed-0 fluke.
+
+**n=8 CONFIRMATION RUNNING** (the decisive test): candidate (above) seeds 0–7 on box wdp48kw + exact PR-#351 control seeds 0–7 on q4g4x9q, dense grid, Track-3 margin=(3.28−mean)·√8 per 5-step boundary, success = candidate first-passing boundary strictly <3125. Will also report pairwise-common-tail and the equal-step comparison vs PR-#351's published n=20 mean (3.278994). All seed-0 screen logs in `logs/muonh351/`; n=8 logs in `logs/muonh351/n8/`. Results + `sweep.tsv`/`summary.tsv`/README on completion (~2.8h).
 
 ---
 

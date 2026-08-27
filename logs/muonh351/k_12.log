@@ -1,0 +1,175 @@
+=== k_12 : train_gpt_muonh_kmaxwell.py --warmup_end 100 --plateau_end 200 --fast_decay_end 1750 --peak_lr 0.030 --floor_lr 0.006 --fast_decay_exponent 0.6 --slow_decay_schedule linear --min_lr 0.0 --train_steps 3125 --seed 0 --k 12 --tau-min 3 --tau-max 64 --km-start 750 --mu 0.95 --anneal-frac 1.0 --age 50 --age-end 22 ===
+W0827 07:30:39.216000 19494 torch/distributed/run.py:852] 
+W0827 07:30:39.216000 19494 torch/distributed/run.py:852] *****************************************
+W0827 07:30:39.216000 19494 torch/distributed/run.py:852] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0827 07:30:39.216000 19494 torch/distributed/run.py:852] *****************************************
+logs/muonh_fast_slow_decay_warm100_plateauEnd200_peak0.03_fastEnd1750_floor0.006_slowlinear_exp0.6_kmaxwell_k12_kmstart750_steps3125_seed0.txt
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 665, in <module>
+[rank1]:     _, _, km_weights_end, km_mean_age_end = build_km(
+[rank1]:                                             ^^^^^^^^^
+[rank1]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 403, in build_km
+[rank1]:     w = solve_weights(k, tau_min, tau_max, age, shape)
+[rank1]:         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 380, in solve_weights
+[rank1]:     raise ValueError(f"infeasible: k={k} [{tmin},{tmax}] age={age} shape={shape} -> {w}")
+[rank1]: ValueError: infeasible: k=12 [3.0,64.0] age=22.0 shape=linear -> [0.01601774158488219, 0.03203548316976438, 0.04805322475464657, 0.06407096633952876, 0.08008870792441095, 0.09610644950929315, 0.11212419109417533, 0.12814193267905752, 0.14415967426393972, 0.1601774158488219, 0.1761951574337041, -0.057170944602224605]
+[rank5]: Traceback (most recent call last):
+[rank5]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 665, in <module>
+[rank5]:     _, _, km_weights_end, km_mean_age_end = build_km(
+[rank5]:                                             ^^^^^^^^^
+[rank5]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 403, in build_km
+[rank5]:     w = solve_weights(k, tau_min, tau_max, age, shape)
+[rank5]:         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank5]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 380, in solve_weights
+[rank5]:     raise ValueError(f"infeasible: k={k} [{tmin},{tmax}] age={age} shape={shape} -> {w}")
+[rank5]: ValueError: infeasible: k=12 [3.0,64.0] age=22.0 shape=linear -> [0.01601774158488219, 0.03203548316976438, 0.04805322475464657, 0.06407096633952876, 0.08008870792441095, 0.09610644950929315, 0.11212419109417533, 0.12814193267905752, 0.14415967426393972, 0.1601774158488219, 0.1761951574337041, -0.057170944602224605]
+[rank3]: Traceback (most recent call last):
+[rank3]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 665, in <module>
+[rank3]:     _, _, km_weights_end, km_mean_age_end = build_km(
+[rank3]:                                             ^^^^^^^^^
+[rank3]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 403, in build_km
+[rank3]:     w = solve_weights(k, tau_min, tau_max, age, shape)
+[rank3]:         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 380, in solve_weights
+[rank3]:     raise ValueError(f"infeasible: k={k} [{tmin},{tmax}] age={age} shape={shape} -> {w}")
+[rank3]: ValueError: infeasible: k=12 [3.0,64.0] age=22.0 shape=linear -> [0.01601774158488219, 0.03203548316976438, 0.04805322475464657, 0.06407096633952876, 0.08008870792441095, 0.09610644950929315, 0.11212419109417533, 0.12814193267905752, 0.14415967426393972, 0.1601774158488219, 0.1761951574337041, -0.057170944602224605]
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 665, in <module>
+[rank0]:     _, _, km_weights_end, km_mean_age_end = build_km(
+[rank0]:                                             ^^^^^^^^^
+[rank0]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 403, in build_km
+[rank0]:     w = solve_weights(k, tau_min, tau_max, age, shape)
+[rank0]:         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 380, in solve_weights
+[rank0]:     raise ValueError(f"infeasible: k={k} [{tmin},{tmax}] age={age} shape={shape} -> {w}")
+[rank0]: ValueError: infeasible: k=12 [3.0,64.0] age=22.0 shape=linear -> [0.01601774158488219, 0.03203548316976438, 0.04805322475464657, 0.06407096633952876, 0.08008870792441095, 0.09610644950929315, 0.11212419109417533, 0.12814193267905752, 0.14415967426393972, 0.1601774158488219, 0.1761951574337041, -0.057170944602224605]
+[rank2]: Traceback (most recent call last):
+[rank2]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 665, in <module>
+[rank2]:     _, _, km_weights_end, km_mean_age_end = build_km(
+[rank2]:                                             ^^^^^^^^^
+[rank2]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 403, in build_km
+[rank2]:     w = solve_weights(k, tau_min, tau_max, age, shape)
+[rank2]:         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 380, in solve_weights
+[rank2]:     raise ValueError(f"infeasible: k={k} [{tmin},{tmax}] age={age} shape={shape} -> {w}")
+[rank2]: ValueError: infeasible: k=12 [3.0,64.0] age=22.0 shape=linear -> [0.01601774158488219, 0.03203548316976438, 0.04805322475464657, 0.06407096633952876, 0.08008870792441095, 0.09610644950929315, 0.11212419109417533, 0.12814193267905752, 0.14415967426393972, 0.1601774158488219, 0.1761951574337041, -0.057170944602224605]
+[rank6]: Traceback (most recent call last):
+[rank6]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 665, in <module>
+[rank6]:     _, _, km_weights_end, km_mean_age_end = build_km(
+[rank6]:                                             ^^^^^^^^^
+[rank6]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 403, in build_km
+[rank6]:     w = solve_weights(k, tau_min, tau_max, age, shape)
+[rank6]:         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank6]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 380, in solve_weights
+[rank6]:     raise ValueError(f"infeasible: k={k} [{tmin},{tmax}] age={age} shape={shape} -> {w}")
+[rank6]: ValueError: infeasible: k=12 [3.0,64.0] age=22.0 shape=linear -> [0.01601774158488219, 0.03203548316976438, 0.04805322475464657, 0.06407096633952876, 0.08008870792441095, 0.09610644950929315, 0.11212419109417533, 0.12814193267905752, 0.14415967426393972, 0.1601774158488219, 0.1761951574337041, -0.057170944602224605]
+[rank7]: Traceback (most recent call last):
+[rank7]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 665, in <module>
+[rank7]:     _, _, km_weights_end, km_mean_age_end = build_km(
+[rank7]:                                             ^^^^^^^^^
+[rank7]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 403, in build_km
+[rank7]:     w = solve_weights(k, tau_min, tau_max, age, shape)
+[rank7]:         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank7]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 380, in solve_weights
+[rank7]:     raise ValueError(f"infeasible: k={k} [{tmin},{tmax}] age={age} shape={shape} -> {w}")
+[rank7]: ValueError: infeasible: k=12 [3.0,64.0] age=22.0 shape=linear -> [0.01601774158488219, 0.03203548316976438, 0.04805322475464657, 0.06407096633952876, 0.08008870792441095, 0.09610644950929315, 0.11212419109417533, 0.12814193267905752, 0.14415967426393972, 0.1601774158488219, 0.1761951574337041, -0.057170944602224605]
+[rank4]: Traceback (most recent call last):
+[rank4]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 665, in <module>
+[rank4]:     _, _, km_weights_end, km_mean_age_end = build_km(
+[rank4]:                                             ^^^^^^^^^
+[rank4]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 403, in build_km
+[rank4]:     w = solve_weights(k, tau_min, tau_max, age, shape)
+[rank4]:         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank4]:   File "/root/modded-nanogpt/records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py", line 380, in solve_weights
+[rank4]:     raise ValueError(f"infeasible: k={k} [{tmin},{tmax}] age={age} shape={shape} -> {w}")
+[rank4]: ValueError: infeasible: k=12 [3.0,64.0] age=22.0 shape=linear -> [0.01601774158488219, 0.03203548316976438, 0.04805322475464657, 0.06407096633952876, 0.08008870792441095, 0.09610644950929315, 0.11212419109417533, 0.12814193267905752, 0.14415967426393972, 0.1601774158488219, 0.1761951574337041, -0.057170944602224605]
+[rank0]:[W827 07:30:52.033769814 ProcessGroupNCCL.cpp:1553] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+W0827 07:30:53.464000 19494 torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 19562 closing signal SIGTERM
+W0827 07:30:53.465000 19494 torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 19564 closing signal SIGTERM
+W0827 07:30:53.466000 19494 torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 19566 closing signal SIGTERM
+W0827 07:30:53.466000 19494 torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 19567 closing signal SIGTERM
+W0827 07:30:53.466000 19494 torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 19568 closing signal SIGTERM
+W0827 07:30:53.467000 19494 torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 19569 closing signal SIGTERM
+E0827 07:30:54.209000 19494 torch/distributed/elastic/multiprocessing/api.py:984] failed (exitcode: 1) local_rank: 1 (pid: 19563) of binary: /root/venv/bin/python3
+Traceback (most recent call last):
+  File "/root/venv/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/root/venv/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 362, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/root/venv/lib/python3.12/site-packages/torch/distributed/run.py", line 991, in main
+    run(args)
+  File "/root/venv/lib/python3.12/site-packages/torch/distributed/run.py", line 982, in run
+    elastic_launch(
+  File "/root/venv/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 170, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/venv/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 317, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+records/track_3_optimization/results/20260810_muonh_fast_slow_decay_3125/train_gpt_muonh_kmaxwell.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-08-27_07:30:53
+  host      : baseten-training-job-wdp48kw-multinode-0.baseten-training-job-wdp48kw-multinode.org-99340d71961343c28c5c567d705ab0c0.svc.cluster.local
+  rank      : 3 (local_rank: 3)
+  exitcode  : 1 (pid: 19565)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[2]:
+  time      : 2026-08-27_07:30:54
+  host      : baseten-training-job-wdp48kw-multinode-0.baseten-training-job-wdp48kw-multinode.org-99340d71961343c28c5c567d705ab0c0.svc.cluster.local
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 19562)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[3]:
+  time      : 2026-08-27_07:30:54
+  host      : baseten-training-job-wdp48kw-multinode-0.baseten-training-job-wdp48kw-multinode.org-99340d71961343c28c5c567d705ab0c0.svc.cluster.local
+  rank      : 2 (local_rank: 2)
+  exitcode  : 1 (pid: 19564)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[4]:
+  time      : 2026-08-27_07:30:54
+  host      : baseten-training-job-wdp48kw-multinode-0.baseten-training-job-wdp48kw-multinode.org-99340d71961343c28c5c567d705ab0c0.svc.cluster.local
+  rank      : 4 (local_rank: 4)
+  exitcode  : -15 (pid: 19566)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 19566
+[5]:
+  time      : 2026-08-27_07:30:54
+  host      : baseten-training-job-wdp48kw-multinode-0.baseten-training-job-wdp48kw-multinode.org-99340d71961343c28c5c567d705ab0c0.svc.cluster.local
+  rank      : 5 (local_rank: 5)
+  exitcode  : 1 (pid: 19567)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[6]:
+  time      : 2026-08-27_07:30:54
+  host      : baseten-training-job-wdp48kw-multinode-0.baseten-training-job-wdp48kw-multinode.org-99340d71961343c28c5c567d705ab0c0.svc.cluster.local
+  rank      : 6 (local_rank: 6)
+  exitcode  : -15 (pid: 19568)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 19568
+[7]:
+  time      : 2026-08-27_07:30:54
+  host      : baseten-training-job-wdp48kw-multinode-0.baseten-training-job-wdp48kw-multinode.org-99340d71961343c28c5c567d705ab0c0.svc.cluster.local
+  rank      : 7 (local_rank: 7)
+  exitcode  : 1 (pid: 19569)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-08-27_07:30:53
+  host      : baseten-training-job-wdp48kw-multinode-0.baseten-training-job-wdp48kw-multinode.org-99340d71961343c28c5c567d705ab0c0.svc.cluster.local
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 19563)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+EXIT=1
