@@ -125,6 +125,16 @@ Monitors are watching for milestones, crashes, and a 402-stall condition. Will p
 
 Monitors watching for milestones, crashes, and 402-stalls. Final per-arm `summary.tsv` when the arms settle.
 
+### VERDICT (~04:4x) — tau2 STOPPED (definitive blocker = credit dips); 2/3 arms (diligence) delivering
+
+**tau2 `gold` crashed 4× at step 1–64, every time on a transient in an uncaught path; I stopped it and its box.** Escalating fixes attempted, each addressing the prior cause: (1) cleared orphans + restart → (2) `VLLMValidationError` context overflow, fixed with `max_model_len=32768` → (3)+(4) OpenRouter **`402 Insufficient credits`** dips. The hardening patch I applied (wraps `run_tau2_episode` to drop-and-count transient failures like the diligence path — verified, `EPISODE_DROP_BY_EXC` counter, applied to the box) did NOT catch the 4th crash: `drops=0`, because the fatal 402 propagates through the **pass@1 eval path** (`evaluate_pass1`, `run.py:605`, unguarded), not the episode body.
+
+**Root cause = the OpenRouter balance keeps briefly hitting $0** (the 3-arm fleet burns faster than the intermittent top-ups; balance oscillated $11→$31→$33 with repeated momentary-zero dips). Diligence arms survive each dip (drop-and-resume); tau2's multi-turn user-sim + pass@1 eval have several uncaught 402 paths, so it hard-crashes on every dip. This is **not further fixable from my side without either (a) a stably-funded balance, or (b) hardening every eval/user-sim call site** (whack-a-mole; the harness came with only `num_retries=2`).
+
+**tau2 is relaunchable** (box was `w5y8zm3`, stopped to save GPU; harness is hardened + 32k ctx) **once the OpenRouter balance is kept reliably positive.** If you want it, top up a comfortable buffer and say so — I'll relaunch. Otherwise the deliverable is the two diligence arms.
+
+**Delivering: diligence `answer_free` + `answer_bearing`** — healthy, near done (`answer_bearing` 176/200, `answer_free` 114/200), surviving the same credit dips. Will produce their per-arm `summary.tsv` (per the spec above) when they hit 200, plus tau2's partial-run diagnostics for the record.
+
 ---
 
 ## REQ-013: stack and tune K-Maxwell on PR #351 MuonH fast-slow decay
