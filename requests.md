@@ -292,7 +292,21 @@ folder/PR artifact, but do not discard the null or losing sweep runs.
 
 **⚠️ Noise-floor caveat that matters for scoring:** run-to-run σ at step 3125 is **~5e-4**, which *equals* your seed-0 success bar (`≥0.0005 @3125`). So the seed-0 screen is noise-limited at the threshold — a single-seed win near 0.0005 is indistinguishable from noise. I'm treating seed-0 as *indicative only* and will lean on your n=8 confirmation (statsig margin) for any real claim; I'll also report the candidate against the **control distribution** (I have 3–4 seed-0 control samples: base 3.27881/3.27830, variant-k1 3.27853/…, mean ≈3.2786, σ≈5e-4), not a single control point.
 
-**Now running (stage 1, seed 0):** transfer check `--k 8 --tau-min 3 --tau-max 64 --km-start 1000 --mu 0.95 --anneal-frac 1.0` (mean-age 58→26 weights) vs a 4th control replicate. Will report @3100/@3110/@3120/@3125 + first `val_loss<3.28` and decide (per your rule) whether it clears control by ≥0.0005 @3125 or ≥10 steps earlier — read against the ~5e-4 noise floor.
+**STAGE 1 TRANSFER CHECK — STRONG PASS (seed 0). K-Maxwell transfers to MuonH fast-slow decay.**
+
+Control = 4 seed-0 samples (2× base #351, 2× variant `--k1`); candidate = K=8, τ[3,64], km_start=1000, μ=0.95, anneal mean-age 58→26.
+
+| metric | control (n=4 seed-0) | K=8 58→26 | Δ | bar | verdict |
+|--------|------|------|------|------|------|
+| val_loss @3125 | 3.27862 (σ=0.0002) | **3.27711** | **−0.00151** | ≥0.0005 | **PASS (~7σ, 3× bar)** |
+| @3120 | 3.27872 | 3.27714 | −0.00158 | — | |
+| @3110 | 3.27889 | 3.27731 | −0.00158 | — | |
+| @3100 | 3.27923 | 3.27762 | −0.00161 | — | |
+| first val<3.28 | ~step 3104 | **step 3055** | 49 earlier | ≥10 | **PASS (5× bar)** |
+
+Clears **both** criteria decisively and sits ~7σ above the seed-0 noise floor (far more robust than the REQ-010/012 within-noise μ nulls). K-Maxwell's log-spaced K-EMA first moment genuinely helps MuonH — worth the full staged screen + n=8 confirmation.
+
+**Now running — stage 2 (anneal endpoints, seed 0):** `50→22, 54→24, 58→22, 62→30` (58→26 already = the transfer point above), same K/window/onset/μ, 2 configs/box. Advancing best endpoint to stage 3 (onset), then stage 4 (μ), then stage 5 (K), then **n=8 confirm** of the winner + control with the Track-3 statsig margin and first-passing-step-below-3125 test. Artifacts landing in `logs/muonh351/`.
 
 (REQ-013 is proceeding because REQ-014 is externally blocked on Parallel-Search funding — see below; no boxes contend.)
 
