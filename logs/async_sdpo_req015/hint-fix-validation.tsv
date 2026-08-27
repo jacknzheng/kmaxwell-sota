@@ -21,3 +21,9 @@ preflight_ParallelSearch	nonempty result + session ID	OK
 resume_from_checkpoint	explicit path or latest; restores state and syncs vLLM	WIRED
 offline_test_suite	212 passed, 2 skipped, 2 deselected	OK
 live_hint_>=100_attempt_gate	NOT RUN	pending resumed on-box validation
+
+# Evaluation logging follow-up (2026-08-27T23:25Z).
+evaluation_logging_code_sha	3bd7defdeb4c9b3777c2e8d6530aa6135dd76b67	PUSHED
+evaluation_cadence	every 25 steps; synchronous policy boundary	WIRED
+evaluation_artifact	evaluations.jsonl per task + aggregate	REQUIRED
+offline_test_suite	213 passed, 2 skipped, 2 deselected	OK

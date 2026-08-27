@@ -32,19 +32,21 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-015: deploy the hint truncation fix and finish scaling-SDPO
 
-- status: OPEN — blockers resolved in `a075254`; resume both diligence
+- status: OPEN — blockers resolved in `3bd7def`; resume both diligence
   checkpoints and rerun the live validation
 - requested: Jack / 2026-08-27 11:28 PDT
 
 ### BLOCKER RESOLUTION (Jack, 2026-08-27 16:17 PDT)
 
 Use `fix/hint-output-budget` at exact commit
-`a075254e96a73c1e1aa12996d6e2b6b95ef95c53`. This supersedes `b7b0bda`.
+`3bd7defdeb4c9b3777c2e8d6530aa6135dd76b67`. This supersedes `a075254`.
 It switches hints, the diligence judge, and the tau2 user simulator to
 `nvidia/nemotron-3-super-120b-a12b:free`; wires checkpoint loading into
 `run.py`; restores model, optimizer, step, policy version, advantage EMA, and
 producer staleness state; and synchronizes restored weights to vLLM before
-new rollouts.
+new rollouts. It also runs held-out evaluation synchronously at every
+25-step boundary and writes full per-task and aggregate records for both
+benchmarks to `evaluations.jsonl`.
 
 Fresh developer preflights passed: OpenRouter chat HTTP 200, the production
 Nemotron hint path returned nonempty guidance, the structured judge parsed
@@ -64,7 +66,7 @@ environment; do not put credentials in this repository.
 
 - repo: https://github.com/jacknzheng/scaling-sdpo
 - branch: `fix/hint-output-budget`
-- exact base: `a075254e96a73c1e1aa12996d6e2b6b95ef95c53`
+- exact base: `3bd7defdeb4c9b3777c2e8d6530aa6135dd76b67`
 - supersedes: REQ-014 execution instructions; preserve and reuse every
   REQ-014 checkpoint and artifact
 - prior evidence: `logs/async_sdpo_req011/`
@@ -99,7 +101,7 @@ the SHA and resolved hint config in every run artifact.
 2. The existing diligence processes were launched from `1e84424` and do not
    contain the truncation fix. Gracefully stop each at a checkpoint boundary,
    then resume `answer_free` and `answer_bearing` from their latest valid
-   checkpoints on `a075254`. Do not restart either from step zero.
+   checkpoints on `3bd7def`. Do not restart either from step zero.
 3. Keep pre-fix and post-fix logs in separate, clearly named directories so
    the hint-drop comparison is auditable.
 4. The tau2 `gold` arm does not use API-generated teacher hints. Do not delay
@@ -168,6 +170,28 @@ Resume after recoverable crashes. Search, hint, user-simulator, judge,
 sandbox, empty-episode, stale-rollout, and weight-sync failures must remain
 separate. A rollout lacking its required hint must be dropped.
 
+### Evaluation logging contract
+
+Run held-out evaluation at steps 25, 50, 75, 100, 125, 150, 175, and 200.
+Commit the complete `evaluations.jsonl` from every arm and baseline; a W&B
+screenshot or aggregate-only summary is not a substitute.
+
+For diligence, retain every held-out task's query, generated response, token
+counts, normalized and raw judge scores, per-section earned/possible/fraction,
+and judge error. Retain aggregate `judge_score`, `judge_n`, `judge_errors`,
+the three section scores, requested count, and rollout-error count.
+
+For tau2, retain every held-out task's domain, query, complete response or
+transcript, token counts, pass^1 score, and rollout error. Retain aggregate
+overall and per-domain pass^1, sample counts, requested count, and
+rollout-error count. Every row and aggregate must identify the exact
+`launched_at_step` and `policy_version`.
+
+Do not skip a 25-step boundary because a prior eval is still running. Commit
+`evaluation_started`, task-completed/task-failed, and
+`evaluation_completed`/`evaluation_failed` records even when an API, sandbox,
+or rollout failure occurs.
+
 ### Required artifacts
 
 Commit and push the complete deliverable to this `jerry-agent` branch:
@@ -188,11 +212,11 @@ logs/async_sdpo_req015/
 
 For every arm include raw `args.txt`, `config.yaml`, `ARTIFACTS.txt`,
 `console.log`, `train.log`, every `rankN.log`, `api_failures.jsonl`,
-`rollouts.jsonl`, `sandbox.jsonl`, `training.jsonl`, `vllm.jsonl`, sandbox
-setup logs, and a checkpoint/resume manifest. Use `git add -f` for ignored log
-patterns. Gzip large text artifacts losslessly and document decompression.
-Never commit secrets, environment dumps, model weights, or checkpoint tensor
-files.
+`evaluations.jsonl`, `rollouts.jsonl`, `sandbox.jsonl`, `training.jsonl`,
+`vllm.jsonl`, sandbox setup logs, and a checkpoint/resume manifest. Use
+`git add -f` for ignored log patterns, including every `evaluations.jsonl`.
+Gzip large text artifacts losslessly and document decompression. Never commit
+secrets, environment dumps, model weights, or checkpoint tensor files.
 
 `summary.tsv` must include exact code SHA and CLI, completed steps, wall time,
 checkpoint history, teacher-minus-student gap, dead-gap fraction, clipping,
