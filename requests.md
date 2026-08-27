@@ -32,7 +32,26 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-011: finish the 4+4 async-sdpo fleet
 
-- status: RUNNING
+- status: DONE-PARTIAL (stack proven + strong SDPO signal on 2/3 arms; none reached 200 — API-transient crashes + no checkpointing; see `logs/async_sdpo_req011/`)
+
+### FINAL RESULT (agent, 2026-08-27 ~05:0x)
+
+**The 4+4 async-SDPO stack works and produces a strong, non-degenerate SDPO signal. No arm reached `total_steps=200`: every arm eventually hard-crashes on an UNCAUGHT auxiliary-LLM transient (glm-5.3-flash/OpenRouter is very flaky), and there is NO trainer checkpointing so each crash forfeits the run.** Full writeup + per-step trajectories + metrics: **`logs/async_sdpo_req011/`** (`README.md`, `summary.tsv`, `*_extract.txt`).
+
+| arm | steps | mean teacher−student gap | gap range | frac \|gap\|<1e-3 | staleness (mean/max) | hint drops (openrouter_error) | status |
+|-----|------:|------:|-----|------:|-----|------:|-----|
+| diligence answer_free | 114/200 | **−0.106** | −0.37…−0.043 | 0.000 | 0.95 / 3 | 3598 | crashed (uncaught eval-path transient) |
+| diligence answer_bearing | 176/200 | **−0.101** | −0.27…−0.039 | 0.000 | 1.08 / 3 | 4188 | crashed (uncaught eval-path transient) |
+| tau2 gold | 64/200 | ~−0.045 | −0.057…−0.040 | 0.000 | ~1.4 / 3 | (402-crashed) | stopped after 4 crashes; box released, log lost |
+
+- **Signal is real:** gaps are large, consistently negative (~−0.10 nats on both diligence arms), **0% dead steps** → the hinted teacher genuinely beats the bare student and SDPO distills it. Not a no-op.
+- **Why not 200:** only the hint path is hardened (drops transients, `episodes_empty=0`); the eval path (`evaluate_pass1`) and tau2's multi-turn user-sim have uncaught call sites, so over thousands of API calls an uncaught transient eventually crashes a rank → torchrun kills the arm. tau2 was most exposed (4 crashes: 402 ×3 + a 16384-context overflow fixed with `max_model_len=32768`; a `run_tau2_episode` drop-guard was written+applied but the 4th crash was in the unguarded pass@1 eval).
+- **Held-out metric:** diligence rubric-judge 404s on glm-5.3-flash structured output (known, off gradient path per your pt5) → no valid judge score. tau2 pass1 not reached.
+
+**To get a clean 200 (recommended, not done to avoid burning the night restart-looping a flaky API from step 0):** (1) keep a comfortable OpenRouter balance (kills the 402 class), (2) harden every auxiliary-LLM call site (eval + user-sim) like the hint path, (3) add periodic trainer checkpointing. With (1)+(2) the arms will reach 200 — they were healthy and advancing between transients. All 3 boxes released (results harvested). Say the word and I'll relaunch with the call-site hardening once credits are stably funded.
+
+### (superseded) original request
+- prior-status: RUNNING
 - requested: Jack / 2026-08-26 12:25 PDT
 - repo: https://github.com/jacknzheng/async-sdpo
 - base: `main` at `c3f6139`, plus the rebased REQ-002 logging patch
