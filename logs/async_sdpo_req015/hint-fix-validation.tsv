@@ -1,0 +1,12 @@
+# REQ-015 hint-fix validation (agent 2026-08-27T22:40:43Z). code SHA b7b0bda (verified on qkpx8dw+wp2znpq).
+item	value	status
+generator.hint.reasoning_enabled	False	OK (matches spec)
+generator.hint.max_tokens	2048	OK (matches spec)
+hint.model	z-ai/glm-5.3-flash	OK (matches spec)
+offline_test_suite	passed (b7b0bda)	OK
+preflight_OpenRouter_GLM	HTTP 402	BLOCKED (unfunded)
+preflight_ParallelSearch	HTTP 402	BLOCKED (unfunded)
+live_hint_>=100_attempt_gate	NOT RUN	blocked on OpenRouter 402
+resume_from_checkpoint	load_state_from_checkpoint defined but never called by run.py	NOT WIRED (decision needed)
+dil_free_latest_checkpoint	runs/sdpo-diligence/step_50 (stopped at step 96)	preserved on-box
+dil_bearing_latest_checkpoint	runs/sdpo-diligence/step_100 (stopped at step 116)	preserved on-box
