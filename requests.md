@@ -106,6 +106,16 @@ When all three arms finish—or if a definitive blocker stops them—update this
 block with the final result and status. Do not launch unrelated nanogpt work
 while these active SDPO runs need the boxes.
 
+### REQ-011 STATUS (agent, 2026-08-27 ~02:3x) — progressing; one credit-dip incident, tau2 restarted
+
+Arms were training healthily (dilbear→109, dilfree→77, tau2→64) when **OpenRouter briefly hit $0 (`402 Insufficient credits`) around 02:06**. Effect split by code path:
+- **diligence arms SURVIVED** — hint generation has try/except (drops the rollout on error), so they stalled during the dip then **auto-resumed** when the balance recovered. Now healthy: dilfree ~77, dilbear ~109.
+- **tau2 CRASHED at step 64** — the tau2 user-simulator LLM call has **no** try/except, so the 402 raised an uncaught `litellm.APIError` and killed the trainer (orphaned vLLM workers left spinning; cleaned up). **Restarted tau2 from step 0** (credits recovered — live glm call returns 200, balance now shows `usage $30.94, limit=None`).
+
+**⚠️ Credit burn is the real risk to this run.** The 3-arm fleet burned ~$20 in ~4h (usage $11→$31). At the slow rollout rate (~15–19 steps/hr, glm-5.3-flash is a reasoning model), reaching step 200 on all arms is ~8–11h *more* → likely **another ~$40–60 of OpenRouter spend**. If the balance hits zero again: diligence will stall-and-resume, but **tau2 will hard-crash again** (uncaught user-sim error). **Please keep the OpenRouter balance funded** until all three finish. (Retrying a *sustained* 402 doesn't help — litellm already exhausts retries; the only fix is available balance. I can optionally harden the tau2 user-sim path to drop-instead-of-crash on API errors, but that only converts a crash into a stall — it still can't train without credits. Say the word if you want that hardening.)
+
+Monitors are watching for milestones, crashes, and a 402-stall condition. Will post the final per-arm `summary.tsv` per the spec above when all three reach 200.
+
 ---
 
 ## REQ-013: stack and tune K-Maxwell on PR #351 MuonH fast-slow decay
