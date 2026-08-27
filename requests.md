@@ -32,8 +32,37 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-015: deploy the hint truncation fix and finish scaling-SDPO
 
-- status: OPEN
+- status: NEEDS-INFO — hint fix deployed+validated, but **(A) both OpenRouter & Parallel Search return 402 again**, and **(B) resume-from-checkpoint is not wired into run.py in b7b0bda**. Per your "external blocker → preserve, report, stop" clause: stopped, checkpoints preserved, not restarting from zero.
 - requested: Jack / 2026-08-27 11:28 PDT
+
+### REQ-015 STATUS (agent 2026-08-27 ~22:4x)
+
+**Hint fix DEPLOYED + config VALIDATED.** Fetched `fix/hint-output-budget`, checked out `b7b0bda65805506ea4eafa7f12bc0fd7d4c6a48a` on both diligence boxes (HEAD SHA verified `=b7b0bda…`), offline suite passed. Resolved hint config confirmed via `train.config.Config()`:
+```
+generator.hint.reasoning_enabled = False   ✓
+generator.hint.max_tokens        = 2048    ✓
+model                            = z-ai/glm-5.3-flash  ✓
+```
+(The ≥100-attempt live validation gate — zero `hint_drop_openrouter_length`, total drops <5% — **could not run**: OpenRouter is 402, see below.)
+
+**BLOCKER A — both paid services 402 again (preflight @ 2026-08-27T22:40:43Z):**
+- OpenRouter GLM-5.3 Flash: **HTTP 402**
+- Parallel Search (`api.parallel.ai`): **HTTP 402**
+
+Both balances drained again during the multi-hour runs. Per your step-1 rule (and the closing "external blocker" clause), I did not burn GPUs retrying. **Fund both services** to proceed. (This is the 3rd credit-exhaustion event of the campaign — the fleet burns balance fast; a larger buffer would prevent the recurring stalls.)
+
+**BLOCKER B — resume-from-checkpoint is not wired into b7b0bda's entrypoint.** `train/trainer.py` defines `load_state_from_checkpoint(...)` (and the save side works — `runs/sdpo-diligence/step_N/state.pt` written every 50 steps), but a whole-tree grep finds **no caller**: `run.py`'s `SDPOTrainer(...)` construction (`run.py:187`) and `train()` (`run.py:474`) never load a checkpoint, and the loop starts at `trainer.state.step = 0`. So "resume from the latest valid checkpoint, do not restart from zero" is **not achievable as-committed** — the checkpoints save but are never loaded on launch (the "verified resume" is a unit-tested mechanism, not integrated into the run path). **Decision needed:**
+- (a) I wire the resume-load into `run.py` (detect latest `step_N` in `output_dir` → `torch.load(state.pt)` → the existing `load_state_dict` path → set start step) and commit to `scaling-sdpo` — this is the "verified resume" wiring REQ-014 step 4 asked for and is absent; ~contained change but touches your training entrypoint, or
+- (b) accept a **clean restart from 0 on b7b0bda** — arguably *better* here: the pre-fix steps (dil_free→96, dil_bearing→116) were trained with the truncated-hint bug b7b0bda fixes, so carrying them forward would contaminate the post-fix run. Say which you prefer.
+
+**State preserved (not restarted):** diligence processes stopped at checkpoint boundaries. Latest valid checkpoints on-box: **dil_free = `step_50`** (was at step 96), **dil_bearing = `step_100`** (was at step 116). ⚠️ The 3 boxes (`qkpx8dw` dil_free, `wp2znpq` dil_bearing, `w5ymlv3` tau2) are **held up idle** to preserve these on-box checkpoints — stopping a Baseten box wipes its filesystem, and the state.pt tensors are too large to archive to git (you also forbid committing checkpoint tensors). If this will be a while, tell me and I'll stop the boxes (forfeiting the checkpoints → restart-from-0 when funded).
+
+**tau2 `gold` follow-up (get_environment API drift fix + test + commit):** not done yet — it needs push access to `scaling-sdpo` and a funded OpenRouter/Parallel to smoke-test the fixed path, so it's gated on Blocker A too.
+
+**To unblock:** (1) fund OpenRouter + Parallel Search; (2) answer Blocker B (wire-resume vs restart-0); (3) if you want the tau2 harness fix committed to `scaling-sdpo`, confirm I have push access to that repo. Then I resume/relaunch the diligence arms on b7b0bda, run the ≥100-attempt hint-fix validation gate, fix+launch tau2, and produce the full `logs/async_sdpo_req015/` deliverable.
+
+---
+
 - repo: https://github.com/jacknzheng/scaling-sdpo
 - branch: `fix/hint-output-budget`
 - exact base: `b7b0bda65805506ea4eafa7f12bc0fd7d4c6a48a`
