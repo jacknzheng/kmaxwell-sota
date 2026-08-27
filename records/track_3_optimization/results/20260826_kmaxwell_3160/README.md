@@ -149,9 +149,11 @@ forward-backward per step; no third-party optimizer import; the stopping rule
 - `kmaxwell_start_end_mu_cube.gif` — intersecting start-age, end-age, and
   Nesterov-coefficient sweep slices.
 
-## Setup & acknowledgements
+## Other contributors
 
-Thank you to [Jerry Hong](https://github.com/jerryhong21) ([@jerryhong21](https://github.com/jerryhong21)) for assisting with this project.
+Thank you to [Jerry Hong](https://github.com/jerryhong21) ([@jerryhong21](https://github.com/jerryhong21)) for assisting us with this project.
+
+## Setup & acknowledgements
 
 Baseline: result #36 (tuned Muon + aux AdamW) by
 [@konstmish](https://github.com/konstmish)
