@@ -308,61 +308,46 @@ Clears **both** criteria decisively and sits ~7σ above the seed-0 noise floor (
 
 **Now running — stage 2 (anneal endpoints, seed 0):** `50→22, 54→24, 58→22, 62→30` (58→26 already = the transfer point above), same K/window/onset/μ, 2 configs/box. Advancing best endpoint to stage 3 (onset), then stage 4 (μ), then stage 5 (K), then **n=8 confirm** of the winner + control with the Track-3 statsig margin and first-passing-step-below-3125 test. Artifacts landing in `logs/muonh351/`.
 
-(REQ-013 is proceeding because REQ-014 is externally blocked on Parallel-Search funding — see below; no boxes contend.)
-
 ---
 
 ## REQ-014: harden and finish the scaling-SDPO fleet
 
-- status: NEEDS-INFO (preflight FAIL — **Parallel Search returns HTTP 402 "Insufficient credit"**; per your step-1 instruction, not renting/launching GPUs until it's funded)
+- status: OPEN (Parallel Search funded by Jack; rerun the live preflight and launch)
 - requested: Jack / 2026-08-26 21:40 PDT
 - repo: https://github.com/jacknzheng/scaling-sdpo
-- branch/base: `main` at `fa6d3d7`
+- branch/base: `main` at `094c701`
 - supersedes: the repository URL and unfinished execution work in REQ-011
 
-### PREFLIGHT (agent, 2026-08-27 ~05:2x) — one service unfunded, blocking launch
-
-Ran your step-1 preflight before renting any GPU:
-- **OpenRouter GLM-5.3 Flash: HTTP 200 ✓** (funded — `usage $33.56, limit=null`, completion returns OK).
-- **Parallel Search (`api.parallel.ai`): HTTP 402 ✗** — `{"error":{"message":"Insufficient credit in account, please check your plan and billing details ... platform.parallel.ai/settings?tab=billing"}}` (ref_id b0bbee7f…).
-
-Per your explicit instruction ("If either still returns 402, set this request to NEEDS-INFO with the failing service named. Do not burn GPUs in a restart loop"), **status = NEEDS-INFO, failing service = Parallel Search.** No boxes rented.
-
-**To unblock:** fund the Parallel Search account (platform.parallel.ai billing). OpenRouter is already fine. Once Parallel Search returns 200, I'll do the code work (steps 2–4: pull `fa6d3d7`, run offline tests, harden the tau2 user-sim / tau2 pass@1 / diligence-rubric boundaries, add checkpoint+resume, commit to `scaling-sdpo`) and then launch all three arms to 200 with resume-on-crash.
-
-I can start the **code hardening + checkpoint/resume prep now** (it doesn't need Search funded — only the launch does); say the word if you'd like me to proceed with that in parallel so launch is instant once Search is funded. Meanwhile, since REQ-014 is externally blocked, I'm continuing REQ-013 (nanogpt LM training — no external services, already in flight).
-
 Continue the three 4+4 async-SDPO arms from REQ-011, but use the renamed
-canonical repository above. Run this continuation before REQ-013. Do not use
-the retired `jacknzheng/async-sdpo` URL except to recognize old artifacts.
+canonical repository above. Parallel Search has now been funded. Re-run a
+real request and, if it returns HTTP 200, start the fleet immediately. Do not
+stop healthy REQ-013 jobs already in flight; use separate boxes or start each
+SDPO arm as capacity becomes available.
 
-Commit `fa6d3d7` has been locally verified (`206 passed, 2 skipped,
-2 deselected` in the offline suite) and pushed. It makes failed hint rollouts
-actionable by retaining bounded error details and separating OpenRouter
-credit, authentication, rate-limit, timeout, empty, and generic failures.
+Commit `094c701` has been locally verified (`207 passed, 2 skipped,
+2 deselected`) and pushed. It adds comprehensive structured diagnostics at
+the API, vLLM, rollout, training, and tau2 sandbox boundaries.
 
 ### Preflight and reliability work
 
 Before renting or restarting GPU boxes:
 
-1. Confirm both already-provisioned services independently:
-   - Parallel Search must return a successful request; its latest observed
-     failure was HTTP 402 "Insufficient credit".
-   - OpenRouter GLM-5.3 Flash must return a successful completion with enough
-     funded balance for the fleet.
-   If either still returns 402, set this request to `NEEDS-INFO` with the
-   failing service named. Do not burn GPUs in a restart loop.
-2. Pull `main` at or after `fa6d3d7` from the new repository URL and run the
-   offline tests before launch.
-3. Harden every remaining auxiliary-LLM boundary identified by REQ-011:
-   tau2 user simulation, tau2 pass@1 evaluation, and diligence rubric
-   evaluation. A transient provider failure must be bounded, counted by cause,
-   and reported without killing torchrun. It must not be silently converted
-   into a model failure or a zero score.
-4. Add periodic trainer checkpoints and verified resume so an infrastructure
-   or provider failure does not forfeit all completed optimizer steps. Commit
-   and push the hardening, tests, and checkpoint/resume work to
-   `jacknzheng/scaling-sdpo` before launching the full fleet.
+1. Confirm Parallel Search and OpenRouter independently with one real request
+   each. Jack has funded Parallel since the previous 402. Record status codes
+   and timestamps, but never keys. If either still returns 402, mark only that
+   service blocked and do not rent its dependent boxes.
+2. Pull `main` at `094c701` or later from the canonical repository and run the
+   offline suite. Do not replace or bypass its diagnostic logging.
+3. Run one short tau2 banking smoke episode and one diligence smoke episode.
+   Verify that the run directory contains `ARTIFACTS.txt`, `console.log`,
+   `train.log`, rank logs, `api_failures.jsonl`, `rollouts.jsonl`,
+   `sandbox.jsonl`, `training.jsonl`, and `vllm.jsonl`. Also preserve the
+   timestamped `tau2-sandbox-setup-*.log`.
+4. Confirm periodic checkpoints can be loaded before the full launch. Resume
+   from the latest valid checkpoint after a crash rather than starting from
+   zero. If a remaining auxiliary-LLM exception can still escape the run or
+   eval coordinator, harden and test that boundary, then commit it to
+   `scaling-sdpo`.
 
 ### Frozen experiment
 
@@ -389,21 +374,37 @@ nonessential change; resume from the latest valid checkpoint after a crash.
 
 ### Completion
 
-Preserve run directories and write reproducible artifacts under
-`logs/async_sdpo_req014/`. Produce a `summary.tsv` and README containing, for
-each arm:
+Preserve every run directory. Copy the complete artifacts into this
+`jerry-agent` branch under:
 
-- exact repository SHA, full CLI, resolved model/hint/judge slugs, wall time,
-  completed steps, checkpoint and resume history
-- mean teacher−student gap, fraction with `abs(gap) < 1e-3`, advantage and
-  low/high ratio clipping, mean/max staleness
-- hint attempts/successes/drops and every drop cause, plus search,
-  user-simulator, judge, sandbox, and empty-episode failures
-- held-out pass@1 for tau2; rubric score and judge-error count for diligence
-- paths or URLs for logs, configs, checkpoints, summaries, and W&B
+```text
+logs/async_sdpo_req014/
+  README.md
+  summary.tsv
+  tau2-gold/
+  diligence-answer-free/
+  diligence-answer-bearing/
+```
+
+For every arm, commit and push the raw `args.txt`, `config.yaml`,
+`ARTIFACTS.txt`, `console.log`, `train.log`, every `rankN.log`,
+`api_failures.jsonl`, `rollouts.jsonl`, `sandbox.jsonl`, `training.jsonl`,
+`vllm.jsonl`, sandbox setup log, and checkpoint/resume manifest. These files
+are the deliverable: do not replace them with excerpts. Use `git add -f` where
+the log patterns are ignored. Never commit API keys, environment dumps,
+credentials, model weights, or checkpoint tensor files. Gzip a raw artifact
+losslessly if needed to keep each GitHub file comfortably below its size
+limit, and document the exact decompression command.
+
+`summary.tsv` and README must include the exact scaling-SDPO SHA and CLI,
+resolved model/hint/judge slugs, wall time, completed steps, checkpoint/resume
+history, mean teacher−student gap, fraction with `abs(gap) < 1e-3`, clipping,
+staleness, every failure counter, and held-out metrics. Link each summary row
+to its committed raw artifact directory.
 
 Success requires all three arms to reach step 200 and auxiliary-service
 failures to be reported separately from policy quality. If a service remains
 unfunded or another definitive external blocker prevents completion, preserve
-all progress, update this block with evidence, and stop rather than repeatedly
+all progress, commit and push the complete failure logs first, update this
+block with evidence and artifact links, and stop rather than repeatedly
 starting from zero.
