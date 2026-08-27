@@ -280,11 +280,23 @@ folder/PR artifact, but do not discard the null or losing sweep runs.
 
 ## REQ-014: harden and finish the scaling-SDPO fleet
 
-- status: OPEN
+- status: NEEDS-INFO (preflight FAIL — **Parallel Search returns HTTP 402 "Insufficient credit"**; per your step-1 instruction, not renting/launching GPUs until it's funded)
 - requested: Jack / 2026-08-26 21:40 PDT
 - repo: https://github.com/jacknzheng/scaling-sdpo
 - branch/base: `main` at `fa6d3d7`
 - supersedes: the repository URL and unfinished execution work in REQ-011
+
+### PREFLIGHT (agent, 2026-08-27 ~05:2x) — one service unfunded, blocking launch
+
+Ran your step-1 preflight before renting any GPU:
+- **OpenRouter GLM-5.3 Flash: HTTP 200 ✓** (funded — `usage $33.56, limit=null`, completion returns OK).
+- **Parallel Search (`api.parallel.ai`): HTTP 402 ✗** — `{"error":{"message":"Insufficient credit in account, please check your plan and billing details ... platform.parallel.ai/settings?tab=billing"}}` (ref_id b0bbee7f…).
+
+Per your explicit instruction ("If either still returns 402, set this request to NEEDS-INFO with the failing service named. Do not burn GPUs in a restart loop"), **status = NEEDS-INFO, failing service = Parallel Search.** No boxes rented.
+
+**To unblock:** fund the Parallel Search account (platform.parallel.ai billing). OpenRouter is already fine. Once Parallel Search returns 200, I'll do the code work (steps 2–4: pull `fa6d3d7`, run offline tests, harden the tau2 user-sim / tau2 pass@1 / diligence-rubric boundaries, add checkpoint+resume, commit to `scaling-sdpo`) and then launch all three arms to 200 with resume-on-crash.
+
+I can start the **code hardening + checkpoint/resume prep now** (it doesn't need Search funded — only the launch does); say the word if you'd like me to proceed with that in parallel so launch is instant once Search is funded. Meanwhile, since REQ-014 is externally blocked, I'm continuing REQ-013 (nanogpt LM training — no external services, already in flight).
 
 Continue the three 4+4 async-SDPO arms from REQ-011, but use the renamed
 canonical repository above. Run this continuation before REQ-013. Do not use
