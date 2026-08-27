@@ -116,6 +116,15 @@ Arms were training healthily (dilbear→109, dilfree→77, tau2→64) when **Ope
 
 Monitors are watching for milestones, crashes, and a 402-stall condition. Will post the final per-arm `summary.tsv` per the spec above when all three reach 200.
 
+### UPDATE (~03:4x) — diligence arms near done; tau2 has a RECURRING crash → hardening it now
+
+- **Diligence arms are healthy and close: dilbear 167/200, dilfree 108/200.** These are the reliable deliverable and will finish.
+- **tau2 has now crashed 3× at low steps, each on a DIFFERENT transient** in its multi-turn user-sim/rollout path: (1) 402 credit-dip @64, (2) `VLLMValidationError` 16384-context overflow @1 (fixed by raising `generator.engine.max_model_len=32768`), (3) another 402 blip @1. Root cause: tau2's episode/user-sim path lacks the drop-on-exception guard the diligence hint path has, so **any** transient LLM error kills the whole trainer. glm-5.3-flash being a *verbose reasoning model* makes tau2 episodes long + error-prone, amplifying this.
+- **Action:** I'm applying the hardening you sanctioned ("increase bounded retries rather than silently training") — wrapping tau2's per-episode rollout so a transient (402/litellm/vLLM) DROPS that episode and is counted by cause, never crashing the trainer (exactly how diligence already behaves). Then restart tau2 once. tau2's orphaned vLLM workers were cleaned; it's held down until the patch lands. If it still can't make sustained progress after hardening, I'll deliver the two diligence arms to 200 + tau2's partial run and leave tau2's completion to your call (it may simply be a poor fit for a verbose reasoning-model user-sim).
+- Credit balance still funded (`usage ~$33, limit=None`) but volatile; **please keep it topped up** — the diligence arms need it to reach 200.
+
+Monitors watching for milestones, crashes, and 402-stalls. Final per-arm `summary.tsv` when the arms settle.
+
 ---
 
 ## REQ-013: stack and tune K-Maxwell on PR #351 MuonH fast-slow decay
