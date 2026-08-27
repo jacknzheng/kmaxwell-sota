@@ -312,7 +312,7 @@ Clears **both** criteria decisively and sits ~7σ above the seed-0 noise floor (
 
 ## REQ-014: harden and finish the scaling-SDPO fleet
 
-- status: OPEN (Parallel Search funded by Jack; rerun the live preflight and launch)
+- status: RUNNING (agent 2026-08-27 ~06:4x — preflight PASS: OpenRouter 200 + **Parallel Search 200** @06:39:40Z; 3 boxes bootstrapping `scaling-sdpo`, will ff to `1e84424`; then smoke+checkpoint gates → launch 3 arms w/ resume-on-crash)
 - requested: Jack / 2026-08-26 21:40 PDT
 - repo: https://github.com/jacknzheng/scaling-sdpo
 - branch/base: `main` at `1e84424`
