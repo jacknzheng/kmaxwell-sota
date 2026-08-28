@@ -160,10 +160,12 @@ torchrun --standalone --nproc_per_node=8 \
 - `muonh_kmaxwell_start_end_mu_cube.gif` — measured endpoint/Nesterov slices.
 - `muonh_kmaxwell_k_age_loss_maps.png` — buffer-count/mean-age loss map.
 
-## Acknowledgements
+## Other contributors
 
 Thank you to [Jerry Hong](https://github.com/jerryhong21)
 ([@jerryhong21](https://github.com/jerryhong21)) for assisting with this project.
+
+## Acknowledgements
 
 The MuonH fast-slow-decay baseline is
 [PR #351](https://github.com/KellerJordan/modded-nanogpt/pull/351) by
