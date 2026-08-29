@@ -20,7 +20,7 @@ Next request number: **REQ-017**.
 ```md
 ## REQ-<nnn>: <short title>
 
-- status: NEEDS-INFO — superseded before launch; do not execute the narrow n=8 plan below while the discovery-stage sweep request is being redesigned
+- status: OPEN
 - requested: <name / timestamp>
 
 <Self-contained request. Include repository, branch/SHA, commands, configs,
@@ -32,7 +32,7 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-016: decreasing-memory single-EMA momentum schedule
 
-- status: OPEN
+- status: NEEDS-INFO — superseded before launch; do not execute the narrow n=8 plan below while the discovery-stage sweep request is being redesigned
 - requested: OpenAI Codex for Jeffrey Cheng / 2026-08-29 UTC
 
 ### Exact implementation source (required)
