@@ -81,8 +81,8 @@
   step and thereby change the update direction.</p>
   <p class="lead">The NanoGPT runs show that changing one EMA helps, while six
   EMA states recover more of the gain. Eight states do not improve on six. The
-  runs leave one ambiguity: the useful ingredient may be the current filter,
-  the momentum history, or the model path created by earlier updates.</p>
+  runs leave three causes entangled: the current filter, the stored momentum
+  history, and the model path created by earlier updates.</p>
   <div class="thesis"><p><strong>Working hypothesis.</strong> Momentum in Muon
   selects among matrix-valued gradient patterns with different temporal
   structure. Scheduling helps because the competing patterns change over
@@ -93,9 +93,10 @@
   six-state K6 and eight-state K8 kernels are tied within the precision of these
   discovery runs. All candidates use the same Muon update through step 1000.
   The single-EMA decay then moves from 0.982 to 0.944. K6 and K8 combine EMA
-  states with coefficients that change during training. The baseline is the
-  matched bi-Maxwell control: the standard two-EMA kernel switched on at step
-  1000.</p>
+  states with coefficients that change during training. K-Maxwell denotes this
+  linear-combination family; K6 and K8 use six and eight states. The baseline
+  is the matched bi-Maxwell control: the standard two-EMA kernel switched on at
+  step 1000.</p>
   <figure>
     <img src="gain_decomposition.png" alt="Scheduled EMA recovers part of the K-Maxwell gain, while scheduled K6 and K8 are nearly tied">
     <figcaption>Validation-loss reduction relative to the matched bi-Maxwell
@@ -103,16 +104,16 @@
     comparison appear in Appendix A.</figcaption>
   </figure>
   <p>In a separate A100 fork, reversing the single-EMA schedule erased the gain
-  and lost substantially to bi-Maxwell. The tested forward schedule therefore
-  outperformed the tested reverse fork.</p>
-  <p>The loss comparison assigns no share among three possible causes: the
-  filter used now, the momentum history carried into the comparison, and the
-  model path created by earlier updates. The experiment in Section 4 changes
-  only the first.</p>
-  <p>The power-law run produced average gradient ages of about 78 → 9 steps,
-  versus its 52 → 16 target, together with much larger responses to alternating
-  and noisy inputs. Treat this run as a failed construction. A corrected power
-  law should follow the same-state filter test.</p>
+  and lost substantially to bi-Maxwell. In this fork, longer memory early and
+  shorter memory late outperformed the reverse schedule.</p>
+  <p>Section 4 changes only the current filter while holding the stored history
+  and model state fixed.</p>
+  <p>From the step-1000 switch to the end of training, the power-law run's
+  average gradient age fell from about 78 to 9 steps; the corrected EMA
+  comparator fell from about 52 to 16. The nominal mean-lag match failed, and
+  the power law also gave much larger responses to alternating and noisy
+  inputs. Test a corrected construction only after the same-state filter
+  test.</p>
 
   <h2>2. Why a temporal filter can change Muon's direction</h2>
   <p>A filter changes Muon's direction when temporal components point in
@@ -122,7 +123,7 @@
   <div class="equation">{{display:gradient_modes}}</div>
   <p>The matrix <em>A</em><sub>j</sub> sets the component's spatial orientation.
   For momentum weights <em>w</em><sub>k</sub>, define the frequency response as
-  {{inline:H_def}}. Filtering gives</p>
+  {{inline:H_def}}. The matrix passed to Muon before matrix-sign normalization is</p>
   <div class="equation">{{display:filtered_modes}}</div>
   <p>Each component receives its own amplitude change and phase shift. Muon then computes</p>
   <div class="equation">{{display:muon_update}}</div>
@@ -134,9 +135,10 @@
   their sum. For two components at frequencies ω<sub>1</sub> and ω<sub>2</sub>,
   the filter changes their relative complex weight by</p>
   <div class="equation">{{display:response_ratio}}</div>
-  <p>Mean lag and total noise gain integrate over temporal frequency and discard
-  matrix orientation. The diagnostic therefore records each time scale's
-  contribution to the matrix directions before the matrix-sign step.</p>
+  <p>Average lag and response to white-noise input are scalar summaries;
+  neither records matrix orientation. The diagnostic therefore records each
+  time scale's contribution to the matrix directions before the matrix-sign
+  step.</p>
 
   <h2>3. Curvature suggests a candidate boundary condition</h2>
   <p>Across the accepted constant-learning-rate runs, measured equilibrium
@@ -151,8 +153,8 @@
   <p>The product of learning-rate multiplier and measured curvature ranges from
   1.54 to 1.15, so the inverse trend is clear while the constant drifts. A
   scalar test asks whether the filter contributes to this inverse relation.</p>
-  <p>The scalar calculation shows how a momentum kernel could move this
-  boundary. On one quadratic direction, let <em>g</em><sub>t</sub> = λ<em>x</em><sub>t</sub>
+  <p>The scalar calculation predicts how the kernel changes critical
+  curvature. On one quadratic direction, let <em>g</em><sub>t</sub> = λ<em>x</em><sub>t</sub>
   and consider</p>
   <div class="equation">{{display:scalar_update}}</div>
   <p>The factor <em>a</em> is the multiplicative weight-decay factor. At the
@@ -172,8 +174,9 @@
     <figcaption>Removing momentum raises the alternating response by about
     eleven-fold. The scalar formula predicts roughly eleven-fold lower
     curvature; the separate momentum-free trajectory ended about three-fold
-    higher. The bars come from separately trained models, so this comparison
-    is diagnostic.</figcaption>
+    higher, with weight norms about 0.31 times the reference trajectory's.
+    The bars come from separately trained models, so this comparison is
+    diagnostic.</figcaption>
   </figure>
   <p>The scalar curvature prediction disagrees with the measured curvature in
   this separately trained model. The next test changes filter coefficients at
@@ -185,11 +188,11 @@
   at a shared checkpoint isolates the filter's current action from stored
   history and model state.</p>
   <div class="flow" aria-label="Same-state intervention design">
-    <div class="node"><strong>Shared checkpoint</strong><br>same model, batch, Adam state,<br>and warmed EMA buffers</div>
+    <div class="node"><strong>Shared checkpoint:</strong><br>Same model, batch, optimizer state, and EMA buffers</div>
     <div class="arrow">→</div>
-    <div class="node"><strong>Filter change</strong><br>change only the coefficients<br>combining those EMA states</div>
+    <div class="node"><strong>Filter intervention:</strong><br>Change only the EMA mixture weights</div>
     <div class="arrow">→</div>
-    <div class="node"><strong>Measurements</strong><br>first-step update rotation;<br>fixed-window loss and curvature</div>
+    <div class="node"><strong>Measurements:</strong><br>First-step update rotation; loss and curvature over the fixed window</div>
   </div>
   <p>At early, middle, and late checkpoints, two unchanged controls and two
   intervention branches copy the model weights, learning rate, weight decay,
@@ -200,9 +203,9 @@
   history available there so {{inline:dc_normalization}}; a constant gradient
   passes unchanged and the common scale is fixed. Hold each candidate's
   average lag, response to sign-alternating inputs, and response to white-noise
-  inputs within registered tolerances. Report their drift over the fixed
+  inputs within pre-specified tolerances. Report their drift over the fixed
   measurement window. The immediate branch difference then estimates the
-  effect of the remaining temporal response.</p>
+  changed temporal response.</p>
   <p>Discovery batches choose a pair predicted to rotate Muon's matrix-sign
   update. At the intervention step, <em>U</em><sub>w</sub> is computed from the
   shared training batch and history. Independent held-out batches estimate the
@@ -210,22 +213,20 @@
   fixed update. With {{inline:Uw_def}}, second-order expansion gives</p>
   <div class="equation">{{display:taylor_local}}</div>
   <p>The first term measures descent alignment; the second measures curvature
-  cost. This estimate is a local diagnostic; the fixed continuation tests its
-  predictive value.</p>
-  <p>The unchanged control supplies a common reference basis: decompose its
-  pre-normalization matrix as <em>Z</em><sub>ref</sub> = <em>U</em>Σ<em>V</em><sup>T</sup>.
-  Project every EMA stream and both intervention matrices into the same
-  (<em>U</em>, <em>V</em>) coordinates, recording their in-basis and orthogonal
-  contributions. Frobenius cosine between matrix-sign updates and principal
-  angles between their leading subspaces measure the cross-branch rotation.
-  This common basis shows which time scales changed influence when the update
-  rotated.</p>
+  cost. Use this estimate to rank candidates; use the fixed continuation to
+  test whether the ranking predicts loss.</p>
+  <p>Use the unchanged control's pre-normalization matrix as a common basis. For
+  each EMA stream and intervention matrix, record the projection within that
+  basis and the residual outside it. Measure update rotation with the cosine
+  between flattened matrix-sign updates and the angle between their leading
+  singular subspaces. These readouts identify which time scales changed the
+  update direction.</p>
   <p>The experiment begins with an offline response map across the three
   checkpoints. The pair with the clearest held-out difference then enters
-  short continuations alongside duplicate controls. The continuation measures
+  fixed-window continuations alongside duplicate controls. The continuation measures
   when the immediate direction change begins to affect sharpness and
   validation loss. A candidate pair advances only if the second-order predicted
-  loss-change ordering has the same sign on every preregistered evaluation
+  loss-change ordering has the same sign on every pre-specified evaluation
   batch. Call the continuation positive only if the branch difference exceeds
   the loss-and-curvature spread between the two unchanged controls over the
   same window.</p>
@@ -236,7 +237,7 @@
       <tr><td>Rotation, followed by tied or reversed continuations</td><td>The local score fails to predict continuation loss</td><td>Find which measured interaction predicts rotations that improve continuation loss</td></tr>
       <tr><td>Small rotations and tied continuations at all three checkpoints</td><td>No measurable first-step or continuation effect at these checkpoints</td><td>Test whether initialization and later dynamics explain the loss gap</td></tr>
       <tr><td>Small rotations followed by delayed separation</td><td>Loss separation is delayed beyond the first-step rotation</td><td>Measure the delayed state before building a controller</td></tr>
-      <tr><td>No resolved rotation and no continuation separation</td><td>No local effect at these checkpoints</td><td>Stop prioritizing current response shape; test initialization and trajectory history</td></tr>
+      <tr><td>No resolved rotation and no continuation separation</td><td>No resolved filter rotation or continuation separation at these checkpoints</td><td>Test initialization and trajectory history before changing the current response shape</td></tr>
     </tbody>
   </table>
   <p>This isolates the immediate filter effect and tests whether it changes
@@ -244,37 +245,40 @@
   K-Maxwell gain requires a full factorial training study.</p>
 
   <h2>5. From an expressive basis to a small controller</h2>
-  <p>If the same-state test identifies a reproducible filter effect, compress
-  it into the smallest EMA bank that preserves that effect. Keep the
-  user-facing control count at zero or one.</p>
+  <p>If the same-state test identifies a reproducible effect, retain the
+  smallest EMA bank that preserves it. The implementation exposes at most one
+  user-facing hyperparameter.</p>
   <p>Let <em>s</em><sub>t</sub> contain measurements available to the
-  optimizer: the learning rate, the measured distance from the curvature
-  boundary, and the per-time-scale projection readouts from Section 4.
-  Constrain the online EMA bank to a bounded response to white-noise input. If
-  the same-state test finds useful filters, use the current gradient
+  optimizer: the learning rate, the measured curvature and its
+  inverse-learning-rate reference, and the per-time-scale projection readouts
+  from Section 4.
+  Constrain the online EMA bank to a bounded response to white-noise input. Use
+  the current gradient
   <em>g</em><sub>t</sub>, Hessian ℋ<sub>t</sub>, and candidate Muon update
   <em>U</em><sub>w</sub> to choose weights that minimize expected one-step loss
   change conditional on that state:</p>
   <div class="equation">{{display:controller_objective}}</div>
-  <p>Treat the optimized filters at each checkpoint as observations. Test
-  whether one measured state variable predicts most of their variation. Keep
-  only features that predict held-out rotation and held-out loss or curvature
-  at all three checkpoints.</p>
+  <p>Use the optimized weight vectors at the three checkpoints as observations.
+  Test whether one measured state variable predicts those weights, then whether
+  the resulting rule predicts held-out rotation and loss or curvature. Keep
+  only features that pass both tests at all three checkpoints.</p>
   <p>At one shared checkpoint, vary alternating response <em>F</em> while holding
   the other summaries fixed. If curvature follows 1/<em>F</em>, include
   <em>F</em> in the stability model; otherwise prioritize matrix-direction
   features.</p>
   <ol class="roadmap">
-    <li><strong>Measure same-state response.</strong> Compare scalar-matched
-      kernels at early, middle, and late checkpoints.</li>
-    <li><strong>Measure the post-fork outcome.</strong> Use a preregistered fixed
-      window and record first-step rotation, loss, and curvature.</li>
-    <li><strong>Test the scalar stability correction.</strong> Run a separate
-      same-state, constant-learning-rate fork that varies alternating response.</li>
-    <li><strong>Choose the state variable.</strong> Optimize expressive local
-      kernels across checkpoints and regress their variation against measured state.</li>
-    <li><strong>Validate one implementation.</strong> Implement the smallest EMA
-      realization and test baseline, high-learning-rate, and low-learning-rate trajectories.</li>
+    <li><strong>Same-state response.</strong> Compare kernels matched on average
+      lag and their responses to sign-alternating and white-noise inputs at
+      early, middle, and late checkpoints.</li>
+    <li><strong>Post-fork outcome.</strong> Run the pre-specified fixed window and
+      record first-step rotation, loss, and curvature.</li>
+    <li><strong>Scalar stability check.</strong> At one shared checkpoint, vary
+      alternating response <em>F</em> while holding the other summaries fixed.</li>
+    <li><strong>State selection.</strong> Test whether one measured state variable
+      predicts the optimized weights and held-out rotation or loss across all
+      three checkpoints.</li>
+    <li><strong>Implementation check.</strong> Test the smallest EMA bank across
+      seeds on baseline, high-learning-rate, and low-learning-rate trajectories.</li>
   </ol>
   <div class="thesis"><p><strong>Decision requested.</strong> Approve the
   same-state response map and its fixed continuation window. Defer another
@@ -330,8 +334,11 @@
   <details>
     <summary>C. Statistical scope</summary>
     <p class="small">The training comparisons use one seed and one checkpoint
-    fork per candidate. Confirmatory claims require repeated seeds under the
-    same registered protocol. The momentum-free curvature comparison uses a separate
+    fork per candidate, so the one-third decomposition is a scale estimate.
+    Published eight-seed results show gains from scheduled EMA mixtures on
+    different stacks; they do not calibrate this one-seed decomposition. The same-state
+    experiment uses duplicate controls at every checkpoint, and the distilled
+    rule is evaluated across seeds. The momentum-free curvature comparison uses a separate
     trajectory whose weight norms are about 0.31 times the reference. The local
     Taylor diagnostic omits the explicit decay term and requires a smooth local
     approximation; the fixed continuation evaluates whether its ranking is
