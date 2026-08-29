@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Momentum scheduling discovery — 2026-08-29</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    body { margin: 0; color: #202124; background: #f7f8fa; }
+    main { max-width: 1120px; margin: 0 auto; padding: 30px 22px 60px; }
+    h1 { margin: 0 0 8px; font-size: clamp(1.7rem, 4vw, 2.6rem); }
+    .stamp, figcaption { color: #5f6368; }
+    .summary { margin: 24px 0; padding: 16px 19px; background: white; border-left: 5px solid #ef3b2c; box-shadow: 0 1px 5px #00000014; }
+    .plots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr)); gap: 22px; }
+    figure { margin: 0; padding: 14px; background: white; box-shadow: 0 1px 5px #00000014; }
+    img { display: block; width: 100%; height: auto; }
+    figcaption { padding: 7px 7px 3px; font-size: .92rem; line-height: 1.45; }
+    code { background: #f0f1f3; padding: .1em .28em; border-radius: 3px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Momentum scheduling discovery</h1>
+  <div class="stamp">Updated 2026-08-29 02:45 UTC · frozen seed-0 step-1000 forks</div>
+  <div class="summary">
+    Best completed scheduled EMA: <code>beta 0.982 → 0.944</code>, final loss
+    <strong>3.27768</strong>, gain <strong>+0.00068</strong> over the paired
+    bi-Maxwell control. Power-law <code>gamma 0.75 → 1.00</code> finished at
+    3.28034, a gain of −0.00198. A static <code>beta 0.944</code> endpoint
+    control is running and is not plotted until it has a final value.
+  </div>
+  <div class="plots">
+    <figure>
+      <img src="ema.png" alt="Matplotlib scatter plot of scheduled EMA results">
+      <figcaption>Evaluated EMA schedules only. Color is paired bi-Maxwell loss minus candidate loss; positive is better.</figcaption>
+    </figure>
+    <figure>
+      <img src="powerlaw.png" alt="Matplotlib scatter plot of scheduled power-law results">
+      <figcaption>Evaluated power-law schedules only. The tested region has much longer mean age than the promising EMA region, so this is not yet a shape-matched comparison.</figcaption>
+    </figure>
+  </div>
+</main>
+</body>
+</html>
