@@ -43,9 +43,9 @@ harvested.
 
 ### Code and scientific baseline
 
-- source repo: `https://github.com/jeffreycider/muoff`
-- source branch: `jcheng/momentum-kernel-schedules`
-- exact source commit: `86aef768ab6ba3db51e1b48e92a93badc8385a00`
+- source repo: `https://github.com/jacknzheng/kmaxwell-sota`
+- source branch: `codex/momentum-kernel-schedules`
+- exact source commit: `9a82be0161100256c450fe4479df02910f008dcb`
 - single-EMA implementation: `AnnealedDecayMuon`
 - power-law implementation: `AnnealedWeightsMuon` plus
   `finite_history_power_law_weights`
