@@ -30,16 +30,16 @@
 <body>
 <main>
   <h1>Momentum scheduling discovery</h1>
-  <div class="stamp">Updated 2026-08-29 04:59 UTC · frozen seed-0 step-1000 forks unless noted</div>
+  <div class="stamp">Updated 2026-08-29 06:06 UTC · frozen seed-0 step-1000 forks unless noted</div>
   <div class="summary">
     The best A100 beta-linear schedule remains <code>0.982 → 0.944</code> at
     <strong>3.27768</strong>, gain <strong>+0.00068</strong>. On the new H100
-    calibration, interpolating the same endpoints linearly in mean age reached
-    <strong>3.27449</strong>, gain <strong>+0.00098</strong> over its 3.27547
-    bi-Maxwell control; log-mean-age interpolation gained +0.00075. The
-    mean-age-targeted power law and its transfer-matched three-pole control were
-    both catastrophic: 3.29123 and 3.29450 respectively. The power law beats
-    that sparse control, but neither is competitive.
+    calibration, the exact current-harness replay of PR357's scheduled K=8
+    kernel reached <strong>3.27250</strong>, gain <strong>+0.00297</strong>
+    over its 3.27547 bi-Maxwell control. This is substantially larger than the
+    best single-EMA gain so far. The A100 <code>0.982 → 0.940</code> endpoint
+    probe reached 3.27794, confirming that the local optimum is bracketed near
+    0.944. The power-law family remains noncompetitive.
   </div>
   <h2>New same-checkpoint controls</h2>
   <div class="panel">
@@ -47,13 +47,18 @@
       <thead><tr><th>Run</th><th>Hardware</th><th>Final loss</th><th>Gain over matched bi-Maxwell</th></tr></thead>
       <tbody>
         <tr><td>bi-Maxwell calibration</td><td>2×H100 SXM</td><td>3.27547</td><td>—</td></tr>
+        <tr><td>PR357 K=8, age 58 → 26, exact current-harness replay</td><td>2×H100 SXM</td><td>3.27250</td><td class="good">+0.00297</td></tr>
         <tr><td>beta 0.982 → 0.944, linear in mean age</td><td>2×H100 SXM</td><td>3.27449</td><td class="good">+0.00098</td></tr>
         <tr><td>beta 0.982 → 0.944, linear in log mean age</td><td>2×H100 SXM</td><td>3.27472</td><td class="good">+0.00075</td></tr>
+        <tr><td>beta 0.978 → 0.944, linear in beta</td><td>2×H100 SXM</td><td>3.27517</td><td class="good">+0.00030</td></tr>
+        <tr><td>beta 0.986 → 0.944, linear in beta</td><td>2×H100 SXM</td><td>3.27547</td><td>+0.00000</td></tr>
+        <tr><td>beta 0.982 → 0.940, linear in beta</td><td>8×A100</td><td>3.27794</td><td class="good">+0.00042</td></tr>
+        <tr><td>power law gamma 0.90 → 1.10</td><td>2×H100 PCIe</td><td>3.27745</td><td class="bad">−0.00198*</td></tr>
         <tr><td>power law gamma 1.28 → 1.66</td><td>8×A100</td><td>3.29123</td><td class="bad">−0.01287</td></tr>
         <tr><td>three-pole transfer match to that power law</td><td>8×A100</td><td>3.29450</td><td class="bad">−0.01614</td></tr>
       </tbody>
     </table>
-    <p class="note">The three-pole control matches finite-history DC gain, period-two response, and mean age at both endpoints. Power law beats it by 0.00327, but this only says the remaining shape matters inside a very bad descriptor-matched region. The H100 beta-linear interpolation run is still in progress.</p>
+    <p class="note">The three-pole control matches finite-history DC gain, period-two response, and mean age at both endpoints. Power law beats it by 0.00327, but this only says the remaining shape matters inside a very bad descriptor-matched region. *The PCIe power-law delta uses the SXM calibration because a same-node PCIe bi-Maxwell fork has not been run; the margin is large enough to classify it as noncompetitive, but not as a precise paired effect.</p>
   </div>
   <h2>Intern K-Maxwell audit</h2>
   <div class="panel">
@@ -66,7 +71,7 @@
         <tr><td>3250</td><td>3.27240</td><td>3.27451</td><td class="good">+0.00211</td></tr>
       </tbody>
     </table>
-    <p class="note">These are the Jerry-agent repository's H100 seed-0 logs: <a href="https://github.com/jacknzheng/kmaxwell-sota/blob/jerry-agent/logs/kmaxwell/ablation_anneal_n8/ANL64_s0_seed0.stdout">K=8 run</a> and <a href="https://github.com/jacknzheng/kmaxwell-sota/blob/jerry-agent/logs/kmaxwell/stage0/seed0_k2_exact.stdout">K=2 exact control</a>. This is not a clean pair: before K-Maxwell activates, their step-1000 losses are already 3.64862 and 3.65352, a 0.00490 offset despite identical pre-switch code. Therefore +0.00211 is only a raw seed-0 endpoint difference. The broader n=8 comparison is much healthier: K-Maxwell is ahead by only 0.00055 in mean loss at the pre-switch step, but by 0.00344 at step 3250, for approximately 0.00289 of additional post-switch separation. This strongly suggests a real gain, although the runs used H100 versus A800 hardware rather than a shared frozen checkpoint. An exact frozen-checkpoint K=8 comparison on the current harness has not yet been run.</p>
+    <p class="note">These are the Jerry-agent repository's historical H100 seed-0 logs: <a href="https://github.com/jacknzheng/kmaxwell-sota/blob/jerry-agent/logs/kmaxwell/ablation_anneal_n8/ANL64_s0_seed0.stdout">K=8 run</a> and <a href="https://github.com/jacknzheng/kmaxwell-sota/blob/jerry-agent/logs/kmaxwell/stage0/seed0_k2_exact.stdout">K=2 exact control</a>. That historical pair is confounded by a 0.00490 pre-switch offset. The broader historical n=8 comparison implied approximately 0.00289 of additional post-switch separation. The new exact current-harness replay above independently lands at +0.00297, making the scheduled K=8 gain much more credible. PR359 K=6 and frozen-long/frozen-short PR357 controls are now running or queued to separate K, scheduling, and endpoint effects.</p>
   </div>
   <h2>Endpoint sweeps</h2>
   <div class="plots">
