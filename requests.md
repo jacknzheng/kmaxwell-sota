@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-016**.
+Next request number: **REQ-017**.
 
 ## Template
 
@@ -27,6 +27,126 @@ Next request number: **REQ-016**.
 success criteria, artifact paths, and any ordering constraints. Do not include
 secrets; refer to already-provisioned environment variables.>
 ```
+
+---
+
+## REQ-016: decreasing-memory single-EMA momentum schedule
+
+- status: OPEN
+- requested: OpenAI Codex for Jeffrey Cheng / 2026-08-29 UTC
+
+### Scientific question
+
+Determine whether the benefit of the winning annealed K-Maxwell kernels is
+mostly explained by scheduling a single EMA from long memory to short memory.
+Do this on the plain Track-3 bi-Maxwell/#339 ablation stack, not the #46 CWD
+stack: `km/WRITEUP.md` shows that CWD's tail-EMA masks momentum-annealing
+effects.  This is a momentum-mechanism experiment, not initially a record run.
+
+The motivating same-state seed-0 screen found:
+
+```text
+configuration                 final val_loss @3250
+bi-Maxwell control            3.27836
+single EMA beta=.95           3.28084
+beta .978 -> .952             3.27804
+beta .978 -> .960             3.27824
+reverse beta .950 -> .984     3.28456
+```
+
+All numbers above forked from one frozen seed-0 step-1000 checkpoint. Treat
+them as a lead to reproduce, not as evidence to reuse in the final statistics.
+
+### Exact optimizer intervention
+
+Through the update at step 1000, use the trainer's unmodified standard Muon
+momentum (`beta_0 = 0.95`). Starting with the update at step 1001, use one EMA
+buffer whose decay is linearly interpolated in training step:
+
+```text
+alpha = clamp((step - 1000) / (3249 - 1000), 0, 1)
+beta(step) = beta_1000 + alpha * (beta_end - beta_1000)
+m = beta(step) * m + (1 - beta(step)) * g
+update = (1 - mu) * g + mu * m, with mu fixed at 0.95
+```
+
+Do not conflate the scheduled EMA decay `beta(step)` with the fixed Nesterov
+blend `mu`. Preserve all non-momentum optimizer and trainer behavior exactly.
+The first scheduled update is step 1001. Record the precise indexing actually
+implemented and add a small deterministic test for endpoints and the unchanged
+pre-switch path.
+
+### Fair forking and execution plan
+
+Use seeds 0--7. For each seed, run the exact common baseline through step 1000
+once and save a complete restartable checkpoint (model, every optimizer group,
+momentum, scaler if any, RNG/data position). Fork every arm for that seed from
+that exact checkpoint. Confirm by hash or tensor comparison that all arms of a
+seed have identical parameters and baseline optimizer state at the fork.
+
+Phase A, seed 0 screen (all nine cells):
+
+```text
+beta_1000 in {0.978, 0.982, 0.986}
+beta_end  in {0.952, 0.960, 0.968}
+```
+
+Phase B, n=8:
+
+1. Promote the best two Phase-A cells by final loss, unless a nearby cell has
+   clearly better mean loss over the dense cooldown window; in that case
+   promote it too and explain the choice.
+2. Run these required matched controls at n=8 from the same per-seed forks:
+   - exact #339 bi-Maxwell
+   - fixed standard single EMA beta=0.95
+   - direction-reversed single EMA beta=0.952 -> 0.978
+3. If the Phase-A optimum is on a boundary and capacity remains, add three
+   seed-0 points extending only that boundary. Prefer beta_end below 0.952 if
+   lower beta_end is monotonically better; prefer beta_1000 outside the grid
+   only if that axis shows a boundary trend. Do not launch an unmotivated full
+   second grid.
+
+Run the standard validation grid through step 3250, including dense cooldown
+validation sufficient for paired trajectory comparisons. Do not stop at the
+first crossing. Use fresh workstations as needed and stop them when harvested.
+
+### Analysis contract
+
+For every completed arm report:
+
+- each seed's validation trajectory and final loss
+- n=8 mean, standard deviation, standard error, and Track-3 statsig margin at
+  each eligible validation step
+- paired per-seed differences versus bi-Maxwell and fixed beta=.95, with mean,
+  standard deviation, confidence interval, and the exact Track-3 acceptance
+  statistic
+- final loss and paired mean difference over the dense cooldown window
+- beta, single-EMA mean age `beta/(1-beta)`, and flip transmission
+  `(1-beta)/(1+beta)` at step 1001, midpoint, and final update
+
+Use `control - candidate` for improvement columns, so positive always means
+the scheduled EMA is better. Keep reported PR results separate from newly run
+same-seed controls.
+
+The primary success criterion is a reproducible n=8 improvement over exact
+bi-Maxwell. A useful negative result is also acceptable if the seed-0 gain
+does not survive paired evaluation.
+
+### Required artifacts
+
+Commit code, tests, exact configs/commands, raw logs, and:
+
+```text
+logs/kmaxwell/req016_single_ema_schedule/
+  README.md
+  summary.tsv
+  trajectories.tsv
+  fork_manifest.tsv
+```
+
+Document exact base SHA, trainer file, hardware, runtime, any deviations, and
+which Phase-A cells were promoted. Update this request status in place and
+push intermediate artifacts if execution will span multiple fleet batches.
 
 ---
 
