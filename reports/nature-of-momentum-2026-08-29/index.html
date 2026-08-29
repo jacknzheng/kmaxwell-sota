@@ -4,10 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Toward a principled theory of momentum</title>
-  <script>
-    window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] } };
-  </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <style>
     :root { --ink:#17202a; --muted:#5f6b76; --paper:#fff; --wash:#f4f6f8;
             --line:#dce2e8; --accent:#4f46e5; --good:#087f5b; --warn:#9c5700; }
@@ -36,6 +32,10 @@
     ul,ol { padding-left:1.3rem; }
     li { margin:.38rem 0; }
     code { background:var(--wash); padding:.08rem .28rem; border-radius:3px; }
+    .math { font-family:"STIX Two Math","Cambria Math","Times New Roman",serif; }
+    .equation { margin:1rem 0 1.15rem; padding:.35rem 1rem; text-align:center;
+                font:1.16rem/1.6 "STIX Two Math","Cambria Math","Times New Roman",serif;
+                overflow-x:auto; }
     .small { color:var(--muted); font-size:.88rem; }
     a { color:#3f43c8; }
     @media (max-width:700px) { main { margin:0; padding:34px 22px 52px; } h1{font-size:2rem;} }
@@ -109,17 +109,14 @@
 
   <h2>3. Why the old scalar stability story is inadequate</h2>
   <p>For a linear optimizer on a scalar quadratic, a causal kernel
-  \(W\) produces the characteristic equation</p>
-  \[
-    r-a+\eta\lambda W(r^{-1})=0.
-  \]
+  <span class="math"><i>W</i></span> produces the characteristic equation</p>
+  <div class="equation"><i>r</i> − <i>a</i> + ηλ <i>W</i>(<i>r</i><sup>−1</sup>) = 0.</div>
   <p>The first unit-circle crossing is the stability boundary; a period-two
-  crossing gives the familiar expression involving \(W(-1)\). This is the
+  crossing gives the familiar expression involving <span class="math"><i>W</i>(−1)</span>. This is the
   correct generalization of the classical single-momentum calculation.</p>
   <p>Muon inserts a nonlinear map between the filtered gradient and the update:</p>
-  \[
-    Z_t=W(q)G_t, \qquad X_{t+1}=aX_t-\eta s\,\mathrm{NS}(Z_t).
-  \]
+  <div class="equation"><i>Z</i><sub>t</sub> = <i>W</i>(q)<i>G</i><sub>t</sub>,
+  &emsp; <i>X</i><sub>t+1</sub> = <i>aX</i><sub>t</sub> − η<i>s</i> NS(<i>Z</i><sub>t</sub>).</div>
   <p>Its local dynamics depend on the Jacobian of the Newton–Schulz/polar map,
   composed with the Hessian and all momentum states. A raw per-layer Hessian
   eigenvalue times learning rate is therefore not the closed-loop stability
@@ -129,39 +126,37 @@
   <div class="callout">
     Muon is approximately invariant to a common rescaling of its pre-polar
     matrix. If one temporal/spatial mode dominates, multiplying it by
-    \(W(\omega)\) mostly disappears during normalization. Momentum becomes
+    <span class="math"><i>W</i>(ω)</span> mostly disappears during normalization. Momentum becomes
     consequential when multiple modes compete, because relative gain and phase
     change the singular subspaces selected by Muon.
   </div>
   <p>For the exact polar factor, perturbations that only change represented
   singular values are annihilated. Rotations between singular directions are
-  weighted by denominators of the form \(\sigma_i+\sigma_j\). The finite
+  weighted by denominators of the form <span class="math">σ<sub>i</sub> + σ<sub>j</sub></span>. The finite
   Newton–Schulz map smooths this behavior, but the implementation explicitly
   normalizes by Frobenius norm and remains nearly scale-invariant.</p>
   <p>This supplies a concrete interpretation of two otherwise awkward facts:</p>
   <ul>
-    <li>Momentum-free Muon changes \(W(-1)\) by about eleven-fold without the
+    <li>Momentum-free Muon changes <span class="math"><i>W</i>(−1)</span> by about eleven-fold without the
     inverse sharpness response predicted by a scalar flip boundary. Its weight
     norms are only about 0.31× the record’s, however, so this remains a
     cross-trajectory screen rather than an identified kernel effect.</li>
     <li>The useful K-Maxwell residual lives in a broad relative-frequency shape
-    that scalar summaries such as mean age and \(W(-1)\) cannot represent.</li>
+    that scalar summaries such as mean age and <span class="math"><i>W</i>(−1)</span> cannot represent.</li>
   </ul>
   <p>The period-two amplitude screen also rejected Fable’s earlier
   step-size-pinned polar toy: amplitude scaled approximately as
-  \(\eta^{2.4}\), not \(\eta^1\). These comparisons are cross-trajectory and
+  <span class="math">η<sup>2.4</sup></span>, not <span class="math">η<sup>1</sup></span>. These comparisons are cross-trajectory and
   confounded, so they reject simple stories more strongly than they establish
   the replacement.</p>
 
   <h2>5. A principled problem statement</h2>
-  <p>Choose the lowest-order stable causal filter \(W\) that optimizes expected
+  <p>Choose the lowest-order stable causal filter <span class="math"><i>W</i></span> that optimizes expected
   local progress after Muon’s norm-selection map while keeping the augmented
   closed loop stable:</p>
-  \[
-  \mathbb{E}[\Delta L]\approx
-  -\eta\,\mathbb{E}\langle G_t,\mathrm{NS}(Z_t)\rangle
-  +\frac{\eta^2}{2}\,\mathbb{E}\langle\mathrm{NS}(Z_t),H\,\mathrm{NS}(Z_t)\rangle.
-  \]
+  <div class="equation">𝔼[Δ<i>L</i>] ≈ −η 𝔼⟨<i>G</i><sub>t</sub>, NS(<i>Z</i><sub>t</sub>)⟩
+  + <span class="math"><span style="white-space:nowrap">η<sup>2</sup>⁄2</span></span>
+  𝔼⟨NS(<i>Z</i><sub>t</sub>), <i>H</i> NS(<i>Z</i><sub>t</sub>)⟩.</div>
   <p>The measurable state should include the pre-NS singular spectrum, lagged
   gradient cross-covariance in the transmitted tangent directions, learning
   rate, and generalized curvature of the composed Muon map. A scalar temporal
@@ -175,7 +170,7 @@
   <p>Use one common checkpoint and a shared, already-warmed EMA basis. Hold the
   weights, data order, learning rate, weight decay, Adam state, and all common
   optimizer state fixed. Run two identical controls plus two kernels that match
-  DC gain, mean age, \(W(-1)\), and approximately total noise gain at the
+  DC gain, mean age, <span class="math"><i>W</i>(−1)</span>, and approximately total noise gain at the
   checkpoint’s realized finite-history age, while differing maximally across
   periods 64–256. Before registration, solve an explicit feasible pair, report
   its achieved noise-gain tolerance, and bound descriptor drift over the first
@@ -202,7 +197,7 @@
   <h2>7. What we should stop doing</h2>
   <ul>
     <li>Dense beta/gamma sweeps and schedule gardening.</li>
-    <li>Treating \(\eta\lambda\) or \(W(-1)\) as a universal Muon “drive.”</li>
+    <li>Treating <span class="math">ηλ</span> or <span class="math"><i>W</i>(−1)</span> as a universal Muon “drive.”</li>
     <li>Calling fixed-history kernel replay causal.</li>
     <li>Designing a one-pole rule before the data establish that one pole can
     represent the useful response.</li>
