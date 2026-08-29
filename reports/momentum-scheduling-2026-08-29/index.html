@@ -9,8 +9,17 @@
     body { margin: 0; color: #202124; background: #f7f8fa; }
     main { max-width: 1120px; margin: 0 auto; padding: 30px 22px 60px; }
     h1 { margin: 0 0 8px; font-size: clamp(1.7rem, 4vw, 2.6rem); }
+    h2 { margin: 30px 0 12px; font-size: 1.35rem; }
     .stamp, figcaption { color: #5f6368; }
     .summary { margin: 24px 0; padding: 16px 19px; background: white; border-left: 5px solid #ef3b2c; box-shadow: 0 1px 5px #00000014; }
+    .panel { padding: 14px 18px 17px; background: white; box-shadow: 0 1px 5px #00000014; overflow-x: auto; }
+    .note { color: #4f555b; font-size: .93rem; line-height: 1.5; }
+    table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    th, td { padding: 8px 10px; border-bottom: 1px solid #e1e4e8; text-align: right; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: #50565c; font-size: .88rem; }
+    .good { color: #08783e; font-weight: 700; }
+    .bad { color: #b42318; font-weight: 700; }
     .plots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr)); gap: 22px; }
     figure { margin: 0; padding: 14px; background: white; box-shadow: 0 1px 5px #00000014; }
     img { display: block; width: 100%; height: auto; }
@@ -21,20 +30,45 @@
 <body>
 <main>
   <h1>Momentum scheduling discovery</h1>
-  <div class="stamp">Updated 2026-08-29 04:34 UTC · frozen seed-0 step-1000 forks</div>
+  <div class="stamp">Updated 2026-08-29 04:59 UTC · frozen seed-0 step-1000 forks unless noted</div>
   <div class="summary">
-    Best completed scheduled EMA: <code>beta 0.982 → 0.944</code>, final loss
-    <strong>3.27768</strong>, gain <strong>+0.00068</strong> over the paired
-    bi-Maxwell control. The static <code>beta 0.944 → 0.944</code> control
-    finished at <strong>3.28134</strong>, so the scheduled run beats the same
-    endpoint used throughout by 0.00366. The new boundary probe,
-    <code>beta 0.982 → 0.936</code>, turned back upward to
-    <strong>3.27801</strong>, bracketing 0.944 as the best late endpoint tested.
-    The mean-age-matched power-law probe <code>gamma 1.28 → 1.66</code> finished
-    at <strong>3.29123</strong>, a gain of <strong>−0.01287</strong>. That is a
-    strong failure, but the transfer-matched three-pole control is still running,
-    so it does not yet isolate power-law tail shape from the matched descriptors.
+    The best A100 beta-linear schedule remains <code>0.982 → 0.944</code> at
+    <strong>3.27768</strong>, gain <strong>+0.00068</strong>. On the new H100
+    calibration, interpolating the same endpoints linearly in mean age reached
+    <strong>3.27449</strong>, gain <strong>+0.00098</strong> over its 3.27547
+    bi-Maxwell control; log-mean-age interpolation gained +0.00075. The
+    mean-age-targeted power law and its transfer-matched three-pole control were
+    both catastrophic: 3.29123 and 3.29450 respectively. The power law beats
+    that sparse control, but neither is competitive.
   </div>
+  <h2>New same-checkpoint controls</h2>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Run</th><th>Hardware</th><th>Final loss</th><th>Gain over matched bi-Maxwell</th></tr></thead>
+      <tbody>
+        <tr><td>bi-Maxwell calibration</td><td>2×H100 SXM</td><td>3.27547</td><td>—</td></tr>
+        <tr><td>beta 0.982 → 0.944, linear in mean age</td><td>2×H100 SXM</td><td>3.27449</td><td class="good">+0.00098</td></tr>
+        <tr><td>beta 0.982 → 0.944, linear in log mean age</td><td>2×H100 SXM</td><td>3.27472</td><td class="good">+0.00075</td></tr>
+        <tr><td>power law gamma 1.28 → 1.66</td><td>8×A100</td><td>3.29123</td><td class="bad">−0.01287</td></tr>
+        <tr><td>three-pole transfer match to that power law</td><td>8×A100</td><td>3.29450</td><td class="bad">−0.01614</td></tr>
+      </tbody>
+    </table>
+    <p class="note">The three-pole control matches finite-history DC gain, period-two response, and mean age at both endpoints. Power law beats it by 0.00327, but this only says the remaining shape matters inside a very bad descriptor-matched region. The H100 beta-linear interpolation run is still in progress.</p>
+  </div>
+  <h2>Intern K-Maxwell audit</h2>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Step</th><th>K=8, age 58 → 26</th><th>K=2 exact bi-Maxwell</th><th>Raw improvement</th></tr></thead>
+      <tbody>
+        <tr><td>3150</td><td>3.27779</td><td>3.28073</td><td class="good">+0.00294</td></tr>
+        <tr><td>3200</td><td>3.27419</td><td>3.27656</td><td class="good">+0.00237</td></tr>
+        <tr><td>3210</td><td>3.27365</td><td>3.27594</td><td class="good">+0.00229</td></tr>
+        <tr><td>3250</td><td>3.27240</td><td>3.27451</td><td class="good">+0.00211</td></tr>
+      </tbody>
+    </table>
+    <p class="note">These are the Jerry-agent repository's H100 seed-0 logs: <a href="https://github.com/jacknzheng/kmaxwell-sota/blob/jerry-agent/logs/kmaxwell/ablation_anneal_n8/ANL64_s0_seed0.stdout">K=8 run</a> and <a href="https://github.com/jacknzheng/kmaxwell-sota/blob/jerry-agent/logs/kmaxwell/stage0/seed0_k2_exact.stdout">K=2 exact control</a>. This is not a clean pair: before K-Maxwell activates, their step-1000 losses are already 3.64862 and 3.65352, a 0.00490 offset despite identical pre-switch code. Therefore +0.00211 is only a raw seed-0 endpoint difference. The broader n=8 comparison is much healthier: K-Maxwell is ahead by only 0.00055 in mean loss at the pre-switch step, but by 0.00344 at step 3250, for approximately 0.00289 of additional post-switch separation. This strongly suggests a real gain, although the runs used H100 versus A800 hardware rather than a shared frozen checkpoint. An exact frozen-checkpoint K=8 comparison on the current harness has not yet been run.</p>
+  </div>
+  <h2>Endpoint sweeps</h2>
   <div class="plots">
     <figure>
       <img src="ema.png" alt="Matplotlib scatter plot of scheduled EMA results">
@@ -42,7 +76,7 @@
     </figure>
     <figure>
       <img src="powerlaw.png" alt="Matplotlib scatter plot of scheduled power-law results">
-      <figcaption>Evaluated power-law schedules, including the new mean-age-matched 1.28 → 1.66 probe. Its matched three-pole control is still running, so the shape attribution remains pending.</figcaption>
+      <figcaption>Evaluated power-law schedules, including the mean-age-matched 1.28 → 1.66 probe. Its three-pole transfer-matched control is even worse, but both lose badly to bi-Maxwell.</figcaption>
     </figure>
   </div>
 </main>
