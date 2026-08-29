@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Toward a principled theory of momentum</title>
+  <link rel="stylesheet" href="katex.min.css">
+  <style>
+    :root { --ink:#17202a; --muted:#5f6b76; --paper:#fff; --wash:#f4f6f8;
+            --line:#dce2e8; --accent:#4f46e5; --good:#087f5b; --warn:#9c5700; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:#eef1f5;
+           font:17px/1.62 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { max-width:940px; margin:32px auto; padding:56px 68px 72px;
+           background:var(--paper); box-shadow:0 10px 40px #24344718; }
+    h1 { margin:0 0 8px; font-size:2.35rem; line-height:1.08; letter-spacing:-.035em; }
+    h2 { margin:2.3rem 0 .65rem; font-size:1.32rem; letter-spacing:-.012em; }
+    h3 { margin:1.45rem 0 .35rem; font-size:1.05rem; }
+    p { margin:.55rem 0 1rem; }
+    .dek { color:var(--muted); font-size:1.12rem; max-width:760px; }
+    .stamp { color:var(--muted); font-size:.86rem; margin-top:1rem; }
+    .callout { margin:1.5rem 0; padding:18px 22px; background:#f0efff;
+               border-left:4px solid var(--accent); font-size:1.06rem; }
+    .verdict { padding:20px 24px; border:1px solid #c9e8dc; background:#f1fbf7; }
+    table { width:100%; border-collapse:collapse; margin:1rem 0 1.35rem; font-size:.94rem; }
+    th,td { text-align:right; padding:9px 10px; border-bottom:1px solid var(--line); }
+    th:first-child,td:first-child { text-align:left; }
+    th { background:var(--wash); font-weight:650; }
+    .good { color:var(--good); font-weight:650; }
+    .bad { color:#b42318; font-weight:650; }
+    img { width:100%; height:auto; margin:1rem 0 .25rem; }
+    figcaption { color:var(--muted); font-size:.85rem; text-align:center; }
+    ul,ol { padding-left:1.3rem; }
+    li { margin:.38rem 0; }
+    code { background:var(--wash); padding:.08rem .28rem; border-radius:3px; }
+    .equation { margin:1rem 0 1.15rem; padding:.35rem 1rem; text-align:center;
+                overflow-x:auto; }
+    .small { color:var(--muted); font-size:.88rem; }
+    a { color:#3f43c8; }
+    @media (max-width:700px) { main { margin:0; padding:34px 22px 52px; } h1{font-size:2rem;} }
+  </style>
+</head>
+<body><main>
+  <h1>Toward a principled theory of momentum</h1>
+  <p class="dek">What the NanoGPT kernel experiments actually established,
+  why the scalar edge-of-stability story is breaking under Muon, and the
+  shortest path from expressive K-Maxwell kernels to a zero- or one-knob rule.</p>
+  <p class="stamp">Codex synthesis · 29 August 2026 · discovery-stage evidence, not a final benchmark claim</p>
+
+  <div class="verdict">
+    <strong>Current answer.</strong> Momentum in Muon looks less like a scalar
+    low-pass filter and more like a <em>temporal spectral mixer before norm
+    selection</em>. It changes which temporally coherent matrix modes dominate
+    the polar update. The evidence is not yet causal, but this model explains
+    why scheduling helps, why a one-pole EMA is insufficient, why the tested
+    power law fails, and why flip transmission alone does not predict the
+    observed oscillations.
+  </div>
+
+  <h2>1. The empirical decomposition</h2>
+  <table>
+    <thead><tr><th>Momentum rule</th><th>hardware</th><th>validation loss</th><th>gain over matched bi-Maxwell</th></tr></thead>
+    <tbody>
+      <tr><td>bi-Maxwell control</td><td>2×H100 SXM</td><td>3.27547</td><td>—</td></tr>
+      <tr><td>scheduled one-pole EMA, best matched H100</td><td>2×H100 SXM</td><td>3.27449</td><td class="good">+0.00098</td></tr>
+      <tr><td>scheduled K6</td><td>2×H100 SXM</td><td>3.27261</td><td class="good">+0.00286</td></tr>
+      <tr><td>scheduled K8</td><td>2×H100 SXM</td><td>3.27250</td><td class="good">+0.00297</td></tr>
+      <tr><td>scheduled matched-age power law</td><td>8×A100</td><td>3.29123</td><td class="bad">−0.01287</td></tr>
+    </tbody>
+  </table>
+  <p class="small">These are local discovery measurements: one seed and one
+  checkpoint fork per row, not a statistical-significance fleet. The roughly
+  one-third fraction is stack-sensitive: the corresponding A100 EMA gain was
+  +0.00068 on its own control, smaller than the H100 estimate. Treat the
+  fraction as scale, not a precise attribution. The power-law row uses its
+  separate matched A100 control (3.27836) and is not part of the one-third
+  arithmetic.</p>
+  <p>A scheduled single EMA recovers roughly one third of the K-Maxwell gain.
+  Scheduling memory is therefore real and useful, but it is not the whole
+  story. K6 and K8 tying tells us that raw parameter count is not the valuable
+  ingredient either.</p>
+  <p>The defensible conclusion is <strong>one-pole insufficiency</strong>. We
+  have not yet separated higher-order frequency shape from the path through
+  kernel space or from momentum-state initialization. Calling the remaining
+  two-thirds a pure “shape gain” would outrun the experiment.</p>
+
+  <h2>2. What differs between the filters?</h2>
+  <figure>
+    <img src="frequency_response.png" alt="End-phase transfer functions for bi-Maxwell, K6, K8, scheduled EMA, and matched-age power law">
+    <figcaption>The corrected EMA comparator ends at β = 0.944. Its plotted
+    curve is the instantaneous endpoint response, not the exact product kernel
+    accumulated under a time-varying β. These are quasi-static descriptors,
+    not causal measurements.</figcaption>
+  </figure>
+  <p>K6/K8 and the scheduled EMA have broadly similar mean age, flip gain, and
+  total noise gain. Their remaining difference is a modest shoulder across
+  intermediate periods and less transmission of ultra-slow history. The first
+  end-phase spectrum-weighted analysis places most of the corrected
+  K8-versus-EMA difference around periods 64–256, with the largest
+  contributions at 128 and 256. The separate early-phase ladder becomes
+  unphysical beyond period 12 and cannot localize the switch phase; it does not
+  invalidate the end-phase long-period result.</p>
+  <p>The tested power law is different in a much less subtle way. Even after
+  matching mean age, it transmits roughly four to six times more period-two
+  content and six to nine times more total noise than the EMA comparator. Its
+  failure is consistent with presenting Muon a badly contaminated pre-polar
+  matrix. That is a diagnosis, not yet a causal proof.</p>
+
+  <h2>3. Why the old scalar stability story is inadequate</h2>
+  <p>For a linear optimizer on a scalar quadratic, a causal kernel
+  {{inline:W}} produces the characteristic equation</p>
+  <div class="equation">{{display:linear_characteristic}}</div>
+  <p>The first unit-circle crossing is the stability boundary; a period-two
+  crossing gives the familiar expression involving {{inline:W_flip}}. This is the
+  correct generalization of the classical single-momentum calculation.</p>
+  <p>Muon inserts a nonlinear map between the filtered gradient and the update:</p>
+  <div class="equation">{{display:muon_update}}</div>
+  <p>Its local dynamics depend on the Jacobian of the Newton–Schulz/polar map,
+  composed with the Hessian and all momentum states. A raw per-layer Hessian
+  eigenvalue times learning rate is therefore not the closed-loop stability
+  variable.</p>
+
+  <h2>4. The key geometric fact</h2>
+  <div class="callout">
+    Muon is approximately invariant to a common rescaling of its pre-polar
+    matrix. If one temporal/spatial mode dominates, multiplying it by
+    {{inline:W_omega}} mostly disappears during normalization. Momentum becomes
+    consequential when multiple modes compete, because relative gain and phase
+    change the singular subspaces selected by Muon.
+  </div>
+  <p>For the exact polar factor, perturbations that only change represented
+  singular values are annihilated. Rotations between singular directions are
+  weighted by denominators of the form {{inline:sigma_sum}}. The finite
+  Newton–Schulz map smooths this behavior, but the implementation explicitly
+  normalizes by Frobenius norm and remains nearly scale-invariant.</p>
+  <p>This supplies a concrete interpretation of two otherwise awkward facts:</p>
+  <ul>
+    <li>Momentum-free Muon changes {{inline:W_flip}} by about eleven-fold without the
+    inverse sharpness response predicted by a scalar flip boundary. Its weight
+    norms are only about 0.31× the record’s, however, so this remains a
+    cross-trajectory screen rather than an identified kernel effect.</li>
+    <li>The useful K-Maxwell residual lives in a broad relative-frequency shape
+    that scalar summaries such as mean age and {{inline:W_flip}} cannot represent.</li>
+  </ul>
+  <p>The period-two amplitude screen also rejected Fable’s earlier
+  step-size-pinned polar toy: amplitude scaled approximately as
+  {{inline:eta_scaling}}, not {{inline:eta_linear}}. These comparisons are cross-trajectory and
+  confounded, so they reject simple stories more strongly than they establish
+  the replacement.</p>
+
+  <h2>5. A principled problem statement</h2>
+  <p>Choose the lowest-order stable causal filter {{inline:W}} that optimizes expected
+  local progress after Muon’s norm-selection map while keeping the augmented
+  closed loop stable:</p>
+  <div class="equation">{{display:expected_loss}}</div>
+  <p>The measurable state should include the pre-NS singular spectrum, lagged
+  gradient cross-covariance in the transmitted tangent directions, learning
+  rate, and generalized curvature of the composed Muon map. A scalar temporal
+  PSD is not sufficient because it forgets whether frequency components occupy
+  the same matrix subspace and compete.</p>
+  <p>The target implementation is not “learn a beta schedule.” It is a minimal
+  controller—possibly a normalized two-timescale shelf—whose single knob is a
+  physical margin or cross-band competition setpoint estimated online.</p>
+
+  <h2>6. The one experiment worth running next</h2>
+  <p>Use one common checkpoint and a shared, already-warmed EMA basis. Hold the
+  weights, data order, learning rate, weight decay, Adam state, and all common
+  optimizer state fixed. Run two identical controls plus two kernels that match
+  DC gain, mean age, {{inline:W_flip}}, and approximately total noise gain at the
+  checkpoint’s realized finite-history age, while differing maximally across
+  periods 64–256. Before registration, solve an explicit feasible pair, report
+  its achieved noise-gain tolerance, and bound descriptor drift over the first
+  measurement window.</p>
+  <p>A branch counts as separated only if its effect exceeds the divergence
+  between the two controls over the same window.</p>
+  <ol>
+    <li><strong>Immediate response also moves an unaltered band’s subspace
+    share:</strong> cross-mode competition survives. Compress the response to
+    the minimum-order state-driven shelf controller.</li>
+    <li><strong>Immediate response is confined to the altered band:</strong>
+    frequency-selective transmission matters, but cross-mode competition is
+    not identified. The controller target should be that band’s own response,
+    not a competition ratio.</li>
+    <li><strong>Only delayed validation/sharpness separates:</strong> local
+    filtering is insufficient; momentum acts through slower trajectory or
+    basin regularization.</li>
+    <li><strong>No separation:</strong> reject the proposed slow-band mechanism
+    and revisit initialization/path effects or richer matrix-valued structure.</li>
+  </ol>
+  <p>No branch is allowed to become a post-hoc success. The outcome map is fixed
+  before launch, and the experiment remains a proposal pending approval.</p>
+
+  <h2>7. What we should stop doing</h2>
+  <ul>
+    <li>Dense beta/gamma sweeps and schedule gardening.</li>
+    <li>Treating {{inline:eta_lambda}} or {{inline:W_flip}} as a universal Muon “drive.”</li>
+    <li>Calling fixed-history kernel replay causal.</li>
+    <li>Designing a one-pole rule before the data establish that one pole can
+    represent the useful response.</li>
+    <li>Claiming the hybrid Muon+Adam system is understood from isolated Muon
+    Hessian blocks.</li>
+  </ul>
+
+  <h2>8. Epistemic status</h2>
+  <p>The temporal spectral-mixer model is an <strong>unrefuted candidate</strong>,
+  not a conclusion. It was constructed after seeing the discovery evidence.
+  The same-state intervention is required before turning it into an optimizer
+  design principle. If it survives, the research program has a plausible route
+  from arbitrary K-Maxwell weights to a small controller derived from measurable
+  state. If it fails, that failure is informative: the useful state is slower
+  or more structured than a local temporal filter can capture.</p>
+
+  <h2>Technical sources</h2>
+  <ul class="small">
+    <li><a href="https://arxiv.org/abs/2604.14108">Andreyev et al., Momentum Further Constrains Sharpness at the Edge of Stochastic Stability</a></li>
+    <li><a href="https://eprints.maths.manchester.ac.uk/2462/1/gendk.pdf">Noferini, a Daleckii–Krein theorem for generalized matrix functions</a></li>
+    <li><a href="https://arxiv.org/abs/2601.19156">Kim and Oh, Convergence of Muon with Newton–Schulz</a></li>
+    <li><a href="https://arxiv.org/abs/2608.26288">Li and Tsuchiya, Muon with Finite Newton–Schulz</a></li>
+  </ul>
+</main></body></html>
