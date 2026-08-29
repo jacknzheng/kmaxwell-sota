@@ -2,18 +2,25 @@ import fs from "node:fs";
 import katex from "katex";
 
 const formulas = {
-  W: String.raw`W`,
+  kernel: String.raw`Z_t=\sum_{k=0}^{t} w_t(k)\,G_{t-k}`,
+  ema_kernel: String.raw`w(k)\propto\beta^k`,
+  msign_scale: String.raw`\operatorname{msign}(cZ)=\operatorname{msign}(Z),\qquad c>0`,
+  two_modes: String.raw`Z=\alpha A+\beta B`,
+  ratio_modes: String.raw`\beta/\alpha`,
+  W_def: String.raw`W(q)=\sum_{k\ge 0}w(k)q^k`,
   W_flip: String.raw`W(-1)`,
-  W_omega: String.raw`W(\omega)`,
-  sigma_sum: String.raw`\sigma_i + \sigma_j`,
-  eta_scaling: String.raw`\eta^{2.4}`,
-  eta_linear: String.raw`\eta^1`,
-  eta_lambda: String.raw`\eta\lambda`,
+  eta_lambda_flip: String.raw`\eta\lambda W(-1)`,
   linear_characteristic: String.raw`r-a+\eta\lambda W(r^{-1})=0`,
-  muon_update: String.raw`Z_t=W(q)G_t, \qquad X_{t+1}=aX_t-\eta s\,\operatorname{NS}(Z_t)`,
-  expected_loss: String.raw`\mathbb{E}[\Delta L]\approx
-    -\eta\,\mathbb{E}\!\left[\left\langle G_t,\operatorname{NS}(Z_t)\right\rangle\right]
-    +\frac{\eta^2}{2}\,\mathbb{E}\!\left[\left\langle\operatorname{NS}(Z_t),H\operatorname{NS}(Z_t)\right\rangle\right]`,
+  scalar_model: String.raw`g_t=\lambda x_t,\qquad z_t=\sum_{k\ge0}w(k)g_{t-k},\qquad x_{t+1}=a x_t-\eta z_t`,
+  mean_age: String.raw`\bar{k}=\frac{\sum_k k\,w(k)}{\sum_k w(k)}`,
+  noise_gain: String.raw`N=\frac{\sum_k w(k)^2}{\left(\sum_k w(k)\right)^2}`,
+  delayed_mode: String.raw`x_{t-k}=r^{-k}x_t`,
+  filtered_mode: String.raw`z_t=\lambda x_t W(r^{-1})`,
+  delta_x: String.raw`\Delta X=-\eta U`,
+  taylor: String.raw`L(X+\Delta X)-L(X)
+    =-\eta\langle \nabla L,U\rangle
+    +\frac{\eta^2}{2}\langle U,HU\rangle
+    +O\!\left(\eta^3\lVert U\rVert^3\right)`,
 };
 
 let html = fs.readFileSync(new URL("index.template.html", import.meta.url), "utf8");
