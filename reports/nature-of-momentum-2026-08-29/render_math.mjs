@@ -20,6 +20,8 @@ const formulas = {
     +\frac{\eta_t^2}{2}\langle U_w,\mathcal H_tU_w\rangle
     \,\middle|\,s_t\right]`,
   general_characteristic: String.raw`r-a+\eta\lambda\sum_{k\ge0}w_kr^{-k}=0`,
+  dc_normalization: String.raw`H(0)=\sum_{k\ge0}w_k=1`,
+  lambda_inverse_F: String.raw`\lambda_{\mathrm{crit}}\propto F^{-1}`,
   kernel: String.raw`Z_t=\sum_{k=0}^{t} w_t(k)\,G_{t-k}`,
   ema_kernel: String.raw`w(k)\propto\beta^k`,
   msign_scale: String.raw`\operatorname{msign}(cZ)=\operatorname{msign}(Z),\qquad c>0`,
@@ -36,7 +38,7 @@ const formulas = {
   periodic_input: String.raw`g_t=A\cos\!\left(\frac{2\pi t}{P}\right)`,
   endpoint_response: String.raw`\left|W\!\left(e^{-i2\pi/P}\right)\right|`,
   eos_sgd: String.raw`\eta\lambda_{\mathrm{crit}}=2`,
-  flip_response: String.raw`F=\sum_{k\ge 0}(-1)^k w(k)`,
+  flip_response: String.raw`F=H(\pi)=\sum_{k\ge 0}(-1)^k w_k`,
   eos_momentum: String.raw`\eta\lambda_{\mathrm{crit}}F=1+a`,
   delayed_mode: String.raw`x_{t-k}=r^{-k}x_t`,
   filtered_mode: String.raw`z_t=\lambda x_t W(r^{-1})`,
