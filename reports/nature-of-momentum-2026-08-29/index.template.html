@@ -80,9 +80,10 @@
   geometry. A temporal filter can rotate the matrix passed to the matrix-sign
   step and thereby change the update direction.</p>
   <p class="lead">The NanoGPT runs show that changing one EMA helps, while six
-  EMA states recover more of the gain. Eight states do not improve on six. The
-  runs leave three causes entangled: the current filter, the stored momentum
-  history, and the model path created by earlier updates.</p>
+  EMA states recover more of the gain. Six and eight states are tied at this
+  discovery resolution. The runs leave three causes entangled: the current
+  filter, the stored momentum history, and the model path created by earlier
+  updates.</p>
   <div class="thesis"><p><strong>Working hypothesis.</strong> Momentum in Muon
   selects among matrix-valued gradient patterns with different temporal
   structure. Scheduling helps because the competing patterns change over
@@ -103,15 +104,19 @@
     control. Single-seed H100 discovery runs; exact losses and the A100
     comparison appear in Appendix A.</figcaption>
   </figure>
-  <p>In a separate A100 fork, reversing the single-EMA schedule erased the gain
-  and lost substantially to bi-Maxwell. In this fork, longer memory early and
-  shorter memory late outperformed the reverse schedule.</p>
+  <p>Against the same A100 bi-Maxwell control used for the power-law comparison,
+  reversing the single-EMA schedule erased the gain and lost substantially.
+  In this fork, longer memory early and shorter memory late outperformed the
+  reverse schedule.</p>
   <p>Section 4 changes only the current filter while holding the stored history
   and model state fixed.</p>
-  <p>From the step-1000 switch to the end of training, the power-law run's
-  average gradient age fell from about 78 to 9 steps; the corrected EMA
-  comparator fell from about 52 to 16. The nominal mean-lag match failed, and
-  the power law also gave much larger responses to alternating and noisy
+  <p>The scheduled candidate targeted normalized taps
+  <em>w</em><sub>k</sub> ∝ (<em>k</em> + 1)<sup>−γ</sup>, with γ scheduled
+  from 1.28 to 1.66, using a finite ten-EMA approximation. From the step-1000
+  switch to the end of training, the deployed finite-history kernel's average
+  gradient age fell from about 78 to 9 steps; for comparison, the scheduled
+  single EMA above fell from about 52 to 16. The nominal mean-lag match failed,
+  and the candidate also gave much larger responses to alternating and noisy
   inputs. Test a corrected construction only after the same-state filter
   test.</p>
 
@@ -152,9 +157,13 @@
   </figure>
   <p>The product of learning-rate multiplier and measured curvature ranges from
   1.54 to 1.15, so the inverse trend is clear while the constant drifts. A
-  scalar test asks whether the filter contributes to this inverse relation.</p>
-  <p>The scalar calculation predicts how the kernel changes critical
-  curvature. On one quadratic direction, let <em>g</em><sub>t</sub> = λ<em>x</em><sub>t</sub>
+  scalar test asks whether the filter contributes to this inverse relation.
+  The plotted multiplier scales the base step size, so proportional changes in
+  the multiplier are proportional changes in η below.</p>
+  <p>Setting Muon's matrix-sign step aside, a classical linear reference model
+  predicts how the kernel changes critical curvature; Section 4 tests whether
+  that prediction survives the matrix-sign normalization. On one quadratic
+  direction, let <em>g</em><sub>t</sub> = λ<em>x</em><sub>t</sub>
   and consider</p>
   <div class="equation">{{display:scalar_update}}</div>
   <p>The factor <em>a</em> is the multiplicative weight-decay factor. At the
@@ -235,9 +244,9 @@
     <tbody>
       <tr><td>Rotation, more negative predicted loss change, and a continuation advantage</td><td>Supports a first-step filter effect that predicts lower continuation loss</td><td>Derive a state-driven controller from the local objective</td></tr>
       <tr><td>Rotation, followed by tied or reversed continuations</td><td>The local score fails to predict continuation loss</td><td>Find which measured interaction predicts rotations that improve continuation loss</td></tr>
-      <tr><td>Small rotations and tied continuations at all three checkpoints</td><td>No measurable first-step or continuation effect at these checkpoints</td><td>Test whether initialization and later dynamics explain the loss gap</td></tr>
+      <tr><td>Rotation exceeds the duplicate-control cosine spread but remains small, with tied continuations</td><td>The current filter has a resolved first-step effect without a detected continuation benefit</td><td>Test whether later state interactions determine which rotations help</td></tr>
       <tr><td>Small rotations followed by delayed separation</td><td>Loss separation is delayed beyond the first-step rotation</td><td>Measure the delayed state before building a controller</td></tr>
-      <tr><td>No resolved rotation and no continuation separation</td><td>No resolved filter rotation or continuation separation at these checkpoints</td><td>Test initialization and trajectory history before changing the current response shape</td></tr>
+      <tr><td>Rotation stays within the duplicate-control cosine spread, and loss and curvature stay within their control spreads</td><td>No current-filter effect is resolved at these checkpoints</td><td>Test initialization and trajectory history</td></tr>
     </tbody>
   </table>
   <p>This isolates the immediate filter effect and tests whether it changes
@@ -283,7 +292,11 @@
   <div class="thesis"><p><strong>Decision requested.</strong> Approve the
   same-state response map and its fixed continuation window. Defer another
   power-law fit, broad K-Maxwell tuning, and controller implementation until
-  those measurements identify a reproducible state variable.</p></div>
+  those measurements identify a reproducible state variable.</p>
+  <p class="small"><strong>Estimated accelerator budget on the current
+  8×A100 node:</strong> 0.5 aggregate GPU-hours for the response map, 1.5 for
+  the first fixed-window continuations, 2 for the scalar stability fork, and
+  0.5 per validation rerun.</p></div>
 
   <h2>Appendices</h2>
   <details>
