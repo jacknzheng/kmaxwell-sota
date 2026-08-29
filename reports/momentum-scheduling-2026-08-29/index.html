@@ -30,7 +30,7 @@
 <body>
 <main>
   <h1>Momentum scheduling discovery</h1>
-  <div class="stamp">Updated 2026-08-29 06:10 UTC · frozen seed-0 step-1000 forks unless noted</div>
+  <div class="stamp">Updated 2026-08-29 06:22 UTC · frozen seed-0 step-1000 forks unless noted</div>
   <div class="summary">
     The best A100 beta-linear schedule remains <code>0.982 → 0.944</code> at
     <strong>3.27768</strong>, gain <strong>+0.00068</strong>. On the new H100
@@ -81,12 +81,12 @@
   <h2>Endpoint sweeps</h2>
   <div class="plots">
     <figure>
-      <img src="ema.png" alt="Matplotlib scatter plot of scheduled EMA results">
-      <figcaption>Evaluated EMA schedules plus the static 0.944 endpoint control. Color is paired bi-Maxwell loss minus candidate loss; positive is better.</figcaption>
+      <img src="ema.png?v=20260829-0622" alt="Matplotlib scatter plot of scheduled EMA results">
+      <figcaption>All completed matched-control EMA points, including the new 0.978, 0.980, 0.984, 0.986, 0.940, and 0.948 probes. Each point uses its hardware cohort's bi-Maxwell control; positive is better. The unmatched PCIe 0.982 → 0.944 run is excluded.</figcaption>
     </figure>
     <figure>
-      <img src="powerlaw.png" alt="Matplotlib scatter plot of scheduled power-law results">
-      <figcaption>Evaluated power-law schedules, including the mean-age-matched 1.28 → 1.66 probe. Its three-pole transfer-matched control is even worse, but both lose badly to bi-Maxwell.</figcaption>
+      <img src="powerlaw.png?v=20260829-0622" alt="Matplotlib scatter plot of scheduled power-law results">
+      <figcaption>All completed power-law schedules, now including 0.90 → 1.10. That H100 PCIe point uses the SXM control as a disclosed proxy; every power-law result remains negative.</figcaption>
     </figure>
   </div>
 </main>
