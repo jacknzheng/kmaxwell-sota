@@ -20,7 +20,7 @@ Next request number: **REQ-017**.
 ```md
 ## REQ-<nnn>: <short title>
 
-- status: OPEN
+- status: NEEDS-INFO — superseded before launch; do not execute the narrow n=8 plan below while the discovery-stage sweep request is being redesigned
 - requested: <name / timestamp>
 
 <Self-contained request. Include repository, branch/SHA, commands, configs,
