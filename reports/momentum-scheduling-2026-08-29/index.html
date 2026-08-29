@@ -21,16 +21,19 @@
 <body>
 <main>
   <h1>Momentum scheduling discovery</h1>
-  <div class="stamp">Updated 2026-08-29 03:48 UTC · frozen seed-0 step-1000 forks</div>
+  <div class="stamp">Updated 2026-08-29 04:34 UTC · frozen seed-0 step-1000 forks</div>
   <div class="summary">
     Best completed scheduled EMA: <code>beta 0.982 → 0.944</code>, final loss
     <strong>3.27768</strong>, gain <strong>+0.00068</strong> over the paired
     bi-Maxwell control. The static <code>beta 0.944 → 0.944</code> control
     finished at <strong>3.28134</strong>, so the scheduled run beats the same
-    endpoint used throughout by 0.00366. The next boundary probe,
-    <code>beta 0.982 → 0.936</code>, is running. Power-law
-    <code>gamma 0.75 → 1.00</code> finished at 3.28034, a gain of −0.00198;
-    the first mean-age-matched probe, <code>gamma 1.28 → 1.66</code>, is queued.
+    endpoint used throughout by 0.00366. The new boundary probe,
+    <code>beta 0.982 → 0.936</code>, turned back upward to
+    <strong>3.27801</strong>, bracketing 0.944 as the best late endpoint tested.
+    The mean-age-matched power-law probe <code>gamma 1.28 → 1.66</code> finished
+    at <strong>3.29123</strong>, a gain of <strong>−0.01287</strong>. That is a
+    strong failure, but the transfer-matched three-pole control is still running,
+    so it does not yet isolate power-law tail shape from the matched descriptors.
   </div>
   <div class="plots">
     <figure>
@@ -39,7 +42,7 @@
     </figure>
     <figure>
       <img src="powerlaw.png" alt="Matplotlib scatter plot of scheduled power-law results">
-      <figcaption>Evaluated power-law schedules only. The tested region has much longer mean age than the promising EMA region, so this is not yet a shape-matched comparison.</figcaption>
+      <figcaption>Evaluated power-law schedules, including the new mean-age-matched 1.28 → 1.66 probe. Its matched three-pole control is still running, so the shape attribution remains pending.</figcaption>
     </figure>
   </div>
 </main>
