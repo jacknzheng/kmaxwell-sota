@@ -161,8 +161,7 @@
   <span>λ̃</span> is each matrix's leading curvature divided by its
   step-1000 value. The ordinary inverse-multiplier reference has slope −1.
   Window-selection sensitivity
-  puts the fitted exponent near −1.28 ± 0.1, consistent with the earlier
-  registered estimate of −1.3 ± 0.2.</p>
+  puts the fitted exponent near −1.28 ± 0.1.</p>
   <figure>
     <img src="eos_pinning.png" alt="Equilibrium curvature rises as the learning-rate multiplier falls across five steady regimes">
     <figcaption>Five constant-learning-rate segments met the steady-regime
@@ -176,7 +175,8 @@
   <p>The aggregate exponent hides substantial variation across matrix types.
   Attention Q, K, and V and the MLP output have fitted slopes from −1.09 to
   −1.34; attention output, MLP input, and the language-model head are
-  shallower, from −0.65 to −0.87.</p>
+  shallower, from −0.65 to −0.87. The embedding slope is +0.78, but
+  adjacent-checkpoint spikes of up to 15× make that fit unreliable.</p>
   <figure class="wide">
     <img src="pinning_by_matrix_type.png" alt="Two-by-four log-log curvature plots for attention K, attention output, attention Q, attention V, MLP input, MLP output, embedding, and language-model head, with residual-block depth shown by color">
     <figcaption>Panels, left to right: attention K, attention output projection,
@@ -225,15 +225,15 @@
   couples directions and removes their common amplitude. Its equation supplies
   a reference for a controlled test, while the measured curvature trend
   supplies the empirical constraint.</p>
-  <p>The existing momentum-free comparison is a late-regime, cross-trajectory
-  screen. Its classical reference was 0.09× the bi-Maxwell curvature, while
-  the measured momentum-free trajectory reached 3×. The fork began at step
-  2400 and measured steps 2432–3231, as the learning-rate cooldown removed most
-  period-two gradient energy; the compared model trajectories also had
-  substantially different weight norms. The earlier regime where the
-  alternating mode is active remains untested.</p>
+  <p>The late momentum-free screen misses the scalar reference by 33×: its
+  classical reference was 0.09× the bi-Maxwell curvature, while the measured
+  trajectory reached 3×. The fork began at step 2400 and measured steps
+  2432–3231, as the learning-rate cooldown removed most period-two gradient
+  energy; the compared model trajectories also had substantially different
+  weight norms. The earlier regime where the alternating mode is active
+  remains untested.</p>
 
-  <h2>4. Does current temporal weighting rotate Muon's update?</h2>
+  <h2>4. Proposed experiment: does temporal weighting rotate Muon's update?</h2>
   <p>K-Maxwell and the scheduled EMA arrive late in training with different
   temporal kernels—the weights they assign to stored gradient summaries—and
   with different stored momentum and model states. A coefficient-only
@@ -296,7 +296,7 @@
   loss or curvature during the continuation. Attribution of the original
   K-Maxwell gain requires a full factorial training study.</p>
 
-  <h2>5. From measurement to a small controller</h2>
+  <h2>5. Proposed program: from measurement to a small controller</h2>
   <p>If the same-state test identifies a reproducible effect, retain the
   smallest EMA bank that preserves it. The implementation exposes at most one
   user-facing hyperparameter.</p>
@@ -382,7 +382,11 @@
     learning-rate drop. After that window, a segment is
     accepted when its whole-segment slope in log median curvature is within the
     length-scaled one-standard-deviation noise floor. All five points use
-    8-iteration Lanczos with the convergence correction and tail gate. Each
+    8-iteration Lanczos with the convergence correction and tail gate.
+    Eight iterations underestimate the leading eigenvalue; the correction
+    extrapolates the remaining gap by assuming geometric decay in successive
+    Ritz-value increments. The tail gate drops matrix estimates whose
+    extrapolated remaining error exceeds 5%. Each
     point is one segment from one trajectory; its uncertainty describes
     within-run measurement variation.</p>
     <p class="small">The geometric-tail extrapolation and tail gate are a
@@ -453,9 +457,9 @@
   <details>
     <summary>G. Matrix-direction readout</summary>
     <p class="small">Decompose the unchanged control's pre-sign matrix as
-    <em>Z</em><sub>ref</sub> = <em>L</em>Σ<em>R</em><sup>T</sup>. For each EMA
+    <em>Z</em><sub>ref</sub> = <em>U</em>Σ<em>V</em><sup>T</sup>. For each EMA
     stream <em>E</em><sub>j</sub>, record its coordinates
-    <em>L</em><sup>T</sup><em>E</em><sub>j</sub><em>R</em> and the Frobenius norm
+    <em>U</em><sup>T</sup><em>E</em><sub>j</sub><em>V</em> and the Frobenius norm
     outside that basis. Compare interventions using the Frobenius cosine of
     their matrix-sign updates and principal angles between their leading
     singular subspaces. Every branch uses the same reference basis.</p>
