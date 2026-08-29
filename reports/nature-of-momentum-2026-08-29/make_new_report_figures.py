@@ -45,7 +45,7 @@ def gains():
     ax.text(
         0,
         1.015,
-        "K6 and K8 are tied at discovery resolution",
+        "K6 and K8 are indistinguishable in these single-seed runs",
         transform=ax.transAxes,
         ha="left",
         va="bottom",
@@ -116,9 +116,9 @@ def flip_screen():
     ax.set_ylim(0.055, 5.2)
     ax.set_yticks([0.1, 0.3, 1, 3], ["0.1×", "0.3×", "1×", "3×"])
     ax.set_xticks(np.arange(2), labels)
-    ax.set_ylabel("curvature after removing momentum", color=INK)
+    ax.set_ylabel("curvature ratio vs bi-Maxwell  (log scale)", color=INK)
     ax.set_title(
-        "The scalar flip correction predicts the wrong direction",
+        "Scalar prediction and measured curvature disagree",
         loc="left",
         fontsize=15,
         color=INK,
@@ -128,7 +128,7 @@ def flip_screen():
     ax.text(
         0,
         1.015,
-        "Eleven-fold higher alternating response predicts lower curvature; the run ended higher",
+        "The measured bar comes from a separately trained momentum-free model",
         transform=ax.transAxes,
         ha="left",
         va="bottom",
