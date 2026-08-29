@@ -4,6 +4,7 @@ import katex from "katex";
 const formulas = {
   normalized_curvature_fit: String.raw`\overline{\widetilde{\lambda}}
     =1.32\,s^{-1.28}`,
+  two_component_history: String.raw`G_t=A_{\mathrm{slow}}s_t+A_{\mathrm{fast}}f_t`,
   local_fourier_coefficient: String.raw`A_{\omega,t}=\frac{2}{L}
     \sum_{\ell=0}^{L-1}G_{t-L+1+\ell}
     e^{-i\omega(t-L+1+\ell)}`,

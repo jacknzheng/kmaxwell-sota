@@ -94,9 +94,9 @@
   several EMA summaries with different decay rates and schedules their mixture
   weights. K6 and K8 denote the six- and eight-summary versions.</p>
   <p>Scheduling the decay of a single EMA recovers about one third of K8's
-  validation-loss improvement over bi-Maxwell. K6 and K8 differ by only
-  0.00011 in these single-seed discovery runs, giving no resolved benefit from
-  the extra two summaries.</p>
+  validation-loss improvement over bi-Maxwell. The K6 and K8 losses are too
+  close to distinguish in a single-seed discovery comparison, so these runs
+  provide no resolved benefit from the extra two summaries.</p>
   <figure>
     <img src="gain_decomposition.png" alt="Scheduled EMA recovers part of the K-Maxwell gain, while scheduled K6 and K8 are nearly tied">
     <figcaption>Validation-loss reduction relative to the matched bi-Maxwell
@@ -115,17 +115,19 @@
   matrix directions. Ideal matrix sign removes a common positive multiplier
   from its input, so temporal weighting matters when it changes the relative
   mixture of those directions.</p>
-  <p>Choose an <em>L</em>-step window of observed gradient matrices and a temporal
-  frequency ω. Its complex matrix Fourier coefficient is</p>
-  <div class="equation">{{display:local_fourier_coefficient}}</div>
-  <p>The sum measures which matrix entries vary coherently at that frequency.
-  For a nonzero, non-Nyquist DFT bin ω = 2π<em>q</em>/<em>L</em>, the factor
-  of two gives the amplitude of an isolated real sinusoid. At other frequencies
-  this defines a local projection, with the usual finite-window leakage. The
-  corresponding local component is</p>
+  <p>A two-component local model is enough to expose the mechanism:</p>
+  <div class="equation">{{display:two_component_history}}</div>
+  <p>Here <em>s</em><sub>t</sub> and <em>f</em><sub>t</sub> are slow and fast
+  scalar variations measured over a chosen window, while
+  <em>A</em><sub>slow</sub> and <em>A</em><sub>fast</sub> are their matrix
+  directions. In the proposed measurement, these objects come from a
+  finite-window Fourier projection of the observed gradient matrices; the
+  exact estimator is in Appendix F.</p>
+  <p>For one harmonic component at frequency ω, write</p>
   <div class="equation">{{display:one_temporal_component}}</div>
-  <p>with the window endpoint suppressed in the notation. Applying temporal
-  weights <em>w</em><sub>k</sub> gives</p>
+  <p>where <em>A</em><sub>ω</sub> is its measured complex coefficient and the
+  window endpoint is suppressed. Applying temporal weights
+  <em>w</em><sub>k</sub> gives</p>
   <div class="equation">{{display:delayed_component_derivation}}</div>
   <p>The minus sign in <em>H</em> comes directly from the delay: replacing
   <em>t</em> by <em>t</em> − <em>k</em> subtracts the phase ω<em>k</em>. Thus
@@ -148,7 +150,9 @@
 
   <h2>3. Curvature constrains the theory</h2>
   <p>The constant-learning-rate runs show an edge-of-stability-like pattern:
-  settled curvature rises as the learning rate falls. On log–log axes, the five
+  settled curvature rises as the learning rate falls. Here edge of stability
+  means that curvature approaches the critical value where fixed-learning-rate
+  dynamics are marginally stable. On log–log axes, the five
   accepted segments fit {{inline:normalized_curvature_fit}}, where <em>s</em>
   is the learning-rate multiplier and
   <span>λ̃</span> is each matrix's leading curvature divided by its
@@ -416,6 +420,18 @@
     <em>r</em> = e<sup>iφ</sup> and scanning φ handles a power law, K-Maxwell,
     or any other realized finite kernel. The period-two formula in the main
     text is the φ = π case.</p>
+  </details>
+  <details>
+    <summary>F. Local Fourier measurement</summary>
+    <p>For an <em>L</em>-step rectangular window ending at step <em>t</em>, the
+    complex matrix coefficient at frequency ω is</p>
+    <div class="equation">{{display:local_fourier_coefficient}}</div>
+    <p class="small">At a nonzero, non-Nyquist DFT bin
+    ω = 2π<em>q</em>/<em>L</em>, the factor of two gives the amplitude of an
+    isolated real sinusoid. At other frequencies this is a projection
+    convention subject to finite-window leakage. The experiment registers
+    <em>L</em>, window shape, frequency bins, and normalization before comparing
+    candidate temporal kernels.</p>
   </details>
   <h3>Technical references</h3>
   <ul class="small">
