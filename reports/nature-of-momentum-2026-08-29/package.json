@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "node render_math.mjs"
+  },
+  "dependencies": {
+    "katex": "0.18.4"
+  }
+}
