@@ -27,6 +27,7 @@
     .equation { margin:1.1rem 0 1.25rem; padding:.5rem 1rem;
       text-align:center; overflow-x:auto; }
     figure { margin:1.8rem 0 2rem; }
+    figure.wide { width:calc(100% + 120px); margin-left:-60px; }
     figure img { width:100%; height:auto; display:block; }
     figcaption { max-width:760px; margin:.65rem auto 0; color:var(--muted);
       font-size:.86rem; line-height:1.48; text-align:center; }
@@ -69,6 +70,7 @@
       .outcome { display:block; max-width:100%; overflow-x:auto; }
       .outcome th, .outcome td { min-width:145px; }
       .equation { max-width:100%; overflow-x:auto; }
+      figure.wide { width:100%; margin-left:0; }
     }
   </style>
 </head>
@@ -76,122 +78,142 @@
   <h1>Toward a principled theory of momentum</h1>
   <p class="stamp">Research memo · 29 August 2026</p>
 
-  <p class="lead">In Muon, momentum acts through temporal averaging and matrix
-  geometry. A temporal filter can rotate the matrix passed to the matrix-sign
-  step and thereby change the update direction.</p>
-  <p class="lead">The NanoGPT runs show that changing one EMA helps, while six
-  EMA states recover more of the gain. Six and eight states are tied at this
-  discovery resolution. The runs leave three causes entangled: the current
-  filter, the stored momentum history, and the model path created by earlier
-  updates.</p>
-  <div class="thesis"><p><strong>Working hypothesis.</strong> Momentum in Muon
-  selects among matrix-valued gradient patterns with different temporal
-  structure. Scheduling helps because the competing patterns change over
-  training.</p></div>
+  <p class="lead">We want a momentum rule whose temporal weighting follows the
+  optimizer's measured state instead of a hand-designed training schedule. The
+  central question is which property of recent gradient history should control
+  that weighting.</p>
+  <div class="thesis"><p><strong>Working hypothesis.</strong> In Muon, the useful
+  state describes how gradient variation at different time scales is oriented
+  within each weight matrix. Momentum changes the relative influence of those
+  directions before the matrix-sign step.</p></div>
 
-  <h2>1. The experimental clue</h2>
-  <p>Scheduling one EMA recovers about one third of the eight-state gain. The
-  six-state K6 and eight-state K8 kernels are tied within the precision of these
-  discovery runs. All candidates use the same Muon update through step 1000.
-  The single-EMA decay then moves from 0.982 to 0.944. K6 and K8 combine EMA
-  states with coefficients that change during training. K-Maxwell denotes this
-  linear-combination family; K6 and K8 use six and eight states. The baseline
-  is the matched bi-Maxwell control: the standard two-EMA kernel switched on at
-  step 1000.</p>
+  <h2>1. Scheduling explains part of the K-Maxwell gain</h2>
+  <p>The comparison varies two freedoms in temporal weighting. A single EMA is
+  one exponentially weighted running summary of recent gradients; scheduling
+  its decay changes its memory length during training. K-Maxwell maintains
+  several EMA summaries with different decay rates and schedules their mixture
+  weights. K6 and K8 denote the six- and eight-summary versions.</p>
+  <p>Scheduling the decay of a single EMA recovers about one third of K8's
+  validation-loss improvement over bi-Maxwell. K6 and K8 differ by only
+  0.00011 in these single-seed discovery runs, giving no resolved benefit from
+  the extra two summaries.</p>
   <figure>
     <img src="gain_decomposition.png" alt="Scheduled EMA recovers part of the K-Maxwell gain, while scheduled K6 and K8 are nearly tied">
     <figcaption>Validation-loss reduction relative to the matched bi-Maxwell
-    control. Single-seed H100 discovery runs; exact losses and the A100
-    comparison appear in Appendix A.</figcaption>
+    control. Every run shares the same model and optimizer state through the
+    step-1000 fork. Exact losses and schedules appear in Appendix A.</figcaption>
   </figure>
-  <p>Against the same A100 bi-Maxwell control used for the power-law comparison,
-  reversing the single-EMA schedule erased the gain and lost substantially.
-  In this fork, longer memory early and shorter memory late outperformed the
-  reverse schedule.</p>
-  <p>Section 4 changes only the current filter while holding the stored history
-  and model state fixed.</p>
-  <p>The scheduled candidate targeted normalized taps
-  <em>w</em><sub>k</sub> ∝ (<em>k</em> + 1)<sup>−γ</sup>, with γ scheduled
-  from 1.28 to 1.66, using a finite ten-EMA approximation. From the step-1000
-  switch to the end of training, the deployed finite-history kernel's average
-  gradient age fell from about 78 to 9 steps; for comparison, the scheduled
-  single EMA above fell from about 52 to 16. The nominal mean-lag match failed,
-  and the candidate also gave much larger responses to alternating and noisy
-  inputs. Test a corrected construction only after the same-state filter
-  test.</p>
+  <p>The remaining endpoint gap has three coupled sources: the temporal weights
+  used at the end, the gradient summaries stored in the momentum buffers, and
+  the model parameters produced by the preceding updates. Each can contribute
+  to K8's lower validation loss. Endpoint training runs therefore establish
+  that scheduling helps and leave the additional K-Maxwell gain causally
+  unassigned.</p>
 
-  <h2>2. Why a temporal filter can change Muon's direction</h2>
-  <p>A filter changes Muon's direction when temporal components point in
-  different matrix directions. Write the local gradient at step <em>t</em> as
-  a sum of components, where <em>A</em><sub>j</sub> is the matrix amplitude and
-  ω<sub>j</sub> is its temporal frequency:</p>
-  <div class="equation">{{display:gradient_modes}}</div>
-  <p>The matrix <em>A</em><sub>j</sub> sets the component's spatial orientation.
-  For momentum weights <em>w</em><sub>k</sub>, define the frequency response as
-  {{inline:H_def}}. The matrix passed to Muon before matrix-sign normalization is</p>
-  <div class="equation">{{display:filtered_modes}}</div>
-  <p>Each component receives its own amplitude change and phase shift. Muon then computes</p>
-  <div class="equation">{{display:muon_update}}</div>
-  <p>For the ideal matrix sign and any positive scalar <em>c</em>,</p>
-  <div class="equation">{{display:msign_scale}}</div>
-  <p>A common positive rescaling of the entire filtered matrix disappears in
-  the ideal matrix-sign normalization. Changing the ratio and phase between
-  two differently oriented components can rotate the singular directions of
-  their sum. For two components at frequencies ω<sub>1</sub> and ω<sub>2</sub>,
-  the filter changes their relative complex weight by</p>
-  <div class="equation">{{display:response_ratio}}</div>
-  <p>Average lag and response to white-noise input are scalar summaries;
-  neither records matrix orientation. The diagnostic therefore records each
-  time scale's contribution to the matrix directions before the matrix-sign
-  step.</p>
+  <h2>2. Temporal weighting can become direction selection</h2>
+  <p>The mechanism hypothesis is that different time scales occupy different
+  matrix directions. Ideal matrix sign removes a common positive multiplier
+  from its input, so temporal weighting matters when it changes the relative
+  mixture of those directions.</p>
+  <p>Choose an <em>L</em>-step window of observed gradient matrices and a temporal
+  frequency ω. Its complex matrix Fourier coefficient is</p>
+  <div class="equation">{{display:local_fourier_coefficient}}</div>
+  <p>The sum measures which matrix entries vary coherently at that frequency.
+  For a nonzero, non-Nyquist DFT bin ω = 2π<em>q</em>/<em>L</em>, the factor
+  of two gives the amplitude of an isolated real sinusoid. At other frequencies
+  this defines a local projection, with the usual finite-window leakage. The
+  corresponding local component is</p>
+  <div class="equation">{{display:one_temporal_component}}</div>
+  <p>with the window endpoint suppressed in the notation. Applying temporal
+  weights <em>w</em><sub>k</sub> gives</p>
+  <div class="equation">{{display:delayed_component_derivation}}</div>
+  <p>The minus sign in <em>H</em> comes directly from the delay: replacing
+  <em>t</em> by <em>t</em> − <em>k</em> subtracts the phase ω<em>k</em>. Thus
+  <em>H</em>(ω) gives both the amplitude change and phase shift applied to that
+  component.</p>
+  <p>With two measured components whose matrix coefficients point in different
+  singular directions, the matrix presented to Muon is</p>
+  <div class="equation">{{display:two_temporal_components}}</div>
+  <p>Muon then takes {{inline:muon_update}}. For ideal matrix sign,
+  {{inline:msign_scale}}; common scale disappears. Changing the temporal
+  weights changes the complex ratio
+  {{inline:response_ratio}}. That ratio changes how much each matrix direction
+  contributes to <em>Z</em><sub>t</sub> and can rotate
+  <em>P</em><sub>t</sub>.</p>
+  <p>The candidate state for adaptive momentum is therefore a
+  <em>time-scale-to-direction map</em>: which temporal bands contribute to which
+  matrix directions, and how a candidate weighting would rotate the resulting
+  Muon update. Whether this map predicts useful rotations is an empirical
+  question.</p>
 
-  <h2>3. Curvature suggests a candidate boundary condition</h2>
-  <p>Across the accepted constant-learning-rate runs, measured equilibrium
-  curvature rises as the learning rate falls. This resembles the
-  edge-of-stability pattern and motivates a scalar reference calculation.</p>
+  <h2>3. Curvature constrains the theory</h2>
+  <p>The constant-learning-rate runs show an edge-of-stability-like pattern:
+  settled curvature rises as the learning rate falls. On log–log axes, the five
+  accepted segments fit {{inline:normalized_curvature_fit}}, where <em>s</em>
+  is the learning-rate multiplier and
+  <span>λ̃</span> is each matrix's leading curvature divided by its
+  step-1000 value. The ordinary inverse-multiplier reference has slope −1.
+  Window-selection sensitivity
+  puts the fitted exponent near −1.28 ± 0.1, consistent with the earlier
+  registered estimate of −1.3 ± 0.2.</p>
   <figure>
     <img src="eos_pinning.png" alt="Equilibrium curvature rises as the learning-rate multiplier falls across five steady regimes">
     <figcaption>Five constant-learning-rate segments met the steady-regime
     criterion. The points show median leading curvature, normalized to each
-    matrix's step-1000 value; the dashed line has inverse-learning-rate scaling.</figcaption>
+    matrix's step-1000 value. The orange curve is an ordinary least-squares fit
+    in log space. Fit residuals alone give a slope standard error of 0.034;
+    moving the settled windows gives the larger uncertainty of roughly 0.1.
+    The dashed line fixes the slope at −1 and fits its vertical
+    normalization.</figcaption>
   </figure>
-  <p>The product of learning-rate multiplier and measured curvature ranges from
-  1.54 to 1.15, so the inverse trend is clear while the constant drifts. A
-  scalar test asks whether the filter contributes to this inverse relation.
-  The plotted multiplier scales the base step size, so proportional changes in
-  the multiplier are proportional changes in η below.</p>
-  <p>Setting Muon's matrix-sign step aside, a classical linear reference model
-  predicts how the kernel changes critical curvature; Section 4 tests whether
-  that prediction survives the matrix-sign normalization. On one quadratic
-  direction, let <em>g</em><sub>t</sub> = λ<em>x</em><sub>t</sub>
-  and consider</p>
-  <div class="equation">{{display:scalar_update}}</div>
-  <p>The factor <em>a</em> is the multiplicative weight-decay factor. At the
-  period-two boundary, the state flips sign each step:
-  <span>{{inline:period2_state}}</span>. Substitution gives</p>
-  <div class="equation">{{display:period2_substitution}}</div>
-  <p>Define the response to an alternating signal as</p>
-  <div class="equation">{{display:flip_response}}</div>
-  <p>The period-two boundary therefore satisfies</p>
-  <div class="equation">{{display:eos_momentum}}</div>
-  <p>For a single decay, this gives the period-two boundary. For a
-  multi-timescale kernel, scan the other frequencies as well. If period two is
-  the binding mode, the scalar model predicts
-  {{inline:lambda_inverse_F}}; the same-state comparison tests that prediction.</p>
-  <figure>
-    <img src="flip_prediction_screen.png" alt="Removing momentum yields a curvature change opposite to the scalar flip-transmission prediction">
-    <figcaption>Removing momentum raises the alternating response by about
-    eleven-fold. The scalar formula predicts roughly eleven-fold lower
-    curvature; the separate momentum-free trajectory ended about three-fold
-    higher, with weight norms about 0.31 times the reference trajectory's.
-    The bars come from separately trained models, so this comparison is
-    diagnostic.</figcaption>
+  <p>The aggregate exponent hides substantial variation across matrix types.
+  Attention Q, K, and V and the MLP output have fitted slopes from −1.09 to
+  −1.34; attention output, MLP input, and the language-model head are
+  shallower, from −0.65 to −0.87.</p>
+  <figure class="wide">
+    <img src="pinning_by_matrix_type.png" alt="Two-by-four log-log curvature plots for attention K, attention output, attention Q, attention V, MLP input, MLP output, embedding, and language-model head, with residual-block depth shown by color">
+    <figcaption>Each point is one matrix's settled curvature, normalized by its
+    step-1000 value; color denotes residual-block depth. The solid line repeats
+    the aggregate −1.28 fit and the dashed line has slope −1. The embedding
+    fit is unreliable because adjacent-checkpoint spikes reach 15×. The
+    language-model head is well behaved, although its normalization baseline
+    has 6.1% estimated error. Shallow blocks sit above the aggregate trend at
+    the largest learning rates; whether this reflects their dynamics or small
+    step-1000 baselines has not been checked.</figcaption>
   </figure>
-  <p>The scalar curvature prediction disagrees with the measured curvature in
-  this separately trained model. The next test changes filter coefficients at
-  a shared checkpoint and measures Muon's direction before the paths diverge.</p>
+  <p>The fitted exponent describes these five accepted segments. An absolute
+  overlay of the SGD rule ηλ = 2 requires physical learning-rate and curvature
+  units. Here the horizontal coordinate is a multiplier on the base step size,
+  and the vertical coordinate is a median of separately normalized per-matrix
+  curvatures, so the plot supports a slope comparison.</p>
+  <p>A one-dimensional quadratic shows how a temporal kernel moves the
+  classical period-two stability boundary. Let <em>x</em><sub>t</sub> be the
+  displacement along one Hessian eigenvector of physical curvature λ, let
+  η = <em>s</em>η<sub>0</sub> be the physical step size, and let ρ be the
+  decoupled weight-decay coefficient. Setting Muon's matrix-sign operation
+  aside gives the scalar momentum update</p>
+  <div class="equation">{{display:scalar_quadratic_derivation}}</div>
+  <p>This linear recurrence is stable when every characteristic root lies
+  inside the unit circle. A period-two boundary is the part of that boundary
+  where the first root reaches <em>r</em> = −1, so a perturbation alternates sign
+  without shrinking. Dividing every delayed coordinate by
+  <em>x</em><sub>t</sub> removes the parity of <em>t</em>:</p>
+  <div class="equation">{{display:period2_full_derivation}}</div>
+  <p>For ordinary gradient descent, <em>w</em><sub>0</sub> = 1 and
+  <em>a</em> = 1, recovering ηλ<sub>crit</sub> = 2. For a general temporal
+  kernel, the inverse-<em>F</em> prediction applies only when period two is the
+  first mode to become unstable.</p>
+  <p>The scalar recurrence omits the operation that defines Muon: matrix sign
+  couples directions and removes their common amplitude. Its equation supplies
+  a reference for a controlled test, while the measured curvature trend
+  supplies the empirical constraint.</p>
+  <p>The existing momentum-free comparison is a late-regime, cross-trajectory
+  screen. It forked at step 2400 and measured steps 2432–3231, as the
+  learning-rate cooldown removed most period-two gradient energy; the compared
+  model trajectories also had substantially different weight norms. The
+  earlier regime where the alternating mode is active remains untested.</p>
 
-  <h2>4. A same-state test of matrix selection</h2>
+  <h2>4. Does current temporal weighting rotate Muon's update?</h2>
   <p>K-Maxwell and the scheduled EMA arrive late in training with different
   filters, stored momentum, and model states. A coefficient-only intervention
   at a shared checkpoint isolates the filter's current action from stored
@@ -216,10 +238,10 @@
   measurement window. The immediate branch difference then estimates the
   changed temporal response.</p>
   <p>Discovery batches choose a pair predicted to rotate Muon's matrix-sign
-  update. At the intervention step, <em>U</em><sub>w</sub> is computed from the
+  update. At the intervention step, <em>P</em><sub>w</sub> is computed from the
   shared training batch and history. Independent held-out batches estimate the
   gradient <em>g</em>, Hessian ℋ, and predicted one-step loss change for that
-  fixed update. With {{inline:Uw_def}}, second-order expansion gives</p>
+  fixed update. With {{inline:Pw_def}}, second-order expansion gives</p>
   <div class="equation">{{display:taylor_local}}</div>
   <p>The first term measures descent alignment; the second measures curvature
   cost. Use this estimate to rank candidates; use the fixed continuation to
@@ -253,7 +275,7 @@
   loss or curvature during the continuation. Attribution of the original
   K-Maxwell gain requires a full factorial training study.</p>
 
-  <h2>5. From an expressive basis to a small controller</h2>
+  <h2>5. From measurement to a small controller</h2>
   <p>If the same-state test identifies a reproducible effect, retain the
   smallest EMA bank that preserves it. The implementation exposes at most one
   user-facing hyperparameter.</p>
@@ -264,25 +286,27 @@
   Constrain the online EMA bank to a bounded response to white-noise input. Use
   the current gradient
   <em>g</em><sub>t</sub>, Hessian ℋ<sub>t</sub>, and candidate Muon update
-  <em>U</em><sub>w</sub> to choose weights that minimize expected one-step loss
+  <em>P</em><sub>w</sub> to choose weights that minimize expected one-step loss
   change conditional on that state:</p>
   <div class="equation">{{display:controller_objective}}</div>
   <p>Use the optimized weight vectors at the three checkpoints as observations.
   Test whether one measured state variable predicts those weights, then whether
   the resulting rule predicts held-out rotation and loss or curvature. Keep
   only features that pass both tests at all three checkpoints.</p>
-  <p>At one shared checkpoint, vary alternating response <em>F</em> while holding
-  the other summaries fixed. If curvature follows 1/<em>F</em>, include
-  <em>F</em> in the stability model; otherwise prioritize matrix-direction
-  features.</p>
+  <p>The scalar reference gets a separate same-state test between steps 1500
+  and 2000, while period-two gradient energy is still large. Vary alternating
+  response <em>F</em> while holding DC response, average lag, and white-noise
+  response fixed; then measure the immediate matrix-sign rotation and the
+  curvature reached during the continuation.</p>
   <ol class="roadmap">
     <li><strong>Same-state response.</strong> Compare kernels matched on average
       lag and their responses to sign-alternating and white-noise inputs at
       early, middle, and late checkpoints.</li>
     <li><strong>Post-fork outcome.</strong> Run the pre-specified fixed window and
       record first-step rotation, loss, and curvature.</li>
-    <li><strong>Scalar stability check.</strong> At one shared checkpoint, vary
-      alternating response <em>F</em> while holding the other summaries fixed.</li>
+    <li><strong>Scalar stability check.</strong> At a step-1500–2000 checkpoint,
+      vary alternating response <em>F</em> while holding the other summaries
+      fixed.</li>
     <li><strong>State selection.</strong> Test whether one measured state variable
       predicts the optimized weights and held-out rotation or loss across all
       three checkpoints.</li>
@@ -310,20 +334,26 @@
         <tr><td>scheduled K8</td><td>3.27250</td><td>+0.00297</td></tr>
       </tbody>
     </table>
-    <p class="small">These are matched H100 single-seed discovery runs. The
-    corresponding scheduled-EMA gain on the A100 stack was +0.00068, so the
-    one-third comparison is an approximate scale. The scheduled power law
-    ended at 3.29123 against its separate A100 control at 3.27836. The reversed
-    single-EMA schedule ended at 3.28456 on that control, a loss of 0.00620.</p>
+    <p class="small">These are matched single-seed discovery runs forked from
+    the same step-1000 state. The scheduled single EMA moves from decay 0.982
+    to 0.944. Its improvement was +0.00068 in a second stack, so the one-third
+    comparison is an approximate scale.</p>
     <p class="small">The bi-Maxwell control uses EMA decays 0.85 and 0.98 with
     mixture weights 0.4385 and 0.5615 after the step-1000 switch.</p>
+    <p class="small">A separate scheduled power-law approximation lost to its
+    control, but its realized average lag and alternating/noise responses
+    missed the intended match. That run does not compare kernel families at
+    fixed descriptors.</p>
   </details>
   <details>
     <summary>B. Curvature measurements and evidence limits</summary>
     <p>The steady points in the figure are
-    (η, λ) = (0.60, 2.56), (0.77, 1.82), (1.15, 1.147), (1.30, 0.92),
+    (learning-rate multiplier, normalized median curvature) = (0.60, 2.56),
+    (0.77, 1.82), (1.15, 1.147), (1.30, 0.92),
     and (1.70, 0.675). Two lower-learning-rate runs failed the stated steady-regime
-    criterion and were excluded.</p>
+    criterion and were excluded. The accepted windows were steps 3000–3249,
+    2500–3000, 2125–2375, 1375–1625, and 1250–1500, respectively; the
+    <em>s</em> = 1.30 window was still drifting downward at its edge.</p>
     <p class="small">Curvature is the median leading eigenvalue of each Muon
     matrix's diagonal Hessian block on a fixed batch, normalized to that
     matrix's step-1000 baseline. The transient window is 250 steps after a
@@ -345,7 +375,24 @@
     sign. The intervention uses the deployed implementation.</p>
   </details>
   <details>
-    <summary>C. Statistical scope</summary>
+    <summary>C. Late-regime momentum-free screen</summary>
+    <figure>
+      <img src="flip_prediction_screen.png" alt="A late momentum-free curvature screen compared with the classical inverse-F reference">
+      <figcaption>The momentum-free branch forked at step 2400; curvature was
+      measured over steps 2432–3231, when period-two gradient energy was fading
+      under the learning-rate cooldown. Removing momentum raised
+      <em>F</em> by about eleven-fold. The classical scalar reference would put
+      curvature near 0.09 times the bi-Maxwell value; the separately trained
+      momentum-free trajectory reached about three times the value, with
+      weight norms about 0.31 times the reference trajectory's.</figcaption>
+    </figure>
+    <p class="small">This screen changes the optimizer, stored history, model
+    trajectory, and weight norms together. It motivates a same-state test in
+    the earlier period-two regime and carries no causal attribution to
+    <em>F</em>.</p>
+  </details>
+  <details>
+    <summary>D. Statistical scope</summary>
     <p class="small">The training comparisons use one seed and one checkpoint
     fork per candidate, so the one-third decomposition is a scale estimate.
     Published eight-seed results show gains from scheduled EMA mixtures on
@@ -358,13 +405,14 @@
     useful.</p>
   </details>
   <details>
-    <summary>D. Full scalar boundary for an arbitrary kernel</summary>
+    <summary>E. Full scalar boundary for an arbitrary kernel</summary>
     <p>Substitute a trial mode <em>x</em><sub>t</sub> = <em>r</em><sup>t</sup>
     into the scalar update from Section 3. Dividing by
     <em>x</em><sub>t</sub> gives</p>
     <div class="equation">{{display:general_characteristic}}</div>
-    <p class="small">The stability boundary is the first root to reach
-    |<em>r</em>| = 1 as ηλ increases. Setting
+    <p class="small">For a curvature scan at fixed η and ρ, hence fixed
+    <em>a</em>, the stability boundary is the first root to reach
+    |<em>r</em>| = 1 as λ increases. Setting
     <em>r</em> = e<sup>iφ</sup> and scanning φ handles a power law, K-Maxwell,
     or any other realized finite kernel. The period-two formula in the main
     text is the φ = π case.</p>
