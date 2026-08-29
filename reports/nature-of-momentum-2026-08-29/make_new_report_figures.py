@@ -60,16 +60,28 @@ def pinning():
     eta = np.array([0.60, 0.77, 1.15, 1.30, 1.70])
     curvature = np.array([2.56, 1.82, 1.147, 0.92, 0.675])
     ref_eta = np.geomspace(0.56, 1.82, 200)
-    ref_curve = 1.33 / ref_eta
+    log_eta = np.log(eta)
+    log_curvature = np.log(curvature)
+    slope, log_intercept = np.polyfit(log_eta, log_curvature, 1)
+    fitted_curve = np.exp(log_intercept) * ref_eta**slope
+    inverse_intercept = np.exp(np.mean(log_curvature + log_eta))
+    inverse_curve = inverse_intercept / ref_eta
 
     fig, ax = plt.subplots(figsize=(8.4, 4.85))
     ax.plot(
         ref_eta,
-        ref_curve,
+        inverse_curve,
         linestyle="--",
         linewidth=2.0,
         color="#98a2b3",
-        label="inverse-learning-rate reference",
+        label=f"slope −1 reference:  {inverse_intercept:.2f} · s⁻¹",
+    )
+    ax.plot(
+        ref_eta,
+        fitted_curve,
+        linewidth=2.4,
+        color=ORANGE,
+        label=rf"log–log fit:  {np.exp(log_intercept):.2f} · $s^{{{slope:.2f}}}$",
     )
     ax.scatter(eta, curvature, s=78, color=PURPLE, zorder=3)
     ax.set_xscale("log")
@@ -78,10 +90,10 @@ def pinning():
     ax.set_ylim(0.58, 2.95)
     ax.set_xticks(eta, ["0.60", "0.77", "1.15", "1.30", "1.70"])
     ax.set_yticks([0.6, 0.8, 1.0, 1.5, 2.0, 3.0], ["0.6", "0.8", "1.0", "1.5", "2.0", "3.0"])
-    ax.set_xlabel("learning-rate multiplier", color=INK)
+    ax.set_xlabel("learning-rate multiplier  s", color=INK)
     ax.set_ylabel("equilibrium curvature  (relative units)", color=INK)
     ax.set_title(
-        "Muon curvature rises as the learning rate falls",
+        "Equilibrium curvature scales approximately as s⁻¹·²⁸",
         loc="left",
         fontsize=15,
         color=INK,
@@ -91,7 +103,7 @@ def pinning():
     ax.text(
         0,
         1.015,
-        "Five constant-learning-rate segments meeting the steady-regime criterion",
+        "Five accepted constant-learning-rate segments; both axes are logarithmic",
         transform=ax.transAxes,
         ha="left",
         va="bottom",
@@ -104,7 +116,7 @@ def pinning():
 
 
 def flip_screen():
-    labels = ["scalar prediction", "measured"]
+    labels = ["classical 1/F\nreference", "measured late\ntrajectory"]
     values = [1 / 11, 3]
     colors = ["#9aa5b1", RED]
 
@@ -118,7 +130,7 @@ def flip_screen():
     ax.set_xticks(np.arange(2), labels)
     ax.set_ylabel("curvature ratio vs bi-Maxwell  (log scale)", color=INK)
     ax.set_title(
-        "Scalar prediction and measured curvature disagree",
+        "The momentum-free screen was measured after period-2 energy decayed",
         loc="left",
         fontsize=15,
         color=INK,
@@ -128,7 +140,7 @@ def flip_screen():
     ax.text(
         0,
         1.015,
-        "The measured bar comes from a separately trained momentum-free model",
+        "Fork at step 2400; curvature measured over steps 2432–3231",
         transform=ax.transAxes,
         ha="left",
         va="bottom",

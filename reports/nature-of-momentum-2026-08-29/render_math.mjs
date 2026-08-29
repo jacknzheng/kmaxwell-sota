@@ -2,22 +2,52 @@ import fs from "node:fs";
 import katex from "katex";
 
 const formulas = {
-  gradient_modes: String.raw`G_t=\sum_j \operatorname{Re}\!\left(A_j e^{i\omega_j t}\right)`,
-  filtered_modes: String.raw`Z_t=\sum_{k\ge 0}w_kG_{t-k}
-    =\sum_j\operatorname{Re}\!\left(H(\omega_j)A_je^{i\omega_jt}\right)`,
+  normalized_curvature_fit: String.raw`\overline{\widetilde{\lambda}}
+    =1.32\,s^{-1.28}`,
+  local_fourier_coefficient: String.raw`A_{\omega,t}=\frac{2}{L}
+    \sum_{\ell=0}^{L-1}G_{t-L+1+\ell}
+    e^{-i\omega(t-L+1+\ell)}`,
+  one_temporal_component: String.raw`G_t^{(\omega)}=\operatorname{Re}\!\left(A_\omega e^{i\omega t}\right)`,
+  delayed_component_derivation: String.raw`\begin{aligned}
+    G_{t-k}^{(\omega)}
+      &=\operatorname{Re}\!\left(A_\omega e^{i\omega(t-k)}\right)\\
+      &=\operatorname{Re}\!\left(e^{-i\omega k}A_\omega e^{i\omega t}\right),\\[4pt]
+    Z_t^{(\omega)}
+      &=\sum_{k\ge0}w_kG_{t-k}^{(\omega)}\\
+      &=\operatorname{Re}\!\left(H(\omega)A_\omega e^{i\omega t}\right),
+      \qquad H(\omega)=\sum_{k\ge0}w_ke^{-i\omega k}.
+    \end{aligned}`,
+  two_temporal_components: String.raw`Z_t=\operatorname{Re}\!\left(
+    H(\omega_1)A_1e^{i\omega_1t}+H(\omega_2)A_2e^{i\omega_2t}
+    \right)`,
   H_def: String.raw`H(\omega)=\sum_{k\ge0}w_ke^{-i\omega k}`,
-  muon_update: String.raw`U_t=\operatorname{msign}(Z_t)`,
+  muon_update: String.raw`P_t=\operatorname{msign}(Z_t)`,
   response_ratio: String.raw`\frac{H(\omega_1)}{H(\omega_2)}`,
-  scalar_update: String.raw`x_{t+1}=a x_t-\eta\lambda\sum_{k\ge0}w_kx_{t-k}`,
+  scalar_quadratic_derivation: String.raw`\begin{aligned}
+    L(x)&=\tfrac12\lambda x^2,
+      &\nabla L(x_t)&=\lambda x_t,\\
+    m_t&=\sum_{k\ge0}w_k\lambda x_{t-k},\\
+    x_{t+1}&=(1-\eta\rho)x_t-\eta m_t\\
+      &=a x_t-\eta\lambda\sum_{k\ge0}w_kx_{t-k},
+      &a&=1-\eta\rho.
+    \end{aligned}`,
+  period2_full_derivation: String.raw`\begin{aligned}
+    x_t&=c(-1)^t,
+      &\frac{x_{t+1}}{x_t}&=-1,
+      &\frac{x_{t-k}}{x_t}&=(-1)^k,\\
+    -1&=a-\eta\lambda\sum_{k\ge0}(-1)^kw_k,\\
+    \eta\lambda_{\mathrm{crit}}F&=1+a,
+      &F=H(\pi)&=\sum_{k\ge0}(-1)^kw_k.
+    \end{aligned}`,
   period2_state: String.raw`x_{t+1}=-x_t,\quad x_{t-k}=(-1)^kx_t`,
   period2_substitution: String.raw`-1=a-\eta\lambda\sum_{k\ge0}(-1)^kw_k`,
-  Uw_def: String.raw`U_w=\operatorname{msign}(Z_w)`,
-  taylor_local: String.raw`L(\theta-\eta U_w)-L(\theta)\approx
-    -\eta\langle g,U_w\rangle
-    +\frac{\eta^2}{2}\langle U_w,\mathcal H U_w\rangle`,
+  Pw_def: String.raw`P_w=\operatorname{msign}(Z_w)`,
+  taylor_local: String.raw`L(\theta-\eta P_w)-L(\theta)\approx
+    -\eta\langle g,P_w\rangle
+    +\frac{\eta^2}{2}\langle P_w,\mathcal H P_w\rangle`,
   controller_objective: String.raw`w^*(s_t)=\arg\min_w\mathbb E\!\left[
-    -\eta_t\langle g_t,U_w\rangle
-    +\frac{\eta_t^2}{2}\langle U_w,\mathcal H_tU_w\rangle
+    -\eta_t\langle g_t,P_w\rangle
+    +\frac{\eta_t^2}{2}\langle P_w,\mathcal H_tP_w\rangle
     \,\middle|\,s_t\right]`,
   general_characteristic: String.raw`r-a+\eta\lambda\sum_{k\ge0}w_kr^{-k}=0`,
   dc_normalization: String.raw`H(0)=\sum_{k\ge0}w_k=1`,
