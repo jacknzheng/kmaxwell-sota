@@ -88,15 +88,16 @@
   directions before the matrix-sign step.</p></div>
 
   <h2>1. Scheduling explains part of the K-Maxwell gain</h2>
-  <p>The comparison varies two freedoms in temporal weighting. A single EMA is
-  one exponentially weighted running summary of recent gradients; scheduling
-  its decay changes its memory length during training. K-Maxwell maintains
+  <p>Scheduling the decay of one exponential moving average (EMA) of past
+  gradients recovers about one third of the validation-loss improvement of
+  K8—an eight-EMA K-Maxwell mixture—over bi-Maxwell, the matched two-EMA
+  control. K6, the six-EMA mixture, and K8 are too close to distinguish in a
+  single-seed discovery comparison, so these runs provide no resolved benefit
+  from the extra two summaries.</p>
+  <p>The comparison varies two freedoms in temporal weighting. Scheduling one
+  EMA changes its memory length during training. K-Maxwell instead maintains
   several EMA summaries with different decay rates and schedules their mixture
-  weights. K6 and K8 denote the six- and eight-summary versions.</p>
-  <p>Scheduling the decay of a single EMA recovers about one third of K8's
-  validation-loss improvement over bi-Maxwell. The K6 and K8 losses are too
-  close to distinguish in a single-seed discovery comparison, so these runs
-  provide no resolved benefit from the extra two summaries.</p>
+  weights.</p>
   <figure>
     <img src="gain_decomposition.png" alt="Scheduled EMA recovers part of the K-Maxwell gain, while scheduled K6 and K8 are nearly tied">
     <figcaption>Validation-loss reduction relative to the matched bi-Maxwell
@@ -125,9 +126,9 @@
   exact estimator is in Appendix F.</p>
   <p>For one harmonic component at frequency ω, write</p>
   <div class="equation">{{display:one_temporal_component}}</div>
-  <p>where <em>A</em><sub>ω</sub> is its measured complex coefficient and the
-  window endpoint is suppressed. Applying temporal weights
-  <em>w</em><sub>k</sub> gives</p>
+  <p>We suppress the window endpoint in <em>A</em><sub>ω</sub> and assume that
+  this local coefficient is approximately stationary over the kernel's
+  effective memory. Applying temporal weights <em>w</em><sub>k</sub> gives</p>
   <div class="equation">{{display:delayed_component_derivation}}</div>
   <p>The minus sign in <em>H</em> comes directly from the delay: replacing
   <em>t</em> by <em>t</em> − <em>k</em> subtracts the phase ω<em>k</em>. Thus
@@ -136,8 +137,9 @@
   <p>With two measured components whose matrix coefficients point in different
   singular directions, the matrix presented to Muon is</p>
   <div class="equation">{{display:two_temporal_components}}</div>
-  <p>Muon then takes {{inline:muon_update}}. For ideal matrix sign,
-  {{inline:msign_scale}}; common scale disappears. Changing the temporal
+  <p>The kernel changes Muon's direction through relative component weights.
+  Muon takes {{inline:muon_update}}, and ideal matrix sign satisfies
+  {{inline:msign_scale}}, so common scale disappears. Changing the temporal
   weights changes the complex ratio
   {{inline:response_ratio}}. That ratio changes how much each matrix direction
   contributes to <em>Z</em><sub>t</sub> and can rotate
@@ -176,14 +178,20 @@
   shallower, from −0.65 to −0.87.</p>
   <figure class="wide">
     <img src="pinning_by_matrix_type.png" alt="Two-by-four log-log curvature plots for attention K, attention output, attention Q, attention V, MLP input, MLP output, embedding, and language-model head, with residual-block depth shown by color">
-    <figcaption>Each point is one matrix's settled curvature, normalized by its
-    step-1000 value; color denotes residual-block depth. The solid line repeats
-    the aggregate −1.28 fit and the dashed line has slope −1. The embedding
-    fit is unreliable because adjacent-checkpoint spikes reach 15×. The
-    language-model head is well behaved, although its normalization baseline
-    has 6.1% estimated error. Shallow blocks sit above the aggregate trend at
-    the largest learning rates; whether this reflects their dynamics or small
-    step-1000 baselines has not been checked.</figcaption>
+    <figcaption>Panels, left to right: attention K, attention output projection,
+    attention Q, attention V; MLP input projection, MLP output projection,
+    token embedding, and language-model output projection. Thus
+    <code>attn.proj</code>, <code>mlp.proj</code>, and
+    <code>proj.weight</code> refer to three different matrices. Each colored
+    point is one residual-block matrix; the two black-dot panels contain the
+    single embedding and output matrices. Curvature is normalized by each
+    matrix's step-1000 value. The solid line repeats the aggregate −1.28 fit
+    and the dashed line has slope −1. The embedding fit is unreliable because
+    adjacent-checkpoint spikes reach 15×. The output matrix is well behaved,
+    although its normalization baseline has 6.1% estimated error. Shallow
+    blocks sit above the aggregate trend at the largest learning rates;
+    whether this reflects their dynamics or small step-1000 baselines has not
+    been checked.</figcaption>
   </figure>
   <p>The fitted exponent describes these five accepted segments. An absolute
   overlay of the SGD rule ηλ = 2 requires physical learning-rate and curvature
@@ -207,40 +215,50 @@
   <em>a</em> = 1, recovering ηλ<sub>crit</sub> = 2. For a general temporal
   kernel, the inverse-<em>F</em> prediction applies only when period two is the
   first mode to become unstable.</p>
+  <p>The deployed kernels occupy a narrow range of alternating responses:
+  bi-Maxwell has <em>F</em> ≈ 0.089, K8 spans 0.061–0.083 during its schedule,
+  and the winning scheduled EMA spans approximately 0.059–0.077. The scalar
+  reference therefore predicts only about a 1.5× spread in critical curvature
+  among them.</p>
   <p>The scalar recurrence omits the operation that defines Muon: matrix sign
   couples directions and removes their common amplitude. Its equation supplies
   a reference for a controlled test, while the measured curvature trend
   supplies the empirical constraint.</p>
   <p>The existing momentum-free comparison is a late-regime, cross-trajectory
-  screen. It forked at step 2400 and measured steps 2432–3231, as the
-  learning-rate cooldown removed most period-two gradient energy; the compared
-  model trajectories also had substantially different weight norms. The
-  earlier regime where the alternating mode is active remains untested.</p>
+  screen. Its classical reference was 0.09× the bi-Maxwell curvature, while
+  the measured momentum-free trajectory reached 3×. The fork began at step
+  2400 and measured steps 2432–3231, as the learning-rate cooldown removed most
+  period-two gradient energy; the compared model trajectories also had
+  substantially different weight norms. The earlier regime where the
+  alternating mode is active remains untested.</p>
 
   <h2>4. Does current temporal weighting rotate Muon's update?</h2>
   <p>K-Maxwell and the scheduled EMA arrive late in training with different
-  filters, stored momentum, and model states. A coefficient-only intervention
-  at a shared checkpoint isolates the filter's current action from stored
-  history and model state.</p>
+  temporal kernels—the weights they assign to stored gradient summaries—and
+  with different stored momentum and model states. A coefficient-only
+  intervention at a shared checkpoint isolates the current temporal weighting
+  from stored history and model state.</p>
   <div class="flow" aria-label="Same-state intervention design">
     <div class="node"><strong>Shared checkpoint:</strong><br>Same model, batch, optimizer state, and EMA buffers</div>
     <div class="arrow">→</div>
-    <div class="node"><strong>Filter intervention:</strong><br>Change only the EMA mixture weights</div>
+    <div class="node"><strong>Kernel intervention:</strong><br>Change only the EMA mixture weights</div>
     <div class="arrow">→</div>
     <div class="node"><strong>Measurements:</strong><br>First-step update rotation; loss and curvature over the fixed window</div>
   </div>
   <p>At early, middle, and late checkpoints, two unchanged controls and two
-  intervention branches copy the model weights, learning rate, weight decay,
-  data order, Muon state, Adam state, and every other pre-fork state. A common
-  EMA bank stores identical filtered summaries of the shared raw gradient
-  history. Candidate kernels are different linear combinations of that bank.
+  intervention branches copy the entire training state: model, Muon and Adam
+  states, data position, and schedules. A common EMA bank stores identical
+  summaries of the shared raw gradient history, and candidate kernels are
+  different linear combinations of that bank.
   At each checkpoint, every candidate is normalized using the finite gradient
   history available there so {{inline:dc_normalization}}; a constant gradient
-  passes unchanged and the common scale is fixed. Hold each candidate's
-  average lag, response to sign-alternating inputs, and response to white-noise
-  inputs within pre-specified tolerances. Report their drift over the fixed
-  measurement window. The immediate branch difference then estimates the
-  changed temporal response.</p>
+  passes unchanged and the common scale is fixed. Average lag
+  {{inline:mean_age}} is the kernel's mean gradient age. White-noise response
+  {{inline:noise_gain}} is its output variance for independent unit-variance
+  inputs; alternating response is <em>F</em> from Section 3. Hold all three
+  within pre-specified tolerances and report their drift over the fixed window.
+  The immediate branch difference then estimates the changed temporal
+  response.</p>
   <p>Discovery batches choose a pair predicted to rotate Muon's matrix-sign
   update. At the intervention step, <em>P</em><sub>w</sub> is computed from the
   shared training batch and history. Independent held-out batches estimate the
@@ -250,12 +268,10 @@
   <p>The first term measures descent alignment; the second measures curvature
   cost. Use this estimate to rank candidates; use the fixed continuation to
   test whether the ranking predicts loss.</p>
-  <p>Use the unchanged control's pre-normalization matrix as a common basis. For
-  each EMA stream and intervention matrix, record the projection within that
-  basis and the residual outside it. Measure update rotation with the cosine
-  between flattened matrix-sign updates and the angle between their leading
-  singular subspaces. These readouts identify which time scales changed the
-  update direction.</p>
+  <p>Use the unchanged control's singular vectors as a common basis to attribute
+  rotation to EMA time scales. Record each stream's projection and residual,
+  then measure update rotation by matrix cosine and leading-subspace angle;
+  Appendix G specifies the readout.</p>
   <p>The experiment begins with an offline response map across the three
   checkpoints. The pair with the clearest held-out difference then enters
   fixed-window continuations alongside duplicate controls. The continuation measures
@@ -268,14 +284,14 @@
   <table class="outcome">
     <thead><tr><th>Observation</th><th>Conclusion</th><th>Research decision</th></tr></thead>
     <tbody>
-      <tr><td>Rotation, more negative predicted loss change, and a continuation advantage</td><td>Supports a first-step filter effect that predicts lower continuation loss</td><td>Derive a state-driven controller from the local objective</td></tr>
+      <tr><td>Rotation, more negative predicted loss change, and a continuation advantage</td><td>Supports a first-step temporal-weighting effect that predicts lower continuation loss</td><td>Derive a state-driven controller from the local objective</td></tr>
       <tr><td>Rotation, followed by tied or reversed continuations</td><td>The local score fails to predict continuation loss</td><td>Find which measured interaction predicts rotations that improve continuation loss</td></tr>
-      <tr><td>Rotation exceeds the duplicate-control cosine spread but remains small, with tied continuations</td><td>The current filter has a resolved first-step effect without a detected continuation benefit</td><td>Test whether later state interactions determine which rotations help</td></tr>
+      <tr><td>Rotation exceeds the duplicate-control cosine spread but remains small, with tied continuations</td><td>The current kernel has a resolved first-step effect without a detected continuation benefit</td><td>Test whether later state interactions determine which rotations help</td></tr>
       <tr><td>Small rotations followed by delayed separation</td><td>Loss separation is delayed beyond the first-step rotation</td><td>Measure the delayed state before building a controller</td></tr>
-      <tr><td>Rotation stays within the duplicate-control cosine spread, and loss and curvature stay within their control spreads</td><td>No current-filter effect is resolved at these checkpoints</td><td>Test initialization and trajectory history</td></tr>
+      <tr><td>Rotation stays within the duplicate-control cosine spread, and loss and curvature stay within their control spreads</td><td>No current-kernel effect is resolved at these checkpoints</td><td>Test initialization and trajectory history</td></tr>
     </tbody>
   </table>
-  <p>This isolates the immediate filter effect and tests whether it changes
+  <p>This isolates the immediate temporal-weighting effect and tests whether it changes
   loss or curvature during the continuation. Attribution of the original
   K-Maxwell gain requires a full factorial training study.</p>
 
@@ -283,7 +299,7 @@
   <p>If the same-state test identifies a reproducible effect, retain the
   smallest EMA bank that preserves it. The implementation exposes at most one
   user-facing hyperparameter.</p>
-  <p>Let <em>s</em><sub>t</sub> contain measurements available to the
+  <p>Let <em>q</em><sub>t</sub> contain measurements available to the
   optimizer: the learning rate, the measured curvature and its
   inverse-learning-rate reference, and the per-time-scale projection readouts
   from Section 4.
@@ -432,6 +448,16 @@
     convention subject to finite-window leakage. The experiment registers
     <em>L</em>, window shape, frequency bins, and normalization before comparing
     candidate temporal kernels.</p>
+  </details>
+  <details>
+    <summary>G. Matrix-direction readout</summary>
+    <p class="small">Decompose the unchanged control's pre-sign matrix as
+    <em>Z</em><sub>ref</sub> = <em>L</em>Σ<em>R</em><sup>T</sup>. For each EMA
+    stream <em>E</em><sub>j</sub>, record its coordinates
+    <em>L</em><sup>T</sup><em>E</em><sub>j</sub><em>R</em> and the Frobenius norm
+    outside that basis. Compare interventions using the Frobenius cosine of
+    their matrix-sign updates and principal angles between their leading
+    singular subspaces. Every branch uses the same reference basis.</p>
   </details>
   <h3>Technical references</h3>
   <ul class="small">
