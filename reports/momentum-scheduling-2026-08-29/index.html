@@ -30,7 +30,7 @@
 <body>
 <main>
   <h1>Momentum scheduling discovery</h1>
-  <div class="stamp">Updated 2026-08-29 06:26 UTC · frozen seed-0 step-1000 forks unless noted</div>
+  <div class="stamp">Updated 2026-08-29 06:42 UTC · frozen seed-0 step-1000 forks unless noted</div>
   <div class="summary">
     The best A100 beta-linear schedule remains <code>0.982 → 0.944</code> at
     <strong>3.27768</strong>, gain <strong>+0.00068</strong>. On the new H100
@@ -55,6 +55,7 @@
         <tr><td>beta 0.982 → 0.944, linear in log mean age</td><td>2×H100 SXM</td><td>3.27472</td><td class="good">+0.00075</td></tr>
         <tr><td>beta 0.980 → 0.944, linear in beta</td><td>2×H100 SXM</td><td>3.27482</td><td class="good">+0.00065</td></tr>
         <tr><td>beta 0.981 → 0.944, linear in beta</td><td>8×A100</td><td>3.27792</td><td class="good">+0.00044</td></tr>
+        <tr><td>beta 0.983 → 0.944, linear in beta</td><td>8×A100</td><td>3.27793</td><td class="good">+0.00043</td></tr>
         <tr><td>beta 0.984 → 0.944, linear in beta</td><td>2×H100 SXM</td><td>3.27509</td><td class="good">+0.00038</td></tr>
         <tr><td>beta 0.978 → 0.944, linear in beta</td><td>2×H100 SXM</td><td>3.27517</td><td class="good">+0.00030</td></tr>
         <tr><td>beta 0.986 → 0.944, linear in beta</td><td>2×H100 SXM</td><td>3.27547</td><td>+0.00000</td></tr>
@@ -82,8 +83,8 @@
   <h2>Endpoint sweeps</h2>
   <div class="plots">
     <figure>
-      <img src="ema.png?v=20260829-0626" alt="Matplotlib scatter plot of scheduled EMA results">
-      <figcaption>All completed matched-control EMA points, including the new 0.978, 0.980, 0.981, 0.984, 0.986, 0.940, and 0.948 probes. Each point uses its hardware cohort's bi-Maxwell control; positive is better. The unmatched PCIe 0.982 → 0.944 run is excluded.</figcaption>
+      <img src="ema.png?v=20260829-0642" alt="Matplotlib scatter plot of scheduled EMA results">
+      <figcaption>All completed matched-control EMA points, including the new 0.978, 0.980, 0.981, 0.983, 0.984, 0.986, 0.940, and 0.948 probes. Each point uses its hardware cohort's bi-Maxwell control; positive is better. The unmatched PCIe 0.982 → 0.944 run is excluded.</figcaption>
     </figure>
     <figure>
       <img src="powerlaw.png?v=20260829-0626" alt="Matplotlib scatter plot of scheduled power-law results">
