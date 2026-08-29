@@ -35,6 +35,25 @@ secrets; refer to already-provisioned environment variables.>
 - status: OPEN
 - requested: OpenAI Codex for Jeffrey Cheng / 2026-08-29 UTC
 
+### Exact implementation source (required)
+
+- source repo: `https://github.com/jeffreycider/muoff`
+- branch: `jcheng/momentum-kernel-schedules`
+- exact commit: `86aef768ab6ba3db51e1b48e92a93badc8385a00`
+- principal implementation: `records/track_3_optimization/optimizers/muon.py`
+- registry: `records/track_3_optimization/optimizers/__init__.py`
+- config generator: `records/track_3_optimization/offline_analysis/make_exponential_anneal_configs.py`
+- tests: `records/track_3_optimization/tests/test_least_squares_momentum_weights.py`
+
+Fetch and inspect this exact commit before implementation. Use its
+`AnnealedDecayMuon` behavior directly if the harness bases are compatible. If
+the Baseten validated trainer cannot consume this optimizer registry, port the
+small implementation mechanically and document the diff; do not independently
+reinterpret update indexing, beta interpolation, or the fixed `mu` separation.
+Record both source SHA and executed SHA in `fork_manifest.tsv`. The same commit
+also contains the power-law implementation, but REQ-016 should execute only the
+single-EMA schedule unless an artifact is needed for compatibility testing.
+
 ### Scientific question
 
 Determine whether the benefit of the winning annealed K-Maxwell kernels is
