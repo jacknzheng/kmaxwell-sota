@@ -73,80 +73,89 @@ def make_empirical_trend():
     plt.close(fig)
 
 
-def make_kernel_shape():
-    colors = {"K8": "#0ea5e9", "K6": "#22c55e", "power": "#ef4444"}
-    fig, (ax1, ax2) = plt.subplots(
-        2,
-        1,
-        figsize=(8.6, 7.3),
-        sharex=True,
-        gridspec_kw={"height_ratios": [1.2, 1]},
-    )
+def format_response_axis(ax):
+    ax.set_xscale("log", base=2)
+    ax.set_xticks(PERIODS)
+    ax.set_xticklabels([str(p) for p in PERIODS])
+    ax.set_xlim(1.8, 285)
+    ax.set_ylim(0, 1.02)
+    ax.set_xlabel("period of the repeating input (optimizer steps)")
+    ax.set_ylabel("output amplitude / input amplitude")
+    style_axis(ax)
 
-    ax1.plot(PERIODS, K8 / EMA, color=colors["K8"], linewidth=2.7, label="K8 / EMA")
-    ax1.plot(PERIODS, K6 / EMA, color=colors["K6"], linewidth=2.7, label="K6 / EMA")
-    ax1.axhline(1, color="#64748b", linewidth=1.2)
-    ax1.axvspan(64, 256, color="#6366f1", alpha=0.08)
-    ax1.set_ylim(0.80, 1.31)
-    ax1.set_ylabel("response relative to EMA")
-    ax1.set_title("K-Maxwell / scheduled-EMA response ratio")
-    ax1.legend(frameon=False, loc="upper right")
-    ax1.text(
-        0.985,
-        0.08,
-        "candidate test band: 64–256 steps per cycle",
-        transform=ax1.transAxes,
-        ha="right",
-        va="bottom",
-        fontsize=9.5,
-        color="#475569",
-    )
-    style_axis(ax1)
 
-    ax2.plot(PERIODS, POWER / EMA, color=colors["power"], linewidth=2.7)
-    ax2.axhline(1, color="#64748b", linewidth=1.2)
-    ax2.set_ylabel("response relative to EMA")
-    ax2.set_title("Matched-age power-law / scheduled-EMA response ratio")
-    ax2.text(
-        0.985,
-        0.88,
-        "much more fast variation survives",
-        transform=ax2.transAxes,
+def make_kmaxwell_response():
+    fig, ax = plt.subplots(figsize=(8.6, 5.15))
+    ax.plot(PERIODS, EMA, color="#64748b", linewidth=2.8, label="scheduled EMA")
+    ax.plot(PERIODS, K6, color="#22c55e", linewidth=2.8, label="K6 endpoint")
+    ax.plot(PERIODS, K8, color="#0ea5e9", linewidth=2.8, label="K8 endpoint")
+    format_response_axis(ax)
+    ax.set_title("How much of a repeating gradient remains after filtering?")
+    ax.legend(frameon=False, loc="upper left")
+    ax.text(
+        0.98,
+        0.95,
+        "constant input (period → ∞): every curve → 1",
+        transform=ax.transAxes,
         ha="right",
         va="top",
-        fontsize=10,
-        color="#991b1b",
+        fontsize=9.5,
+        color="#475569",
     )
-    ax2.text(
-        0.985,
-        0.07,
-        "constant input (period ∞): every ratio → 1",
-        transform=ax2.transAxes,
+    ax.text(
+        0.98,
+        0.05,
+        "Calculated from endpoint kernel weights—not a training-run statistic",
+        transform=ax.transAxes,
         ha="right",
         va="bottom",
         fontsize=9.5,
         color="#475569",
     )
-    style_axis(ax2)
+    ax.annotate(
+        "At period 8, K6 returns\namplitude 0.130 from a unit input",
+        xy=(8, K6[4]),
+        xytext=(14, 0.34),
+        arrowprops={"arrowstyle": "-", "color": "#15803d", "lw": 1.1},
+        fontsize=9.5,
+        color="#166534",
+    )
+    fig.tight_layout()
+    fig.savefig("kmaxwell_filter_response.png", dpi=190, bbox_inches="tight")
+    plt.close(fig)
 
-    ax2.set_xscale("log", base=2)
-    ax2.set_xticks(PERIODS)
-    ax2.set_xticklabels([str(p) for p in PERIODS])
-    ax2.set_xlabel("steps per cycle  →  slower variation")
 
-    fig.text(
-        0.5,
-        0.006,
-        "Unit-DC anchor: every kernel has response 1 to a constant gradient. Ratios show temporal shape, not Muon update size.",
-        ha="center",
+def make_powerlaw_response():
+    fig, ax = plt.subplots(figsize=(8.6, 5.15))
+    ax.plot(PERIODS, EMA, color="#64748b", linewidth=2.8, label="scheduled EMA")
+    ax.plot(PERIODS, POWER, color="#ef4444", linewidth=2.8, label="nominally mean-lag-targeted power law")
+    format_response_axis(ax)
+    ax.set_title("Nominal mean-lag targeting produced a very different realized filter")
+    ax.legend(frameon=False, loc="upper left")
+    ax.text(
+        0.98,
+        0.05,
+        "Calculated from endpoint kernel weights—not a training-run statistic",
+        transform=ax.transAxes,
+        ha="right",
+        va="bottom",
         fontsize=9.5,
         color="#475569",
     )
-    fig.tight_layout(rect=(0, 0.025, 1, 1))
-    fig.savefig("kernel_shape_comparison.png", dpi=190, bbox_inches="tight")
+    ax.annotate(
+        "For a period-2 input:\npower law 0.400; EMA 0.077",
+        xy=(2, POWER[0]),
+        xytext=(4.2, 0.57),
+        arrowprops={"arrowstyle": "-", "color": "#dc2626", "lw": 1.1},
+        fontsize=9.5,
+        color="#991b1b",
+    )
+    fig.tight_layout()
+    fig.savefig("powerlaw_filter_response.png", dpi=190, bbox_inches="tight")
     plt.close(fig)
 
 
 if __name__ == "__main__":
     make_empirical_trend()
-    make_kernel_shape()
+    make_kmaxwell_response()
+    make_powerlaw_response()

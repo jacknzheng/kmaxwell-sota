@@ -61,8 +61,10 @@
   <p>The list of weights by age is the <em>momentum kernel</em>. A single
   exponential moving average has {{inline:ema_kernel}}, so it has one memory
   timescale. Bi-Maxwell mixes two EMAs with different decay rates. K6 and K8
-  mix six and eight; their mixture weights change during training. A schedule
-  changes the kernel over the training trajectory.</p>
+  mix six and eight EMA components, respectively; their mixture weights change
+  during training. A schedule changes the kernel over the training trajectory.</p>
+  <p>The kernel's <em>mean lag</em> is the average number of optimizer steps
+  back represented by its weights.</p>
 
   <figure>
     <img src="empirical_trend.png" alt="Scheduled one-EMA captures roughly one third of the observed K8 improvement, while K6 and K8 are nearly tied">
@@ -77,9 +79,9 @@
       EMA leaves a substantial gap in this run.</li>
     <li>K6 and K8 are nearly tied. The number of mixture coefficients alone
       does not explain the gain.</li>
-    <li>A scheduled power law matched to the EMA's mean lag—the average age of
-      the gradient samples it retains—performs worse than its control. Mean lag
-      alone does not predict the outcome.</li>
+    <li>A power law with nominally mean-lag-targeted exponents performs much
+      worse than its control. The finite implementation missed the intended
+      mean-lag match, so this run does not isolate mean lag or tail shape.</li>
   </ol>
   <p>The comparisons still mix two effects: the endpoint kernel and the
   history that initialized the stored momentum. These possibilities require
@@ -92,9 +94,9 @@
   discarding its common size. For the ideal matrix-sign operation, multiplying
   the entire input by a positive number changes nothing:</p>
   <div class="equation">{{display:msign_scale}}</div>
-  <p>The deployed finite-precision Newton–Schulz calculation is only
-  approximately invariant, but the exact identity gives the right conceptual
-  distinction.</p>
+  <p>The deployed Newton–Schulz iteration—the fixed computation Muon uses to
+  approximate the matrix-sign update—is only approximately invariant, but the
+  exact identity gives the right conceptual distinction.</p>
   <p class="small">A direct test of the deployed code returned identical
   outputs for power-of-two input scalings and about 1% relative differences
   for several non-power-of-two scalings on one random 768×768 matrix. The
@@ -114,141 +116,206 @@
     by changing the size of a smoothed gradient.</p>
   </div>
 
-  <h2>3. How to read the filter comparison</h2>
-  <p>Every kernel in the plot is anchored to response 1 for a constant
-  gradient. The height of the power-law response is therefore not an arbitrary
-  common multiplier. It means that much more fast variation survives relative
-  to a constant or very slow gradient. Muon's scale invariance removes a
-  multiplier on the whole matrix; it does not remove this frequency-dependent
-  ratio when several patterns coexist.</p>
+  <h2>3. What one point in the filter plots means</h2>
+  <p><strong>These plots are arithmetic on frozen endpoint kernel weights; they
+  are not summaries of training runs.</strong> Each point is the output
+  amplitude from a unit-amplitude gradient pattern that repeats every
+  <em>P</em> optimizer steps:</p>
+  <div class="equation">{{display:periodic_input}}</div>
+  <p><strong>The plotted height is the amplitude remaining after the kernel
+  filters that input.</strong> Period 2 flips sign every step; larger periods
+  vary more slowly. A height of 0.13 means that a unit-amplitude input produces
+  an output with amplitude 0.13. The phase shift is not shown.</p>
+  <p><strong>Every curve uses the same scale convention.</strong> A constant
+  gradient passes through unchanged, so every response approaches 1 as the
+  period approaches infinity. This removes an arbitrary common multiplier; it
+  does not make the finite-period responses equal.</p>
+
   <figure>
-    <img src="kernel_shape_comparison.png" alt="Separate response-ratio panels compare K6 and K8 with a scheduled EMA, and the matched-age power law with the same EMA">
-    <figcaption>End-of-run filter descriptors, not realized Muon update sizes.
-    Each kernel has unit response to a constant gradient. The panels use ratios
-    to the scheduled EMA so the large power-law mismatch does not hide the
-    smaller K-Maxwell difference.</figcaption>
+    <img src="kmaxwell_filter_response.png" alt="Absolute endpoint response of the scheduled EMA, K6, and K8 to repeating gradient inputs at different periods">
+    <figcaption>One point is one deterministic calculation from a kernel's
+    endpoint weights. For example, at period 8 the scheduled EMA returns
+    amplitude 0.104, K8 returns 0.117, and K6 returns 0.130 from the same
+    unit-amplitude input.</figcaption>
   </figure>
-  <p>K6 and K8 pass somewhat more short-to-intermediate variation than the EMA
-  and less variation at periods of 64–256 steps. Weighting this difference by
-  the frequency distribution of gradient energy estimated on the observed
-  end-of-run trajectory places much of the K8–EMA discrepancy in that slower
-  band. One trajectory identifies a band to test; it does not show that the
-  band caused the loss difference.</p>
-  <p>The power law is a much larger mismatch. It passes several times more
-  alternating-step variation—roughly 4–6×—and has roughly 6–9× the EMA's
-  white-noise amplification, despite their matched mean lag. Its poor training
-  result is consistent with that mismatch, but the comparison does not
-  establish the cause. The comparison shows only what the filter passes.</p>
 
-  <h2>4. What remains of the scalar edge-of-stability account</h2>
-  <p>The edge of stability is the boundary where a small disturbance stops
-  decaying and begins to grow. The classical calculation is still useful as a
-  reference. Consider one quadratic direction with curvature λ and the update
-  x<sub>t+1</sub> = ax<sub>t</sub> − ηz<sub>t</sub>, where <em>a</em> is the
-  decay multiplier and η is the learning rate. Define {{inline:W_def}}, with
-  <em>q</em> standing for a one-step delay. Try a disturbance that changes by a
-  factor <em>r</em> each step. A value delayed by <em>k</em> steps carries a factor
-  r<sup>−k</sup>, which gives</p>
-  <div class="equation">{{display:linear_characteristic}}</div>
-  <p>An alternating disturbance has <em>r</em> = −1, so {{inline:W_flip}}
-  appears in momentum edge-of-stability formulas such as Andreyev et al.'s.
-  The full substitution is in the appendix.</p>
-  <p>That scalar equation is not sufficient for Muon. Muon filters a matrix
-  and then normalizes it nonlinearly, so its local response depends on
-  matrix directions, stored momentum, and curvature together. Because the
-  trainer applies Adam to embeddings and the language-model head, a full local
-  analysis must also include those states and their coupling to Muon layers.</p>
+  <p><strong>The K6 curve is above K8 at every sampled finite period.</strong>
+  The two endpoint filters have different shapes: K6 has slightly shorter
+  endpoint memory and attenuates these repeating inputs less. Both converge to
+  1 for a constant input, but nothing requires them to cross at a finite
+  period. This ordering does not imply that K6 trains better: K6 and K8 have
+  nearly tied validation loss, with K8 slightly ahead in the discovery run.</p>
+  <p><strong>Relative to the scheduled EMA, both K-Maxwell endpoints attenuate
+  periods 2–32 less and periods 64–256 more.</strong> In plain terms, their
+  outputs contain a little more of the fast repetitions and a little less of
+  the 64–256-step repetitions. This describes the endpoint filters; it does not
+  explain the validation-loss difference.</p>
 
-  <p>Two preregistered screens challenged the simple scalar account.</p>
-  <ul>
-    <li>Removing momentum increased {{inline:W_flip}} by about 11×. A scalar
-      boundary predicts roughly 11× lower equilibrium sharpness; the measured
-      sharpness was instead about 3× higher.</li>
-    <li>Changing the learning rate by 3.4× changed period-two amplitude by
-      16–19×, an exponent near 2.4 rather than the preregistered near-linear
-      range. After dividing amplitude by learning rate and curvature, the
-      no-momentum run stayed within about 1.5× of the control in three of four
-      windows despite its 11× change in {{inline:W_flip}}.</li>
-  </ul>
-  <p>The runs follow different trajectories, and the no-momentum run's weight
-  norms are only about 0.31× the reference. The screens therefore weaken
-  {{inline:eta_lambda_flip}} as a standalone Muon control variable; they do not
-  identify its replacement.</p>
+  <figure>
+    <img src="powerlaw_filter_response.png" alt="Absolute endpoint response of the scheduled EMA and nominally mean-lag-targeted power-law kernel">
+    <figcaption>The power-law exponents 1.28 → 1.66 were chosen by a nominal
+    mean-lag calculation, but the realized finite-history mean lags were about
+    78 → 9 steps, versus 52 → 16 for the EMA. At period 2, the endpoint
+    responses are 0.400 and 0.077, respectively.</figcaption>
+  </figure>
 
-  <p>The scale identity suggests a replacement hypothesis. Gain cancels when
-  one matrix pattern dominates. It can matter again when differently oriented
-  patterns compete, because the kernel changes their relative mixture. Finite
-  Newton–Schulz makes this selection graded rather than winner-take-all. This
-  is still a hypothesis: every result above compares different trajectories,
-  and none tests the mechanism from the same state.</p>
-
-  <h2>5. The next same-state question</h2>
+  <p><strong>The power-law result rules out this construction, not the family.</strong>
+  Its realized mean lag missed the target; its endpoint also transmits roughly
+  4–6× as much sign-flipping content and has roughly 6–9× the EMA's white-
+  noise amplification. Here white-noise amplification means the output
+  variance produced by independent unit-variance input noise. The run's poor
+  loss is consistent with these mismatches, but it does not identify which
+  mismatch mattered.</p>
+  <p><strong>Why test periods 64–256 first?</strong> At each period, we multiplied
+  the squared K8-versus-EMA endpoint-response difference by the observed
+  oscillation strength of the stored end-of-run gradients. The largest
+  products occurred at periods 64–256, so that range is the first intervention
+  target. This is a ranking rule, not evidence that the range caused the K8
+  gain.</p>
   <div class="finding">
-    <p><strong>Question.</strong> Does the unresolved part of K-Maxwell's
-    temporal response change which matrix directions Muon selects when model
-    and optimizer state are held fixed?</p>
+    <p><strong>The filter plots identify realized endpoint differences; they do
+    not isolate a winning scalar summary.</strong> They nominate a specific
+    K-Maxwell–EMA difference for testing, but they do not explain why K-Maxwell
+    wins.</p>
   </div>
-  <p>Start four branches from one checkpoint: two identical controls and two
-  intervention filters. Copy all model and optimizer state, including Adam
-  state, and keep data order and hyperparameters fixed. Before the fork, warm
-  one common bank of EMA buffers; after the fork, realize each intervention as
-  a different linear combination of that same bank. Thus every branch begins
-  with the same stored gradient history.</p>
-  <p>Use duplicate controls to measure ordinary run divergence. Before launch,
-  solve for two filters that match their constant-input response, mean lag,
-  alternating-step response, and white-noise amplification at the fork. Mean
-  lag is {{inline:mean_age}}; white-noise amplification is
-  {{inline:noise_gain}}. Make the filters differ as much as possible in the
-  64–256-step band. Register the allowed
-  mismatch, the immediate measurement window, the maximum descriptor drift,
-  and the threshold set by the duplicate controls. If no pair meets those
-  tolerances, do not run the experiment.</p>
-  <p>To measure competition, decompose the gradient history into temporal
-  bands. Compute the leading left and right singular vectors of the total
-  matrix just before Muon's normalization. Project each band's matrix
-  contribution onto those vectors; its squared projected Frobenius norm,
-  divided by the sum across bands, is that band's <em>subspace share</em>.</p>
-  <ul class="outcomes">
-    <li><strong>An unaltered band's subspace share moves immediately.</strong>
-      Beyond duplicate-control divergence, this supports competition between
-      temporal patterns under the intervention.</li>
-    <li><strong>Only the altered band moves immediately.</strong> Selective
-      temporal filtering matters, but cross-band competition has not been shown.</li>
-    <li><strong>Only later loss or sharpness separates.</strong> The local
-      matrix-direction mechanism has not been identified; test slower
-      trajectory state.</li>
-    <li><strong>Nothing separates.</strong> Do not promote the 64–256-step
-      explanation at this checkpoint; test momentum-state history or richer
-      matrix structure next.</li>
-  </ul>
-  <p>This experiment distinguishes a local filter-shape effect from a
-  trajectory or initialization effect.</p>
-  <p class="small">This is a proposed experiment; no intervention has been
-  run.</p>
 
-  <h2>6. What a principled rule would look like</h2>
-  <p>If the same-state test supports a local mechanism, the next task is to
-  find the fewest running summaries of past gradients that reproduce it. Each
-  independent summary is one memory state. Fewer states are desirable because
-  they make the rule interpretable and reduce tuning, not because fewer is
-  inherently better.</p>
-  <p>The setting should come from measured optimizer state rather than
-  training step. The practical research question is:</p>
+  <h2>4. What edge of stability says—and fails to say—about Muon</h2>
+  <p><strong>Here edge of stability means the phenomenon that pins curvature
+  near the value that makes the learning rate critical, on the verge of
+  divergence.</strong> For gradient descent on one quadratic direction, the
+  critical relation is</p>
+  <div class="equation">{{display:eos_sgd}}</div>
+  <p>where η is the learning rate and λ<sub>crit</sub> is the critical
+  curvature in that direction.</p>
+
+  <p><strong>The scalar momentum calculation asks how a kernel changes that
+  critical curvature.</strong> For a period-2 pattern, the gradient from
+  <em>k</em> steps ago has sign (−1)<sup><em>k</em></sup> relative to the current
+  gradient. The kernel therefore multiplies the pattern by</p>
+  <div class="equation">{{display:flip_response}}</div>
+  <p>This quantity <em>F</em> is the <em>flip transmission</em>. For the scalar
+  update with multiplicative decay <em>a</em>, the period-2 boundary is</p>
+  <div class="equation">{{display:eos_momentum}}</div>
+  <p>With no multiplicative decay, <em>a</em> = 1 and this reduces to the usual
+  value 2 when <em>F</em> = 1. This is the simple deterministic version of the
+  kernel correction that appears in momentum edge-of-stability analyses such
+  as Andreyev et al.; the appendix gives the full mode calculation.</p>
+
+  <p><strong>Muon still shows the curvature-pinning phenomenon.</strong> Across
+  constant-learning-rate runs that had reached a steady regime, equilibrium
+  curvature rose as learning rate fell. Learning rate varied from 0.6 to 1.7,
+  while the product of learning rate and curvature stayed between about 1.15
+  and 1.54. Rows still changing appreciably, or represented by only two usable
+  checkpoints, were not counted as equilibria. The evidence supports an edge-
+  of-stability-like attractor, although its constant is not the gradient-
+  descent value 2.</p>
+  <p><strong>The scalar kernel correction did not predict these cross-trajectory
+  Muon screens.</strong>
+  Removing momentum increased flip transmission about 11×. The equation above
+  predicts roughly 11× lower critical curvature; measured curvature was about
+  3× higher. In a separate screen, changing learning rate by 3.4× changed the
+  period-2 amplitude by 16–19× rather than the preregistered near-linear
+  amount. Normalized amplitude also stayed roughly flat across the 11× flip-
+  transmission change in three of four windows.</p>
+  <p><strong>These cross-trajectory screens do not show that flip transmission
+  is sufficient to predict Muon's state.</strong> They do not invalidate it as
+  a scalar filter statistic. The runs had different histories, and the
+  momentum-free run's weight norms were about 0.31× the reference; a same-
+  state intervention is required.</p>
+  <p><strong>Muon's scale invariance suggests what the scalar calculation
+  misses.</strong> If one matrix pattern dominates, changing its amplitude by
+  <em>F</em> can disappear during normalization. A kernel can still matter by
+  changing the relative amplitudes and phases of differently oriented matrix
+  patterns. That pattern-competition account remains a hypothesis.</p>
   <div class="finding">
-    <p><strong>If the intervention succeeds, can one measured optimizer state
-    choose the filter setting without a hand-written schedule?</strong></p>
+    <p><strong>The EoS evidence supports curvature pinning under Muon but does
+    not support the scalar flip-transmission correction.</strong> The existing
+    comparisons do not show that flip transmission determines the pinned
+    curvature.</p>
   </div>
-  <p>The analysis should treat the model, gradient history, momentum memory,
-  Muon normalization, and Adam blocks as one evolving system. The controller
-  itself should use the smallest measurable proxy that predicts the desired
-  response. The immediate roadmap is:</p>
+
+  <h2>5. Proposed experiment: does endpoint shape change Muon's direction?</h2>
+  <p><strong>This section describes a proposed causal experiment; it is not a
+  result or an algorithm.</strong> The question is whether the endpoint filter
+  difference identified above changes Muon's update direction when the model,
+  stored gradient history, and all other optimizer state begin identically.</p>
+  <p><strong>The experiment uses four branches because each branch has one
+  specific job.</strong> Two unchanged controls measure ordinary numerical
+  divergence. Two intervention branches compare filters. All four copy one
+  checkpoint, Adam state, data order, and hyperparameters. They also use one
+  shared bank of EMA buffers warmed before the fork, so the stored raw gradient
+  history is identical at the moment of intervention.</p>
+  <p><strong>The intervention pair is accepted only if four scalar summaries
+  match within registered tolerances.</strong> Those summaries are response to
+  a constant gradient, mean lag, flip transmission, and white-noise
+  amplification; the pair should otherwise differ as much as possible at
+  periods 64–256. A branch separation would show that the four summaries are
+  not sufficient; it would not identify which remaining shape feature caused
+  the separation. The registered record will include the filter pair, matching
+  errors, and allowed drift. If no pair meets the tolerances, no GPU run is
+  launched.</p>
+  <p><strong>The primary measurement is whether Muon's update direction changes
+  immediately.</strong> At the first post-fork step, every branch sees the same
+  model and data. We compare the matrix-sign updates produced by the two
+  intervention filters against the difference between duplicate controls. A
+  decomposition by period range is a secondary diagnostic only if the update
+  directions separate.</p>
+  <p><strong>Post-fork measurements determine whether an immediate direction
+  change is useful.</strong> Validation loss, curvature, and update directions
+  are tracked for a window registered with the filter pair, and the
+  interpretation is fixed in advance:</p>
+  <table>
+    <thead><tr><th>observation</th><th>interpretation</th><th>next move</th></tr></thead>
+    <tbody>
+      <tr><td>immediate direction change and later loss separation</td><td>endpoint shape has a useful local effect</td><td>search for the smallest state-driven filter that reproduces it</td></tr>
+      <tr><td>immediate direction change but no loss separation</td><td>shape changes Muon, but this change is not useful here</td><td>do not build a controller around it</td></tr>
+      <tr><td>no resolved immediate change, but later loss separates</td><td>the endpoint intervention acts through accumulated post-fork dynamics</td><td>model the slower closed-loop state</td></tr>
+      <tr><td>neither direction nor loss separates</td><td>this endpoint intervention is unsupported</td><td>do not promote 64–256 from this test; scheduling history remains a candidate</td></tr>
+    </tbody>
+  </table>
+  <p><strong>This design removes pre-fork history as a confound.</strong> Because
+  every branch starts from the same state, an immediate change comes from the
+  endpoint filter itself. A delayed-only change says the intervention acts
+  through post-fork dynamics. A null result rejects this particular endpoint
+  difference; it does not by itself prove that scheduling history caused the
+  original K-Maxwell gain.</p>
+
+  <h2>6. Recommended next steps and decisions</h2>
+  <div class="finding">
+    <p><strong>Recommendation: proceed mechanism-first and stop broad momentum-
+    family tuning for now.</strong> The next GPU work should answer which state
+    a principled rule must control, not search for another schedule.</p>
+  </div>
+  <p><strong>Step 1 is a zero-GPU feasibility check for the filter-shape
+  intervention.</strong> We solve for the two concrete filters described in
+  Section 5 and report their coefficient lists, matching errors, and response
+  curves. This prevents an ill-posed intervention from consuming a run.</p>
+  <p><strong>Step 2 is the four-branch same-state experiment, conditional on a
+  satisfactory filter pair.</strong> This is the shortest test of whether a
+  controlled endpoint-shape change is sufficient to alter Muon's update and
+  training outcome from the same state. A null would leave scheduling history
+  as a candidate, not establish it.</p>
+  <p><strong>Step 3 is a separate same-state edge-of-stability fork.</strong>
+  From one checkpoint and one learning rate, switch among kernels with
+  substantially different flip transmission and measure where curvature
+  equilibrates. This directly tests whether the Andreyev-style kernel
+  correction survives under Muon without relying on cross-trajectory screens.</p>
+  <p><strong>Step 4 depends on the two experiments.</strong> If endpoint shape
+  has a useful immediate effect, find the smallest online state variable that
+  predicts that effect and implement it with the fewest memory states. If the
+  effect is delayed, model momentum as trajectory state. If neither experiment
+  separates, stop treating the current frequency range as the leading
+  explanation and test the matching, initialization, or other trajectory
+  explanations before proposing a controller.</p>
+  <p><strong>The requested sign-off is therefore narrow.</strong></p>
   <ol>
-    <li>test whether relative temporal filtering changes Muon's selected
-      matrix directions from the same state;</li>
-    <li>find a measurable state that predicts the desired response;</li>
-    <li>implement that response with the fewest memory states whose bounded
-      inputs and small local perturbations remain bounded;</li>
-    <li>only then evaluate the resulting rule across seeds, scales, and tasks.</li>
+    <li>Approve or reject the mechanism-first ordering.</li>
+    <li>Approve preparation of the concrete matched filter pair; this does not
+      launch a GPU experiment.</li>
+    <li>After inspecting that pair, approve or reject the four-branch run.</li>
+    <li>Approve or defer the separate same-state edge-of-stability fork.</li>
+    <li>Defer controller implementation until these results choose its state
+      variable.</li>
   </ol>
 
   <h2>Appendices</h2>
@@ -261,7 +328,7 @@
         <tr><td>scheduled one-EMA</td><td>2×H100 SXM</td><td>3.27449</td><td class="good">+0.00098</td></tr>
         <tr><td>scheduled K6</td><td>2×H100 SXM</td><td>3.27261</td><td class="good">+0.00286</td></tr>
         <tr><td>scheduled K8</td><td>2×H100 SXM</td><td>3.27250</td><td class="good">+0.00297</td></tr>
-        <tr><td>matched-age scheduled power law</td><td>8×A100</td><td>3.29123</td><td class="bad">−0.01287</td></tr>
+        <tr><td>nominal mean-lag-targeted power law, γ 1.28 → 1.66</td><td>8×A100</td><td>3.29123</td><td class="bad">−0.01287</td></tr>
       </tbody>
     </table>
     <p class="small">Each row is a single-seed discovery measurement. The
@@ -273,7 +340,8 @@
     <summary>B. Full scalar characteristic-equation derivation</summary>
     <p>Let</p>
     <div class="equation">{{display:scalar_model}}</div>
-    <p>Try a mode x<sub>t</sub> = r<sup>t</sup>. A lag of <em>k</em> steps gives</p>
+    <p>Define the kernel polynomial {{inline:W_poly}}. For a trial mode, set
+    x<sub>t</sub> = r<sup>t</sup>. A lag of <em>k</em> steps gives</p>
     <div class="equation">{{display:delayed_mode}}</div>
     <p>Therefore the filtered gradient is</p>
     <div class="equation">{{display:filtered_mode}}</div>
@@ -286,6 +354,9 @@
     <p>For a proposed update {{inline:delta_x}}, second-order Taylor expansion
     around the current parameters gives</p>
     <div class="equation">{{display:taylor}}</div>
+    <p>Here <em>H</em> is the Hessian of the loss at the current parameters,
+    and <em>U</em> is the proposed update direction before multiplication by
+    −η.</p>
     <p>The first term rewards alignment with the true gradient. The second is
     the curvature cost of the chosen direction. Taking an expectation
     conditional on the current model and optimizer state gives the expected
@@ -302,9 +373,17 @@
       <li>The transfer curves are endpoint filter descriptors. They are not the
         exact accumulated kernel of a time-varying schedule or the realized
         Muon update.</li>
-      <li>The 64–256-step localization uses an end-of-run, trajectory-specific
-        spectrum. An early-training estimate became invalid beyond short
-        periods and is not used here.</li>
+      <li>Each plotted endpoint value is {{inline:endpoint_response}} at
+        P ∈ {2, 3, 4, 6, 8, 12, 16, 24, 32, 64, 128, 256}. The EMA curve
+        uses μ = 0.95 and endpoint β = 0.944. The K6, K8, and power-law
+        arrays are finite-history, unit-constant-response descriptors computed
+        from the configured endpoint kernels; the power-law schedule uses γ
+        1.28 → 1.66. The exact values are published in the
+        <a href="make_report_figures.py">figure generator</a>.</li>
+      <li>The 64–256-step ranking uses oscillation strength reconstructed from
+        lagged gradient correlations at step 3000 of one recorded run. An
+        early-training reconstruction became invalid beyond period 12 and is
+        not used here.</li>
       <li>Exact matrix sign is invariant to positive common scaling. The
         deployed implementation uses an additive epsilon and BF16 arithmetic,
         so exact homogeneity is not guaranteed.</li>
@@ -312,7 +391,7 @@
         overall kernel scale. For nonnegative weights it is also the maximum
         response by the triangle inequality. The finite power-law
         approximation has a tiny negative tail (about 1.4×10<sup>−5</sup> at
-        one late lag), too small to affect the plotted ratios.</li>
+        one late lag), too small to affect the plotted endpoint responses.</li>
       <li>The momentum-free and step-size screens compare different
         trajectories and weight norms. They challenge scalar accounts but
         identify no replacement.</li>
