@@ -292,8 +292,8 @@
   gradient, and it is the only property of the kernel that enters the
   period-two boundary. The current runs do not test this prediction because
   changing the kernel also changed the stored momentum and the model
-  trajectory. Section 4 proposes the same-state intervention that would test
-  it directly.</p>
+  trajectory. The matched-kernel intervention of Section 4 would test it
+  directly.</p>
   <p>Muon adds a directional complication: matrix sign removes common scale,
   but reweighting temporal components can rotate the matrix before that
   operation. The available momentum-free comparison cannot test the
@@ -340,9 +340,12 @@
   checkpoint, matrix cosines and leading-subspace angles measure the immediate
   difference; duplicate control forks define the resolution floor. A fixed
   short continuation then asks whether a resolved update difference changes
-  validation loss or curvature. The pre-sign momentum spectrum supplies the measurement missing
-  from Section 3's analyses of momentum scale, update direction, and
-  curvature.</p>
+  validation loss or curvature. When the later controller search compares
+  candidate kernels at one of these states, it ranks them by measured one-step
+  loss on fresh batches; the fixed continuation decides whether that local
+  ranking survives training. The pre-sign momentum spectrum supplies the
+  measurement missing from Section 3's analyses of momentum scale, update
+  direction, and curvature.</p>
   <p>Classify the result sequentially: first ask whether any update angle clears
   its control floor; only then count checkpoints where both that angle and a
   downstream effect clear their floors.</p>
@@ -386,17 +389,36 @@
       Δ<sub><em>t</em></sub> is the actual parameter change, measured in the
       optimizer's update norm.</div>
   </div>
-  <p>Given this state, choose the kernel weights that minimize a quadratic
-  approximation to expected one-step loss change. Cap white-noise gain because
-  unconstrained combinations can amplify stochastic gradients. For kernel weights
+  <p>Given this state, choose kernel weights by measuring the loss after one
+  virtual optimizer step. For kernel weights
   <em>w</em>, define <em>Z</em><sub><em>w</em></sub> =
   ∑<sub><em>k</em></sub><em>w</em><sub><em>k</em></sub>
   <em>G</em><sub><em>t</em>−<em>k</em></sub> and
   <em>P</em><sub><em>w</em></sub> =
-  msign(<em>Z</em><sub><em>w</em></sub>). The feasible set 𝒲 contains
+  msign(<em>Z</em><sub><em>w</em></sub>) and {{inline:deployed_step}}. The virtual
+  step runs the deployed update, including its shape factors, weight decay,
+  finite Newton–Schulz iteration, and numerical precision. The recorded
+  gradient history constructs <em>P</em><sub><em>w</em></sub>; it never includes
+  the fresh batches used to score the step. The feasible set 𝒲 contains
   combinations representable by the EMA bank, normalized to unit constant
-  response and capped in white-noise gain.</p>
+  response and capped in white-noise gain so the search cannot buy alignment by
+  amplifying gradient noise.</p>
   <div class="equation">{{display:controller_objective}}</div>
+  <p>Each score subtracts the pre-step loss on the same batch, reducing sampling
+  noise. A small set of batches selects <em>w</em><sup>*</sup>; disjoint batches
+  estimate its error bar and compare it with duplicate-control divergence.</p>
+  <p>At the selected kernel and its matched partner, decompose the local loss
+  change once:</p>
+  <div class="equation">{{display:cubic_diagnostic}}</div>
+  <p>The three terms measure gradient alignment, curvature along the update,
+  and the change of that curvature along the step. The cubic derivative is
+  estimated with two finite-differenced Hessian–vector products. A positive
+  cubic contribution warns that a kernel's immediate gain may sharpen the loss
+  surface. If that warning appears, repeat the cheap search once with this term
+  penalized and send both selections to the fixed continuation. Otherwise, add
+  no horizon model. Continuation loss and curvature remain the ground truth;
+  recording the cubic term across candidates will show whether it predicts
+  which local choices survive.</p>
   <p>The program advances only when each stage earns the next expense.</p>
   <ol class="roadmap">
     <li><strong>Map the immediate response.</strong> The matched pair isolates
@@ -541,10 +563,10 @@
     different stacks; they do not calibrate this one-seed decomposition. The
     matched-kernel experiment uses duplicate controls at every checkpoint, and the distilled
     rule is evaluated across seeds. The momentum-free curvature comparison uses a separate
-    trajectory whose weight norms are about 0.31 times the reference. The local
-    Taylor diagnostic omits the explicit decay term and requires a smooth local
-    approximation; the fixed continuation evaluates whether its ranking is
-    useful.</p>
+    trajectory whose weight norms are about 0.31 times the reference. Kernel
+    selection uses the measured loss of the complete deployed step. The
+    third-order decomposition is diagnostic: it requires a smooth local loss
+    and does not replace the fixed continuation.</p>
   </details>
   <details>
     <summary>E. Full scalar boundary for an arbitrary kernel</summary>
