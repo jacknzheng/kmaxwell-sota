@@ -314,6 +314,7 @@
       to choosing their trajectories over training. The present raw-gradient
       plus EMA family is already a minimal implementation: two or three EMA
       streams matched to K8's three-number trajectory should recover its gain.
+      K8 is the eight-EMA mixture that leads the comparisons in Section 1.
       We build that compressed schedule and stop treating kernel shape as a
       design variable.</div>
     <div><strong>If they do not suffice</strong><br>Two kernels can agree on all
@@ -323,7 +324,8 @@
       which shape helps.</div>
   </div>
   <p>A comparison inside the current family cannot decide between these
-  branches. Once constant-gradient response, mean lag, <em>F</em>, and
+  branches. Constant-gradient response is normalized to one, so it is a scale
+  convention rather than a fourth informative summary. Once that normalization, mean lag, <em>F</em>, and
   white-noise gain are fixed, a nonnegative mixture of the current gradient and
   EMA streams is essentially unique. The smallest enlargement that creates two
   distinct matched kernels adds short moving averages, implemented with a
@@ -339,7 +341,7 @@
     at lag one because its horizontal axis is logarithmic.</figcaption>
   </figure>
   <p>The displayed kernels differ only in how they distribute weight across
-  gradient ages after the four scalar constraints are imposed. The pair is
+  gradient ages after normalization and the three summaries are fixed. The pair is
   re-solved for the finite gradient history available at each checkpoint;
   Appendix G gives the construction and numerical tolerances.</p>
   <div class="flow" aria-label="Same-state intervention design">
@@ -357,7 +359,7 @@
   matrix cosines and leading-singular-subspace angles measure how much the two
   Muon updates differ. Two duplicate controls—independent continuations using
   the same kernel, checkpoint, and data order—measure the small divergence
-  caused by GPU arithmetic. Their difference is the <strong>control
+  caused by GPU arithmetic. Their difference is the <strong>duplicate-control
   floor</strong>: a kernel effect counts as resolved only when it is larger.
   The <strong>pre-sign momentum spectrum</strong> records the singular values
   and singular directions of the temporally weighted gradient matrix before
@@ -367,21 +369,21 @@
   produces a loss or curvature difference larger than its duplicate-control
   floor.</p>
   <p>Classify the result sequentially: first ask whether any update angle clears
-  its control floor; only then count checkpoints where both that angle and a
-  downstream effect clear their floors.</p>
+  its duplicate-control floor; only then count checkpoints where both the
+  update-angle and downstream duplicate-control floors are cleared.</p>
   <table class="outcome">
     <thead><tr><th>Observation</th><th>Conclusion</th><th>Decision</th></tr></thead>
     <tbody>
       <tr><td>No checkpoint has an update angle above the duplicate-control floor.</td>
         <td>This pair reveals no missing temporal effect over the tested states.</td>
         <td>Repeat with one independent pair; if it also fails, build the compressed EMA schedule.</td></tr>
-      <tr><td>An angle clears its floor, but no checkpoint clears both angle and downstream floors.</td>
+      <tr><td>An angle clears its duplicate-control floor, but no checkpoint clears both the update-angle and downstream duplicate-control floors.</td>
         <td>The remaining kernel structure changes the update without a detectable short-window consequence.</td>
-        <td>Do not retain shape as a design variable without a longer-horizon effect.</td></tr>
-      <tr><td>Exactly one checkpoint clears both angle and downstream floors.</td>
+        <td>Provisionally take the suffice branch; retain no shape mechanism unless a longer continuation resolves an effect.</td></tr>
+      <tr><td>Exactly one checkpoint clears both the update-angle and downstream duplicate-control floors.</td>
         <td>The useful temporal weighting depends on training state.</td>
         <td>Retain the ring-buffer family and identify what is special about that state.</td></tr>
-      <tr><td>Two or more checkpoints clear both angle and downstream floors.</td>
+      <tr><td>Two or more checkpoints clear both the update-angle and downstream duplicate-control floors.</td>
         <td>The matched summaries omit a reproducible, consequential feature.</td>
         <td>Retain the ring-buffer family and fit the smallest state-conditioned shape rule.</td></tr>
     </tbody>
@@ -390,12 +392,11 @@
   selected without a training sweep. At a shared checkpoint, recorded gradient
   history constructs each candidate update; fresh minibatches score the true
   loss change from one complete deployed virtual step, and disjoint batches
-  evaluate the winner. A third-order Taylor decomposition is computed once for
+  evaluate the winner. Section 5 gives the equations for this virtual step and
+  the re-solve below. A third-order Taylor decomposition is computed once for
   the winner and its matched partner: a cubic term that indicates sharpening
   triggers one curvature-penalized re-solve. In every case, the fixed
-  continuation—not the one-step score—decides whether the selection was useful.
-  Section 5 gives the equations and the rule for compressing a successful
-  selector.</p>
+  continuation—not the one-step score—decides whether the selection was useful.</p>
   <p>A separate early-training fork tests the scalar stability theory. Between
   steps 1500 and 2000 the gradients still contain substantial period-two
   oscillation, so changing <em>F</em> while matching constant response, mean lag,
@@ -407,7 +408,8 @@
   its fixed continuations (1.5 aggregate GPU-hours). Together they decide
   whether to build the compressed EMA schedule or retain kernel shape as a
   control dimension. The independent early <em>F</em>-fork costs 2 aggregate
-  GPU-hours and tests the scalar stability mechanism.</p></div>
+  GPU-hours and tests the scalar stability mechanism. The complete request is
+  4 aggregate GPU-hours.</p></div>
 
   <h2 id="controller">5. Proposed program: from measurement to a small controller</h2>
   <p>A controller is justified only if measured state predicts which temporal
