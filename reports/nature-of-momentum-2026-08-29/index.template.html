@@ -351,23 +351,37 @@
     <div class="arrow">→</div>
     <div class="node"><strong>Measure consequence</strong><br>Compare the immediate update, then loss and curvature over a fixed continuation</div>
   </div>
-  <p>The null is plausible, especially late in training: the kernels differ
-  materially only over periods 16–40, where gradient energy has decayed, and any
-  remaining energy may lie in directions that do not compete for the momentum
-  matrix's leading singular subspace.</p>
-  <p>Three checkpoints test early, middle, and late training. At each one,
-  matrix cosines and leading-singular-subspace angles measure how much the two
-  Muon updates differ. Two duplicate controls—independent continuations using
-  the same kernel, checkpoint, and data order—measure the small divergence
-  caused by GPU arithmetic. Their difference is the <strong>duplicate-control
-  floor</strong>: a kernel effect counts as resolved only when it is larger.
-  The <strong>pre-sign momentum spectrum</strong> records the singular values
-  and singular directions of the temporally weighted gradient matrix before
-  Muon's matrix-sign operation, together with each time scale's contribution.
-  It shows how a change in temporal weighting becomes a change in update
-  direction. Fixed continuations then test whether a resolved update difference
-  produces a loss or curvature difference larger than its duplicate-control
-  floor.</p>
+  <p>The no-detectable-difference outcome is plausible. Although the kernels
+  differ most over periods 16–40, that temporal variation may lie in matrix
+  directions that do not compete for the leading singular subspace. In that
+  case the three summaries would still predict the deployed update.</p>
+  <p>The effect may depend on training state, so the comparison repeats at
+  checkpoints spanning training. At each checkpoint, matrix cosines and
+  leading-subspace angles compare the updates produced by kernel A and kernel B
+  from the identical state. One duplicate pair—two continuations using the same
+  kernel, checkpoint, and data order—measures divergence from GPU arithmetic.
+  Its difference defines the <strong>duplicate-control floor</strong>, which is
+  reused at the other checkpoints; without such a floor, no observed difference
+  is falsifiable. The duplicate fork-1500 arm in REQ-019 supplies an independent
+  estimate at no additional cost.</p>
+  <p>The directional readout is the SVD of each momentum matrix
+  <em>Z</em><sub><em>t</em></sub> before matrix sign. For every stored temporal
+  stream <em>E</em><sub><em>j</em></sub>, we record its coordinates in that
+  singular basis, <em>U</em><sup>T</sup><em>E</em><sub><em>j</em></sub><em>V</em>;
+  in particular,
+  <em>u</em><sub><em>i</em></sub><sup>T</sup><em>E</em><sub><em>j</em></sub>
+  <em>v</em><sub><em>i</em></sub> measures how much time scale <em>j</em> feeds
+  singular direction <em>i</em>. Both kernels are different linear combinations
+  of the same recorded streams. Their coordinates therefore predict the update
+  rotation under either reweighting, which can be compared with the realized
+  rotation after matrix sign.</p>
+  <p>A <strong>fixed continuation</strong> resumes each fork for a number of
+  steps registered before launch, then compares validation loss and curvature.
+  A difference is <strong>resolved</strong> when it exceeds the corresponding
+  duplicate-control floor. The update-angle floor begins near zero immediately
+  after the fork and grows with the continuation horizon, so short windows give
+  the sharpest test. If the floor grows large enough to absorb the kernel effect,
+  that horizon is declared unusable rather than interpreted.</p>
   <p>Classify the result sequentially: first ask whether any update angle clears
   its duplicate-control floor; only then count checkpoints where both the
   update-angle and downstream duplicate-control floors are cleared.</p>
