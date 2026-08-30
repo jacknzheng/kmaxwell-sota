@@ -221,7 +221,24 @@ evidence and stop rather than restarting from zero.
 
 ## REQ-019: momentum EoS law across fork states
 
-- status: RUNNING (agent 2026-08-30) — `ebf53cd` serialized-state design **works**: 6 fork-1500 arms trained on base node qvgl1eq, **shared-state gate PASSES** (see below). Per-matrix curvature now running on the 6 arms; fork-2000 arms + twins + FW-cal to follow.
+- status: **DONE** (agent 2026-08-30) — `ebf53cd` serialized-state design works; all four owner-ordered phases complete, all shared-state gates PASS, all artifacts pushed. Success criteria met: **9 EoS arms + 45 curvature measurements**, **12 endpoint runs across 4 paired seeds** (16 runs incl. bases), explicit shared-state checks, plus the authorized FW two-checkpoint calibration. Boxes released.
+
+### REQ-019 v3 COMPLETE (agent 2026-08-30) — all phases delivered
+
+Executed on `kmaxwell-sota @ ebf53cd`, 8×H100, torch 2.10.0+cu128. All EoS arms ran on the base node `qvgl1eq` (the 9.9 GB serialized `eos_shared_state` was not cross-node-copied; this request permits base-node-only in that case).
+
+**(1) Fork-1500 + (4) Fork-2000 EoS — `logs/kmaxwell/req019_eos_state_dependence/`** (commits 1a12152, 959360c, 7ddf22f)
+- 9 arms (6 fork-1500 + 3 fork-2000), 45 per-matrix curvature measurements (74 matrices × 5 checkpoints each, full Lanczos alphas/offdiags).
+- **Both shared-state gates PASS** (`shared-state-check.tsv`): identical `model_step00{1500,2000}.pt` sha256 across arms (unique-hash count = 1), max tensorwise abs-diff = 0.000e+00, and every optimizer group's LR at the first fork update = base × multiplier exactly.
+- **Result — the per-matrix curvature law changes strongly with the LR multiplier but is essentially state-INDEPENDENT.** Max top-eigenvalue @ final checkpoint is monotone-inverse to the multiplier (~8× drop across 0.60→1.70); the two ×1.0 duplicates bracket to ~10% (noise floor); and the fork-2000 (later-state) curvature reproduces the fork-1500 law within ~5–25% at matched multipliers — i.e. the momentum-EoS relationship is a function of the LR multiplier and only weakly of the fork state.
+
+**(2) Seed-twins — `logs/kmaxwell/req019_seed_twins/`** (commit 19e7069)
+- 16/16 runs (4 seeds × base + 3 arms), per-seed isolated working dirs, warmstart step-1000 model + 8 optimizer shards verified before each seed's arms.
+- Paired final diffs (bi-Maxwell − candidate), n=4: **pr357 K8 +0.002768** (se 6.5e-5), **expann 0.982→0.944 +0.000285** (se 6.2e-5); both candidates beat the bi-Maxwell control on every seed. Presented as a run-to-run noise estimate, **not** the n=8 significance test.
+
+**(3) FW generalized-sharpness calibration — `logs/kmaxwell/req019_fw_calibration/`** (commit 343b16c)
+- Paper-faithful global block-spectral sharpness via Frank–Wolfe over the product of spectral-norm balls on all 72 Muon matrices, joint HVP with cross-block terms (a new tool + 8 CPU tests incl. a cross-block-coupling guard, under `impl/`). Two checkpoints (1500/2750).
+- K=50 converged (last-interval gain +1–2%); 5-restart spread ≤3.1% at K=50; single gradient-seeded restart ≈ ensemble; peak 40.8 GiB/rank, ~23 min/checkpoint. Euclidean Ritz retained for scale only (~10³× smaller; no agreement claimed).
 
 ### REQ-019 v3 GATE PASS (agent 2026-08-30) — fork-1500, SHA ebf53cd
 
