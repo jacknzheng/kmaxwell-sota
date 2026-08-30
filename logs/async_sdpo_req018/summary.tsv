@@ -1,0 +1,6 @@
+# REQ-018 partial (agent 2026-08-30). SHA 3bd7def. aux model nvidia/nemotron-3-super-120b-a12b:free. HINT GATE PASSED; step-200 blocked by free-tier 429 rate limits.
+arm	sha	hint_model	steps_reached	hint_attempts	hint_drops	openrouter_length	drop_rate	eval25_judge_score	eval25_judge_n	eval25_judge_errors	http_429	status
+answer_free	3bd7def	nemotron-3-super-120b-a12b:free	28	479	0	0	0.0%	0.0546	30	0	3693	crashed@28 (vLLM c10::Error after free-tier 429 stall)
+answer_bearing	3bd7def	nemotron-3-super-120b-a12b:free	28	477	0	0	0.0%	0.0504	24	6	3697	crashed@28 (vLLM c10::Error after free-tier 429 stall)
+# GATE: >=100 attempts YES; openrouter_length=0 YES; drop_rate<5% YES -> hint-truncation fix VALIDATED.
+# BLOCKER: free Nemotron tier rate-limited (~3693 x 429/arm) -> eval@25+rollout stall (~2h) -> vLLM worker c10::Error. Needs paid/higher-rate model or lighter eval to reach 200.
