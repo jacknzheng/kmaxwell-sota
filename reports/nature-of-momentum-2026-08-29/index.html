@@ -331,18 +331,17 @@
   faded, and it changed the optimizer, stored history, and model trajectory
   together. Its details are in Appendix C.</p>
 
-  <h2 id="experiment">4. Proposed experiment: does temporal weighting rotate Muon's update?</h2>
-  <p>The next experiment tests whether three measured summaries determine the
-  immediate Muon update: mean lag, the average age of its gradients;
+  <h2 id="experiment">4. Proposed experiment: are three kernel summaries sufficient?</h2>
+  <p>The experiment asks whether three summaries predict what a momentum kernel
+  does to Muon: mean lag, the average age of its gradients;
   alternating response <em>F</em> from Section 3; and white-noise gain, the
-  output variance under independent unit-variance gradients. A useful
-  constraint appears before training. Within the deployed family of a
-  raw-gradient term plus a nonnegative EMA mixture, matching these summaries
-  identifies essentially one kernel.</p>
-  <p>The test therefore makes the smallest enlargement that permits a real
-  comparison. Short moving averages, maintained by a bounded ring buffer, are
-  added to the warmed EMA bank. This produces two nonnegative kernels whose
-  three summaries agree while their weights across gradient age do not.</p>
+  output variance under independent unit-variance gradients. It first asks
+  whether their update angles exceed the divergence between duplicate controls,
+  then whether any resolved difference changes loss or curvature.</p>
+  <p>Within the deployed family of a raw-gradient term plus a nonnegative EMA
+  mixture, matching these summaries identifies essentially one kernel. The test
+  therefore adds the smallest new structure that permits a real comparison:
+  short moving averages maintained by a bounded ring buffer.</p>
   <figure class="wide">
     <img src="matched_pair.png" alt="Two temporal kernels with matched mean lag, alternating response, and white-noise gain but different shapes">
     <figcaption>Both kernels have unit response to a constant gradient and agree
@@ -361,13 +360,17 @@
     <div class="arrow">→</div>
     <div class="node"><strong>Swap coefficients</strong><br>Apply the matched kernels to the same history</div>
     <div class="arrow">→</div>
-    <div class="node"><strong>Read the effect</strong><br>Update rotation now; loss and curvature over a fixed window</div>
+    <div class="node"><strong>Read the effect</strong><br>Update angle now; loss and curvature over a fixed window</div>
   </div>
-  <p>Three checkpoints test whether the effect changes over training. At each
+  <p>The null is plausible, especially late in training: the kernels differ
+  materially only over periods 16–40, where gradient energy has decayed, and any
+  remaining energy may lie in directions that do not compete for the momentum
+  matrix's leading singular subspace.</p>
+  <p>Three checkpoints test whether sufficiency changes over training. At each
   checkpoint, matrix cosines and leading-subspace angles measure the immediate
-  rotation; duplicate control forks define the resolution floor. A fixed short
-  continuation then asks whether a resolved rotation changes validation loss or
-  curvature. The pre-sign momentum spectrum supplies the measurement missing
+  difference; duplicate control forks define the resolution floor. A fixed
+  short continuation then asks whether a resolved update difference changes
+  validation loss or curvature. The pre-sign momentum spectrum supplies the measurement missing
   from Section 3's analyses of momentum scale, update direction, and
   curvature.</p>
   <p>Classify the result sequentially: first ask whether any update angle clears
@@ -380,8 +383,8 @@
         <td>This pair reveals no missing temporal effect over the tested states.</td>
         <td>Repeat with one independent pair; stop if it also remains below the floor.</td></tr>
       <tr><td>An angle clears its floor, but no checkpoint clears both angle and downstream floors.</td>
-        <td>The remaining kernel structure rotates the update without a detectable short-window consequence.</td>
-        <td>Do not build a controller from the rotation alone.</td></tr>
+        <td>The remaining kernel structure changes the update without a detectable short-window consequence.</td>
+        <td>Do not build a controller from the angle alone.</td></tr>
       <tr><td>Exactly one checkpoint clears both angle and downstream floors.</td>
         <td>The useful temporal weighting depends on training state.</td>
         <td>Identify the state variable before extending the window.</td></tr>
@@ -436,13 +439,13 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v1200 v585 h43z"/></svg></span></span
       information beyond the three summaries at early, middle, and late
       checkpoints; cost: 0.5 aggregate GPU-hours.</li>
     <li><strong>Test training consequence.</strong> Fixed continuations connect
-      resolved rotation to loss and curvature; cost: 1.5 aggregate GPU-hours.</li>
+      resolved update differences to loss and curvature; cost: 1.5 aggregate GPU-hours.</li>
     <li><strong>Test scalar stability.</strong> The early <em>F</em>-fork decides
       whether the period-two boundary predicts curvature; cost: 2 aggregate
       GPU-hours.</li>
     <li><strong>Select the state.</strong> Fit
       <em>q</em><sub><em>t</em></sub> → <em>w</em><sup>*</sup> across checkpoints;
-      held-out rotation and outcomes eliminate useless signals. Replace offline
+      held-out update angles and outcomes eliminate useless signals. Replace offline
       curvature only with an online statistic that predicts the same weights on
       held-out checkpoints. Cost: 0.5 aggregate GPU-hours per validation
       rerun.</li>
