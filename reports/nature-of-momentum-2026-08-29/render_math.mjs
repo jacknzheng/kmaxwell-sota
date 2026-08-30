@@ -47,10 +47,14 @@ const formulas = {
   taylor_local: String.raw`L(\theta-\eta P_w)-L(\theta)\approx
     -\eta\langle g,P_w\rangle
     +\frac{\eta^2}{2}\langle P_w,\mathcal H P_w\rangle`,
-  controller_objective: String.raw`w^*(q_t)=\arg\min_{w\in\mathcal W}\mathbb E\!\left[
-    -\eta_t\langle g_t,P_w\rangle
-    +\frac{\eta_t^2}{2}\langle P_w,\mathcal H_tP_w\rangle
-    \,\middle|\,q_t\right]`,
+  controller_objective: String.raw`w^*(q_t)=\arg\min_{w\in\mathcal W}
+    \mathbb E_{b\in\mathcal B_{\rm opt}}\!\left[
+    L_b(\theta_w^+)-L_b(\theta)\,\middle|\,q_t\right]`,
+  deployed_step: String.raw`\theta_w^+=\operatorname{DeployedStep}(\theta,P_w)`,
+  cubic_diagnostic: String.raw`\Delta L_w^{(3)}=
+    -\eta\langle g,P_w\rangle
+    +\frac{\eta^2}{2}\langle P_w,\mathcal H P_w\rangle
+    -\frac{\eta^3}{6}\nabla^3L[P_w,P_w,P_w]`,
   alignment_threshold: String.raw`A_t=-\frac{2\langle g_t,\Delta_t\rangle}
     {\lVert\Delta_t\rVert^2}`,
   general_characteristic: String.raw`r-a+\eta\lambda\sum_{k\ge0}w_kr^{-k}=0`,
