@@ -238,6 +238,16 @@ partial evidence, then set `NEEDS-INFO` with the exact failing command and log.
 
 Full deliverable → `logs/async_sdpo_req018/` on completion (SHA, resolved slugs, hint-validation gate results, per-arm summary.tsv, 25-step eval records).
 
+### REQ-018 RESULT (agent 2026-08-30) — ✅ hint-fix gate PASSED; ⚠️ step-200 blocked by FREE-model 429 rate limit
+
+Evidence committed: `logs/async_sdpo_req018/` (`summary.tsv`, per-arm evidence).
+
+**Hint-truncation fix VALIDATED** on both diligence arms @ `3bd7def` (`reasoning_enabled=false`, `max_tokens=2048`, hint model `nvidia/nemotron-3-super-120b-a12b:free`): answer_free **0 drops / 0 `openrouter_length` over 479 attempts**; answer_bearing **0 / 0 over 477**. Gate (≥100 attempts, zero length, <5% drops) passes decisively — the REQ-011 hint-truncation problem is solved. eval@25 ran (nemotron judge; free-tier: 0 vs 6 judge_errors).
+
+**Blocked at step 28:** the FREE Nemotron tier is rate-limited (~**3693 HTTP 429/arm**). Hints retry through them (0 drops), but the eval@25 + rollouts overwhelmed the free endpoint → ~2h stall → vLLM worker `c10::Error` + shm dequeue timeout (`disable_custom_all_reduce=True` already). No checkpoint yet (crash < interval 50) → restart just re-crashes.
+
+**Decision needed to reach 200:** (a) paid/higher-rate aux model, (b) keep free + lighter eval (fewer held-out tasks, `eval_interval≥50`) + a bounded eval timeout, or (c) debug the vLLM `c10::Error`. Tell me which. Meanwhile the 2 boxes are **repurposed for REQ-019** (no external-API dependency) to keep the 2-node budget productive.
+
 Use separate boxes. (REQ-017 was removed as superseded; the constraint now applies to REQ-019.) This is a fresh SDPO execution
 request: fetch the exact SHA, resume the preserved diligence checkpoints,
 launch tau2, and commit the complete logs.
