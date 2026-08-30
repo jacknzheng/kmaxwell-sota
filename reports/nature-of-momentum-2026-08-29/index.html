@@ -93,22 +93,20 @@
   within each weight matrix. Momentum changes the relative influence of those
   directions before the matrix-sign step.</p></div>
 
-  <h2>1. Scheduling explains part of the K-Maxwell gain</h2>
-  <p>Scheduling the decay of one exponential moving average (EMA) of past
-  gradients recovers about one third of the validation-loss improvement of
-  K8—an eight-EMA K-Maxwell mixture—over bi-Maxwell, the matched two-EMA
-  control. K6, the six-EMA mixture, and K8 are too close to distinguish in a
-  single-seed discovery comparison, so these runs provide no resolved benefit
-  from the extra two summaries.</p>
+  <h2>1. A single EMA schedule captures one tenth of the K8 gain</h2>
+  <p>Across four paired seeds, scheduling the decay of one exponential moving
+  average (EMA) improves validation loss by about one tenth as much as K8, an
+  eight-EMA K-Maxwell mixture. Both comparisons use bi-Maxwell, the matched
+  two-EMA rule, as their control.</p>
   <p>The comparison varies two freedoms in temporal weighting. Scheduling one
   EMA changes its memory length during training. K-Maxwell instead maintains
   several EMA summaries with different decay rates and schedules their mixture
   weights.</p>
   <figure>
-    <img src="gain_decomposition.png" alt="Scheduled EMA recovers part of the K-Maxwell gain, while scheduled K6 and K8 are nearly tied">
+    <img src="gain_decomposition.png" alt="Across four paired seeds, scheduled K8 improves validation loss about ten times as much as a scheduled single EMA">
     <figcaption>Validation-loss reduction relative to the matched bi-Maxwell
-    control. Every run shares the same model and optimizer state through the
-    step-1000 fork. Exact losses and schedules appear in Appendix A.</figcaption>
+    control, averaged across four paired seeds. Exact values and the original
+    discovery runs appear in Appendix A.</figcaption>
   </figure>
   <p>The remaining endpoint gap has three coupled sources: the temporal weights
   used at the end, the gradient summaries stored in the momentum buffers, and
@@ -572,7 +570,20 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
 
   <h2>Appendices</h2>
   <details>
-    <summary>A. Exact discovery measurements</summary>
+    <summary>A. Exact training comparisons</summary>
+    <p>Four paired seeds confirm the K8 gain and reduce the estimated gain from
+    scheduling a single EMA:</p>
+    <table class="data">
+      <thead><tr><th>momentum rule</th><th>mean gain over paired bi-Maxwell</th><th>standard error</th></tr></thead>
+      <tbody>
+        <tr><td>scheduled single EMA</td><td>+0.000285</td><td>0.000062</td></tr>
+        <tr><td>scheduled K8</td><td>+0.00277</td><td>0.000065</td></tr>
+      </tbody>
+    </table>
+    <p class="small">Every seed favors both scheduled rules over its paired
+    bi-Maxwell control. These comparisons estimate replication noise with four
+    seeds rather than the eight required by the official Track 3 test.</p>
+    <p>The initial single-seed comparisons were:</p>
     <table class="data">
       <thead><tr><th>momentum rule</th><th>validation loss</th><th>gain over matched control</th></tr></thead>
       <tbody>
@@ -582,10 +593,10 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
         <tr><td>scheduled K8</td><td>3.27250</td><td>+0.00297</td></tr>
       </tbody>
     </table>
-    <p class="small">These are matched single-seed discovery runs forked from
-    the same step-1000 state. The scheduled single EMA moves from decay 0.982
-    to 0.944. Its improvement was +0.00068 in a second stack, so the one-third
-    comparison is an approximate scale.</p>
+    <p class="small">These matched discovery runs share the same step-1000
+    state. The scheduled single EMA moves from decay 0.982 to 0.944. Its
+    apparent gain was about 3.4 times larger here than in the four-seed mean;
+    the K8 discovery gain agrees with the four-seed estimate.</p>
     <p class="small">The bi-Maxwell control uses EMA decays 0.85 and 0.98 with
     mixture weights 0.4385 and 0.5615 after the step-1000 switch.</p>
     <p class="small">A separate scheduled power-law approximation lost to its
@@ -679,10 +690,10 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
   </details>
   <details>
     <summary>D. Statistical scope</summary>
-    <p class="small">The training comparisons use one seed and one checkpoint
-    fork per candidate, so the one-third decomposition is a scale estimate.
-    Published eight-seed results show gains from scheduled EMA mixtures on
-    different stacks; they do not calibrate this one-seed decomposition. The
+    <p class="small">The K8 and scheduled-single-EMA gains in Section 1 are
+    means over four paired seeds. These runs estimate replication noise and do
+    not constitute the official eight-seed Track 3 significance test. The
+    K6 comparison in Appendix A remains a single-seed discovery result. The
     matched-kernel experiment uses duplicate controls at every checkpoint, and the distilled
     rule is evaluated across seeds. The momentum-free curvature comparison uses a separate
     trajectory whose weight norms are about 0.31 times the reference. Kernel

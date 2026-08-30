@@ -25,17 +25,19 @@ def save(fig, name):
 
 
 def gains():
-    labels = ["scheduled\nEMA", "scheduled\nK6", "scheduled\nK8"]
-    values = np.array([0.00098, 0.00286, 0.00297]) * 1000
-    colors = [ORANGE, GREEN, PURPLE]
+    labels = ["scheduled\nsingle EMA", "scheduled\nK8"]
+    values = np.array([0.000285, 0.00277]) * 1000
+    errors = np.array([0.000062, 0.000065]) * 1000
+    colors = [ORANGE, PURPLE]
 
     fig, ax = plt.subplots(figsize=(8.4, 4.65))
-    ax.bar(np.arange(3), values, width=0.58, color=colors)
-    ax.set_xticks(np.arange(3), labels)
-    ax.set_ylim(0, 3.45)
+    x = np.arange(2)
+    ax.bar(x, values, yerr=errors, width=0.58, color=colors, capsize=5)
+    ax.set_xticks(x, labels)
+    ax.set_ylim(0, 3.2)
     ax.set_ylabel("validation-loss reduction vs bi-Maxwell  (×10⁻³)", color=INK)
     ax.set_title(
-        "One scheduled EMA captures part of the K-Maxwell gain",
+        "K8 gains about ten times as much as one scheduled EMA",
         loc="left",
         fontsize=15,
         color=INK,
@@ -45,7 +47,7 @@ def gains():
     ax.text(
         0,
         1.015,
-        "K6 and K8 are indistinguishable in these single-seed runs",
+        "Mean ± standard error across four paired seeds",
         transform=ax.transAxes,
         ha="left",
         va="bottom",
