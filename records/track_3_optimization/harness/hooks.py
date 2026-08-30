@@ -205,7 +205,9 @@ def cool_down_learning_rate(*, cooldown_frac: float,
                             shape: str = "linear",
                             schedule_step_min: int | None = None,
                             schedule_step_max: int | None = None,
-                            eta_scale: float = 1.0) -> Hook:
+                            eta_scale: float = 1.0,
+                            fixed_eta_after_step: int | None = None,
+                            fixed_eta_after: float | None = None) -> Hook:
     """The record's stable-then-decay schedule, pulling the one grouped lever:
     every group's lr = its base lr times eta. shape selects the decay curve
     inside the cooldown window: "linear" (the record's) or "cosine"
@@ -217,8 +219,18 @@ def cool_down_learning_rate(*, cooldown_frac: float,
     step-S eta from the start until the true step catches up. eta_scale
     multiplies the resulting eta (values above 1 exceed the peak rate)."""
     assert shape in ("linear", "cosine")
+    if (fixed_eta_after_step is None) != (fixed_eta_after is None):
+        raise ValueError("fixed_eta_after_step and fixed_eta_after must be set together")
+    if fixed_eta_after_step is not None and fixed_eta_after_step < 0:
+        raise ValueError("fixed_eta_after_step must be nonnegative")
+    if fixed_eta_after is not None and fixed_eta_after < 0:
+        raise ValueError("fixed_eta_after must be nonnegative")
+
     def hook(config: Config, state: State) -> State:
         step = state["step"]
+        if fixed_eta_after_step is not None and step >= fixed_eta_after_step:
+            state["optimizer"].scale_learning_rates(fixed_eta_after)
+            return state
         if schedule_step_max is not None:
             step = min(step, schedule_step_max)
         if schedule_step_min is not None:
