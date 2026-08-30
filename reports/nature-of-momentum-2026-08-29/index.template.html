@@ -422,12 +422,16 @@
   largest frequency-response separation moves toward longer periods. The
   immediate measurements above use that 128-step construction; its
   continuations remain gated on approval of this protocol change.</p>
-  <p class="small">A virtual deployed step also separates the kernels in
-  one-step loss: A is better and B worse at the early checkpoint, the gap
-  narrows in the middle, and both approach the control late in the learning-rate
-  cooldown. Those loss comparisons remain provisional until the same evaluation
-  batches are scored on the realized one-step checkpoints. The third-order
-  diagnostic found no kernel-specific sharpening warning.</p>
+  <p class="small">One-step loss also separates the kernels: A is better and B
+  worse at the early checkpoint, the gap narrows in the middle, and both
+  approach the control late in the learning-rate cooldown. At the early
+  checkpoint, the realized parameter updates change loss by &minus;0.000220 for
+  A and +0.003736 for B; duplicate controls differ by 0.000010. The virtual
+  evaluator agrees with these realized losses to within 0.000018 and supplies
+  the middle- and late-checkpoint estimates. This calibration was performed
+  after the parameter-level parity check, so it confirms the early ordering
+  without retroactively turning that check into a preregistered pass. The
+  third-order diagnostic found no kernel-specific sharpening warning.</p>
   <p>If the matched pair establishes that shape matters, candidate kernels are
   selected without a training sweep. At a shared checkpoint, recorded gradient
   history constructs each candidate update; fresh minibatches score the true
