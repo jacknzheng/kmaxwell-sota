@@ -221,8 +221,22 @@ evidence and stop rather than restarting from zero.
 
 ## REQ-019: momentum EoS law across fork states
 
-- status: OPEN
+- status: NEEDS-INFO — **shared-state gate FAILED**: the generated "fork" arms diverge from ~step 125, not at the fork; the LR multiplier is applied globally (from step 0), not gated to post-fork. Runs preserved; curvature not run (shared-state premise void). Fix the config generator / fork gating, then I'll re-run.
 - requested: OpenAI Codex for Jeffrey Cheng / 2026-08-30 01:40 UTC
+
+### REQ-019 STATUS (agent 2026-08-30) — 9 arms trained; shared-state gate FAILED (real divergence, not nondeterminism)
+
+All 9 EoS arms trained to their stop steps on `kmaxwell-sota @ 755c49d2` (2-node budget, torch 2.10+cu128). Checkpoints saved every 125 steps in `dumps_<run_id>/model_step*.pt`. Ran the shared-state gate before accepting any measurement, per your instruction.
+
+**Gate FAILS (see `logs/kmaxwell/req019_eos_state_dependence/shared-state-check.tsv`):**
+- Fork-1500: all **6** arms have **distinct** `model_step001500` sha256 (each 572213441 B). Fork-2000: all **3** distinct at `model_step002000`.
+- Max tensorwise abs diff (fork-1500, s060 vs s100 / s130 @ step 1500): **8.675e+01 / 8.125e+01** — this is ~8 orders of magnitude above the ~1e-6 you'd see from NCCL/cuBLAS nondeterminism, so it is a **genuine trajectory divergence**, not run-to-run noise.
+- **First divergent checkpoint = step 125** (earliest saved): s060 vs s100 max_abs_diff **26.5** @125 → 69.5 @750 → 86.0 @1375 → 86.75 @1500. They diverge from the *start of training*, not at the fork.
+- The only config difference between two fork-1500 arms (e.g. s060 vs s100) is the LR-multiplier value (`0.6` vs `1.0`) + `run_id`/`dump_dir`. Since they diverge from step 125, **the multiplier is being applied globally (from step 0) rather than only after the fork step 1500** — i.e. `make_eos_state_dependence_configs.py` / the runner is not encoding a shared-pre-fork fork. (The duplicate-1.00 control `s100` vs `s100dup` also has distinct hashes, but those are on separate boxes; the same-box s060/s100/s130 comparison already proves the divergence.)
+
+Per your gate protocol I **preserved the runs and did not silently call the states shared, and did not run the 45 curvature measurements** (measuring per-matrix curvature across states that aren't actually shared would be meaningless). 
+
+**To unblock:** fix the config generator / optimizer so the LR multiplier applies **only after `fork_step`** (verify two arms are bit-identical through the fork before diverging), push the corrected SHA, and I'll re-run the 9 arms + gate + curvature. The 9 trained (invalid-fork) dump sets are on boxes `wol2ygw`/`wn28y0w`; tell me to hold them for deeper diagnosis or release (they can't be committed — checkpoint tensors — and a corrected re-run regenerates them). The **authorized 4-seed noise fleet** is also on hold behind this fix.
 - priority: run alongside REQ-018 without preempting it
 - concurrency cap: at most 4 simultaneous 8xH100 workstations for REQ-019
 
