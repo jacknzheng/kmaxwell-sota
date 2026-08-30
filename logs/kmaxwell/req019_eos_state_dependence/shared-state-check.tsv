@@ -45,3 +45,32 @@ s060	0.60	0.42	0.0024	0.015	0.009	OK
 s100	1.00	0.7	0.004	0.025	0.015	OK
 s170	1.70	1.19	0.0068	0.0425	0.0255	OK
 # every group = base x mult exactly -> PASS
+#
+# ===================================================================
+# REQ-022 shared-state gate — fork-1500 FINE LADDER (7 arms resume eos_shared_state@1500, regenerated)
+# GATE VERDICT: PASS (all three checks)
+#
+# (1) sha256 model_step001500.pt — expect identical across all 7 ladder arms
+arm	fork	multiplier	sha256_model_step001500	verdict
+s065	1500	0.65	de88e4aa56b46bc8a2b086498a33e3bc6c8f8186fa79a1c1f14140cc2e0e2245	OK
+s085	1500	0.85	de88e4aa56b46bc8a2b086498a33e3bc6c8f8186fa79a1c1f14140cc2e0e2245	OK
+s090	1500	0.90	de88e4aa56b46bc8a2b086498a33e3bc6c8f8186fa79a1c1f14140cc2e0e2245	OK
+s110	1500	1.10	de88e4aa56b46bc8a2b086498a33e3bc6c8f8186fa79a1c1f14140cc2e0e2245	OK
+s115	1500	1.15	de88e4aa56b46bc8a2b086498a33e3bc6c8f8186fa79a1c1f14140cc2e0e2245	OK
+s145	1500	1.45	de88e4aa56b46bc8a2b086498a33e3bc6c8f8186fa79a1c1f14140cc2e0e2245	OK
+s085dup	1500	0.85	de88e4aa56b46bc8a2b086498a33e3bc6c8f8186fa79a1c1f14140cc2e0e2245	OK
+# unique-hash count = 1 -> PASS  (note: regenerated eos_shared_base; hash de88e4aa differs from REQ-019's 3d9560ea, expected — different base run, but internally consistent across all 7 ladder arms)
+#
+# (2) max tensorwise abs-diff, model_step001500 s065 vs s145: 0.000e+00 (185/185 keys, symdiff 0) -> PASS
+#
+# (3) LR of every optimizer group at first fork update (step 1500) = base x multiplier
+# base LRs (mult 1.00): embed=0.7  proj=0.004  blocks=0.025  other=0.015
+arm	mult	embed.weight	proj.weight	blocks.*.weight	.*(other)	verdict
+s065	0.65	0.455	0.0026	0.01625	0.00975	OK
+s085	0.85	0.595	0.0034	0.02125	0.01275	OK
+s090	0.90	0.63	0.0036	0.0225	0.0135	OK
+s110	1.10	0.77	0.0044	0.0275	0.0165	OK
+s115	1.15	0.805	0.0046	0.02875	0.017250	OK
+s145	1.45	1.015	0.0058	0.03625	0.02175	OK
+s085dup	0.85	0.595	0.0034	0.02125	0.01275	OK
+# every group = base x mult exactly -> PASS
