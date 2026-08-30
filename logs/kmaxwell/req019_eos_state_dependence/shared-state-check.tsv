@@ -1,13 +1,26 @@
-FORK1500 eos_f1500_s060 57e9cd848d70f49ff1df2097069bb29006a630d33369f33c64ce64d5a6f7d1cd 572213441
-FORK1500 eos_f1500_s100 afde1b77e632f80bbed54b7cd4c1c1648bc8a01dccb6f7e9acec4e73a5f83813 572213441
-FORK1500 eos_f1500_s130 67f2a36e0f4c61d39dfacddc9a584174cb0bc7a36aaba9bb3f045be29c0998bf 572213441
-FORK2000 eos_f2000_s060 a4676deed03c180d183b54503dcfb4ee0b028acbf31b363c839c86ef5206f0d5 572213441
-FORK2000 eos_f2000_s170 a401972658034a52163c949dadc5892be39e72e53f70db5ebfca69d5d8d33853 572213441
-FORK1500 eos_f1500_s077 f81e210c3ac6e593155815362d6d04e503b19ab1e93b00e38ae96bb73afbe2ca 572213441
-FORK1500 eos_f1500_s100dup 53760ad4014947376e44111de61fd024847071398cf62f3c42820e321bf3c29b 572213441
-FORK1500 eos_f1500_s170 9c1a4a9ecdaf6fb33f80ee5971650057496531a4e0648b63fb35ff74d3e2721d 572213441
-FORK2000 eos_f2000_s100 7923d6f3dbd4b369d43608745aeae0b7bd511527ec1e132fe6d60232e9848a00 572213441
-# GATE VERDICT: FAIL. All 6 fork-1500 arms have distinct model_step001500 hashes; all 3 fork-2000 distinct at model_step002000.
-# max_abs_diff (fork-1500, s060 vs s100/s130 @ step1500): 8.675e+01 / 8.125e+01  -- NOT nondeterminism (~1e-6); real divergence.
-# first divergent checkpoint = step 000125 (earliest saved): s060 vs s100 max_abs_diff 2.653e+01 (125), 6.950e+01 (750), 8.600e+01 (1375), 8.675e+01 (1500).
-# ROOT: arms diverge from ~step 125, not at fork 1500; only config difference is the LR multiplier -> multiplier applied GLOBALLY (from step 0), not gated to post-fork. The generated fork is not a shared-trajectory fork.
+# REQ-019 v3 shared-state gate — fork-1500 (SHA ebf53cd, serialized eos_shared_base state)
+# box: qvgl1eq (8xH100), all 6 arms on base node (9.9GB eos_shared_state not cross-node-copied; spec permits base-node-only)
+# GATE VERDICT: PASS (all three checks)
+#
+# (1) sha256 model_step001500.pt — expect identical across all 6 arms
+arm	fork	multiplier	sha256_model_step001500	verdict
+s060	1500	0.60	3d9560ea86d8f7a930a946e3ad92917ffdaf772c40c94d604bfcd1aa3f96cb1f	OK
+s077	1500	0.77	3d9560ea86d8f7a930a946e3ad92917ffdaf772c40c94d604bfcd1aa3f96cb1f	OK
+s100	1500	1.00	3d9560ea86d8f7a930a946e3ad92917ffdaf772c40c94d604bfcd1aa3f96cb1f	OK
+s100dup	1500	1.00	3d9560ea86d8f7a930a946e3ad92917ffdaf772c40c94d604bfcd1aa3f96cb1f	OK
+s130	1500	1.30	3d9560ea86d8f7a930a946e3ad92917ffdaf772c40c94d604bfcd1aa3f96cb1f	OK
+s170	1500	1.70	3d9560ea86d8f7a930a946e3ad92917ffdaf772c40c94d604bfcd1aa3f96cb1f	OK
+# unique-hash count = 1  -> PASS
+#
+# (2) max tensorwise abs-diff, model_step001500 s060 vs s170: 0.000e+00 (185/185 keys, symdiff 0) -> PASS
+#
+# (3) LR of every optimizer group at first fork update (step 1500) = base x multiplier
+# base LRs (mult 1.00, s100): embed=0.7  proj=0.004  blocks=0.025  other=0.015
+arm	mult	embed.weight	proj.weight	blocks.*.weight	.*(other)	verdict
+s060	0.60	0.42	0.0024	0.015	0.009	OK
+s077	0.77	0.539	0.00308	0.01925	0.01155	OK
+s100	1.00	0.7	0.004	0.025	0.015	OK
+s100dup	1.00	0.7	0.004	0.025	0.015	OK
+s130	1.30	0.91	0.0052	0.0325	0.0195	OK
+s170	1.70	1.19	0.0068	0.0425	0.0255	OK
+# every group = base x mult exactly -> PASS
