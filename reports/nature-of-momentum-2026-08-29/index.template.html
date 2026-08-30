@@ -38,6 +38,11 @@
     .evidence div { padding:15px 16px; border:1px solid var(--line);
       border-radius:8px; background:#fafbfc; }
     .evidence strong { display:block; margin-bottom:4px; color:var(--purple); }
+    .state-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px;
+      margin:1.2rem 0 1.55rem; }
+    .state-grid div { padding:15px 16px; border:1px solid var(--line);
+      border-radius:8px; background:#fafbfc; }
+    .state-grid strong { display:block; margin-bottom:4px; color:var(--purple); }
     .flow { display:grid; grid-template-columns:1fr 22px 1fr 22px 1fr;
       align-items:stretch; margin:1.5rem 0; }
     .flow .node { padding:14px; border:1px solid var(--line); border-radius:8px;
@@ -65,6 +70,7 @@
     @media (max-width:720px) { main { width:100%; max-width:100%; margin:0; padding:38px 22px 56px; }
       h1 { font-size:2rem; } body { font-size:16px; }
       .evidence { grid-template-columns:1fr; }
+      .state-grid { grid-template-columns:1fr; }
       .flow { grid-template-columns:1fr; gap:8px; }
       .flow .arrow { transform:rotate(90deg); }
       .outcome { display:block; max-width:100%; overflow-x:auto; }
@@ -295,88 +301,115 @@
   faded, and it changed the optimizer, stored history, and model trajectory
   together. Its details are in Appendix C.</p>
 
-  <h2>4. Proposed experiment: does temporal weighting rotate Muon's update?</h2>
+  <h2 id="experiment">4. Proposed experiment: does temporal weighting rotate Muon's update?</h2>
   <p>The next experiment tests whether three measured summaries determine the
-  immediate Muon update. For this first test, restrict the kernels to
-  nonnegative temporal weights and normalize their response to a constant
-  gradient to one. Mean lag is the average age of the gradients a kernel uses.
-  Then match mean lag, alternating response <em>F</em>, and white-noise gain,
-  the output variance for independent unit-variance input. Allow their
-  other weights to differ. If the resulting updates differ, these three
-  summaries do not determine the kernel's immediate effect.</p>
+  immediate Muon update. A useful constraint appears before training: within
+  the deployed family—a raw-gradient term plus a nonnegative EMA mixture—matching
+  mean lag, alternating response <em>F</em>, and white-noise gain identifies
+  essentially one kernel. Inside that family, the summaries already determine
+  the temporal weighting.</p>
+  <p>The test therefore makes the smallest enlargement that permits a real
+  comparison. Short moving averages, maintained by a bounded ring buffer, are
+  added to the warmed EMA bank. This produces two nonnegative kernels whose
+  three summaries agree while their weights across gradient age do not.</p>
+  <figure class="wide">
+    <img src="matched_pair.png" alt="Two temporal kernels with matched mean lag, alternating response, and white-noise gain but different shapes">
+    <figcaption>Both kernels have unit response to a constant gradient and agree
+    on mean lag, <em>F</em>, and white-noise gain. Their frequency responses
+    differ by more than twofold over periods 16–39 despite matching the scheduled
+    EMA reference within 0.1%. A 64-step ring buffer implements the displayed
+    pair; 32 steps is the minimum feasible extra history. The left panel begins
+    at lag one because its horizontal axis is logarithmic.</figcaption>
+  </figure>
+  <p>The intended difference is where the kernels place weight across gradient
+  age. Mean lag fixes the average age used; <em>F</em> fixes the response to
+  sign-alternating gradients; white-noise gain fixes variance under independent
+  gradient noise. The pair is re-solved against the finite history available at
+  each fork; Appendix G gives the construction and matching tolerances.</p>
   <div class="flow" aria-label="Same-state intervention design">
-    <div class="node"><strong>One checkpoint</strong><br>One model and one bank of stored gradient averages</div>
+    <div class="node"><strong>Shared state</strong><br>Same model, gradient history, data order, and schedule</div>
     <div class="arrow">→</div>
-    <div class="node"><strong>Two matched kernels</strong><br>Unit constant response; same mean lag, <em>F</em>, and noise gain</div>
+    <div class="node"><strong>Swap coefficients</strong><br>Apply the matched kernels to the same history</div>
     <div class="arrow">→</div>
-    <div class="node"><strong>Measure</strong><br>Momentum spectrum and update angles; then fixed-window loss and curvature</div>
+    <div class="node"><strong>Read the effect</strong><br>Update rotation now; loss and curvature over a fixed window</div>
   </div>
-  <p>At each checkpoint, record each candidate's pre-sign singular values and
-  ideal-sign polar factor. Project every EMA stream onto the unchanged
-  control's singular vectors and retain its residual. Compare
-  candidate-to-control matrix cosines and leading-subspace angles. These
-  measurements test the time-scale-to-direction state proposed in Section 2.</p>
-  <p>Run this comparison from early, middle, and late checkpoints because the
-  useful temporal weighting may depend on training state. Each fork keeps the
-  model, stored gradient averages, data order, learning-rate schedule, and all
-  other optimizer state fixed. Only the coefficients combining the stored
-  averages change. The continuation follows the original schedule for a
-  fixed measurement window chosen before launch, giving faster feedback than
-  a full run.</p>
-  <p>The immediate readouts are the matrix cosine and leading-subspace angle
-  between the two matrix-sign updates. The continuation then tests whether
-  validation loss or curvature separates by more than it does between two
-  unchanged control forks. A reproducible separation would show that the
-  three descriptors do not determine the immediate update. No resolved
-  separation at any checkpoint would leave stored-state initialization and
-  trajectory history as competing explanations.</p>
-  <p>One additional comparison varies <em>F</em> while maintaining unit response
-  to a constant gradient and matching mean lag and noise gain. Run it near
-  steps 1500–2000, while the gradient history still has a strong alternating
-  component. This is the direct test of the scalar period-two prediction
-  developed in Section 3.</p>
+  <p>Three checkpoints test whether the effect changes over training. At each
+  checkpoint, matrix cosines and leading-subspace angles measure the immediate
+  rotation; duplicate control forks define the resolution floor. A fixed short
+  continuation then asks whether a resolved rotation changes validation loss or
+  curvature. The pre-sign momentum spectrum supplies the measurement missing
+  from Section 3's analyses of momentum scale, update direction, and
+  curvature.</p>
+  <table class="outcome">
+    <thead><tr><th>Observation</th><th>Conclusion</th><th>Decision</th></tr></thead>
+    <tbody>
+      <tr><td>No update angle exceeds the duplicate-control floor.</td>
+        <td>This pair reveals no missing temporal effect over the tested states.</td>
+        <td>Repeat with one independent pair; stop if it also remains below the floor.</td></tr>
+      <tr><td>Update angles exceed their floor, but loss and curvature do not.</td>
+        <td>The remaining kernel structure rotates the update without a detectable short-window consequence.</td>
+        <td>Do not build a controller from the rotation alone.</td></tr>
+      <tr><td>Loss or curvature exceeds its control floor at exactly one checkpoint.</td>
+        <td>The useful temporal weighting depends on training state.</td>
+        <td>Identify the state variable before extending the window.</td></tr>
+      <tr><td>Loss or curvature exceeds its control floor at two or more checkpoints.</td>
+        <td>The matched summaries omit a reproducible, consequential feature.</td>
+        <td>Fit the smallest state-conditioned rule that predicts the effect.</td></tr>
+    </tbody>
+  </table>
+  <p>The scalar stability claim gets a separate comparison near steps
+  1500–2000, where period-two energy is still present. This fork varies
+  <em>F</em> while matching constant response, mean lag, and white-noise gain,
+  directly testing the period-two prediction from Section 3.</p>
 
-  <h2>5. Proposed program: from measurement to a small controller</h2>
-  <p>If the same-state test identifies a reproducible effect, retain the
-  smallest EMA bank that preserves it. The implementation exposes at most one
-  user-facing hyperparameter.</p>
-  <p>Let <em>q</em><sub>t</sub> contain measurements available to the
-  optimizer: the learning rate, the measured curvature and its
-  inverse-learning-rate reference, and the per-time-scale projection readouts
-  from Section 4. For kernel weights <em>w</em>, define
-  <em>Z</em><sub><em>w</em></sub> = ∑<sub><em>k</em></sub>
-  <em>w</em><sub><em>k</em></sub><em>G</em><sub><em>t</em>−<em>k</em></sub>
-  and <em>P</em><sub><em>w</em></sub> =
-  msign(<em>Z</em><sub><em>w</em></sub>).
-  Constrain the online EMA bank to a bounded response to white-noise input. Use
-  the current gradient
-  <em>g</em><sub>t</sub>, Hessian ℋ<sub>t</sub>, and candidate Muon update
-  <em>P</em><sub>w</sub> to choose weights that minimize expected one-step loss
-  change conditional on that state:</p>
+  <h2 id="controller">5. Proposed program: from measurement to a small controller</h2>
+  <p>A controller is justified only if measured state predicts which temporal
+  weighting helps. Its candidate state <em>q</em><sub>t</sub> combines global
+  optimization signals with per-matrix readouts, each tied to an observation
+  above.</p>
+  <div class="state-grid">
+    <div><strong>Optimization scale</strong><br>Learning rate and measured
+      curvature track proximity to the inverse-learning-rate pinning law.</div>
+    <div><strong>Matrix progress</strong><br>Per-matrix curvature records the
+      stable identity component and slow drift found in Section 3.</div>
+    <div><strong>Temporal direction</strong><br>EMA projections into the
+      pre-sign singular basis measure each time scale's matrix contribution.</div>
+    <div><strong>Realized boundary</strong><br>{{inline:alignment_threshold}}
+      marks where the deployed step stops decreasing loss. Here
+      <em>g</em><sub>t</sub> is the current gradient and
+      Δ<sub><em>t</em></sub> is the actual parameter change, measured in the
+      optimizer's update norm.</div>
+  </div>
+  <p>Given this state, choose the kernel weights that minimize a quadratic
+  approximation to expected one-step loss change. Cap white-noise gain because
+  unconstrained combinations can amplify stochastic gradients. For kernel weights
+  <em>w</em>, define <em>Z</em><sub><em>w</em></sub> =
+  ∑<sub><em>k</em></sub><em>w</em><sub><em>k</em></sub>
+  <em>G</em><sub><em>t</em>−<em>k</em></sub> and
+  <em>P</em><sub><em>w</em></sub> =
+  msign(<em>Z</em><sub><em>w</em></sub>). The feasible set 𝒲 contains
+  combinations representable by the EMA bank, normalized to unit constant
+  response and capped in white-noise gain.</p>
   <div class="equation">{{display:controller_objective}}</div>
-  <p>Use the optimized weight vectors at the three checkpoints as observations.
-  Test whether one measured state variable predicts those weights, then whether
-  the resulting rule predicts held-out rotation and loss or curvature. Keep
-  only features that pass both tests at all three checkpoints.</p>
-  <p>The scalar reference gets a separate same-state test between steps 1500
-  and 2000, while period-two gradient energy is still large. Vary alternating
-  response <em>F</em> while holding DC response, average lag, and white-noise
-  response fixed; then measure the immediate matrix-sign rotation and the
-  curvature reached during the continuation.</p>
+  <p>The program advances only when each stage earns the next expense.</p>
   <ol class="roadmap">
-    <li><strong>Same-state response.</strong> Compare kernels matched on average
-      lag and their responses to sign-alternating and white-noise inputs at
-      early, middle, and late checkpoints.</li>
-    <li><strong>Post-fork outcome.</strong> Run the pre-specified fixed window and
-      record first-step rotation, loss, and curvature.</li>
-    <li><strong>Scalar stability check.</strong> At a step-1500–2000 checkpoint,
-      vary alternating response <em>F</em> while holding the other summaries
-      fixed.</li>
-    <li><strong>State selection.</strong> Test whether one measured state variable
-      predicts the optimized weights and held-out rotation or loss across all
-      three checkpoints.</li>
-    <li><strong>Implementation check.</strong> Test the smallest EMA bank across
-      seeds on baseline, high-learning-rate, and low-learning-rate trajectories.</li>
+    <li><strong>Map the immediate response.</strong> The matched pair isolates
+      information beyond the three summaries at early, middle, and late
+      checkpoints; cost: 0.5 aggregate GPU-hours.</li>
+    <li><strong>Test training consequence.</strong> Fixed continuations connect
+      resolved rotation to loss and curvature; cost: 1.5 aggregate GPU-hours.</li>
+    <li><strong>Test scalar stability.</strong> The early <em>F</em>-fork decides
+      whether the period-two boundary predicts curvature; cost: 2 aggregate
+      GPU-hours.</li>
+    <li><strong>Select the state.</strong> Fit
+      <em>q</em><sub><em>t</em></sub> → <em>w</em><sup>*</sup> across checkpoints;
+      held-out rotation and outcomes eliminate useless signals, and offline
+      curvature must yield to a cheap proxy before deployment. Cost: 0.5
+      aggregate GPU-hours per validation rerun.</li>
+    <li><strong>Compress and verify.</strong> Seed tests on ordinary, high-, and
+      low-learning-rate trajectories retain only the smallest EMA bank that
+      generalizes; cost: 0.5 aggregate GPU-hours per validation rerun before a
+      seed fleet is justified.</li>
   </ol>
   <div class="thesis"><p><strong>Decision requested.</strong> Approve the
   same-state response map and its fixed continuation window. Defer another
@@ -386,6 +419,8 @@
   8×A100 node:</strong> 0.5 aggregate GPU-hours for the response map, 1.5 for
   the first fixed-window continuations, 2 for the scalar stability fork, and
   0.5 per validation rerun.</p></div>
+  <p>The end state is a minimal EMA bank governed by one measured quantity and
+  exposing at most one user-facing hyperparameter.</p>
 
   <h2>Appendices</h2>
   <details>
@@ -534,6 +569,20 @@
     available history and compute its constant response, mean lag, alternating
     response, and white-noise gain as</p>
     <div class="equation">{{display:finite_history_descriptors}}</div>
+    <p class="small">The deployed family is a nonnegative mixture of the
+    current-gradient term and warmed EMA streams. At the scheduled-EMA endpoint,
+    a convex quadratic program certifies that EMA streams alone cannot attain
+    the target white-noise gain after mean lag and <em>F</em> are fixed. Adding
+    the current-gradient term makes the target attainable, but the equality
+    conditions identify essentially one mixture. The displayed pair enlarges
+    this basis with finite moving averages; their bounded lengths permit an
+    exact ring-buffer implementation. At the late scheduled-EMA endpoint, the
+    displayed kernels have mean lag 16.0303, <em>F</em> = 0.0772889, and
+    white-noise gain 0.0338518; corresponding values agree between the two
+    kernels to about 10<sup>−7</sup> and remain within 0.1% of the reference.
+    Their largest response ratio is 4.24 near period 35. A 32-step construction
+    remains feasible, whereas a 16-step basis does not reach the target
+    white-noise gain.</p>
     <p class="small">Decompose the unchanged control's pre-sign matrix as
     <em>Z</em><sub>ref</sub> = <em>U</em>Σ<em>V</em><sup>T</sup>. For each EMA
     stream <em>E</em><sub>j</sub>, record its coordinates
@@ -555,6 +604,7 @@
   <h3>Technical references</h3>
   <ul class="small">
     <li><a href="https://arxiv.org/abs/2604.14108">Andreyev et al., <em>Momentum Further Constrains Sharpness at the Edge of Stochastic Stability</em></a></li>
+    <li><a href="https://arxiv.org/abs/2603.05002">Islamov et al., <em>Non-Euclidean Gradient Descent Operates at the Edge of Stability</em></a></li>
     <li><a href="https://arxiv.org/abs/2601.19156">Kim and Oh, <em>Convergence of Muon with Newton–Schulz</em></a></li>
     <li><a href="https://arxiv.org/abs/2608.26288">Li and Tsuchiya, <em>Muon with Finite Newton–Schulz</em></a></li>
   </ul>
