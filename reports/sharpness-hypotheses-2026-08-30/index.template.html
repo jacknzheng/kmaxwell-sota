@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>What sets layerwise sharpness in Muon?</title>
+  <link rel="stylesheet" href="../nature-of-momentum-2026-08-29/katex.min.css">
+  <style>
+    :root {
+      --ink:#17202a; --muted:#596575; --paper:#fff; --page:#eef1f5;
+      --line:#d9e0e8; --purple:#5746d9; --purple-wash:#f2f0ff;
+      --teal:#16877b; --teal-wash:#eaf8f5; --amber:#a35e00; --amber-wash:#fff6e6;
+    }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; color:var(--ink); background:var(--page);
+      font:17px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { width:calc(100% - 64px); max-width:1020px; margin:32px auto;
+      padding:64px 82px 84px; background:var(--paper); box-shadow:0 12px 44px #24344716; }
+    h1 { margin:0 0 12px; font-size:2.65rem; line-height:1.06; letter-spacing:-.045em; }
+    h2 { margin:3.4rem 0 1rem; font-size:1.48rem; line-height:1.25; letter-spacing:-.02em; }
+    h3 { margin:2rem 0 .55rem; font-size:1.12rem; line-height:1.3; }
+    p { margin:.65rem 0 1.05rem; }
+    a { color:#4844b7; }
+    .stamp { color:var(--muted); font-size:.84rem; margin:0 0 2rem; }
+    .lead { font-size:1.16rem; line-height:1.62; max-width:790px; }
+    .thesis { margin:1.5rem 0 2rem; padding:20px 23px; border-left:4px solid var(--purple); background:var(--purple-wash); }
+    .thesis p { margin:0; }
+    .definitions { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:1.25rem 0 1.7rem; }
+    .definitions div { padding:16px 17px; border:1px solid var(--line); border-radius:9px; background:#fafbfc; }
+    .definitions strong { display:block; margin-bottom:4px; color:var(--purple); }
+    .constraint { margin:1rem 0; padding:16px 18px 15px; border-left:3px solid #aeb7c4; background:#fafbfc; }
+    .constraint .label { display:block; margin-bottom:3px; color:var(--purple); font-weight:750; font-size:.82rem; letter-spacing:.055em; text-transform:uppercase; }
+    .constraint p { margin:0; }
+    .global { border-left-color:var(--amber); background:var(--amber-wash); }
+    .global .label { color:var(--amber); }
+    figure { margin:2rem 0 2.25rem; }
+    figure.wide { width:calc(100% + 90px); margin-left:-45px; }
+    figure img { width:100%; height:auto; display:block; }
+    figcaption { max-width:820px; margin:.7rem auto 0; color:var(--muted); font-size:.87rem; line-height:1.48; text-align:center; }
+    .result { margin:1.5rem 0 2.2rem; padding:19px 22px; border-left:4px solid var(--teal); background:var(--teal-wash); }
+    .result p { margin:.2rem 0; }
+    .equation { margin:1.05rem 0 1.2rem; padding:.55rem 1rem; text-align:center; overflow-x:auto; }
+    .ranking { margin:1.4rem 0 2rem; padding:0; list-style:none; counter-reset:rank; }
+    .ranking li { counter-increment:rank; display:grid; grid-template-columns:35px 1fr; gap:9px; margin:.45rem 0; }
+    .ranking li::before { content:counter(rank); display:flex; align-items:center; justify-content:center; width:27px; height:27px; margin-top:2px; border-radius:50%; color:white; background:var(--purple); font-size:.78rem; font-weight:750; }
+    .ranking a { color:var(--ink); text-decoration:none; border-bottom:1px solid #b9b5ee; }
+    .mechanism { position:relative; padding-left:54px; }
+    .mechanism .rank { position:absolute; left:0; top:-2px; width:37px; height:37px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; background:var(--purple); font-weight:800; }
+    .mechanism h2 { margin-top:3.55rem; }
+    .stakes { color:var(--teal); font-weight:720; }
+    .test { margin:1.05rem 0 1.3rem; padding:14px 16px; border:1px solid #b9ddd8; border-radius:8px; background:#f4fbfa; }
+    .test strong { color:#106e65; }
+    .caveat { color:var(--muted); font-size:.91rem; }
+    .thermostat { margin:1.25rem 0 1.5rem; padding:18px 20px; border:1px solid #e5c992; border-radius:9px; background:var(--amber-wash); }
+    .thermostat strong { color:var(--amber); }
+    .roadmap { counter-reset:step; list-style:none; padding:0; margin:1.3rem 0; }
+    .roadmap li { counter-increment:step; position:relative; padding:2px 0 18px 48px; margin:0; }
+    .roadmap li::before { content:counter(step); position:absolute; left:0; top:0; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; background:var(--teal); font-weight:800; font-size:.82rem; }
+    .small { color:var(--muted); font-size:.88rem; }
+    @media (max-width:760px) {
+      main { width:100%; margin:0; padding:38px 22px 58px; }
+      h1 { font-size:2.1rem; }
+      body { font-size:16px; }
+      .definitions { grid-template-columns:1fr; }
+      figure.wide { width:100%; margin-left:0; }
+      .mechanism { padding-left:0; }
+      .mechanism .rank { position:static; margin-bottom:10px; }
+    }
+  </style>
+</head>
+<body><main>
+  <h1>What sets layerwise sharpness in Muon?</h1>
+  <p class="stamp">Candidate mechanisms, ranked by explanatory compression · 30 August 2026</p>
+
+  <p class="lead">Changing a Muon matrix's learning rate changes the curvature that the matrix later occupies. The aggregate response is simple; the response of an individual matrix is not. This page states the measurements that any explanation must fit, then ranks ten candidate mechanisms by how much they explain with one idea.</p>
+
+  <div class="thesis"><p><strong>The empirical problem has split in two.</strong> A nearly universal weight-norm response explains most of the inverse relation between learning rate and measured curvature. The remaining quantity, curvature multiplied by squared weight norm, varies strongly across matrices. A useful theory must explain that residual and predict how momentum changes it.</p></div>
+
+  <h2 id="observations">The observations to explain</h2>
+
+  <p>The measurements below come from NanoGPT training with AdamW on the embedding and language-model head and Muon on the hidden weight matrices. A <strong>learning-rate intervention</strong> starts several continuations from one saved training state and assigns different learning-rate multipliers to otherwise identical copies.</p>
+
+  <div class="definitions">
+    <div><strong>Per-matrix leading curvature</strong>The largest eigenvalue of the loss Hessian restricted to one weight matrix. We estimate it with Hessian–vector products and Lanczos iteration.</div>
+    <div><strong>Curvature level</strong>A matrix's typical leading curvature at a given training state. Levels differ by nearly two orders of magnitude across matrices.</div>
+    <div><strong>Temporal kernel</strong>The weights applied to gradients from different ages before Muon takes the matrix sign. K6 and K8 are scheduled mixtures of six and eight exponential moving averages.</div>
+    <div><strong>Same-state kernel comparison</strong>Different kernels are applied to the same model, optimizer buffers, minibatch, and learning rate. This isolates the immediate update direction from the model trajectory created by earlier updates.</div>
+  </div>
+
+  <div class="constraint"><span class="label">C1 · Aggregate learning-rate law</span><p>Across three saved training states, multiplying the learning rate by <em>s</em> changes the median per-matrix curvature approximately as <em>s</em><sup>−1.2</sup>. The relation is reproducible even though the model is at a different point in training.</p></div>
+
+  <div class="constraint"><span class="label">C2 · Individual responses</span><p>Individual matrices also respond strongly, but their fitted exponents range roughly from −2.1 to −0.95 and correlate weakly across saved states. The smooth median hides real matrix-to-matrix heterogeneity.</p></div>
+
+  <div class="constraint"><span class="label">C3 · Persistent identity</span><p>Curvature levels are highly reproducible across saved states: matrices that are sharp relative to their peers tend to remain sharp. Matrix type explains part of this ordering, but apparently similar matrices can still differ by several measurement standard deviations.</p></div>
+
+  <div class="constraint global"><span class="label">C4 · One global calibration</span><p>We separately maximized Hessian curvature over a simultaneous perturbation of all Muon matrices, constraining each perturbation to have operator norm at most one. This global Frank–Wolfe calibration was measured once across the learning-rate cooldown and remained approximately constant while the classical scalar threshold 2/<em>η</em> rose by about 3.5×. This is a global observation; it is not the per-layer quantity that the main program is trying to predict.</p></div>
+
+  <div class="constraint"><span class="label">C5 · The raw gradient misses the sharpest direction</span><p>Curvature along the raw gradient's own direction is about 21% of the leading curvature, a stable ratio across matrices and learning rates. Along the matrix sign of that gradient it drops to near the random-direction floor, and that subspace is nearly unrelated to the leading Hessian eigenspace.</p></div>
+
+  <div class="constraint"><span class="label">C6 · Momentum changes direction</span><p>When different temporal kernels are applied to the same stored gradient history, the resulting Muon updates can have cosine similarities near 0.72–0.83 and substantially different leading singular subspaces. Matching mean gradient age, period-two response, and total white-noise gain does not determine the update.</p></div>
+
+  <div class="constraint"><span class="label">C7 · Immediate and deployed performance disagree</span><p>One finite-history kernel produces a better immediate loss change than the deployed kernel from the same state. After 100–400 actual training steps, the ordering reverses and the deployed kernel is better than both candidates. The two candidate kernels can also exchange order late in the continuation.</p></div>
+
+  <div class="constraint"><span class="label">C8 · Period-two response is insufficient</span><p>Reducing a kernel's response to a gradient component that alternates sign every step by factors of two and four did not measurably change continuation loss. The curvature response of those runs is still being measured.</p></div>
+
+  <div class="constraint"><span class="label">C9 · Expressive kernels help</span><p>K8's improvement over bi-Maxwell replicates across seeds. Scheduling the decay of a single exponential moving average recovers only about one tenth of that gain, while K6 and K8 perform similarly at the current resolution.</p></div>
+
+  <div class="constraint"><span class="label">C10 · Oscillations move to longer periods</span><p>Early training contains strong period-two gradient oscillation. That component disappears late in training, while components with periods around 16–40 steps remain in many reproducible planes transverse to the slowly moving gradient direction.</p></div>
+
+  <div class="constraint"><span class="label">C11 · Reproducibility is optimizer-group dependent</span><p>Duplicate Muon continuations agree closely matrix by matrix. Rare-token rows in the Adam-managed embedding are much less reproducible, even though the total loss difference between duplicate controls is only about 10<sup>−5</sup>.</p></div>
+
+  <h2 id="factorization">Most of the inverse law is weight-norm scaling</h2>
+
+  <p>A log–log slope records how a measured quantity changes when the learning-rate multiplier changes. A slope of +1 means that doubling the multiplier doubles the quantity; a slope of −1 means that doubling it halves the quantity.</p>
+
+  <figure class="wide">
+    <img src="gauge_factorization.png" alt="Two histograms: squared weight-norm slopes cluster tightly near plus one, while gauge-normalized curvature slopes spread broadly around minus 0.44">
+    <figcaption>One dot represents one Muon-managed weight matrix; the bars count matrices in each slope interval. The same 71 matrices appear in both panels. Left: the slope of squared weight norm is tightly concentrated near +1. Right: after multiplying curvature by squared weight norm, the remaining slope is broad. Vertical jitter separates overlapping dots and carries no meaning.</figcaption>
+  </figure>
+
+  <p>The two slopes add because the raw curvature can be written as</p>
+  <div class="equation">{{display:factorization}}</div>
+  <p>The median raw-curvature slope in this late-training window is −1.39. It separates into a nearly universal −0.95 contribution from squared weight norm and a heterogeneous −0.44 contribution from <em>R</em>. The first candidate mechanism is therefore partly confirmed, and every other candidate now has a sharper target: explain the response of <em>R</em>.</p>
+
+  <div class="result"><p><strong>Current belief.</strong> Larger learning rates reliably produce larger Muon weight norms, and larger norms mechanically reduce parameter-space curvature in scale-invariant parts of the network. This accounts for roughly two thirds of the aggregate inverse law. It does not explain which matrices have high curvature or why the residual response differs across matrices.</p></div>
+
+  <h2 id="ranking">Ranked mechanisms</h2>
+  <p>The order below rewards theoretical beauty: how many observations follow from one mechanism. It is not a probability ranking. Each entry ends with the measurement that would most efficiently raise or lower it.</p>
+  <ol class="ranking">
+    <li><a href="#h1">Gauge and norm equilibrium</a></li>
+    <li><a href="#h2">Adaptation to the incumbent kernel</a></li>
+    <li><a href="#h3">Closed-loop marginality at the occupied frequencies</a></li>
+    <li><a href="#h4">A cross-layer sharpness budget</a></li>
+    <li><a href="#h5">Shadow dynamics from discrete temporal weighting</a></li>
+    <li><a href="#h6">Curvature rectification by matrix sign</a></li>
+    <li><a href="#h7">Active singular-subspace geometry</a></li>
+    <li><a href="#h8">Coupling between the Adam and Muon parameter groups</a></li>
+    <li><a href="#h9">A shared equilibrium obscured by different relaxation times</a></li>
+    <li><a href="#h10">Metastable spectral states</a></li>
+  </ol>
+
+  <section class="mechanism" id="h1"><span class="rank">1</span>
+    <h2>Gauge and norm equilibrium</h2>
+    <p class="stakes">This mechanism explains most of the aggregate law, but the new measurement shows exactly where it stops.</p>
+    <p>A layer is scale invariant when multiplying its weight matrix <em>W</em> by a positive constant <em>c</em> leaves the network function unchanged, either directly or through a compensating normalization. Along that rescaling, the Hessian measured in parameter coordinates changes: multiplying <em>W</em> by <em>c</em> divides the measured curvature by approximately <em>c</em><sup>2</sup>. Muon supplies matrix updates with a normalized spectral size, while weight decay pulls weights toward zero. Their long-run balance makes squared weight norm grow almost linearly with learning rate, so a larger learning rate produces a larger norm and therefore smaller measured curvature.</p>
+    <div class="equation">{{display:gauge_chain}}</div>
+    <p>The measured +0.95 norm slope confirms this chain. The remaining variable <em>R</em> contains the function-space curvature and any departure from exact scale invariance; its broad response means norm equilibrium cannot be the complete theory of C1–C3.</p>
+    <div class="test"><strong>Decisive test.</strong> Repeat the factorization at other saved states and apply compensated rescalings to adjacent matrices that preserve the represented function. Raw curvature should follow the inverse-square rescaling while <em>R</em> remains unchanged under that function-preserving rescaling.</div>
+  </section>
+
+  <section class="mechanism" id="h2"><span class="rank">2</span>
+    <h2>Adaptation to the incumbent kernel</h2>
+    <p class="stakes">This is the most direct explanation of why the best immediate update becomes worse after deployment.</p>
+    <p>The <strong>incumbent kernel</strong> is the temporal weighting used to reach the saved training state. Repeated updates under that kernel preferentially sharpen the matrix directions it excites, while directions it rarely uses can retain easy immediate descent. A replacement kernel can rotate into those underused directions and win one step, then lose after continued training sharpens them or feeds their changes back through the network. C6 supplies the rotation; this adaptation supplies the horizon reversal in C7.</p>
+    <div class="test"><strong>Decisive test.</strong> During matched continuations, track curvature along each kernel's own update direction. The replacement kernel's initially favorable directions should sharpen or lose descent value before its loss crosses the incumbent. Without that temporal ordering, the mechanism has no evidence beyond the inversion it was designed to explain.</div>
+  </section>
+
+  <section class="mechanism" id="h3"><span class="rank">3</span>
+    <h2>Closed-loop marginality at the occupied frequencies</h2>
+    <p class="stakes">Momentum may set sharpness through the stability of a feedback loop containing both the weights and the momentum buffers.</p>
+    <div class="thermostat"><strong>Thermostat analogy.</strong> A thermostat with an on/off actuator does not respond proportionally to a tiny temperature error; it switches between fixed outputs and can settle into a repeated cycle. Muon's matrix sign has the analogous property: the spectral size of its output does not shrink with the size of its input. Feedback systems with such a relay can settle into a self-sustained oscillation whose frequency is determined jointly by the relay, the plant, and any delay in the controller.</div>
+    <p>Here the plant is the local training dynamics, the controller delay is the temporal kernel, and the relay is matrix sign. <strong>Marginality</strong> means that the closed loop sits at the boundary where a repeated disturbance neither decays nor grows from one cycle to the next. The proposed condition ties curvature <em>λ</em>, learning rate <em>η</em>, and the amplitude and phase change that the kernel applies at the frequency the layer actually occupies. Different layers can occupy different frequencies or have different delays, producing C1–C3. Period-two response can be irrelevant because the live late-training oscillations have periods around 16–40 steps, explaining C8 and C10.</p>
+    <p>Gradient noise adds a stochastic version of the same mechanism. The relevant noise strength is the power that remains after temporal weighting inside the occupied frequency range, rather than total white-noise gain.</p>
+    <div class="test"><strong>Decisive test.</strong> Fit one closed-loop model to each matrix before the learning-rate intervention and predict its later curvature, overshoot, and continuation loss. Then compare kernels matched in gain and phase specifically at periods 16–40. A correlation with the observed frequency spectrum is insufficient because the closed loop may itself create that spectrum.</div>
+  </section>
+
+  <section class="mechanism" id="h4"><span class="rank">4</span>
+    <h2>A cross-layer sharpness budget</h2>
+    <p class="stakes">The static global calibration may reflect redistribution of one collective mode across layers.</p>
+    <p>A <strong>cross-block Hessian term</strong> measures how changing one weight matrix alters the gradient of another. If the most unstable perturbation is distributed across many matrices, each per-matrix curvature is only one local part of a collective mode. A learning-rate intervention on one matrix can then move curvature into or out of neighboring matrices while the maximum curvature attainable by a simultaneous operator-norm-bounded perturbation stays fixed. Persistent participation in that collective mode explains C3; changing participation explains C2; conservation of the total explains C4.</p>
+    <div class="test"><strong>Decisive test.</strong> In the per-matrix learning-rate experiment, untreated neighboring matrices must change curvature in a reproducible signed pattern. A decomposition of the global quadratic form must show quantitatively matching changes among diagonal and cross-matrix contributions. Mere evidence of some cross-talk is too weak.</div>
+  </section>
+
+  <section class="mechanism" id="h5"><span class="rank">5</span>
+    <h2>Shadow dynamics from discrete temporal weighting</h2>
+    <p class="stakes">A kernel can improve one discrete step while changing the longer trajectory through terms that a one-step comparison cannot see.</p>
+    <p><strong>Backward-error analysis</strong> represents a discrete update rule as the exact short-time flow of a nearby continuous dynamics. For momentum, that nearby dynamics contains corrections determined by the kernel and by the order in which changing Hessians and Muon update geometries act. The failure of two operations to commute—the result changes when their order is reversed—creates explicit correction terms over multiple steps. Two kernels can match a few scalar summaries and still differ in these higher-order terms, offering one account of C6, C7, and C9.</p>
+    <p class="caveat">Muon with weight decay is dissipative, so this proposal does not assume a conserved Hamiltonian. A modified objective exists only when the inferred correction field is integrable; the safer target is a modified dynamics.</p>
+    <div class="test"><strong>Decisive test.</strong> Estimate the leading correction terms from short recorded replays, then predict continuation ordering across the deployed, truncated, and K-Maxwell kernels at a different saved state. A retrospective fit to one loss inversion does not test the mechanism.</div>
+  </section>
+
+  <section class="mechanism" id="h6"><span class="rank">6</span>
+    <h2>Curvature rectification by matrix sign</h2>
+    <p class="stakes">This mechanism directly targets the heterogeneous residual left after norm scaling.</p>
+    <p>A <strong>ratchet</strong> converts fluctuations with little or no mean into motion with a preferred sign. Matrix sign discards the magnitude of the momentum matrix while retaining a direction; weight decay supplies a slow radial return. If positive and negative directional fluctuations have unequal effects on future curvature because the loss has asymmetric third-order geometry, repeated normalized updates can pump the residual <em>R</em> upward at a matrix-specific rate. The universal norm equilibrium and the heterogeneous rectification efficiency would then multiply to produce the observed factorization.</p>
+    <div class="test"><strong>Decisive test.</strong> From one fixed state, apply each Muon update direction and its negative and measure the resulting change in <em>R</em>. Smooth curvature generically produces a nonzero average of the pair; the ratchet requires that average to have a consistent curvature-increasing sign across states and that its magnitude predict each matrix's residual learning-rate response.</div>
+  </section>
+
+  <section class="mechanism" id="h7"><span class="rank">7</span>
+    <h2>Active singular-subspace geometry</h2>
+    <p class="stakes">Layer identity may live in the singular directions selected by matrix sign rather than in scalar curvature or gradient norm.</p>
+    <p>Matrix sign maps every nonzero singular value of its input to one, so the resulting update lies on a particular face of the operator-norm ball. The <strong>active singular subspace</strong> is the set of singular directions defining that face. Large gaps between singular values make the selected subspace stable; near-ties let small changes in momentum or learning rate switch it abruptly. Stable subspaces can encode C3, while switches can produce C2 and the direction changes in C6.</p>
+    <div class="test"><strong>Decisive test.</strong> Small singular-value gaps before an intervention should predict kinks in the curvature response and abrupt rotation of the update or Hessian subspace. Matrices with large gaps should have smoother, more reproducible responses across saved states.</div>
+  </section>
+
+  <section class="mechanism" id="h8"><span class="rank">8</span>
+    <h2>Coupling between the Adam and Muon parameter groups</h2>
+    <p class="stakes">The unexplained layerwise state may be imposed by the optimizer boundary rather than generated inside each Muon matrix.</p>
+    <p>Adam controls the embedding, head, and several scalar parameters; Muon controls the hidden matrices. Changes in the Adam-managed parameters alter the activation and error covariances seen by every Muon layer, while Muon changes the representation returned to Adam. This makes the network a coupled nonequilibrium system with two update geometries. Graph position and coupling to the Adam-managed parameters can then explain persistent layer identity, the global observation, and the reproducibility difference in C11.</p>
+    <div class="test"><strong>Decisive test.</strong> Measure each Muon matrix's cross-Hessian coupling to the Adam-managed parameters. The delayed response to a learning-rate intervention should scale with that coupling, and temporarily freezing Adam parameters and optimizer buffers should weaken the relationship.</div>
+  </section>
+
+  <section class="mechanism" id="h9"><span class="rank">9</span>
+    <h2>A shared equilibrium obscured by different relaxation times</h2>
+    <p class="stakes">The heterogeneous exponents may partly be a measurement of speed rather than a difference in equilibrium law.</p>
+    <p>After a learning-rate change, each matrix takes time to approach its new curvature. If matrices share nearly one equilibrium relation but have different relaxation times, measuring all of them in one fixed window produces different apparent slopes. Those fitted slopes can change across saved states even while the eventual law and the persistent curvature levels remain stable. Momentum scheduling would matter because it changes relaxation, not only the final temporal weights.</p>
+    <div class="test"><strong>Decisive test.</strong> Fit the full post-intervention curves using one equilibrium exponent and matrix-specific time constants. Rescaling time by those constants should collapse the curves, and increasing and decreasing the learning rate should approach the same endpoint without hysteresis.</div>
+  </section>
+
+  <section class="mechanism" id="h10"><span class="rank">10</span>
+    <h2>Metastable spectral states</h2>
+    <p class="stakes">Abrupt transitions among long-lived curvature states could make a smooth per-layer law impossible.</p>
+    <p>A <strong>metastable state</strong> persists for many updates but can eventually switch to another state. Each matrix may have several such Hessian configurations; learning rate and temporally colored update noise change the transition rate among them. Persistent state occupancy explains C3, while rare switches make the fitted slopes in C2 unstable and let different kernels reverse their long-horizon ordering. The aggregate law can remain smooth because it averages many transition probabilities.</p>
+    <div class="test"><strong>Decisive test.</strong> Curvature traces should show abrupt and persistent level changes accompanied by Hessian-eigenvector or feature-subspace changes. Switch counts should predict continuation loss better than a smooth local exponent.</div>
+  </section>
+
+  <h2 id="next">Cheapest experiments that separate the mechanisms</h2>
+  <p>The order below is based on decision value per unit of compute, not the beauty ranking above.</p>
+  <ol class="roadmap">
+    <li><strong>Finish the checkpoint arithmetic.</strong> Recompute the norm–curvature factorization at earlier saved states, and test whether singular gaps, existing cubic measurements, or distance from the Adam/Muon boundary predict the residual <em>R</em>.</li>
+    <li><strong>Use the per-matrix learning-rate continuations already in flight.</strong> Fit complete response curves to separate equilibrium from relaxation time, and measure whether intervening on one matrix moves untreated neighbors.</li>
+    <li><strong>Replay the closed loop.</strong> Estimate occupied frequencies, phase lag, and finite-horizon amplification from recorded states; require an out-of-sample prediction of curvature response and continuation loss.</li>
+    <li><strong>Measure the incumbent-basin sequence.</strong> Test whether replacement-kernel directions sharpen before their continuation loss becomes worse than the deployed kernel.</li>
+    <li><strong>Run new interventions only where the screens disagree.</strong> The leading options are compensated gauge rescaling, kernels matched specifically at periods 16–40, paired update/sign-reversal replays for the ratchet, and short continuations with the Adam-managed parameters frozen.</li>
+  </ol>
+
+  <p class="small">Source measurements and implementation details are retained in the project records. The ranking should change when a candidate predicts a new result; agreement with facts used to invent it is not enough.</p>
+</main></body>
+</html>
