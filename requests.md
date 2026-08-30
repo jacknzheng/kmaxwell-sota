@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-019**.
+Next request number: **REQ-020**.
 
 ## Template
 
@@ -27,6 +27,138 @@ Next request number: **REQ-019**.
 success criteria, artifact paths, and any ordering constraints. Do not include
 secrets; refer to already-provisioned environment variables.>
 ```
+
+---
+
+## REQ-019: momentum EoS law across fork states
+
+- status: OPEN
+- requested: OpenAI Codex for Jeffrey Cheng / 2026-08-30 01:40 UTC
+- priority: run alongside REQ-018 without preempting it
+- concurrency cap: at most 4 simultaneous 8xH100 workstations for REQ-019
+
+Measure whether the per-matrix curvature law changes with training state. This
+request contains two shared-trajectory programs, forked at steps 1500 and 2000.
+It does not include momentum-kernel sweeps, seed fleets, or the Section-4
+interventions; those require separate authorization.
+
+### Frozen public harness
+
+- repo: `https://github.com/jacknzheng/kmaxwell-sota`
+- branch: `codex/momentum-kernel-schedules`
+- exact SHA: `755c49d2933c3fa6c5b2fe449d05e72e40fbab9d`
+- runner: `records/track_3_optimization/run.py`
+- config generator:
+  `records/track_3_optimization/offline_analysis/make_eos_state_dependence_configs.py`
+- curvature tool:
+  `records/track_3_optimization/offline_analysis/measure_per_matrix_curvature.py`
+
+The exact SHA was tested from a fresh public HTTPS clone on an 8xA100 box: all
+nine generated configs resolve through `bind_sites` and optimizer-group
+resolution, and the curvature tool imports successfully. Do not substitute a
+private `muoff` checkout or port the harness again.
+
+On every workstation:
+
+```bash
+git clone --filter=blob:none --branch codex/momentum-kernel-schedules \
+  https://github.com/jacknzheng/kmaxwell-sota.git
+cd kmaxwell-sota
+git checkout 755c49d2933c3fa6c5b2fe449d05e72e40fbab9d
+python records/track_3_optimization/offline_analysis/\
+make_eos_state_dependence_configs.py --out configs/req019
+```
+
+Record the resolved Python, PyTorch, CUDA, GPU, and git versions, but never
+environment variables or credentials. Use the provisioned FineWeb data and
+the ordinary 8-rank Track-3 launch environment.
+
+### Frozen slate
+
+The generator emits this manifest:
+
+| fork | fixed LR multipliers after fork | stop after step | curvature checkpoints |
+| ---: | --- | ---: | --- |
+| 1500 | 0.60, 0.77, 1.00, 1.00 duplicate, 1.30, 1.70 | 2750 | 2250, 2375, 2500, 2625, 2750 |
+| 2000 | 0.60, 1.00, 1.70 | 3249 | 2750, 2875, 3000, 3125, 3249 |
+
+Every arm uses seed 0, bi-Maxwell momentum, the standard planned 3250-step
+Track-3 schedule before its fork, and an absolute constant learning-rate
+multiplier after its fork. Each arm trains from initialization, so it has no
+external checkpoint dependency. Runs at the same fork must reproduce the same
+model and optimizer trajectory through that fork; the duplicate 1.00 arm is a
+run-divergence control.
+
+Run each generated config with:
+
+```bash
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/run.py configs/req019/<run_id>.yaml
+```
+
+Use no more than four workstations concurrently. Assign one arm per node at a
+time and refill nodes from the frozen manifest until all nine arms finish. If
+REQ-018 needs capacity, reduce REQ-019 concurrency rather than preempting it.
+
+### Shared-state gate
+
+Before accepting the post-fork measurements, compare the saved model tensors
+at step 1500 across all six fork-1500 arms and at step 2000 across all three
+fork-2000 arms. Report file hashes and the maximum tensorwise absolute
+difference. The expected difference is exactly zero because seed, data order,
+hardware class, and pre-fork hooks are identical. If it is nonzero, preserve
+the runs, set this request to `NEEDS-INFO`, and report the first divergent
+checkpoint; do not silently call the states shared.
+
+### Curvature measurement
+
+After an arm trains, run its five manifest checkpoints on all eight GPUs:
+
+```bash
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/offline_analysis/measure_per_matrix_curvature.py \
+  --no_dist --dump_dir dumps_<run_id> \
+  --steps <five manifest steps> --tokens 131072 --iters 8 \
+  --out_tag req019_per_matrix_curvature
+```
+
+The merged JSON must contain all 74 matrices at every requested checkpoint,
+including the complete Lanczos `alphas` and `offdiags`; these allow the
+geometric-tail correction to be recomputed centrally. Keep the raw rank shards
+until the merged file is validated. A low-learning-rate arm that remains in
+transient is still a valid deliverable: retain its within-window trajectory so
+the relaxation time can be modeled instead of discarding it.
+
+### Required artifacts
+
+Commit and push to this `jerry-agent` branch:
+
+```text
+logs/kmaxwell/req019_eos_state_dependence/
+  README.md
+  manifest.tsv
+  shared-state-check.tsv
+  summary.tsv
+  configs/
+  <run_id>/
+    command.txt
+    console.log
+    train-log.txt
+    req019_per_matrix_curvature.json
+    curvature-console.log
+```
+
+`summary.tsv` must include run ID, fork, multiplier, executed SHA, node/GPU,
+wall times, completion state, checkpoint count, matrix count, and any failure.
+The README must map every summary row to raw artifacts and state whether each
+shared-state gate passed. Use `git add -f` for ignored log patterns. Gzip large
+logs losslessly if needed. Never commit model/optimizer checkpoints, FineWeb
+data, secrets, or environment dumps.
+
+Success means all nine frozen arms and their 45 curvature measurements are
+complete, the shared-state checks are explicit, and the artifacts are pushed.
+If a reproducible harness or infrastructure blocker remains, first commit all
+partial evidence, then set `NEEDS-INFO` with the exact failing command and log.
 
 ---
 
