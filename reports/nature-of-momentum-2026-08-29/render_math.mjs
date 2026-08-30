@@ -47,10 +47,12 @@ const formulas = {
   taylor_local: String.raw`L(\theta-\eta P_w)-L(\theta)\approx
     -\eta\langle g,P_w\rangle
     +\frac{\eta^2}{2}\langle P_w,\mathcal H P_w\rangle`,
-  controller_objective: String.raw`w^*(q_t)=\arg\min_w\mathbb E\!\left[
+  controller_objective: String.raw`w^*(q_t)=\arg\min_{w\in\mathcal W}\mathbb E\!\left[
     -\eta_t\langle g_t,P_w\rangle
     +\frac{\eta_t^2}{2}\langle P_w,\mathcal H_tP_w\rangle
     \,\middle|\,q_t\right]`,
+  alignment_threshold: String.raw`A_t=-\frac{2\langle g_t,\Delta_t\rangle}
+    {\lVert\Delta_t\rVert^2}`,
   general_characteristic: String.raw`r-a+\eta\lambda\sum_{k\ge0}w_kr^{-k}=0`,
   dc_normalization: String.raw`H(0)=\sum_{k\ge0}w_k=1`,
   lambda_inverse_F: String.raw`\lambda_{\mathrm{crit}}\propto F^{-1}`,
