@@ -455,10 +455,10 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v1200 v585 h43z"/></svg></span></span
       seed fleet is justified.</li>
   </ol>
   <div class="thesis"><p><strong>Decision requested.</strong> Approve the
-  same-state response map and its fixed continuation window. Defer another
-  power-law fit, broad K-Maxwell tuning, and controller implementation until
-  those measurements identify a reproducible state variable. The roadmap gives
-  the accelerator cost at each gate.</p></div>
+  matched-kernel experiment in Section 4 and its fixed continuation window.
+  Defer another power-law fit, broad K-Maxwell tuning, and controller
+  implementation until those measurements identify a reproducible state
+  variable. The roadmap gives the accelerator cost at each gate.</p></div>
   <p>The end state is a minimal EMA bank governed by one measured quantity and
   exposing at most one user-facing hyperparameter.</p>
 
@@ -508,9 +508,13 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v1200 v585 h43z"/></svg></span></span
     extrapolated remaining error exceeds 5%. Each
     point is one segment from one trajectory; its uncertainty describes
     within-run measurement variation.</p>
-    <p class="small">The geometric-tail extrapolation and tail gate are a
-    provisional analysis rule; calibration of its error model remains future
-    work. The five points are descriptive results accepted under that rule.</p>
+    <p class="small">The geometric-tail extrapolation and tail gate were
+    calibrated against 16- and 32-iteration references at early and late
+    checkpoints. The corrected 8-iteration estimates had zero median bias at
+    both ages; the change in bias between ages was less than 1% of the reported
+    curvature drift. The one exception was <code>embed.weight</code>: its late
+    8-iteration estimate retained a −0.015 log<sub>10</sub> under-correction, so
+    its reported late-age values use 16 Lanczos iterations.</p>
     <p class="small">The law ladder fits absolute corrected eigenvalues. L1
     uses one exponent and matrix-type levels; L2 adds depth-dependent levels;
     L3 allows type-specific exponents; L4 adds depth-dependent exponents; L5
@@ -561,8 +565,8 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v1200 v585 h43z"/></svg></span></span
       weight norms about 0.31 times the reference trajectory's.</figcaption>
     </figure>
     <p class="small">This screen changes the optimizer, stored history, model
-    trajectory, and weight norms together. It motivates a same-state test in
-    the earlier period-two regime and carries no causal attribution to
+    trajectory, and weight norms together. It motivates the matched-kernel
+    intervention of Section 4 in the earlier period-two regime and carries no causal attribution to
     <em>F</em>.</p>
   </details>
   <details>
@@ -570,8 +574,8 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v1200 v585 h43z"/></svg></span></span
     <p class="small">The training comparisons use one seed and one checkpoint
     fork per candidate, so the one-third decomposition is a scale estimate.
     Published eight-seed results show gains from scheduled EMA mixtures on
-    different stacks; they do not calibrate this one-seed decomposition. The same-state
-    experiment uses duplicate controls at every checkpoint, and the distilled
+    different stacks; they do not calibrate this one-seed decomposition. The
+    matched-kernel experiment uses duplicate controls at every checkpoint, and the distilled
     rule is evaluated across seeds. The momentum-free curvature comparison uses a separate
     trajectory whose weight norms are about 0.31 times the reference. The local
     Taylor diagnostic omits the explicit decay term and requires a smooth local
