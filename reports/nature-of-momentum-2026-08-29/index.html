@@ -167,27 +167,20 @@
   question.</p>
 
   <h2>3. Curvature constrains the theory</h2>
-  <p>The fixed-learning-rate runs show curvature pinning: once a run settles,
-  its median leading curvature is higher at smaller learning-rate multipliers.
-  Each point below summarizes a separate trajectory by taking the median over
-  its Muon-managed matrices. The five accepted segments fit
-  <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mover accent="true"><mi>λ</mi><mo stretchy="true">~</mo></mover><mo stretchy="true">‾</mo></mover><mo>=</mo><mn>1.32</mn><mtext> </mtext><msup><mi>s</mi><mrow><mo>−</mo><mn>1.28</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\overline{\widetilde{\lambda}}
-    =1.32\,s^{-1.28}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.1544em;"></span><span class="mord katex-overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.1544em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord katex-accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9544em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">λ</span></span><span class="svg-align" style="top:-3.6944em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.26em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.26em" viewBox="0 0 600 260" preserveAspectRatio="none"><path d="M200 55.538c-77 0-168 73.953-177 73.953-3 0-7
--2.175-9-5.437L2 97c-1-2-2-4-2-6 0-4 2-7 5-9l20-12C116 12 171 0 207 0c86 0
- 114 68 191 68 78 0 168-68 177-68 4 0 7 2 9 5l12 19c1 2.175 2 4.35 2 6.525 0
- 4.35-2 7.613-5 9.788l-19 13.05c-92 63.077-116.937 75.308-183 76.128
--68.267.847-113-73.952-191-73.952z"/></svg></span></span></span></span></span></span></span></span><span style="top:-4.0744em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord">1.32</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1.28</span></span></span></span></span></span></span></span></span></span></span></span>. Here <em>s</em> is the learning-rate
-  multiplier and <span>λ̃</span> is each matrix's leading curvature divided by
-  its step-1000 value; the ordinary inverse-multiplier reference has slope −1.</p>
+  <p>Changing the learning rate from several shared checkpoints produces the
+  same aggregate response: after the fork, the median leading curvature of the
+  Muon-managed matrices falls approximately as the inverse learning-rate
+  multiplier. Independent forks near steps 1000, 1500, and 2400 give exponents
+  near −1.2. The three-point step-2000 fork is directionally consistent but has
+  not passed the same settled-window screen.</p>
   <figure>
-    <img src="eos_pinning.png" alt="Equilibrium curvature rises as the learning-rate multiplier falls across five steady regimes">
-    <figcaption>Five constant-learning-rate segments met the steady-regime
-    criterion. The points show median leading curvature, normalized to each
-    matrix's step-1000 value. The orange curve is an ordinary least-squares fit
-    in log space. Fit residuals alone give a slope standard error of 0.034;
-    moving the settled windows gives the larger uncertainty of roughly 0.1.
-    The dashed line fixes the slope at −1 and fits its vertical
-    normalization.</figcaption>
+    <img src="eos_pinning_across_forks.png" alt="Median per-matrix curvature falls approximately as inverse learning rate from four different fork states">
+    <figcaption>Each colored curve starts from a different training checkpoint.
+    One point is the median leading curvature across Muon-managed matrices after
+    continuing with the indicated learning-rate multiplier, divided by that
+    fork's value at multiplier one. The dotted line has slope −1.2. This
+    reproducible aggregate law does not identify the exact stability boundary
+    of the hybrid optimizer.</figcaption>
   </figure>
   <p>The median is unusually smooth because it averages over different
   matrix-level laws. Most Muon-managed matrices individually follow a tight
@@ -209,22 +202,18 @@
     embedding fit is especially unreliable because adjacent-checkpoint spikes
     reach 15×.</figcaption>
   </figure>
-  <p>Training progress appears to move individual matrices without changing the
-  aggregate inverse-learning-rate law. The aggregate exponent was reproduced
-  at a later checkpoint, while individual matrices measured at different stages
-  shifted together; deeper blocks tended to move higher. Matrices measured at
-  nearly the same training step agreed much more closely. The aggregate law
-  survives because the matrix-level shifts largely cancel in the median.</p>
+  <p>The aggregate law hides a stable matrix-specific component. Curvature
+  levels measured after different forks correlate strongly for the same
+  matrix, even after conditioning on layer type. Fitted response exponents are
+  much less stable.</p>
   <figure class="wide">
-    <img src="fork2400_state_independence.png" alt="Per-matrix curvature levels from early and late forks, showing agreement when measurement steps match and correlated shifts when they differ">
-    <figcaption>The left panel compares each matrix's curvature level between
-    the early and late forks. The nearly step-matched pair lies close to the
-    diagonal; the pairs measured at different stages scatter systematically.
-    Open markers identify matrices that did not meet the settled-window test in
-    at least one run.
-    The right panel shows that the late-minus-early shifts agree across the two
-    step-mismatched comparisons. The aggregate exponent was −1.19 ± 0.10 in
-    the later fork, compared with −1.21 to −1.28 in the earlier runs.</figcaption>
+    <img src="crossfork_identity.png" alt="The same matrices retain correlated curvature levels after forks at steps 1500 and 2400">
+    <figcaption>Each point is one Muon-managed matrix. Its horizontal and
+    vertical coordinates are log leading curvatures after two independently
+    forked trajectories, measured late in training. The correlation is 0.93
+    overall and 0.77 after removing layer-type means. Persistent levels may
+    reflect static architecture or parameterization; a momentum controller
+    would instead need to predict the residual that changes during training.</figcaption>
   </figure>
   <p>Near-matched matrix gaps also reproduced across checkpoints, revealing a
   stable matrix-identity component beneath the slower drift. The
@@ -315,13 +304,11 @@
   slope is close to −1, while the resolved deviation and differences among
   matrices require a richer empirical law.</p>
   <p>Second, hold the learning rate and training state fixed and vary
-  <em>F</em>: the critical curvature should scale as 1/<em>F</em>. This is why
-  <em>F</em> is useful. It is the kernel's response to a sign-alternating
-  gradient, and it is the only property of the kernel that enters the
-  period-two boundary. The current runs do not test this prediction because
-  changing the kernel also changed the stored momentum and the model
-  trajectory. The matched-kernel intervention of Section 4 would test it
-  directly.</p>
+  <em>F</em>: the scalar calculation predicts critical curvature proportional
+  to 1/<em>F</em>. An early shared-state intervention now performs this test.
+  Reducing <em>F</em> by factors of two and four produced no continuation-loss
+  difference above duplicate-run variation. Its curvature measurements are
+  still running, so the scalar stability prediction remains open.</p>
   <p>Muon adds a directional complication: matrix sign removes common scale,
   but reweighting temporal components can rotate the matrix before that
   operation. The available momentum-free comparison cannot test the
@@ -329,44 +316,28 @@
   faded, and it changed the optimizer, stored history, and model trajectory
   together. Its details are in Appendix C.</p>
 
-  <h2 id="experiment">4. Proposed experiment: are three kernel summaries sufficient?</h2>
-  <p>This experiment decides which of two momentum-design programs is worth
-  pursuing. It tests whether three numbers contain all the useful information
-  in a temporal kernel: <strong>mean lag</strong>, the average age of the
+  <h2 id="experiment">4. Three scalar summaries do not determine Muon's update</h2>
+  <p>We tested whether three numbers contain all the useful information in a
+  temporal kernel: <strong>mean lag</strong>, the average age of the
   gradients it uses; <strong>alternating response</strong> <em>F</em>, the
   surviving amplitude of a gradient that flips sign every step; and
   <strong>white-noise gain</strong>, the output variance produced by independent
-  unit-variance gradients.</p>
-  <div class="state-grid">
-    <div><strong>If the three numbers suffice</strong><br>Momentum design reduces
-      to choosing their trajectories over training. The present raw-gradient
-      plus EMA family is already a minimal implementation: two or three EMA
-      streams matched to K8's three-number trajectory should recover its gain.
-      K8 is the eight-EMA mixture that leads the comparisons in Section 1.
-      We build that compressed schedule and stop treating kernel shape as a
-      design variable.</div>
-    <div><strong>If they do not suffice</strong><br>Two kernels can agree on all
-      three numbers yet produce different useful updates. Kernel shape is then
-      a genuine control dimension. We retain the short ring-buffer components
-      used by this test and search for the measured training state that predicts
-      which shape helps.</div>
-  </div>
-  <p>A comparison inside the current family cannot decide between these
-  branches. Constant-gradient response is normalized to one, so it is a scale
-  convention rather than a fourth informative summary. Once that normalization, mean lag, <em>F</em>, and
-  white-noise gain are fixed, a nonnegative mixture of the current gradient and
-  EMA streams is essentially unique. The smallest enlargement that creates two
-  distinct matched kernels adds short moving averages, implemented with a
-  bounded ring buffer.</p>
+  unit-variance gradients. Two kernels matched on all three produce sharply
+  different Muon updates and one-step losses from the same checkpoints. The
+  remaining question is whether that local difference survives continued
+  training.</p>
+  <p>Within a nonnegative mixture of the current gradient and EMA streams,
+  fixing unit constant response, mean lag, <em>F</em>, and white-noise gain leaves
+  essentially one kernel. Short moving averages create distinct kernels with
+  the same summaries and require only a bounded ring buffer.</p>
   <figure class="wide">
-    <img src="matched_pair.png" alt="Two temporal kernels with matched mean lag, alternating response, and white-noise gain but different shapes">
+    <img src="s4_matched_pair_128.png" alt="Two 128-step temporal kernels with matched mean lag, alternating response, and white-noise gain but different shapes">
     <figcaption>Both kernels have unit response to a constant gradient and agree
-    on mean lag, <em>F</em>, and white-noise gain. Their frequency responses
-    differ by more than twofold over periods 16–39 despite matching the scheduled
-    EMA reference within 0.1%. A 64-step ring buffer implements the displayed
-    pair. A 32-step construction remains feasible; a 16-step construction does
-    not. The left panel begins
-    at lag one because its horizontal axis is logarithmic.</figcaption>
+    on mean lag, <em>F</em>, and white-noise gain within 0.1%. The left panel
+    shows their weights on gradients of different ages. The right panel shows
+    how strongly each kernel responds to a gradient-history component of a
+    given period. Their response ratio reaches 5.44 despite the matched scalar
+    summaries.</figcaption>
   </figure>
   <p>The displayed kernels differ only in how they distribute weight across
   gradient ages after normalization and the three summaries are fixed. The pair is
@@ -379,10 +350,10 @@
     <div class="arrow">→</div>
     <div class="node"><strong>Measure consequence</strong><br>Compare the immediate update, then loss and curvature over a fixed continuation</div>
   </div>
-  <p>The no-detectable-difference outcome is plausible. Although the kernels
-  differ most over periods 16–40, that temporal variation may lie in matrix
-  directions that do not compete for the leading singular subspace. In that
-  case the three summaries would still predict the deployed update.</p>
+  <p>The experiment begins from a shared model, optimizer state, gradient
+  history, and future minibatch order. It changes only the temporal weighting
+  applied to the stored gradients. Duplicate continuations with the same
+  kernel measure ordinary run divergence.</p>
   <p>The effect may depend on training state, so the comparison repeats at
   checkpoints spanning training. At each checkpoint, matrix cosines and
   leading-subspace angles compare the updates produced by kernel A and kernel B
@@ -410,89 +381,91 @@
   after the fork and grows with the continuation horizon, so short windows give
   the sharpest test. If the floor grows large enough to absorb the kernel effect,
   that horizon is declared unusable rather than interpreted.</p>
-  <p>Classify the result sequentially: first ask whether any update angle clears
-  its duplicate-control floor; only then count checkpoints where both the
-  update-angle and downstream duplicate-control floors are cleared.</p>
-  <table class="outcome">
-    <thead><tr><th>Observation</th><th>Conclusion</th><th>Decision</th></tr></thead>
-    <tbody>
-      <tr><td>No checkpoint has an update angle above the duplicate-control floor.</td>
-        <td>This pair reveals no missing temporal effect over the tested states.</td>
-        <td>Repeat with one independent pair; if it also fails, build the compressed EMA schedule.</td></tr>
-      <tr><td>An angle clears its duplicate-control floor, but no checkpoint clears both the update-angle and downstream duplicate-control floors.</td>
-        <td>The remaining kernel structure changes the update without a detectable short-window consequence.</td>
-        <td>Provisionally take the suffice branch; retain no shape mechanism unless a longer continuation resolves an effect.</td></tr>
-      <tr><td>Exactly one checkpoint clears both the update-angle and downstream duplicate-control floors.</td>
-        <td>The useful temporal weighting depends on training state.</td>
-        <td>Retain the ring-buffer family and identify what is special about that state.</td></tr>
-      <tr><td>Two or more checkpoints clear both the update-angle and downstream duplicate-control floors.</td>
-        <td>The matched summaries omit a reproducible, consequential feature.</td>
-        <td>Retain the ring-buffer family and fit the smallest state-conditioned shape rule.</td></tr>
-    </tbody>
-  </table>
-  <h3>Immediate result: the three summaries do not determine Muon's update</h3>
-  <p>The first stage has finished. The implemented pair matches mean lag,
-  <em>F</em>, and white-noise gain to 0.1%, yet produces a large directional
-  change from the same recorded gradients. The median cosine between the
-  realized one-step change under kernel A and the control is 0.72–0.73 across
-  the three checkpoints; for kernel B it is 0.83–0.84. Repeating the control
-  gives 0.9999. The leading eight-dimensional update subspaces of A and B are
-  nearly orthogonal. These effects remain roughly constant from the early to
-  the late checkpoint.</p>
-  <p>This answers the first question in the registered decision rule: the
-  update-angle effect is resolved at every checkpoint. It does not yet show
-  that the rotation improves training. Fixed continuations must establish a
-  loss or curvature effect above their duplicate-control floors before kernel
-  shape becomes a useful design variable.</p>
-  <p class="small">The available bi-Maxwell checkpoints have a longer mean lag
-  than the scheduled-EMA reference used to construct the displayed 64-step
-  pair. Matching the bi-Maxwell summaries required a 128-step pair, whose
-  largest frequency-response separation moves toward longer periods. The
-  immediate measurements above use that 128-step construction; its
-  continuations remain gated on approval of this protocol change.</p>
-  <p class="small">One-step loss also separates the kernels: A is better and B
-  worse at the early checkpoint, the gap narrows in the middle, and both
-  approach the control late in the learning-rate cooldown. At the early
-  checkpoint, the realized parameter updates change loss by &minus;0.000220 for
-  A and +0.003736 for B; duplicate controls differ by 0.000010. The virtual
-  evaluator agrees with these realized losses to within 0.000018 and supplies
-  the middle- and late-checkpoint estimates. This calibration was performed
-  after the parameter-level parity check, so it confirms the early ordering
-  without retroactively turning that check into a preregistered pass. The
+  <h3>The local effect is large and persists across training states</h3>
+  <figure>
+    <img src="s4_update_rotation.png" alt="Matched kernels rotate the Muon update far beyond duplicate-run variation at three training checkpoints">
+    <figcaption>One point is the median cosine across 72 Muon-managed matrices
+    between the one-step update from a matched kernel and the deployed
+    bi-Maxwell update at the same checkpoint. The purple curve compares the two
+    matched kernels directly. The dotted line is an independent duplicate run:
+    applying the same kernel twice gives cosine 0.9999. The kernel-induced
+    rotation is stable across all three checkpoints.</figcaption>
+  </figure>
+  <figure>
+    <img src="s4_onestep_loss.png" alt="Kernel A improves one-step loss while kernel B worsens it early in training, with the difference shrinking during cooldown">
+    <figcaption>One point is the held-out loss change caused by one complete
+    deployed step from a shared checkpoint; negative values are improvements.
+    Error bars show uncertainty across evaluation batches. The early ordering
+    was confirmed by scoring realized one-step checkpoints. The later points
+    use the virtual evaluator calibrated by that realized comparison. Kernel A
+    gives the better local update at every checkpoint, while the separation
+    shrinks under the learning-rate cooldown.</figcaption>
+  </figure>
+  <p>The update rotation clears the duplicate-control floor at every
+  checkpoint. Its one-step loss consequence is clear early and in the middle
+  of training, then becomes small late in the cooldown. For this constructed
+  pair, kernel A's flatter recent window gives a better gradient-alignment term
+  than kernel B's long tail. One pair establishes a local direction in kernel
+  space; it does not establish that flat windows are generally optimal.</p>
+  <p>The continuations show that this local effect is consequential and that
+  one-step loss is not a safe selector. At the early and middle checkpoints,
+  both matched kernels finish worse than the deployed bi-Maxwell kernel by more
+  than duplicate-run divergence. Kernel A is the crucial counterexample: its
+  first step improves loss relative to bi-Maxwell, but its continuation is
+  worse. The late-checkpoint differences do not clearly exceed the floor.</p>
+  <figure class="wide">
+    <img src="s4_continuation_loss.png" alt="Kernel A improves the first step but both matched kernels finish worse than deployed bi-Maxwell after continuation at the early and middle checkpoints">
+    <figcaption>Each curve is validation loss relative to a continuation of the
+    deployed bi-Maxwell kernel from the same checkpoint; positive values are
+    worse. The gray band is the absolute difference between duplicate deployed
+    continuations at the early checkpoint, reused at the corresponding horizon
+    in all three panels. At checkpoints 1628 and 2528,
+    both matched kernels rise beyond that floor. The checkpoint-3028 separation
+    is not clearly resolved. Kernel A began with lower one-step loss than the
+    deployed kernel at every checkpoint, so the early and middle panels reverse
+    the choice made by the local objective.</figcaption>
+  </figure>
+  <p>The result selects the consequential branch of the registered test: mean
+  lag, alternating response, and white-noise gain omit information that affects
+  training over hundreds of steps. It does not select the finite-window
+  implementation. Both matched kernels discard history older than 128 steps,
+  while the deployed kernel retains a small slow tail. That shared truncation
+  may explain why the deployed kernel beats both. It cannot explain the
+  continuation gap between A and B, because they have the same support. The
+  next experiment isolates recent-weight shape while holding the slow tail
+  fixed.</p>
+  <p class="small">The early realized-checkpoint comparison also calibrates the
+  virtual evaluator in loss units. Parameter-level parity was calibrated after
+  the original preregistered bound failed, so it is recorded as a post-hoc
+  duplicate-floor calibration rather than a preregistered pass. The
   third-order diagnostic found no kernel-specific sharpening warning.</p>
-  <p>If the matched pair establishes that shape matters, candidate kernels are
-  selected without a training sweep. At a shared checkpoint, recorded gradient
-  history constructs each candidate update; fresh minibatches score the true
-  loss change from one complete deployed virtual step, and disjoint batches
-  evaluate the winner. Section 5 gives the equations for this virtual step and
-  the re-solve below. A third-order Taylor decomposition is computed once for
-  the winner and its matched partner: a cubic term that indicates sharpening
-  triggers one curvature-penalized re-solve. In every case, the fixed
-  continuation—not the one-step score—decides whether the selection was useful.</p>
+  <p>The one-step evaluator remains a precise local diagnostic. It measures how
+  a temporal kernel changes the immediate update and decomposes the resulting
+  loss change into gradient, curvature, and third-order terms. The continuation
+  shows that none of these local terms is yet a validated selection objective.</p>
   <p>A separate early-training fork tests the scalar stability theory. Between
   steps 1500 and 2000 the gradients still contain substantial period-two
-  oscillation, so changing <em>F</em> while matching constant response, mean lag,
-  and white-noise gain directly tests Section 3's prediction that critical
-  curvature scales as 1/<em>F</em>. The late momentum-free run could not perform
-  this test because its period-two energy had already vanished.</p>
-  <div class="thesis"><p><strong>Decision requested.</strong> Approve the
-  three-checkpoint matched-kernel response map (0.5 aggregate GPU-hours) and
-  its fixed continuations (1.5 aggregate GPU-hours). Together they decide
-  whether to build the compressed EMA schedule or retain kernel shape as a
-  control dimension. The independent early <em>F</em>-fork costs 2 aggregate
-  GPU-hours and tests the scalar stability mechanism. The complete request is
-  4 aggregate GPU-hours.</p></div>
+  oscillation. Changing <em>F</em> while matching constant response, mean lag,
+  and white-noise gain did not resolve a continuation-loss effect; the
+  curvature readout will decide the narrower 1/<em>F</em> prediction.</p>
+  <div class="thesis"><p><strong>Current decision.</strong> Construct a new
+  matched pair whose two kernels share the deployed slow tail and differ only
+  in their recent weights. This removes the common truncation in the present
+  pair. Do not fit a state-conditioned controller until a local measurement
+  predicts continuation outcomes.</p></div>
 
-  <h2 id="controller">5. Proposed program: from measurement to a small controller</h2>
-  <p>A controller is justified only if measured state predicts which temporal
-  weighting helps. Its candidate state <em>q</em><sub>t</sub> combines three
-  signals motivated by the measurements above with the exact loss-decrease
-  boundary for the deployed update.</p>
+  <h2 id="controller">5. Roadmap after one-step selection failed</h2>
+  <p>The first proposed selector minimized loss after one virtual optimizer
+  step. Kernel A passed that local test and failed the continuation. A
+  controller therefore needs a measurement that predicts closed-loop behavior,
+  not merely the quality of the immediate direction. The following quantities
+  remain candidates for such a predictor.</p>
   <div class="state-grid">
     <div><strong>Optimization scale</strong><br>Learning rate and measured
       curvature track proximity to the inverse-learning-rate pinning law.</div>
-    <div><strong>Matrix progress</strong><br>Per-matrix curvature records the
-      stable identity component and slow drift found in Section 3.</div>
+    <div><strong>Matrix progress</strong><br>The residual change in per-matrix
+      curvature, after separating its persistent matrix-specific level, tracks
+      movement through training.</div>
     <div><strong>Temporal direction</strong><br>EMA projections into the
       pre-sign singular basis measure each time scale's matrix contribution.</div>
     <div><strong>Realized boundary</strong><br><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>t</mi></msub><mo>=</mo><mo>−</mo><mfrac><mrow><mn>2</mn><mo stretchy="false">⟨</mo><msub><mi>g</mi><mi>t</mi></msub><mo separator="true">,</mo><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo stretchy="false">⟩</mo></mrow><mrow><mo stretchy="false">∥</mo><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><msup><mo stretchy="false">∥</mo><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">A_t=-\frac{2\langle g_t,\Delta_t\rangle}
@@ -502,7 +475,7 @@
       Δ<sub><em>t</em></sub> is the actual parameter change, measured in the
       optimizer's update norm.</div>
   </div>
-  <p>Given this state, choose kernel weights by measuring the loss after one
+  <p>The failed selector chose kernel weights by measuring the loss after one
   virtual optimizer step. For kernel weights
   <em>w</em>, define <em>Z</em><sub><em>w</em></sub> =
   ∑<sub><em>k</em></sub><em>w</em><sub><em>k</em></sub>
@@ -522,49 +495,43 @@
 c10,0,16.667,-5,20,-15 v-585 v0 v-585 c-2.667,-10,-9.667,-15,-21,-15
 c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.35em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size1">]</span></span></span></span></span></span></span></div>
   <p>Each score subtracts the pre-step loss on the same batch, reducing sampling
-  noise. A small set of batches selects <em>w</em><sup>*</sup>; disjoint batches
-  estimate its error bar and compare it with duplicate-control divergence.</p>
-  <p>At the selected kernel and its matched partner, decompose the local loss
-  change once:</p>
+  noise. This estimator is accurate in loss units, but the continuation result
+  shows that its argmin need not improve training.</p>
+  <p>For diagnosis, decompose the local loss change at a candidate kernel and
+  its matched partner:</p>
   <div class="equation"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="normal">Δ</mi><msubsup><mi>L</mi><mi>w</mi><mrow><mo stretchy="false">(</mo><mn>3</mn><mo stretchy="false">)</mo></mrow></msubsup><mo>=</mo><mo>−</mo><mi>η</mi><mo stretchy="false">⟨</mo><mi>g</mi><mo separator="true">,</mo><msub><mi>P</mi><mi>w</mi></msub><mo stretchy="false">⟩</mo><mo>+</mo><mfrac><msup><mi>η</mi><mn>2</mn></msup><mn>2</mn></mfrac><mo stretchy="false">⟨</mo><msub><mi>P</mi><mi>w</mi></msub><mo separator="true">,</mo><mi mathvariant="script">H</mi><msub><mi>P</mi><mi>w</mi></msub><mo stretchy="false">⟩</mo><mo>−</mo><mfrac><msup><mi>η</mi><mn>3</mn></msup><mn>6</mn></mfrac><msup><mi mathvariant="normal">∇</mi><mn>3</mn></msup><mi>L</mi><mo stretchy="false">[</mo><msub><mi>P</mi><mi>w</mi></msub><mo separator="true">,</mo><msub><mi>P</mi><mi>w</mi></msub><mo separator="true">,</mo><msub><mi>P</mi><mi>w</mi></msub><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">\Delta L_w^{(3)}=
     -\eta\langle g,P_w\rangle
     +\frac{\eta^2}{2}\langle P_w,\mathcal H P_w\rangle
     -\frac{\eta^3}{6}\nabla^3L[P_w,P_w,P_w]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.185em;vertical-align:-0.247em;"></span><span class="mord">Δ</span><span class="mord"><span class="mord mathnormal">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.938em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mopen mtight">(</span><span class="mord mtight">3</span><span class="mclose mtight">)</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.247em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">−</span><span class="mord mathnormal" style="margin-right:0.0359em;">η</span><span class="mopen">⟨</span><span class="mord mathnormal" style="margin-right:0.0359em;">g</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">⟩</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:2.1771em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.4911em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">η</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mopen">⟨</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathcal" style="margin-right:0.0097em;">H</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">⟩</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:2.1771em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.4911em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">6</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">η</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord"><span class="mord">∇</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span><span class="mord mathnormal">L</span><span class="mopen">[</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">]</span></span></span></span></span></div>
   <p>The three terms measure gradient alignment, curvature along the update,
   and the change of that curvature along the step. The cubic derivative is
-  estimated with two finite-differenced Hessian–vector products. A positive
-  cubic contribution warns that a kernel's immediate gain may sharpen the loss
-  surface. If that warning appears, repeat the cheap search once with this term
-  penalized and send both selections to the fixed continuation. Otherwise, add
-  no horizon model. Continuation loss and curvature remain the ground truth;
-  recording the cubic term across candidates will show whether it predicts
-  which local choices survive.</p>
+  estimated with two finite-differenced Hessian–vector products. In the matched
+  pair, the cubic term gave no kernel-specific warning and therefore does not
+  explain why the locally better update failed over the continuation.
+  Continuation loss remains the ground truth.</p>
   <p>The program advances only when each stage earns the next expense.</p>
   <ol class="roadmap">
-    <li><strong>Map the immediate response.</strong> The matched pair isolates
-      information beyond the three summaries at early, middle, and late
-      checkpoints; cost: 0.5 aggregate GPU-hours.</li>
-    <li><strong>Test training consequence.</strong> Fixed continuations connect
-      resolved update differences to loss and curvature; cost: 1.5 aggregate GPU-hours.</li>
-    <li><strong>Test scalar stability.</strong> The early <em>F</em>-fork decides
-      whether the period-two boundary predicts curvature; cost: 2 aggregate
-      GPU-hours.</li>
-    <li><strong>Select the state.</strong> Fit
-      <em>q</em><sub><em>t</em></sub> → <em>w</em><sup>*</sup> across checkpoints;
-      held-out update angles and outcomes eliminate useless signals. Replace offline
-      curvature only with an online statistic that predicts the same weights on
-      held-out checkpoints. Cost: 0.5 aggregate GPU-hours per validation
-      rerun.</li>
-    <li><strong>Compress and verify.</strong> Seed tests on ordinary, high-, and
-      low-learning-rate trajectories retain only the smallest EMA bank that
-      generalizes; cost: 0.5 aggregate GPU-hours per validation rerun before a
-      seed fleet is justified.</li>
+    <li><strong>Remove the tail-support confound.</strong> Match two kernels that
+      share the deployed slow tail and differ in recent weighting, then repeat
+      the short continuation. This decides whether the present pair failed
+      because both kernels truncated history; estimated cost: 2–4 GPU-hours.</li>
+    <li><strong>Find a horizon predictor.</strong> Compare local measurements
+      with continuation loss across a small, diverse kernel set. Continue only
+      if a predictor ranks held-out kernels above duplicate uncertainty.</li>
+    <li><strong>Find the orientation statistic.</strong> Use the recorded
+      momentum-SVD stream coordinates to find a compact matrix-valued readout
+      that predicts update rotation and the successful horizon metric. Then
+      test whether measured state predicts the selected kernel; offline
+      analysis first.</li>
+    <li><strong>Separate identity from state.</strong> Predict persistent
+      per-matrix curvature levels from static architecture and weight-spectrum
+      features, and predict the residual drift from dynamic measurements.
+      Cross-fork prediction is the test; begin offline.</li>
   </ol>
-  <div class="thesis"><p><strong>Decision requested.</strong> Approve the
-  matched-kernel experiment in Section 4 and its fixed continuation window.
-  Defer another power-law fit, broad K-Maxwell tuning, and controller
-  implementation until those measurements identify a reproducible state
-  variable. The roadmap gives the accelerator cost at each gate.</p></div>
+  <div class="thesis"><p><strong>Stop rule.</strong> Do not build a controller
+  unless a cheap local measurement predicts continuation outcomes on held-out
+  kernels and states. Defer more EMA-schedule tuning, aggregate curvature
+  forks, and joint-norm theory while this test remains unresolved.</p></div>
   <p>The end state is a minimal EMA bank governed by one measured quantity and
   exposing at most one user-facing hyperparameter.</p>
 
@@ -670,6 +637,13 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
     effects, so the plot is a descriptive inverse trend. BF16 rounding and the
     numerical stabilizer also break the exact scale invariance of ideal matrix
     sign. The intervention uses the deployed implementation.</p>
+    <p class="small">A separate Frank–Wolfe calculation measured joint
+    generalized sharpness over the product of the 72 Muon spectral-norm balls.
+    Under the tested radius and loss-scaling convention, that quantity remained
+    nearly constant from steps 1500 to 2750 while 2/η grew by a factor of 3.5.
+    This rules out a direct transfer of that joint-norm formula under this
+    convention; it does not rule out generalized-sharpness theories under a
+    different norm or hybrid-optimizer treatment.</p>
   </details>
   <details>
     <summary>C. Late-regime momentum-free comparison (diagnostic only)</summary>
@@ -694,12 +668,13 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
     means over four paired seeds. These runs estimate replication noise and do
     not constitute the official eight-seed Track 3 significance test. The
     K6 comparison in Appendix A remains a single-seed discovery result. The
-    matched-kernel experiment uses duplicate controls at every checkpoint, and the distilled
-    rule is evaluated across seeds. The momentum-free curvature comparison uses a separate
+    matched-kernel experiment uses duplicate controls to define its loss and
+    update floors. The momentum-free curvature comparison uses a separate
     trajectory whose weight norms are about 0.31 times the reference. Kernel
-    selection uses the measured loss of the complete deployed step. The
-    third-order decomposition is diagnostic: it requires a smooth local loss
-    and does not replace the fixed continuation.</p>
+    one-step selector uses the measured loss of the complete deployed step; its
+    first continuation test failed against the deployed kernel. The third-order
+    decomposition is diagnostic: it requires a smooth local loss and did not
+    explain that failure.</p>
   </details>
   <details>
     <summary>E. Full scalar boundary for an arbitrary kernel</summary>
