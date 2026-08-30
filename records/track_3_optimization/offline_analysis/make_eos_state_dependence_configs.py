@@ -100,6 +100,8 @@ def config_for(fork: int, stop: int, label: str, multiplier: float) -> dict:
              "hyperparams": {"cooldown_frac": 0.7,
                              "fixed_eta_after_step": fork,
                              "fixed_eta_after": multiplier}},
+            {"name": "log_learning_rates_at_steps",
+             "hyperparams": {"steps": [fork, fork + 1]}},
         ]
     return config
 
