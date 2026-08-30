@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-021**.
+Next request number: **REQ-024**.
 
 ## Template
 
@@ -27,6 +27,178 @@ Next request number: **REQ-021**.
 success criteria, artifact paths, and any ordering constraints. Do not include
 secrets; refer to already-provisioned environment variables.>
 ```
+
+---
+
+## REQ-023: wide per-matrix learning-rate interventions at two fork states
+
+- status: OPEN
+- requested: Jeffrey / Codex / 2026-08-30 16:55 PDT
+- priority: use the idle 8xH100 node released by REQ-021; do not preempt the
+  running REQ-022 node
+- expected cost: six 850-step continuations plus 30 standard curvature
+  measurements, approximately 3–4 8xH100 node-hours
+
+### Scientific question
+
+Does changing one Muon matrix's learning rate affect only that matrix, as a
+local thermostat predicts, or does curvature move into untreated matrices, as
+a collective cross-layer sharpness budget predicts? Three replicated,
+type-balanced assignments make untreated-neighbor effects estimable rather
+than anecdotes. Repeating the same assignments from steps 1500 and 2000 also
+tests whether the per-layer causal law changes with training state, extending
+the local step-2400 intervention.
+
+### Frozen implementation
+
+Use a fresh clone of this repository and check out exactly:
+
+```text
+branch: codex/per-matrix-lr-public
+SHA: 25d320879087eacc57fbc8d51b6007c18bb97ca6
+parent lineage: ebf53cd88dad93721c121af80285cf01f239f53e
+```
+
+This SHA adds `PerMatrixLrMuon` as a subclass of the deployed
+`BimaxwellMuon`. It changes only the applied learning rate and its decoupled
+weight-decay factor by `lr_multipliers[sorted_index]`; the bi-Maxwell momentum
+buffers and polar update are unchanged. It therefore loads the existing
+`eos_shared_base` fork states without translating or resetting `m_fast` or
+`m_slow`.
+
+Run these targeted offline tests before renting or using the H100 node:
+
+```bash
+python -m pytest -q \
+  records/track_3_optimization/tests/test_per_matrix_lr_muon.py \
+  records/track_3_optimization/tests/test_per_matrix_lr_config_generator.py \
+  records/track_3_optimization/tests/test_registry_locks.py \
+  -k 'per_matrix or optimizer_registry'
+```
+
+Expected: 7 tests pass. The broad `test_hook_registry_is_locked` test is
+already stale at parent `ebf53cd`: that parent added
+`log_gradient_autocorrelation`, `log_learning_rates_at_steps`, and
+`set_learning_rate_stairs` without adding them to its locked-name set. Do not
+treat that pre-existing unrelated failure as a REQ-023 failure and do not patch
+the frozen checkout on the box.
+
+### Frozen assignments and configs
+
+The six generated configs and both human- and machine-readable assignment
+tables are committed beside this request:
+
+```text
+requests/req023/assignments.tsv
+requests/req023/assignments.json
+requests/req023/manifest.tsv
+requests/req023/req023_f1500_a{0,1,2}.yaml
+requests/req023/req023_f2000_a{0,1,2}.yaml
+```
+
+The design uses seed 23023. Within each of the six matrix types, a seeded
+random ordering is divided among multipliers `{0.6, 1.0, 1.7}` and cyclically
+rotated across assignments 0, 1, and 2. Consequently every assignment has
+exactly four matrices at each multiplier within every type, and every matrix
+receives each multiplier exactly once. The same three assignments are reused
+at both forks so the fork-state comparison is paired.
+
+Regenerate the files from the frozen code and require a byte-for-byte match
+with the committed tables/configs before launch:
+
+```bash
+python records/track_3_optimization/offline_analysis/make_per_matrix_lr_configs.py \
+  --out /tmp/req023-generated
+diff -ru requests/req023 /tmp/req023-generated
+```
+
+### Shared-state and learning-rate gate
+
+Use the serialized `eos_shared_base` states at steps 1500 and 2000 from
+REQ-019. If the node was wiped, regenerate that base exactly from the
+REQ-019 `ebf53cd` config; do not replace it with six independent prefixes.
+
+Before the six full runs, execute a one-update temporary trace derived from
+assignment 0 at each fork. Keep the committed scientific configs unchanged;
+only the temporary trace copy may use `stop_after_step = fork + 1` and a unique
+run ID. Both traces must show:
+
+1. the loaded pre-update model and optimizer tensors equal the corresponding
+   serialized source state;
+2. the `learning_rates` row at the fork lists all 72 entries in
+   `sorted_index` order;
+3. every `sorted_index -> parameter name -> multiplier` tuple equals the
+   committed `assignments.tsv` column; and
+4. every effective Muon learning rate is exactly `0.025 * multiplier` at the
+   first fork update.
+
+Stop with `NEEDS-INFO` and retain the trace if any item fails. Do not run
+curvature on a failed branch.
+
+Each full config writes its loaded state at the fork to its own `gate_*`
+directory before the first update. After all six training runs, compare model
+and optimizer tensors across the three assignments at each fork and against
+the source state. Record the hashes and maximum absolute tensor difference in
+`shared-state-check.tsv`. This gate must pass before any curvature job begins.
+
+### Runs and curvature
+
+Run the six configs exactly as committed. Each continuation lasts 850 updates:
+
+- fork 1500: stop 2350; curvature checkpoints
+  `{1850, 1975, 2100, 2225, 2350}`
+- fork 2000: stop 2850; curvature checkpoints
+  `{2350, 2475, 2600, 2725, 2850}`
+
+At every listed checkpoint, run the standard per-matrix curvature measurement
+used by REQ-019: all Muon matrices, `--iters 8 --tokens 131072`, preserving raw
+Lanczos alphas/off-diagonals and parameter names. Do not substitute aggregate
+curvature or a shorter token budget.
+
+### Required analysis
+
+For each fork, report both raw leading curvature and the gauge-normalized
+quantity `lambda_top * ||W||_F^2`.
+
+1. Fit the direct effect of a matrix's own multiplier with matrix and type
+   effects retained.
+2. For every untreated matrix, fit response to the multipliers assigned to
+   other matrices. Report same-block, adjacent-block, same-type, and all-other
+   effects with the random assignment as the unit of replication.
+3. Compare the signed cross-talk pattern between forks 1500 and 2000.
+4. Recompute the own-multiplier law separately for each assignment; do not let
+   one assignment or matrix type create the aggregate conclusion.
+
+This is a discovery experiment with three assignments, not a claim of final
+statistical significance. Preserve the per-matrix rows so later assignments
+can extend the regression without rerunning these six continuations.
+
+### Artifacts
+
+Commit and push under:
+
+```text
+logs/kmaxwell/req023_per_matrix_lr/
+  README.md
+  summary.tsv
+  shared-state-check.tsv
+  runtime-lr-trace.tsv
+  assignments.tsv
+  manifest.tsv
+  configs/
+  <run_id>/
+    command.txt
+    console.log
+    train-log.txt
+    per_matrix_curvature.json
+```
+
+`summary.tsv` must contain the exact code SHA, fork, assignment, runtime,
+validation loss, every curvature checkpoint, direct-effect estimates, and the
+four cross-talk group estimates for both raw and gauge-normalized curvature.
+The README must state whether the evidence favors a local response, a
+collective redistribution, or is unresolved at three assignments. Commit all
+raw evidence before marking `DONE`, `FAILED`, or `NEEDS-INFO`.
 
 ---
 
