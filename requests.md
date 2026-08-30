@@ -32,7 +32,7 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-022: momentum EoS fine-grained multiplier ladder at fork-1500
 
-- status: RUNNING (agent 2026-08-30) — node wxgmk0q (8xH100) bootstrapping ebf53cd; will regen eos_shared_base then run 7 ladder arms {0.65,0.85,0.90,1.10,1.15,1.45,0.85dup} → gate → curvature. After REQ-021.
+- status: RUNNING (agent 2026-08-30) — node wxgmk0q (8xH100), ebf53cd. eos_shared_base regenerated; all **7 ladder arms trained** {0.65,0.85,0.90,1.10,1.15,1.45,0.85dup}; **shared-state gate PASSES** (identical sha256 `de88e4aa` across all 7, abs-diff 0, LR@1500=base×mult exact — see `shared-state-check.tsv`). Per-matrix curvature now running (7 arms × 5 ckpts). REQ-021 withdrawn (node w7yov0w released), so REQ-022 is the sole active request.
 - exact SHA: `ebf53cd88dad93721c121af80285cf01f239f53e` (same as REQ-019; do not upgrade)
 - priority: after REQ-021 if both are picked up together; both fit one node
 - protocol: identical to REQ-019 phase (1) in every respect (serialized
