@@ -56,7 +56,7 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-021: complete the n=8 seed test for K8 and scheduled-EMA vs bi-Maxwell
 
-- status: RUNNING (agent 2026-08-30) — node w7yov0w (8xH100) bootstrapping ebf53cd; will run twins seeds {4,5,6,7} (12 runs) + merge with pushed seeds {0,1,2,3} for n=8 paired stats.
+- status: **WITHDRAWN — STOP AND RELEASE THE NODE** (owner 2026-08-30 ~21:25 UTC, supersedes the pickup). Jeffrey: "if the effect size is not visible in n=4 then it's not an interesting place to look." Do not run the seeds; discard any partial work; w7yov0w may be released or reassigned to REQ-022. REQ-022 is unaffected and remains first priority.
 - exact SHA: `ebf53cd88dad93721c121af80285cf01f239f53e` (same as REQ-019 twins; do not upgrade)
 - priority: FIRST — this finishes the official-significance version of the
   headline kernel comparison.
