@@ -1,0 +1,7 @@
+run_id	fork	multiplier	stop_after	curvature_checkpoints	matrices	merged_json
+eos_f1500_s060	1500	0.60	2750	2250,2375,2500,2625,2750	74	eos_f1500_s060/req019_per_matrix_curvature.json
+eos_f1500_s077	1500	0.77	2750	2250,2375,2500,2625,2750	74	eos_f1500_s077/req019_per_matrix_curvature.json
+eos_f1500_s100	1500	1.00	2750	2250,2375,2500,2625,2750	74	eos_f1500_s100/req019_per_matrix_curvature.json
+eos_f1500_s100dup	1500	1.00	2750	2250,2375,2500,2625,2750	74	eos_f1500_s100dup/req019_per_matrix_curvature.json
+eos_f1500_s130	1500	1.30	2750	2250,2375,2500,2625,2750	74	eos_f1500_s130/req019_per_matrix_curvature.json
+eos_f1500_s170	1500	1.70	2750	2250,2375,2500,2625,2750	74	eos_f1500_s170/req019_per_matrix_curvature.json
