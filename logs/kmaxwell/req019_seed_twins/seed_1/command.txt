@@ -1,0 +1,7 @@
+# seed 1: isolated WD /root/twins_seed_1, SHA ebf53cd, 8xH100
+python .../make_powerlaw_anneal_configs.py configs/seed_1
+python .../make_exponential_anneal_configs.py configs/seed_1 --start 0.982 --end 0.944
+torchrun --standalone --nproc_per_node=8 run.py configs/seed_1/pl_anneal_base.yaml seed=1
+torchrun --standalone --nproc_per_node=8 run.py configs/seed_1/plann_bimaxwell_control.yaml seed=1
+torchrun --standalone --nproc_per_node=8 run.py configs/seed_1/expann_b0p982_b0p944.yaml seed=1
+torchrun --standalone --nproc_per_node=8 run.py configs/seed_1/plann_pr357_kernel_control.yaml seed=1
