@@ -1,0 +1,13 @@
+FORK1500 eos_f1500_s060 57e9cd848d70f49ff1df2097069bb29006a630d33369f33c64ce64d5a6f7d1cd 572213441
+FORK1500 eos_f1500_s100 afde1b77e632f80bbed54b7cd4c1c1648bc8a01dccb6f7e9acec4e73a5f83813 572213441
+FORK1500 eos_f1500_s130 67f2a36e0f4c61d39dfacddc9a584174cb0bc7a36aaba9bb3f045be29c0998bf 572213441
+FORK2000 eos_f2000_s060 a4676deed03c180d183b54503dcfb4ee0b028acbf31b363c839c86ef5206f0d5 572213441
+FORK2000 eos_f2000_s170 a401972658034a52163c949dadc5892be39e72e53f70db5ebfca69d5d8d33853 572213441
+FORK1500 eos_f1500_s077 f81e210c3ac6e593155815362d6d04e503b19ab1e93b00e38ae96bb73afbe2ca 572213441
+FORK1500 eos_f1500_s100dup 53760ad4014947376e44111de61fd024847071398cf62f3c42820e321bf3c29b 572213441
+FORK1500 eos_f1500_s170 9c1a4a9ecdaf6fb33f80ee5971650057496531a4e0648b63fb35ff74d3e2721d 572213441
+FORK2000 eos_f2000_s100 7923d6f3dbd4b369d43608745aeae0b7bd511527ec1e132fe6d60232e9848a00 572213441
+# GATE VERDICT: FAIL. All 6 fork-1500 arms have distinct model_step001500 hashes; all 3 fork-2000 distinct at model_step002000.
+# max_abs_diff (fork-1500, s060 vs s100/s130 @ step1500): 8.675e+01 / 8.125e+01  -- NOT nondeterminism (~1e-6); real divergence.
+# first divergent checkpoint = step 000125 (earliest saved): s060 vs s100 max_abs_diff 2.653e+01 (125), 6.950e+01 (750), 8.600e+01 (1375), 8.675e+01 (1500).
+# ROOT: arms diverge from ~step 125, not at fork 1500; only config difference is the LR multiplier -> multiplier applied GLOBALLY (from step 0), not gated to post-fork. The generated fork is not a shared-trajectory fork.
