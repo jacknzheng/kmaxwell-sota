@@ -248,17 +248,34 @@ def cool_down_learning_rate(*, cooldown_frac: float,
 
 
 def log_learning_rates_at_steps(*, steps: list[int]) -> Hook:
-    """Logs every resolved optimizer-group LR after schedule hooks run."""
+    """Logs resolved group and per-matrix LRs after schedule hooks run.
+
+    Per-matrix entries use the same size-descending ``sorted_index`` convention
+    as Muon rank ownership. Emitting the parameter name beside each multiplier
+    makes intervention assignment tables auditable at the first fork update.
+    """
     pinned = {int(step) for step in steps}
 
     def hook(config: Config, state: State) -> State:
         if state["step"] not in pinned:
             return state
         values = []
+        names = {id(p): name for name, p in state["model"].named_parameters()}
         for spec, built in state["optimizer"].groups:
-            values.append({"pattern": spec.pattern,
-                           "lr": [float(group["lr"])
-                                  for group in built.param_groups]})
+            value = {"pattern": spec.pattern,
+                     "lr": [float(group["lr"])
+                            for group in built.param_groups]}
+            multipliers = getattr(built, "lr_multipliers", None)
+            if multipliers is not None:
+                assert len(built.param_groups) == 1
+                group_lr = float(built.param_groups[0]["lr"])
+                value["per_matrix"] = [
+                    {"sorted_index": index, "name": names[id(param)],
+                     "multiplier": multiplier,
+                     "effective_lr": group_lr * multiplier}
+                    for index, (param, multiplier) in enumerate(
+                        zip(built.sorted_params(), multipliers))]
+            values.append(value)
         state["print_log"](f"learning_rates step:{state['step']} {values}",
                            console=True)
         return state

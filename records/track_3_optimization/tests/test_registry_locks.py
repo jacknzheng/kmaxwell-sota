@@ -34,7 +34,7 @@ LOCKED_HOOK_NAMES = {
     "mark_log_finished",
 }
 
-LOCKED_OPTIMIZER_NAMES = {"adamw", "muon", "bimaxwell_muon", "secant_gmres_muon", "sgd_blocks", "weighted_decays_muon", "scheduled_weights_muon", "annealed_weights_muon", "annealed_decay_muon"}
+LOCKED_OPTIMIZER_NAMES = {"adamw", "muon", "bimaxwell_muon", "secant_gmres_muon", "sgd_blocks", "weighted_decays_muon", "per_matrix_lr_muon", "scheduled_weights_muon", "annealed_weights_muon", "annealed_decay_muon"}
 
 
 def test_hook_registry_is_locked():

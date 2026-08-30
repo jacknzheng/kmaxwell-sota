@@ -457,6 +457,52 @@ class WeightedDecaysMuon(Muon):
             self._dot_accumulator = None
 
 
+class PerMatrixLrMuon(BimaxwellMuon):
+    """BimaxwellMuon whose applied learning rate varies by matrix.
+
+    ``lr_multipliers`` follows the size-descending parameter order used by Muon
+    for rank ownership and recorder ``sorted_index`` values. The momentum state
+    and update direction are exactly BimaxwellMuon's, so serialized bi-Maxwell
+    fork states load without translating or resetting buffers. The multiplier
+    changes only the parameter update and its decoupled weight-decay factor.
+    """
+    def __init__(self, params: list[torch.nn.Parameter], lr: float = 0.02,
+                 weight_decay: float = 0, mu: float = 0.95,
+                 fast_decay: float = PR340_BIMAXWELL["fast_decay"],
+                 slow_decay: float = PR340_BIMAXWELL["slow_decay"],
+                 fast_weight: float = PR340_BIMAXWELL["fast_weight"],
+                 switch_step: int = PR340_BIMAXWELL["switch_step"],
+                 lr_multipliers: list[float] = ()) -> None:
+        super().__init__(params, lr=lr, weight_decay=weight_decay, mu=mu,
+                         fast_decay=fast_decay, slow_decay=slow_decay,
+                         fast_weight=fast_weight, switch_step=switch_step)
+        if len(lr_multipliers) != len(self.sorted_params()):
+            raise ValueError(f"lr_multipliers has {len(lr_multipliers)} entries"
+                             f" for {len(self.sorted_params())} matrices")
+        self.lr_multipliers = tuple(float(multiplier)
+                                    for multiplier in lr_multipliers)
+
+    @torch.no_grad()
+    def step(self) -> None:
+        world_size = dist.get_world_size()
+        rank = dist.get_rank()
+        for group in self.param_groups:
+            params = group["params"]
+            params_pad = params + [torch.empty_like(params[-1])] * (
+                world_size - len(params) % world_size)
+            for base_i in range(0, len(params), world_size):
+                if base_i + rank < len(params):
+                    sorted_index = base_i + rank
+                    p = params[sorted_index]
+                    update = self.compute_polar_input(p, self.state[p], group)
+                    lr = group["lr"] * self.lr_multipliers[sorted_index]
+                    p.mul_(1 - lr * group["weight_decay"])
+                    p.add_(update, alpha=-lr)
+                dist.all_gather(params_pad[base_i:base_i + world_size],
+                                params_pad[base_i + rank])
+        self._muon_steps_seen += 1
+
+
 class ScheduledWeightsMuon(WeightedDecaysMuon):
     def __init__(self, params: list[torch.nn.Parameter], lr: float = 0.02,
                  weight_decay: float = 0, mu: float = 0.95,
