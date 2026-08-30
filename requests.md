@@ -32,8 +32,16 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-020: 9-GPU local-hint SDPO fleet
 
-- status: OPEN
+- status: NEEDS-INFO — **a 9-GPU box is not provisionable on this Baseten fleet** (workstation `--gpu-count` is capped at 8). Per this request's own "record and stop if <9 visible devices" rule, stopped. Need a 9-GPU box source or an approved layout change.
 - requested: Jack / 2026-08-29 23:58 PDT
+
+### REQ-020 STATUS (agent 2026-08-30) — blocked on 9-GPU hardware availability
+
+The operator authorized lifting the 2-node cap for this request. But **the hardware isn't available via the standard tooling**: `truss train workstation --accelerator h100 --gpu-count 9` → `Error: Invalid value for '--gpu-count': 9 is not in the range 1<=x<=8`. Baseten H100 workstations top out at **8 GPUs**. The requested map (`cuda:0-3` policy + `cuda:4-7` trainer + `cuda:8` frozen hint engine) needs 9 on a single box, and REQ-020 explicitly forbids the 8-GPU fallback ("do not shrink to 3+4+1 on an 8-GPU box") and says to stop if fewer than 9 devices are visible — so I did not provision a smaller box.
+
+**To unblock, pick one:** (a) point me at a 9-GPU (or larger) box/source outside `truss train workstation` (a pre-provisioned node, a different accelerator/instance type, or a cluster that offers >8-GPU single nodes); or (b) authorize a modified layout that fits 8 GPUs (e.g. hint engine time-shared on the policy GPUs, or 3 rollout + 4 trainer + 1 hint) — noting you currently forbid that; or (c) revert to the OpenRouter-hint path (REQ-018 `3bd7def`) with a **paid/higher-rate** aux model to sidestep the free-tier 429s. Tell me which and I'll proceed.
+
+REQ-020 supersedes REQ-018, so REQ-018 stays closed (hint-length fix already validated — `logs/async_sdpo_req018/`). REQ-019 (curvature) is unaffected and running on the 2-node budget.
 - repo: https://github.com/jacknzheng/scaling-sdpo
 - branch: `fix/hint-output-budget`
 - exact SHA: `e2ff7181305b1f6066ff059ae97bb36993371cd5`
