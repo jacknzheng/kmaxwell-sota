@@ -30,6 +30,51 @@ secrets; refer to already-provisioned environment variables.>
 
 ---
 
+## REQ-022: momentum EoS fine-grained multiplier ladder at fork-1500
+
+- status: OPEN
+- exact SHA: `ebf53cd88dad93721c121af80285cf01f239f53e` (same as REQ-019; do not upgrade)
+- priority: after REQ-021 if both are picked up together; both fit one node
+- protocol: identical to REQ-019 phase (1) in every respect (serialized
+  `eos_shared_base` fork-1500 state — regenerate exactly as REQ-019 did if the
+  released box wiped it; same shared-state hash gate; same per-matrix Lanczos:
+  74 matrices, checkpoints {2250,2375,2500,2625,2750}, `--iters 8 --tokens
+  131072`, alphas/offdiags stored raw), EXCEPT the multiplier set:
+  run SIX new arms with constant post-fork multipliers {0.65, 0.85, 0.90,
+  1.10, 1.15, 1.45} plus ONE duplicate at 0.85 (second seed of GPU
+  nondeterminism only — identical config, for a mid-multiplier noise floor).
+- purpose: REQ-019 established the aggregate inverse-LR law from five
+  multipliers; per-matrix slopes are heterogeneous (10th-90th pct roughly
+  -2.1..-1.0). The fine ladder doubles the per-matrix regression leverage and
+  tests law curvature (departure from a pure power law) near multiplier 1.
+- deliverables: same layout as REQ-019 (`logs/kmaxwell/req019_eos_state_dependence/`
+  naming pattern `eos_f1500_s065` etc., summary.tsv rows appended, shared-state
+  check rows appended). Gate must PASS before any curvature run, per REQ-019's
+  rule; NEEDS-INFO with evidence otherwise.
+- cost estimate: 7 train arms x ~3.5 min + 7 curvature passes x ~19 min on one
+  8xH100 node ~= 3 node-hours.
+
+## REQ-021: complete the n=8 seed test for K8 and scheduled-EMA vs bi-Maxwell
+
+- status: OPEN
+- exact SHA: `ebf53cd88dad93721c121af80285cf01f239f53e` (same as REQ-019 twins; do not upgrade)
+- priority: FIRST — this finishes the official-significance version of the
+  headline kernel comparison.
+- protocol: identical to REQ-019's twins phase in every respect (same three
+  configs: `plann_bimaxwell_control`, `expann_b0p982_b0p944`,
+  `plann_pr357_kernel_control`; per-seed isolated working directories;
+  warmstart gate verified per seed) EXCEPT seeds: run seeds {4,5,6,7}
+  (12 runs). Merge with the pushed seeds {0,1,2,3} and report n=8 paired
+  statistics in the same summary.tsv format (per-seed diffs, mean, std,
+  stderr), flagged as the full n=8 comparison.
+- purpose: REQ-019's n=4 was an explicit noise estimate, not the official
+  Track-3 test. n=8 makes the +0.00277 (K8) and +0.000285 (scheduled EMA)
+  gains citable at the standard the track uses.
+- deliverables: `logs/kmaxwell/req019_seed_twins/summary.tsv` extended (or a
+  sibling `summary_n8.tsv`), all run logs, per-seed warmstart-gate evidence.
+- cost estimate: 12 runs x ~3.5 min train + overhead ~= 1.5-2 node-hours on
+  one 8xH100 node.
+
 ## REQ-020: 9-GPU local-hint SDPO fleet
 
 - status: NEEDS-INFO — **a 9-GPU box is not provisionable on this Baseten fleet** (workstation `--gpu-count` is capped at 8). Per this request's own "record and stop if <9 visible devices" rule, stopped. Need a 9-GPU box source or an approved layout change.
