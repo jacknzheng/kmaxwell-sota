@@ -32,7 +32,7 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-022: momentum EoS fine-grained multiplier ladder at fork-1500
 
-- status: OPEN
+- status: RUNNING (agent 2026-08-30) — node wxgmk0q (8xH100) bootstrapping ebf53cd; will regen eos_shared_base then run 7 ladder arms {0.65,0.85,0.90,1.10,1.15,1.45,0.85dup} → gate → curvature. After REQ-021.
 - exact SHA: `ebf53cd88dad93721c121af80285cf01f239f53e` (same as REQ-019; do not upgrade)
 - priority: after REQ-021 if both are picked up together; both fit one node
 - protocol: identical to REQ-019 phase (1) in every respect (serialized
@@ -56,7 +56,7 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-021: complete the n=8 seed test for K8 and scheduled-EMA vs bi-Maxwell
 
-- status: OPEN
+- status: RUNNING (agent 2026-08-30) — node w7yov0w (8xH100) bootstrapping ebf53cd; will run twins seeds {4,5,6,7} (12 runs) + merge with pushed seeds {0,1,2,3} for n=8 paired stats.
 - exact SHA: `ebf53cd88dad93721c121af80285cf01f239f53e` (same as REQ-019 twins; do not upgrade)
 - priority: FIRST — this finishes the official-significance version of the
   headline kernel comparison.
