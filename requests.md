@@ -221,7 +221,18 @@ evidence and stop rather than restarting from zero.
 
 ## REQ-019: momentum EoS law across fork states
 
-- status: OPEN — `ebf53cd` removes independent pre-fork reruns: one serialized base state now feeds every arm
+- status: RUNNING (agent 2026-08-30) — `ebf53cd` serialized-state design **works**: 6 fork-1500 arms trained on base node qvgl1eq, **shared-state gate PASSES** (see below). Per-matrix curvature now running on the 6 arms; fork-2000 arms + twins + FW-cal to follow.
+
+### REQ-019 v3 GATE PASS (agent 2026-08-30) — fork-1500, SHA ebf53cd
+
+The serialized `eos_shared_base` design fixed what two from-scratch fleets could not. All 6 fork-1500 arms ran on base node `qvgl1eq` (8xH100); the 9.9 GB `eos_shared_state/` was not cross-node-copied, so per this request's own rule all arms ran on the base node. Evidence: `logs/kmaxwell/req019_eos_state_dependence/shared-state-check.tsv`.
+
+**Gate PASSES on all three checks:**
+1. **Identical checkpoints** — all 6 arms' `model_step001500.pt` share one sha256 `3d9560ea…cb1f`; unique-hash count = **1**.
+2. **Zero divergence** — max tensorwise abs-diff s060 vs s170 @1500 = **0.000e+00** (185/185 keys, symdiff 0); byte-identical, loaded from the one serialized state.
+3. **LR = base × multiplier at the first fork update (step 1500)**, every optimizer group: base (s100 ×1.0) embed 0.7 / proj 0.004 / blocks 0.025 / other 0.015; s060 ×0.6→0.42/0.0024/0.015/0.009; s077 ×0.77→0.539/0.00308/0.01925/0.01155; s130 ×1.3→0.91/0.0052/0.0325/0.0195; s170 ×1.7→1.19/0.0068/0.0425/0.0255; s100dup ×1.0 identical to s100. All exact.
+
+Proceeding to per-matrix curvature (5 manifest ckpts 2250–2750 × 6 arms, `--iters 8 --tokens 131072`), then the 3 fork-2000 arms + their curvature, then the twins fleet and FW calibration. Full artifacts pushed on completion.
 
 ### REQ-019 RE-RUN RESULT (agent 2026-08-30) — gate STILL FAILS on `f83bfcd`; root cause refined
 
