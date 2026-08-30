@@ -67,6 +67,13 @@ const formulas = {
   scalar_model: String.raw`g_t=\lambda x_t,\qquad z_t=\sum_{k\ge0}w(k)g_{t-k},\qquad x_{t+1}=a x_t-\eta z_t`,
   mean_age: String.raw`\bar{k}=\frac{\sum_k k\,w_k}{\sum_k w_k}`,
   noise_gain: String.raw`N=\frac{\sum_k w_k^2}{\left(\sum_k w_k\right)^2}`,
+  finite_history_descriptors: String.raw`\begin{aligned}
+    H_t(0)&=\sum_{k=0}^{t}w_t(k)=1,
+      &\bar{k}_t&=\frac{\sum_{k=0}^{t}k\,w_t(k)}{\sum_{k=0}^{t}w_t(k)},\\
+    F_t&=\sum_{k=0}^{t}(-1)^kw_t(k),
+      &G_{\mathrm{wn},t}&=\frac{\sum_{k=0}^{t}w_t(k)^2}
+      {\left(\sum_{k=0}^{t}w_t(k)\right)^2}.
+  \end{aligned}`,
   periodic_input: String.raw`g_t=A\cos\!\left(\frac{2\pi t}{P}\right)`,
   endpoint_response: String.raw`\left|W\!\left(e^{-i2\pi/P}\right)\right|`,
   eos_sgd: String.raw`\eta\lambda_{\mathrm{crit}}=2`,

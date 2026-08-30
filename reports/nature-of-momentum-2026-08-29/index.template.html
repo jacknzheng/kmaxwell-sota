@@ -152,16 +152,13 @@
   question.</p>
 
   <h2>3. Curvature constrains the theory</h2>
-  <p>The constant-learning-rate runs show an edge-of-stability-like pattern:
-  settled curvature rises as the learning rate falls. Here edge of stability
-  means that curvature approaches the critical value where fixed-learning-rate
-  dynamics are marginally stable. On log–log axes, the five
-  accepted segments fit {{inline:normalized_curvature_fit}}, where <em>s</em>
-  is the learning-rate multiplier and
-  <span>λ̃</span> is each matrix's leading curvature divided by its
-  step-1000 value. The ordinary inverse-multiplier reference has slope −1.
-  Window-selection sensitivity
-  puts the fitted exponent near −1.28 ± 0.1.</p>
+  <p>The fixed-learning-rate runs show curvature pinning: once a run settles,
+  its median leading curvature is higher at smaller learning-rate multipliers.
+  Each point below summarizes a separate trajectory by taking the median over
+  its Muon-managed matrices. The five accepted segments fit
+  {{inline:normalized_curvature_fit}}. Here <em>s</em> is the learning-rate
+  multiplier and <span>λ̃</span> is each matrix's leading curvature divided by
+  its step-1000 value; the ordinary inverse-multiplier reference has slope −1.</p>
   <figure>
     <img src="eos_pinning.png" alt="Equilibrium curvature rises as the learning-rate multiplier falls across five steady regimes">
     <figcaption>Five constant-learning-rate segments met the steady-regime
@@ -172,11 +169,11 @@
     The dashed line fixes the slope at −1 and fits its vertical
     normalization.</figcaption>
   </figure>
-  <p>The aggregate exponent hides substantial variation across matrix types.
-  Attention Q, K, and V and the MLP output have fitted slopes from −1.09 to
-  −1.34; attention output, MLP input, and the language-model head are
-  shallower, from −0.65 to −0.87. The embedding slope is +0.78, but
-  adjacent-checkpoint spikes of up to 15× make that fit unreliable.</p>
+  <p>The median is unusually smooth because it averages over different
+  matrix-level laws. Most Muon-managed matrices individually follow a tight
+  power law in the learning-rate multiplier, but their slopes and vertical
+  levels differ by much more than the estimated measurement noise. Their
+  deviations lie on both sides of the median and largely cancel there.</p>
   <figure class="wide">
     <img src="pinning_by_matrix_type.png" alt="Two-by-four log-log curvature plots for attention K, attention output, attention Q, attention V, MLP input, MLP output, embedding, and language-model head, with residual-block depth shown by color">
     <figcaption>Panels, left to right: attention K, attention output projection,
@@ -187,15 +184,73 @@
     point is one residual-block matrix; the two black-dot panels contain the
     single embedding and output matrices. Curvature is normalized by each
     matrix's step-1000 value. The solid line repeats the aggregate −1.28 fit
-    and the dashed line has slope −1. The embedding fit is unreliable because
-    adjacent-checkpoint spikes reach 15×. The output matrix is well behaved,
-    although its normalization baseline has 6.1% estimated error. Shallow
-    blocks sit above the aggregate trend at the largest learning rates;
-    whether this reflects their dynamics or small step-1000 baselines has not
-    been checked.</figcaption>
+    and the dashed line has slope −1. Hollow or visibly isolated points reflect
+    weakly settled estimates; such cells occur throughout the network. The
+    embedding fit is especially unreliable because adjacent-checkpoint spikes
+    reach 15×.</figcaption>
   </figure>
-  <p>The fitted exponent describes these five accepted segments. An absolute
-  overlay of the SGD rule ηλ = 2 requires physical learning-rate and curvature
+  <p>Training progress appears to move individual matrices without changing the
+  aggregate inverse-learning-rate law. The aggregate exponent was reproduced
+  at a later checkpoint, while individual matrices measured at different stages
+  shifted together; deeper blocks tended to move higher. Matrices measured at
+  nearly the same training step agreed much more closely. The aggregate law
+  survives because the matrix-level shifts largely cancel in the median.</p>
+  <figure class="wide">
+    <img src="fork2400_state_independence.png" alt="Per-matrix curvature levels from early and late forks, showing agreement when measurement steps match and correlated shifts when they differ">
+    <figcaption>The left panel compares each matrix's curvature level between
+    the early and late forks. The nearly step-matched pair lies close to the
+    diagonal; the pairs measured at different stages scatter systematically.
+    Open markers identify matrices that did not meet the settled-window test in
+    at least one run.
+    The right panel shows that the late-minus-early shifts agree across the two
+    step-mismatched comparisons. The aggregate exponent was −1.19 ± 0.10 in
+    the later fork, compared with −1.21 to −1.28 in the earlier runs.</figcaption>
+  </figure>
+  <p>Near-matched matrix gaps also reproduced across checkpoints, revealing a
+  stable matrix-identity component beneath the slower drift. The
+  measurement-step pattern suggests training-progress drift but does not
+  establish it. Comparing early and late windows within the existing runs can
+  test this interpretation without additional training.</p>
+  <p>Matrix type and block depth capture some structure but do not predict
+  held-out absolute curvatures to the measurement floor. Removing the
+  step-1000 normalization from the analysis leaves the same heterogeneity.
+  Allowing each matrix its own
+  exponent and level performs much better, yet still misses the estimated
+  measurement floor and cannot predict an unseen matrix. Within each measured
+  state, the current data therefore support matrix-specific power laws, with
+  the variables controlling
+  their slopes and levels still unidentified. Any predictive law must account
+  for both the reproducible matrix-identity component and its drift over
+  training.</p>
+  <figure class="wide">
+    <img src="eos_law_collapse.png" alt="Held-out prediction error for a ladder of curvature laws, followed by per-matrix fitted exponents across block depth">
+    <figcaption>The left panel compares candidate laws by prediction error on a
+    held-out learning-rate run. Type and depth add no useful collapse; allowing
+    every matrix its own slope and level is the first large improvement, and
+    even that remains above the measurement floor. The right panel shows those
+    fitted exponents. Hollow markers have fewer than three settled cells. The
+    two Adam-managed matrices are shown as diagnostic controls, but each has
+    too few settled cells for a strong quantitative comparison.</figcaption>
+  </figure>
+  <p>The recorded variables do not yet predict the matrix-specific laws
+  accurately. Matrix type, depth, shape, initial curvature, and raw-gradient
+  norm leave large held-out errors and fail to explain the fitted constants to
+  the measurement floor. Near-matched matrix pairs also exhibit clearly
+  different fitted slopes or levels, so a smooth rule built from those fields
+  is insufficient. The proxy tests also expose a gap in the instrumentation:
+  the logs contain the raw gradient's norm and polar direction, while the
+  candidate theories concern the scale and polar direction of the temporally
+  filtered momentum matrix.</p>
+  <p>The next measurement should resolve a candidate state at the same
+  per-matrix and training-time granularity: the singular values and directions
+  of the momentum matrix before matrix sign, separated by the temporal
+  components that produced it. This momentum spectrum is the
+  time-scale-to-direction map proposed in Section 2. It could record both
+  matrix identity and slow drift, but has not yet been shown to explain the
+  curvature laws.</p>
+  <p>The fitted slope supports only a normalized trend comparison, not an
+  absolute SGD threshold. An overlay of the rule ηλ = 2 requires physical
+  learning-rate and curvature
   units. Here the horizontal coordinate is a multiplier on the base step size,
   and the vertical coordinate is a median of separately normalized per-matrix
   curvatures, so the plot supports a slope comparison.</p>
@@ -216,85 +271,69 @@
   <em>a</em> = 1, recovering ηλ<sub>crit</sub> = 2. For a general temporal
   kernel, the inverse-<em>F</em> prediction applies only when period two is the
   first mode to become unstable.</p>
-  <p>The deployed kernels occupy a narrow range of alternating responses:
-  bi-Maxwell has <em>F</em> ≈ 0.089, K8 spans 0.061–0.083 during its schedule,
-  and the winning scheduled EMA spans approximately 0.059–0.077. The scalar
-  reference therefore predicts only about a 1.5× spread in critical curvature
-  among them.</p>
-  <p>The scalar recurrence omits the operation that defines Muon: matrix sign
-  couples directions and removes their common amplitude. Its equation supplies
-  a reference for a controlled test, while the measured curvature trend
-  supplies the empirical constraint.</p>
-  <p>The late momentum-free screen misses the scalar reference by 33×: its
-  classical reference was 0.09× the bi-Maxwell curvature, while the measured
-  trajectory reached 3×. The fork began at step 2400 and measured steps
-  2432–3231, as the learning-rate cooldown removed most period-two gradient
-  energy; the compared model trajectories also had substantially different
-  weight norms. The earlier regime where the alternating mode is active
-  remains untested.</p>
+  <p>This equation makes two experimentally distinct predictions. First, hold
+  the kernel fixed and vary the learning rate. The scalar boundary is
+  λ<sub>crit</sub> = (2 − ηρ)/(η<em>F</em>), which is approximately proportional
+  to 1/η when ηρ is small. The runs above all use the same bi-Maxwell kernel,
+  and hence the same <em>F</em>, but their post-fork trajectories are not held at
+  the same state. They provide a descriptive slope comparison: the aggregate
+  slope is close to −1, while the resolved deviation and differences among
+  matrices require a richer empirical law.</p>
+  <p>Second, hold the learning rate and training state fixed and vary
+  <em>F</em>: the critical curvature should scale as 1/<em>F</em>. This is why
+  <em>F</em> is useful. It is the kernel's response to a sign-alternating
+  gradient, and it is the only property of the kernel that enters the
+  period-two boundary. The current runs do not test this prediction because
+  changing the kernel also changed the stored momentum and the model
+  trajectory. Section 4 proposes the same-state intervention that would test
+  it directly.</p>
+  <p>Muon adds a directional complication: matrix sign removes common scale,
+  but reweighting temporal components can rotate the matrix before that
+  operation. The available momentum-free comparison cannot test the
+  <em>F</em> prediction. It was measured late, after alternating energy had
+  faded, and it changed the optimizer, stored history, and model trajectory
+  together. Its details are in Appendix C.</p>
 
   <h2>4. Proposed experiment: does temporal weighting rotate Muon's update?</h2>
-  <p>K-Maxwell and the scheduled EMA arrive late in training with different
-  temporal kernels—the weights they assign to stored gradient summaries—and
-  with different stored momentum and model states. A coefficient-only
-  intervention at a shared checkpoint isolates the current temporal weighting
-  from stored history and model state.</p>
+  <p>The next experiment tests whether three measured summaries determine the
+  immediate Muon update. For this first test, restrict the kernels to
+  nonnegative temporal weights and normalize their response to a constant
+  gradient to one. Then match their mean lag—the average age of the gradients
+  they use—their alternating response <em>F</em>, and their white-noise gain,
+  defined as output variance for independent unit-variance input. Allow their
+  other weights to differ. If the resulting updates differ, these three
+  summaries do not determine the kernel's immediate effect.</p>
   <div class="flow" aria-label="Same-state intervention design">
-    <div class="node"><strong>Shared checkpoint:</strong><br>Same model, batch, optimizer state, and EMA buffers</div>
+    <div class="node"><strong>One checkpoint</strong><br>One model and one bank of stored gradient averages</div>
     <div class="arrow">→</div>
-    <div class="node"><strong>Kernel intervention:</strong><br>Change only the EMA mixture weights</div>
+    <div class="node"><strong>Two matched kernels</strong><br>Unit constant response; same mean lag, <em>F</em>, and noise gain</div>
     <div class="arrow">→</div>
-    <div class="node"><strong>Measurements:</strong><br>First-step update rotation; loss and curvature over the fixed window</div>
+    <div class="node"><strong>Measure</strong><br>Momentum spectrum and update angles; then fixed-window loss and curvature</div>
   </div>
-  <p>At early, middle, and late checkpoints, two unchanged controls and two
-  intervention branches copy the entire training state: model, Muon and Adam
-  states, data position, and schedules. A common EMA bank stores identical
-  summaries of the shared raw gradient history, and candidate kernels are
-  different linear combinations of that bank.
-  At each checkpoint, every candidate is normalized using the finite gradient
-  history available there so {{inline:dc_normalization}}; a constant gradient
-  passes unchanged and the common scale is fixed. Average lag
-  {{inline:mean_age}} is the kernel's mean gradient age. White-noise response
-  {{inline:noise_gain}} is its output variance for independent unit-variance
-  inputs; alternating response is <em>F</em> from Section 3. Hold all three
-  within pre-specified tolerances and report their drift over the fixed window.
-  The immediate branch difference then estimates the changed temporal
-  response.</p>
-  <p>Discovery batches choose a pair predicted to rotate Muon's matrix-sign
-  update. At the intervention step, <em>P</em><sub>w</sub> is computed from the
-  shared training batch and history. Independent held-out batches estimate the
-  gradient <em>g</em>, Hessian ℋ, and predicted one-step loss change for that
-  fixed update. With {{inline:Pw_def}}, second-order expansion gives</p>
-  <div class="equation">{{display:taylor_local}}</div>
-  <p>The first term measures descent alignment; the second measures curvature
-  cost. Use this estimate to rank candidates; use the fixed continuation to
-  test whether the ranking predicts loss.</p>
-  <p>Use the unchanged control's singular vectors as a common basis to attribute
-  rotation to EMA time scales. Record each stream's projection and residual,
-  then measure update rotation by matrix cosine and leading-subspace angle;
-  Appendix G specifies the readout.</p>
-  <p>The experiment begins with an offline response map across the three
-  checkpoints. The pair with the clearest held-out difference then enters
-  fixed-window continuations alongside duplicate controls. The continuation measures
-  when the immediate direction change begins to affect sharpness and
-  validation loss. A candidate pair advances only if the second-order predicted
-  loss-change ordering has the same sign on every pre-specified evaluation
-  batch. Call the continuation positive only if the branch difference exceeds
-  the loss-and-curvature spread between the two unchanged controls over the
-  same window.</p>
-  <table class="outcome">
-    <thead><tr><th>Observation</th><th>Conclusion</th><th>Research decision</th></tr></thead>
-    <tbody>
-      <tr><td>Rotation, more negative predicted loss change, and a continuation advantage</td><td>Supports a first-step temporal-weighting effect that predicts lower continuation loss</td><td>Derive a state-driven controller from the local objective</td></tr>
-      <tr><td>Rotation, followed by tied or reversed continuations</td><td>The local score fails to predict continuation loss</td><td>Find which measured interaction predicts rotations that improve continuation loss</td></tr>
-      <tr><td>Rotation exceeds the duplicate-control cosine spread but remains small, with tied continuations</td><td>The current kernel has a resolved first-step effect without a detected continuation benefit</td><td>Test whether later state interactions determine which rotations help</td></tr>
-      <tr><td>Small rotations followed by delayed separation</td><td>Loss separation is delayed beyond the first-step rotation</td><td>Measure the delayed state before building a controller</td></tr>
-      <tr><td>Rotation stays within the duplicate-control cosine spread, and loss and curvature stay within their control spreads</td><td>No current-kernel effect is resolved at these checkpoints</td><td>Test initialization and trajectory history</td></tr>
-    </tbody>
-  </table>
-  <p>This isolates the immediate temporal-weighting effect and tests whether it changes
-  loss or curvature during the continuation. Attribution of the original
-  K-Maxwell gain requires a full factorial training study.</p>
+  <p>At each checkpoint, record each candidate's pre-sign singular values and
+  ideal-sign polar factor. Project every EMA stream onto the unchanged
+  control's singular vectors and retain its residual. Compare
+  candidate-to-control matrix cosines and leading-subspace angles. These
+  measurements test the time-scale-to-direction state proposed in Section 2.</p>
+  <p>Run this comparison from early, middle, and late checkpoints because the
+  useful temporal weighting may depend on training state. Each fork keeps the
+  model, stored gradient averages, data order, learning-rate schedule, and all
+  other optimizer state fixed. Only the coefficients combining the stored
+  averages change. The continuation follows the original schedule for a
+  fixed measurement window chosen before launch, giving faster feedback than
+  a full run.</p>
+  <p>The immediate readouts are the matrix cosine and leading-subspace angle
+  between the two matrix-sign updates. The continuation then tests whether
+  validation loss or curvature separates by more than it does between two
+  unchanged control forks. A reproducible separation would show that the
+  three descriptors do not determine the immediate update. No resolved
+  separation at any checkpoint would leave stored-state initialization and
+  trajectory history as competing explanations.</p>
+  <p>One additional comparison varies <em>F</em> while maintaining unit response
+  to a constant gradient and matching mean lag and noise gain. Run it near
+  steps 1500–2000, while the gradient history still has a strong alternating
+  component. This is the direct test of the scalar period-two prediction
+  developed in Section 3.</p>
 
   <h2>5. Proposed program: from measurement to a small controller</h2>
   <p>If the same-state test identifies a reproducible effect, retain the
@@ -303,7 +342,11 @@
   <p>Let <em>q</em><sub>t</sub> contain measurements available to the
   optimizer: the learning rate, the measured curvature and its
   inverse-learning-rate reference, and the per-time-scale projection readouts
-  from Section 4.
+  from Section 4. For kernel weights <em>w</em>, define
+  <em>Z</em><sub><em>w</em></sub> = ∑<sub><em>k</em></sub>
+  <em>w</em><sub><em>k</em></sub><em>G</em><sub><em>t</em>−<em>k</em></sub>
+  and <em>P</em><sub><em>w</em></sub> =
+  msign(<em>Z</em><sub><em>w</em></sub>).
   Constrain the online EMA bank to a bounded response to white-noise input. Use
   the current gradient
   <em>g</em><sub>t</sub>, Hessian ℋ<sub>t</sub>, and candidate Muon update
@@ -392,6 +435,36 @@
     <p class="small">The geometric-tail extrapolation and tail gate are a
     provisional analysis rule; calibration of its error model remains future
     work. The five points are descriptive results accepted under that rule.</p>
+    <p class="small">The law ladder fits absolute corrected eigenvalues. L1
+    uses one exponent and matrix-type levels; L2 adds depth-dependent levels;
+    L3 allows type-specific exponents; L4 adds depth-dependent exponents; L5
+    gives every matrix its own level and exponent. Model selection uses
+    held-out learning-rate runs, with a separate even-depth to odd-depth test.
+    Fits exclude 81 of 360 Muon-matrix cells whose within-window drift exceeds
+    three estimated standard errors; those cells are distributed across all
+    depths. L5 is a diagnostic ceiling because it cannot predict an unseen
+    matrix.</p>
+    <p class="small">The recorded-feature check used matrix type, depth, shape,
+    step-1000 curvature, and raw-gradient norm. The near-match test required the
+    same matrix type, a depth difference of at most one block, and step-1000
+    curvature and gradient norm within 15%. Six such pairs differed by three to
+    nine fitted standard errors in their law constants. This rejects a smooth,
+    low-capacity rule over the tested neighborhoods. The
+    proposed collapses based on raw-gradient scale and curvature along the
+    raw-gradient polar direction were unsupported; the apparent scale relation
+    largely vanished after controlling for the shared step-1000 state. The
+    corresponding momentum-spectrum quantities were not recorded.</p>
+    <p class="small">A second five-point bi-Maxwell set forked from step 2400.
+    Its aggregate exponent was −1.19 ± 0.10, consistent with the earlier
+    −1.21 to −1.28 estimates. For the two comparisons whose measurement
+    windows differed by roughly 1,500 training steps, per-matrix log-curvature
+    shifts had 0.5–0.7 root-mean-square magnitude, four to six times the pooled
+    noise estimate; their residuals correlated at Pearson 0.73 and Spearman
+    0.86. The nearly step-matched comparison had a median offset of 0.03 and
+    roughly twice the pooled noise. Fifteen of eighteen near-match gap
+    comparisons agreed within 1.5 standard errors; all exceptions contained an
+    unsettled cell. These observations motivate, but do not prove, the
+    training-progress interpretation in the main text.</p>
     <p class="small">The learning-rate multiplier also scales decoupled weight
     decay in this harness. The full hybrid Muon–Adam update depends on
     weight-norm adaptation, cross-block coupling, and finite Newton–Schulz
@@ -456,6 +529,10 @@
   </details>
   <details>
     <summary>G. Matrix-direction readout</summary>
+    <p class="small">At checkpoint <em>t</em>, truncate each kernel to the
+    available history and compute its constant response, mean lag, alternating
+    response, and white-noise gain as</p>
+    <div class="equation">{{display:finite_history_descriptors}}</div>
     <p class="small">Decompose the unchanged control's pre-sign matrix as
     <em>Z</em><sub>ref</sub> = <em>U</em>Σ<em>V</em><sup>T</sup>. For each EMA
     stream <em>E</em><sub>j</sub>, record its coordinates
@@ -463,6 +540,16 @@
     outside that basis. Compare interventions using the Frobenius cosine of
     their matrix-sign updates and principal angles between their leading
     singular subspaces. Every branch uses the same reference basis.</p>
+    <p class="small">Candidate pairs are screened before training on the finite
+    gradient history available at the fork. Constant response must equal one;
+    mean lag must agree within 0.25 step; alternating response and white-noise
+    gain must each agree within 1% of the reference value. Simulate the fixed
+    continuation and require the same tolerances at every registered readout;
+    if no pair is feasible, report that result instead of relaxing the match.
+    Register evaluation batches and window length before launch. Call a branch
+    difference resolved only when its magnitude exceeds the difference between
+    the two unchanged control forks at every corresponding readout and its sign
+    is stable across the registered evaluation batches.</p>
   </details>
   <h3>Technical references</h3>
   <ul class="small">
