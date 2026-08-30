@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-018**.
+Next request number: **REQ-019**.
 
 ## Template
 
@@ -27,6 +27,188 @@ Next request number: **REQ-018**.
 success criteria, artifact paths, and any ordering constraints. Do not include
 secrets; refer to already-provisioned environment variables.>
 ```
+
+---
+
+## REQ-018: finish the 4+4 scaling-SDPO fleet
+
+- status: OPEN
+- requested: Jack / 2026-08-29 17:39 PDT
+- repo: https://github.com/jacknzheng/scaling-sdpo
+- branch: `fix/hint-output-budget`
+- exact SHA: `3bd7defdeb4c9b3777c2e8d6530aa6135dd76b67`
+- supersedes: REQ-015
+- prior evidence: `logs/async_sdpo_req011/`, `logs/async_sdpo_req015/`
+
+Do not preempt REQ-017. Use separate boxes. This is a fresh SDPO execution
+request: fetch the exact SHA, resume the preserved diligence checkpoints,
+launch tau2, and commit the complete logs.
+
+### Frozen checkout
+
+```bash
+git fetch origin fix/hint-output-budget
+git checkout 3bd7defdeb4c9b3777c2e8d6530aa6135dd76b67
+uv run --no-sync pytest -q -m 'not network'
+```
+
+Record that SHA and the resolved auxiliary-model slugs in every artifact.
+Do not recreate this as an on-box patch. Offline suite at this SHA:
+`213 passed, 2 skipped, 2 deselected`.
+
+Resolved defaults that must appear in `config.yaml`:
+
+```text
+model.model=Qwen/Qwen3-8B
+generator.hint.reasoning_enabled=false
+generator.hint.max_tokens=2048
+generator.hint.model=nvidia/nemotron-3-super-120b-a12b:free
+judge.model=nvidia/nemotron-3-super-120b-a12b:free
+data.user_llm=openrouter/nvidia/nemotron-3-super-120b-a12b:free
+judge.eval_interval=25
+logging.checkpoint_interval=50
+```
+
+### Preflight
+
+OpenRouter and Parallel Search are funded on the developer account. Before
+renting or restarting a box, send one real request to each and record status
+plus UTC timestamp, never keys.
+
+If a box still returns 402, report which credential/account differs from the
+developer environment and stop that dependent arm. Do not put credentials in
+this repository.
+
+### Resume existing diligence work
+
+Preserve every current run directory before changing a process.
+
+| arm | box | latest valid checkpoint | last live step |
+| --- | --- | --- | ---: |
+| diligence `answer_free` | `qkpx8dw` | `runs/sdpo-diligence/step_50` | 96 |
+| diligence `answer_bearing` | `wp2znpq` | `runs/sdpo-diligence/step_100` | 116 |
+
+Resume with:
+
+```text
+logging.resume_from=runs/sdpo-diligence/step_50   # answer_free
+logging.resume_from=runs/sdpo-diligence/step_100  # answer_bearing
+```
+
+`run.py` now loads the checkpoint, restores trainer/optimizer/EMA/staleness
+state, and syncs restored weights into vLLM before new rollouts. Do not
+restart either diligence arm from step zero. Keep pre-fix and post-fix logs
+in separate directories.
+
+Failed pre-fix hints were dropped, not trained, so those checkpoints are
+data-inefficient but not contaminated by empty-hint updates.
+
+### Hint validation gate
+
+Before the resumed diligence arms run unattended, issue one production hint
+through `build_error_hint` / `generate_hint` and retain sanitized request
+settings plus response metadata. Then, after at least 100 post-fix hint
+attempts on each diligence arm, report:
+
+- attempts, successes, total drops, and `drops / attempts`
+- every `hint_drop_*` cause, especially `openrouter_length`
+- count of raw `finish_reason=length` responses
+- comparison against the matching pre-fix REQ-014/REQ-015 window and
+  `logs/async_sdpo_req011/`; recompute from counts, never reuse the old
+  malformed 149% display
+
+Gate passes when there are zero `hint_drop_openrouter_length` failures in
+those 100+ attempts and the total drop rate is below 5% while OpenRouter is
+healthy. If the gate fails, preserve raw artifacts, diagnose, update this
+block, and stop. Do not raise concurrency, switch models, enable hint
+reasoning, or train with an empty hint.
+
+### Tau2
+
+Do not delay diligence on tau2. Resolve the already-reported tau2-bench
+`a2c0247` `get_environment` API drift, add a test covering the pinned
+signature, commit that follow-up to `scaling-sdpo`, then launch tau2 `gold`
+on retail+airline only. Do not use banking on Baseten.
+
+### Frozen experiment
+
+Finish all three arms at `trainer.total_steps=200`:
+
+1. diligence `answer_free`
+2. diligence `answer_bearing`
+3. tau2 `gold` on retail+airline
+
+Runtime per arm:
+
+- 4 vLLM rollout GPUs + 4 FSDP2 trainer ranks
+- `model.model=Qwen/Qwen3-8B`
+- `trainer.mini_batch_size=2`
+- `generator.engine.max_model_len=32768` for tau2
+- hints, judge, and tau2 user sim: Nemotron free slug above
+- never fall back to 4B, `stealth/ox-alpha`, or `NPROC=1`
+
+Resume after recoverable crashes. A rollout without its required hint must
+be dropped. Keep search, hint, user-simulator, judge, sandbox, empty-episode,
+stale-rollout, and weight-sync failures as separate counters.
+
+### Evaluation contract
+
+Held-out eval runs synchronously at every 25-step boundary (25, 50, 75, 100,
+125, 150, 175, 200). Do not skip a boundary because a prior eval is still
+running.
+
+Write every eval to `evaluations.jsonl`. A W&B screenshot is not a
+substitute.
+
+- Diligence: per-task query, response, token counts, normalized/raw judge
+  scores, per-section earned/possible/fraction, judge error; plus aggregate
+  `judge_score`, `judge_n`, `judge_errors`, section scores, requested count,
+  and rollout-error count.
+- Tau2: per-task domain, query, full transcript, token counts, pass^1, and
+  rollout error; plus overall and per-domain pass^1, sample counts, requested
+  count, and rollout-error count.
+
+Every row and aggregate must include `launched_at_step` and `policy_version`.
+Commit `evaluation_started`, task-completed/task-failed, and
+`evaluation_completed`/`evaluation_failed` even when an API or sandbox
+failure occurs.
+
+### Required artifacts
+
+Commit and push to this `jerry-agent` branch:
+
+```text
+logs/async_sdpo_req018/
+  README.md
+  summary.tsv
+  hint-fix-validation.tsv
+  diligence-answer-free/
+    pre-fix/
+    post-fix/
+  diligence-answer-bearing/
+    pre-fix/
+    post-fix/
+  tau2-gold/
+```
+
+For every arm include `args.txt`, `config.yaml`, `ARTIFACTS.txt`,
+`console.log`, `train.log`, every `rankN.log`, `api_failures.jsonl`,
+`evaluations.jsonl`, `rollouts.jsonl`, `sandbox.jsonl`, `training.jsonl`,
+`vllm.jsonl`, sandbox setup logs, and a checkpoint/resume manifest. Use
+`git add -f` for ignored log patterns. Gzip large text artifacts losslessly
+and document decompression. Never commit secrets, environment dumps, model
+weights, or checkpoint tensor files.
+
+`summary.tsv` must include exact SHA and CLI, completed steps, wall time,
+checkpoint history, teacher-minus-student gap, dead-gap fraction, clipping,
+staleness, every failure counter, and held-out metrics. The README must link
+each row to its raw directory and explain any pre-fix/post-fix resume
+boundary.
+
+Success: hint gate passes and all three arms reach step 200. If a definitive
+external blocker stops the run, first commit and push all progress and raw
+failure logs, then update this block with exact evidence and stop rather
+than restarting from zero.
 
 ---
 
@@ -158,343 +340,3 @@ logs/kmaxwell/req017_momentum_maps/
 The completion criterion is broad empirical maps and clearly identified next
 questions, not Track-3 statistical significance. Record exact source/executed
 SHAs, hardware, runtimes, failures, and every adaptive follow-up decision.
-
----
-
-## REQ-016: decreasing-memory single-EMA momentum schedule
-
-- status: NEEDS-INFO — superseded before launch; do not execute the narrow n=8 plan below while the discovery-stage sweep request is being redesigned
-- requested: OpenAI Codex for Jeffrey Cheng / 2026-08-29 UTC
-
-### Exact implementation source (required)
-
-- source repo: `https://github.com/jeffreycider/muoff`
-- branch: `jcheng/momentum-kernel-schedules`
-- exact commit: `86aef768ab6ba3db51e1b48e92a93badc8385a00`
-- principal implementation: `records/track_3_optimization/optimizers/muon.py`
-- registry: `records/track_3_optimization/optimizers/__init__.py`
-- config generator: `records/track_3_optimization/offline_analysis/make_exponential_anneal_configs.py`
-- tests: `records/track_3_optimization/tests/test_least_squares_momentum_weights.py`
-
-Fetch and inspect this exact commit before implementation. Use its
-`AnnealedDecayMuon` behavior directly if the harness bases are compatible. If
-the Baseten validated trainer cannot consume this optimizer registry, port the
-small implementation mechanically and document the diff; do not independently
-reinterpret update indexing, beta interpolation, or the fixed `mu` separation.
-Record both source SHA and executed SHA in `fork_manifest.tsv`. The same commit
-also contains the power-law implementation, but REQ-016 should execute only the
-single-EMA schedule unless an artifact is needed for compatibility testing.
-
-### Scientific question
-
-Determine whether the benefit of the winning annealed K-Maxwell kernels is
-mostly explained by scheduling a single EMA from long memory to short memory.
-Do this on the plain Track-3 bi-Maxwell/#339 ablation stack, not the #46 CWD
-stack: `km/WRITEUP.md` shows that CWD's tail-EMA masks momentum-annealing
-effects.  This is a momentum-mechanism experiment, not initially a record run.
-
-The motivating same-state seed-0 screen found:
-
-```text
-configuration                 final val_loss @3250
-bi-Maxwell control            3.27836
-single EMA beta=.95           3.28084
-beta .978 -> .952             3.27804
-beta .978 -> .960             3.27824
-reverse beta .950 -> .984     3.28456
-```
-
-All numbers above forked from one frozen seed-0 step-1000 checkpoint. Treat
-them as a lead to reproduce, not as evidence to reuse in the final statistics.
-
-### Exact optimizer intervention
-
-Through the update at step 1000, use the trainer's unmodified standard Muon
-momentum (`beta_0 = 0.95`). Starting with the update at step 1001, use one EMA
-buffer whose decay is linearly interpolated in training step:
-
-```text
-alpha = clamp((step - 1000) / (3249 - 1000), 0, 1)
-beta(step) = beta_1000 + alpha * (beta_end - beta_1000)
-m = beta(step) * m + (1 - beta(step)) * g
-update = (1 - mu) * g + mu * m, with mu fixed at 0.95
-```
-
-Do not conflate the scheduled EMA decay `beta(step)` with the fixed Nesterov
-blend `mu`. Preserve all non-momentum optimizer and trainer behavior exactly.
-The first scheduled update is step 1001. Record the precise indexing actually
-implemented and add a small deterministic test for endpoints and the unchanged
-pre-switch path.
-
-### Fair forking and execution plan
-
-Use seeds 0--7. For each seed, run the exact common baseline through step 1000
-once and save a complete restartable checkpoint (model, every optimizer group,
-momentum, scaler if any, RNG/data position). Fork every arm for that seed from
-that exact checkpoint. Confirm by hash or tensor comparison that all arms of a
-seed have identical parameters and baseline optimizer state at the fork.
-
-Phase A, seed 0 screen (all nine cells):
-
-```text
-beta_1000 in {0.978, 0.982, 0.986}
-beta_end  in {0.952, 0.960, 0.968}
-```
-
-Phase B, n=8:
-
-1. Promote the best two Phase-A cells by final loss, unless a nearby cell has
-   clearly better mean loss over the dense cooldown window; in that case
-   promote it too and explain the choice.
-2. Run these required matched controls at n=8 from the same per-seed forks:
-   - exact #339 bi-Maxwell
-   - fixed standard single EMA beta=0.95
-   - direction-reversed single EMA beta=0.952 -> 0.978
-3. If the Phase-A optimum is on a boundary and capacity remains, add three
-   seed-0 points extending only that boundary. Prefer beta_end below 0.952 if
-   lower beta_end is monotonically better; prefer beta_1000 outside the grid
-   only if that axis shows a boundary trend. Do not launch an unmotivated full
-   second grid.
-
-Run the standard validation grid through step 3250, including dense cooldown
-validation sufficient for paired trajectory comparisons. Do not stop at the
-first crossing. Use fresh workstations as needed and stop them when harvested.
-
-### Analysis contract
-
-For every completed arm report:
-
-- each seed's validation trajectory and final loss
-- n=8 mean, standard deviation, standard error, and Track-3 statsig margin at
-  each eligible validation step
-- paired per-seed differences versus bi-Maxwell and fixed beta=.95, with mean,
-  standard deviation, confidence interval, and the exact Track-3 acceptance
-  statistic
-- final loss and paired mean difference over the dense cooldown window
-- beta, single-EMA mean age `beta/(1-beta)`, and flip transmission
-  `(1-beta)/(1+beta)` at step 1001, midpoint, and final update
-
-Use `control - candidate` for improvement columns, so positive always means
-the scheduled EMA is better. Keep reported PR results separate from newly run
-same-seed controls.
-
-The primary success criterion is a reproducible n=8 improvement over exact
-bi-Maxwell. A useful negative result is also acceptable if the seed-0 gain
-does not survive paired evaluation.
-
-### Required artifacts
-
-Commit code, tests, exact configs/commands, raw logs, and:
-
-```text
-logs/kmaxwell/req016_single_ema_schedule/
-  README.md
-  summary.tsv
-  trajectories.tsv
-  fork_manifest.tsv
-```
-
-Document exact base SHA, trainer file, hardware, runtime, any deviations, and
-which Phase-A cells were promoted. Update this request status in place and
-push intermediate artifacts if execution will span multiple fleet batches.
-
----
-
-## REQ-015: deploy the hint truncation fix and finish scaling-SDPO
-
-- status: OPEN — blockers resolved in `3bd7def`; resume both diligence
-  checkpoints and rerun the live validation
-- requested: Jack / 2026-08-27 11:28 PDT
-
-### BLOCKER RESOLUTION (Jack, 2026-08-27 16:17 PDT)
-
-Use `fix/hint-output-budget` at exact commit
-`3bd7defdeb4c9b3777c2e8d6530aa6135dd76b67`. This supersedes `a075254`.
-It switches hints, the diligence judge, and the tau2 user simulator to
-`nvidia/nemotron-3-super-120b-a12b:free`; wires checkpoint loading into
-`run.py`; restores model, optimizer, step, policy version, advantage EMA, and
-producer staleness state; and synchronizes restored weights to vLLM before
-new rollouts. It also runs held-out evaluation synchronously at every
-25-step boundary and writes full per-task and aggregate records for both
-benchmarks to `evaluations.jsonl`.
-
-Fresh developer preflights passed: OpenRouter chat HTTP 200, the production
-Nemotron hint path returned nonempty guidance, the structured judge parsed
-one criterion, and Parallel Search returned a nonempty result with a session
-ID. The offline suite is `212 passed, 2 skipped, 2 deselected`.
-
-Resume `qkpx8dw` with
-`logging.resume_from=runs/sdpo-diligence/step_50` and resume `wp2znpq` with
-`logging.resume_from=runs/sdpo-diligence/step_100`. Failed pre-fix hints were
-dropped rather than trained, so these checkpoints are data-inefficient but
-not contaminated by empty-hint updates. Re-run both service preflights on the
-boxes, then run the required 100-attempt post-fix gate. If a box still returns
-402, report which credential/account differs from the now-working developer
-environment; do not put credentials in this repository.
-
----
-
-- repo: https://github.com/jacknzheng/scaling-sdpo
-- branch: `fix/hint-output-budget`
-- exact base: `3bd7defdeb4c9b3777c2e8d6530aa6135dd76b67`
-- supersedes: REQ-014 execution instructions; preserve and reuse every
-  REQ-014 checkpoint and artifact
-- prior evidence: `logs/async_sdpo_req011/`
-
-Deploy the exact commit above before continuing the API-hint arms. The prior
-OpenRouter failures were not primarily a balance problem: raw responses showed
-`finish_reason=length` with no visible content because reasoning consumed the
-1,024-token hint budget. The branch now:
-
-- disables reasoning only for hint generation while preserving judge behavior
-- raises the configurable visible hint budget to 2,048 tokens
-- records `hint_drop_openrouter_length` separately
-- logs cumulative hint drops as `drops/attempts` on every training line
-- uses `nvidia/nemotron-3-super-120b-a12b:free` for all OpenRouter auxiliary
-  roles
-- supports explicit and `latest` checkpoint resume before rollout begins
-
-The commit is locally verified with:
-
-```text
-212 passed, 2 skipped, 2 deselected
-```
-
-Do not recreate this as an uncommitted on-box patch. Fetch the named branch,
-verify that `HEAD` is the exact SHA above, run the offline suite, and record
-the SHA and resolved hint config in every run artifact.
-
-### Ordering and existing work
-
-1. Preserve the complete current REQ-014 run directories and identify the
-   latest valid checkpoint for each arm before changing a process.
-2. The existing diligence processes were launched from `1e84424` and do not
-   contain the truncation fix. Gracefully stop each at a checkpoint boundary,
-   then resume `answer_free` and `answer_bearing` from their latest valid
-   checkpoints on `3bd7def`. Do not restart either from step zero.
-3. Keep pre-fix and post-fix logs in separate, clearly named directories so
-   the hint-drop comparison is auditable.
-4. The tau2 `gold` arm does not use API-generated teacher hints. Do not delay
-   the diligence fix on tau2. Resolve the already-reported tau2-bench
-   `a2c0247` environment API drift, add a test covering the pinned signature,
-   commit that follow-up to `scaling-sdpo`, and then launch/resume tau2
-   `gold` on retail+airline. Do not use banking on Baseten.
-
-### Required hint-fix validation
-
-Before the resumed diligence arms run unattended, issue a real hint request
-through the production code path and retain the sanitized request settings
-and response metadata. Confirm:
-
-```text
-generator.hint.reasoning_enabled=false
-generator.hint.max_tokens=2048
-model=nvidia/nemotron-3-super-120b-a12b:free
-```
-
-Never log keys. Parallel Search and OpenRouter are funded now; preflight each
-with one real request and record status and timestamp. A transient service
-failure should be logged and retried or dropped according to the committed
-policy, not misreported as policy quality.
-
-For each diligence arm, report a post-fix checkpoint after at least 100 hint
-attempts:
-
-- attempts, successes, total drops, and `drops / attempts`
-- every `hint_drop_*` cause, especially `openrouter_length`
-- number of API requests whose raw metadata reports `finish_reason=length`
-- comparison against the matching pre-fix REQ-014 window and the archived
-  REQ-011 evidence; recompute from counts and do not reuse the historical
-  malformed 149% display
-
-The validation gate passes when there are zero
-`hint_drop_openrouter_length` failures in at least 100 post-fix attempts and
-the total hint-drop rate is below 5% while OpenRouter is healthy. If the
-length cause remains nonzero or total drops remain at or above 5%, preserve
-the raw failure artifacts, diagnose the remaining cause, update this request,
-and do not claim the fix succeeded. Do not silently increase concurrency,
-switch away from the specified Nemotron model, enable hint reasoning, or
-train with an empty hint.
-
-### Frozen experiment
-
-Finish all three arms at `trainer.total_steps=200`:
-
-1. diligence `answer_free`
-2. diligence `answer_bearing`
-3. tau2 `gold` on retail+airline
-
-Keep the proven runtime:
-
-- 4 vLLM rollout GPUs + 4 FSDP2 trainer ranks per arm
-- `model.model=Qwen/Qwen3-8B`
-- `trainer.mini_batch_size=2`
-- `generator.engine.max_model_len=32768` for tau2
-- hints and diligence judge: `nvidia/nemotron-3-super-120b-a12b:free`
-- tau2 user simulator:
-  `openrouter/nvidia/nemotron-3-super-120b-a12b:free`
-- checkpoint interval no larger than 50 steps
-- never fall back to 4B, `stealth/ox-alpha`, or `NPROC=1`
-
-Resume after recoverable crashes. Search, hint, user-simulator, judge,
-sandbox, empty-episode, stale-rollout, and weight-sync failures must remain
-separate. A rollout lacking its required hint must be dropped.
-
-### Evaluation logging contract
-
-Run held-out evaluation at steps 25, 50, 75, 100, 125, 150, 175, and 200.
-Commit the complete `evaluations.jsonl` from every arm and baseline; a W&B
-screenshot or aggregate-only summary is not a substitute.
-
-For diligence, retain every held-out task's query, generated response, token
-counts, normalized and raw judge scores, per-section earned/possible/fraction,
-and judge error. Retain aggregate `judge_score`, `judge_n`, `judge_errors`,
-the three section scores, requested count, and rollout-error count.
-
-For tau2, retain every held-out task's domain, query, complete response or
-transcript, token counts, pass^1 score, and rollout error. Retain aggregate
-overall and per-domain pass^1, sample counts, requested count, and
-rollout-error count. Every row and aggregate must identify the exact
-`launched_at_step` and `policy_version`.
-
-Do not skip a 25-step boundary because a prior eval is still running. Commit
-`evaluation_started`, task-completed/task-failed, and
-`evaluation_completed`/`evaluation_failed` records even when an API, sandbox,
-or rollout failure occurs.
-
-### Required artifacts
-
-Commit and push the complete deliverable to this `jerry-agent` branch:
-
-```text
-logs/async_sdpo_req015/
-  README.md
-  summary.tsv
-  hint-fix-validation.tsv
-  diligence-answer-free/
-    pre-fix/
-    post-fix/
-  diligence-answer-bearing/
-    pre-fix/
-    post-fix/
-  tau2-gold/
-```
-
-For every arm include raw `args.txt`, `config.yaml`, `ARTIFACTS.txt`,
-`console.log`, `train.log`, every `rankN.log`, `api_failures.jsonl`,
-`evaluations.jsonl`, `rollouts.jsonl`, `sandbox.jsonl`, `training.jsonl`,
-`vllm.jsonl`, sandbox setup logs, and a checkpoint/resume manifest. Use
-`git add -f` for ignored log patterns, including every `evaluations.jsonl`.
-Gzip large text artifacts losslessly and document decompression. Never commit
-secrets, environment dumps, model weights, or checkpoint tensor files.
-
-`summary.tsv` must include exact code SHA and CLI, completed steps, wall time,
-checkpoint history, teacher-minus-student gap, dead-gap fraction, clipping,
-staleness, every failure counter, and held-out metrics. The README must link
-each summary row to its raw artifact directory and explain any resumed
-pre-fix/post-fix boundary.
-
-Success requires the hint validation gate above and all three arms reaching
-step 200. If a definitive external blocker prevents completion, first commit
-and push all progress and raw failure logs, then update this block with exact
-evidence and stop rather than restarting from zero.
