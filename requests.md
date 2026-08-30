@@ -221,7 +221,7 @@ evidence and stop rather than restarting from zero.
 
 ## REQ-019: momentum EoS law across fork states
 
-- status: NEEDS-INFO — **shared-state gate FAILED**: the generated "fork" arms diverge from ~step 125, not at the fork; the LR multiplier is applied globally (from step 0), not gated to post-fork. Runs preserved; curvature not run (shared-state premise void). Fix the config generator / fork gating, then I'll re-run.
+- status: OPEN — corrected harness ready; discard the nine pre-fix arms whose shared-state gate failed
 - requested: OpenAI Codex for Jeffrey Cheng / 2026-08-30 01:40 UTC
 
 ### REQ-019 STATUS (agent 2026-08-30) — 9 arms trained; shared-state gate FAILED (real divergence, not nondeterminism)
@@ -249,17 +249,22 @@ interventions; those require separate authorization.
 
 - repo: `https://github.com/jacknzheng/kmaxwell-sota`
 - branch: `codex/momentum-kernel-schedules`
-- exact SHA: `755c49d2933c3fa6c5b2fe449d05e72e40fbab9d`
+- exact SHA: `f83bfcdca955af57b988ee865388712f81a34a81`
 - runner: `records/track_3_optimization/run.py`
 - config generator:
   `records/track_3_optimization/offline_analysis/make_eos_state_dependence_configs.py`
 - curvature tool:
   `records/track_3_optimization/offline_analysis/measure_per_matrix_curvature.py`
 
-The exact SHA was tested from a fresh public HTTPS clone on an 8xA100 box: all
-nine generated configs resolve through `bind_sites` and optimizer-group
-resolution, and the curvature tool imports successfully. Do not substitute a
-private `muoff` checkout or port the harness again.
+The previous generator leaked each arm's learning-rate multiplier into the
+pre-fork trajectory; the shared-state gate caught the error, and those nine
+runs are invalid. The corrected SHA keeps the ordinary Track-3 schedule and
+the post-fork fixed multiplier in one schedule hook. From a fresh public HTTPS
+clone, all six fork-1500 configs produced identical learning-rate traces over
+steps 0--1499 and all three fork-2000 configs did so over steps 0--1999; the
+configured multipliers first appeared at the respective fork steps. Do not
+reuse the preserved pre-fix runs, substitute a private `muoff` checkout, or
+port the harness again.
 
 On every workstation:
 
@@ -267,7 +272,7 @@ On every workstation:
 git clone --filter=blob:none --branch codex/momentum-kernel-schedules \
   https://github.com/jacknzheng/kmaxwell-sota.git
 cd kmaxwell-sota
-git checkout 755c49d2933c3fa6c5b2fe449d05e72e40fbab9d
+git checkout f83bfcdca955af57b988ee865388712f81a34a81
 python records/track_3_optimization/offline_analysis/\
 make_eos_state_dependence_configs.py --out configs/req019
 ```
@@ -331,6 +336,38 @@ geometric-tail correction to be recomputed centrally. Keep the raw rank shards
 until the merged file is validated. A low-learning-rate arm that remains in
 transient is still a valid deliverable: retain its within-window trajectory so
 the relaxation time can be modeled instead of discarding it.
+
+### Authorized generalized-sharpness calibration
+
+Calibrate the paper-faithful global block-spectral generalized sharpness
+measurement before adding it to the fleet. Use two valid checkpoints from the
+corrected runs, one early and one late, and the same fixed 131072-token set as
+the Euclidean-curvature measurement. The Frank--Wolfe domain is the product of
+spectral-norm balls over all 72 Muon matrices; each iteration uses one joint
+Hessian--vector product, followed by the exact polar/SVD linear minimization
+for every block. Cross-block Hessian terms must remain present. A collection
+of independent diagonal-block maxima is not an acceptable substitute.
+
+At both checkpoints, run one shared initialization through iteration counts
+`K = 5, 10, 20, 50`. Then compare one restart with five restarts at `K = 50`.
+Report the objective after every iteration, relative changes between the four
+iteration budgets, spread across restarts, peak memory, and node wall time.
+Retain the Euclidean Ritz measurement at the same checkpoints for scale only;
+do not claim the two observables should agree. Commit implementation and tests
+with the calibration artifacts under:
+
+```text
+logs/kmaxwell/req019_fw_calibration/
+  README.md
+  summary.tsv
+  objective_trace.tsv
+  configs/
+  raw/
+```
+
+This request authorizes only the two-checkpoint calibration. Do not launch a
+generalized-sharpness fleet until the convergence, restart, and cost evidence
+has been reviewed.
 
 ### Authorized seed-noise fleet
 
@@ -432,6 +469,10 @@ partial evidence, then set `NEEDS-INFO` with the exact failing command and log.
 - prior evidence: `logs/async_sdpo_req011/`, `logs/async_sdpo_req015/`
 
 ### REQ-018 STATUS (agent 2026-08-30 ~04:1x)
+
+Any decision about REQ-018's step-200 free-model `429` blocker belongs to Jack,
+the request owner. Preserve the evidence and ask him; do not infer a choice
+from REQ-019 or from this queue edit.
 
 **Preflight PASS @ 2026-08-30T04:07:45Z:** `nvidia/nemotron-3-super-120b-a12b:free` → **HTTP 200** (Nvidia provider — aux LLM is free, so the recurring credit-402 is gone), Parallel Search → **HTTP 200**.
 
