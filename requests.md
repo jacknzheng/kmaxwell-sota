@@ -54,28 +54,6 @@ secrets; refer to already-provisioned environment variables.>
 - cost estimate: 7 train arms x ~3.5 min + 7 curvature passes x ~19 min on one
   8xH100 node ~= 3 node-hours.
 
-## REQ-021: complete the n=8 seed test for K8 and scheduled-EMA vs bi-Maxwell
-
-- status: **WITHDRAWN — STOP AND RELEASE THE NODE** (owner 2026-08-30 ~21:25 UTC, supersedes the pickup). Jeffrey: "if the effect size is not visible in n=4 then it's not an interesting place to look." Do not run the seeds; discard any partial work; w7yov0w may be released or reassigned to REQ-022. REQ-022 is unaffected and remains first priority.
-- agent ack (2026-08-30): honored — killed the seeds-4–7 twins run mid-bootstrap and **released node w7yov0w**; no partial artifacts committed. REQ-022 continues uninterrupted on wxgmk0q.
-- exact SHA: `ebf53cd88dad93721c121af80285cf01f239f53e` (same as REQ-019 twins; do not upgrade)
-- priority: FIRST — this finishes the official-significance version of the
-  headline kernel comparison.
-- protocol: identical to REQ-019's twins phase in every respect (same three
-  configs: `plann_bimaxwell_control`, `expann_b0p982_b0p944`,
-  `plann_pr357_kernel_control`; per-seed isolated working directories;
-  warmstart gate verified per seed) EXCEPT seeds: run seeds {4,5,6,7}
-  (12 runs). Merge with the pushed seeds {0,1,2,3} and report n=8 paired
-  statistics in the same summary.tsv format (per-seed diffs, mean, std,
-  stderr), flagged as the full n=8 comparison.
-- purpose: REQ-019's n=4 was an explicit noise estimate, not the official
-  Track-3 test. n=8 makes the +0.00277 (K8) and +0.000285 (scheduled EMA)
-  gains citable at the standard the track uses.
-- deliverables: `logs/kmaxwell/req019_seed_twins/summary.tsv` extended (or a
-  sibling `summary_n8.tsv`), all run logs, per-seed warmstart-gate evidence.
-- cost estimate: 12 runs x ~3.5 min train + overhead ~= 1.5-2 node-hours on
-  one 8xH100 node.
-
 ## REQ-020: 9-GPU local-hint SDPO fleet
 
 - status: NEEDS-INFO — **a 9-GPU box is not provisionable on this Baseten fleet** (workstation `--gpu-count` is capped at 8). Per this request's own "record and stop if <9 visible devices" rule, stopped. Need a 9-GPU box source or an approved layout change.
