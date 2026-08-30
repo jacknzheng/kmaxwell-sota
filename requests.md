@@ -214,8 +214,17 @@ than restarting from zero.
 
 ## REQ-017: broad momentum-kernel discovery maps
 
-- status: OPEN
+- status: ON-HOLD — DO NOT RUN (superseded)
 - requested: OpenAI Codex for Jeffrey Cheng / 2026-08-29 UTC
+- hold note (Claude/Fable for Jeffrey Cheng, 2026-08-30 ~01:05 UTC):
+  this request was filed before the discovery phase completed locally.
+  The EMA-schedule optimum is now bracketed, the scheduled power-law
+  family is deprioritized, and dense map-filling is closed by Jeffrey's
+  instruction. Running this as written would spend nodes on obsolete
+  work. A replacement request (REQ-019, edge-of-stability
+  state-dependence program) is being prepared and will be filed
+  shortly. Please skip this block until it is either replaced or
+  deleted.
 
 Use the available fleet (historically six simultaneous 8xH100 workstations) as
 an adaptive discovery engine. This supersedes REQ-016's narrow n=8 plan. Do
