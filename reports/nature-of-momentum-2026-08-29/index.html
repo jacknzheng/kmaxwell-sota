@@ -333,11 +333,12 @@
 
   <h2 id="experiment">4. Proposed experiment: does temporal weighting rotate Muon's update?</h2>
   <p>The next experiment tests whether three measured summaries determine the
-  immediate Muon update. A useful constraint appears before training: within
-  the deployed family—a raw-gradient term plus a nonnegative EMA mixture—matching
-  mean lag, alternating response <em>F</em>, and white-noise gain identifies
-  essentially one kernel. Inside that family, the summaries already determine
-  the temporal weighting.</p>
+  immediate Muon update: mean lag, the average age of its gradients;
+  alternating response <em>F</em> from Section 3; and white-noise gain, the
+  output variance under independent unit-variance gradients. A useful
+  constraint appears before training. Within the deployed family of a
+  raw-gradient term plus a nonnegative EMA mixture, matching these summaries
+  identifies essentially one kernel.</p>
   <p>The test therefore makes the smallest enlargement that permits a real
   comparison. Short moving averages, maintained by a bounded ring buffer, are
   added to the warmed EMA bank. This produces two nonnegative kernels whose
@@ -348,14 +349,13 @@
     on mean lag, <em>F</em>, and white-noise gain. Their frequency responses
     differ by more than twofold over periods 16–39 despite matching the scheduled
     EMA reference within 0.1%. A 64-step ring buffer implements the displayed
-    pair; 32 steps is the minimum feasible extra history. The left panel begins
+    pair. A 32-step construction remains feasible; a 16-step construction does
+    not. The left panel begins
     at lag one because its horizontal axis is logarithmic.</figcaption>
   </figure>
   <p>The intended difference is where the kernels place weight across gradient
-  age. Mean lag fixes the average age used; <em>F</em> fixes the response to
-  sign-alternating gradients; white-noise gain fixes variance under independent
-  gradient noise. The pair is re-solved against the finite history available at
-  each fork; Appendix G gives the construction and matching tolerances.</p>
+  age. The pair is re-solved against the finite history available at each fork;
+  Appendix G gives the construction and matching tolerances.</p>
   <div class="flow" aria-label="Same-state intervention design">
     <div class="node"><strong>Shared state</strong><br>Same model, gradient history, data order, and schedule</div>
     <div class="arrow">→</div>
@@ -370,19 +370,22 @@
   curvature. The pre-sign momentum spectrum supplies the measurement missing
   from Section 3's analyses of momentum scale, update direction, and
   curvature.</p>
+  <p>Classify the result sequentially: first ask whether any update angle clears
+  its control floor; only then count checkpoints where both that angle and a
+  downstream effect clear their floors.</p>
   <table class="outcome">
     <thead><tr><th>Observation</th><th>Conclusion</th><th>Decision</th></tr></thead>
     <tbody>
-      <tr><td>No update angle exceeds the duplicate-control floor.</td>
+      <tr><td>No checkpoint has an update angle above the duplicate-control floor.</td>
         <td>This pair reveals no missing temporal effect over the tested states.</td>
         <td>Repeat with one independent pair; stop if it also remains below the floor.</td></tr>
-      <tr><td>Update angles exceed their floor, but loss and curvature do not.</td>
+      <tr><td>An angle clears its floor, but no checkpoint clears both angle and downstream floors.</td>
         <td>The remaining kernel structure rotates the update without a detectable short-window consequence.</td>
         <td>Do not build a controller from the rotation alone.</td></tr>
-      <tr><td>Loss or curvature exceeds its control floor at exactly one checkpoint.</td>
+      <tr><td>Exactly one checkpoint clears both angle and downstream floors.</td>
         <td>The useful temporal weighting depends on training state.</td>
         <td>Identify the state variable before extending the window.</td></tr>
-      <tr><td>Loss or curvature exceeds its control floor at two or more checkpoints.</td>
+      <tr><td>Two or more checkpoints clear both angle and downstream floors.</td>
         <td>The matched summaries omit a reproducible, consequential feature.</td>
         <td>Fit the smallest state-conditioned rule that predicts the effect.</td></tr>
     </tbody>
@@ -394,9 +397,9 @@
 
   <h2 id="controller">5. Proposed program: from measurement to a small controller</h2>
   <p>A controller is justified only if measured state predicts which temporal
-  weighting helps. Its candidate state <em>q</em><sub>t</sub> combines global
-  optimization signals with per-matrix readouts, each tied to an observation
-  above.</p>
+  weighting helps. Its candidate state <em>q</em><sub>t</sub> combines three
+  signals motivated by the measurements above with the exact loss-decrease
+  boundary for the deployed update.</p>
   <div class="state-grid">
     <div><strong>Optimization scale</strong><br>Learning rate and measured
       curvature track proximity to the inverse-learning-rate pinning law.</div>
@@ -439,9 +442,10 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v1200 v585 h43z"/></svg></span></span
       GPU-hours.</li>
     <li><strong>Select the state.</strong> Fit
       <em>q</em><sub><em>t</em></sub> → <em>w</em><sup>*</sup> across checkpoints;
-      held-out rotation and outcomes eliminate useless signals, and offline
-      curvature must yield to a cheap proxy before deployment. Cost: 0.5
-      aggregate GPU-hours per validation rerun.</li>
+      held-out rotation and outcomes eliminate useless signals. Replace offline
+      curvature only with an online statistic that predicts the same weights on
+      held-out checkpoints. Cost: 0.5 aggregate GPU-hours per validation
+      rerun.</li>
     <li><strong>Compress and verify.</strong> Seed tests on ordinary, high-, and
       low-learning-rate trajectories retain only the smallest EMA bank that
       generalizes; cost: 0.5 aggregate GPU-hours per validation rerun before a
@@ -450,11 +454,8 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v1200 v585 h43z"/></svg></span></span
   <div class="thesis"><p><strong>Decision requested.</strong> Approve the
   same-state response map and its fixed continuation window. Defer another
   power-law fit, broad K-Maxwell tuning, and controller implementation until
-  those measurements identify a reproducible state variable.</p>
-  <p class="small"><strong>Estimated accelerator budget on the current
-  8×A100 node:</strong> 0.5 aggregate GPU-hours for the response map, 1.5 for
-  the first fixed-window continuations, 2 for the scalar stability fork, and
-  0.5 per validation rerun.</p></div>
+  those measurements identify a reproducible state variable. The roadmap gives
+  the accelerator cost at each gate.</p></div>
   <p>The end state is a minimal EMA bank governed by one measured quantity and
   exposing at most one user-facing hyperparameter.</p>
 
