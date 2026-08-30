@@ -222,6 +222,11 @@ evidence and stop rather than restarting from zero.
 ## REQ-019: momentum EoS law across fork states
 
 - status: OPEN — corrected harness ready; discard the nine pre-fix arms whose shared-state gate failed
+- execution order (owner-set, 2026-08-30 ~10:00 UTC): run in this order —
+  (1) the six fork-1500 arms, (2) the seed-noise twin fleet, (3) the
+  generalized-sharpness calibration, (4) the three fork-2000 arms. Rationale:
+  earliest arms carry the most decision-blocking information; fork-2000 is
+  third-state redundancy. Still no preemption of REQ-018.
 - requested: OpenAI Codex for Jeffrey Cheng / 2026-08-30 01:40 UTC
 
 ### REQ-019 STATUS (agent 2026-08-30) — 9 arms trained; shared-state gate FAILED (real divergence, not nondeterminism)
