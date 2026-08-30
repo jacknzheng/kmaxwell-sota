@@ -229,8 +229,9 @@
     every matrix its own slope and level is the first large improvement, and
     even that remains above the measurement floor. The right panel shows those
     fitted exponents. Hollow markers have fewer than three settled cells. The
-    two Adam-managed matrices are shown as diagnostic controls, but each has
-    too few settled cells for a strong quantitative comparison.</figcaption>
+    two Adam-managed matrices are refit here with the absolute L5 model, rather
+    than the preceding figure's normalized fit; both have too few settled cells
+    for a strong quantitative comparison.</figcaption>
   </figure>
   <p>The recorded variables do not yet predict the matrix-specific laws
   accurately. Matrix type, depth, shape, initial curvature, and raw-gradient
@@ -298,9 +299,9 @@
   <p>The next experiment tests whether three measured summaries determine the
   immediate Muon update. For this first test, restrict the kernels to
   nonnegative temporal weights and normalize their response to a constant
-  gradient to one. Then match their mean lag—the average age of the gradients
-  they use—their alternating response <em>F</em>, and their white-noise gain,
-  defined as output variance for independent unit-variance input. Allow their
+  gradient to one. Mean lag is the average age of the gradients a kernel uses.
+  Then match mean lag, alternating response <em>F</em>, and white-noise gain,
+  the output variance for independent unit-variance input. Allow their
   other weights to differ. If the resulting updates differ, these three
   summaries do not determine the kernel's immediate effect.</p>
   <div class="flow" aria-label="Same-state intervention design">
@@ -473,7 +474,7 @@
     sign. The intervention uses the deployed implementation.</p>
   </details>
   <details>
-    <summary>C. Late-regime momentum-free screen</summary>
+    <summary>C. Late-regime momentum-free comparison (diagnostic only)</summary>
     <figure>
       <img src="flip_prediction_screen.png" alt="A late momentum-free curvature screen compared with the classical inverse-F reference">
       <figcaption>The momentum-free branch forked at step 2400; curvature was
