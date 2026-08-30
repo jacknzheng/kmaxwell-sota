@@ -1,11 +1,10 @@
 """Generate the shared-state EoS pinning-law replication configs.
 
-Every arm follows the ordinary Track-3 schedule from initialization to the
-named fork step. At the fork, the schedule hook replaces that schedule with a
-fixed absolute multiplier. Keeping both phases in one hook prevents an arm's
-post-fork multiplier from leaking into its pre-fork trajectory. Identical seed, data order, and
-pre-fork hooks make the model state shared across arms; launchers must verify
-the fork checkpoint hashes before accepting the fleet.
+One base run follows the ordinary Track-3 schedule and writes complete training
+states at steps 1500 and 2000. Every intervention arm resumes one of those exact
+states and applies its fixed learning-rate multiplier beginning with the fork
+update. This makes shared state a serialization invariant instead of relying on
+separate GPU runs to reproduce a chaotic trajectory bit for bit.
 """
 from __future__ import annotations
 
@@ -25,8 +24,7 @@ PROGRAMS = (
 )
 
 
-def config_for(fork: int, stop: int, label: str, multiplier: float) -> dict:
-    run_id = f"eos_f{fork}_{label}"
+def common(run_id: str) -> dict:
     return {
         "loop": "gpt_record",
         "run_id": run_id,
@@ -35,7 +33,6 @@ def config_for(fork: int, stop: int, label: str, multiplier: float) -> dict:
         # Keep the planned duration at the Track-3 value so the shared
         # pre-fork cooldown is identical in every program.
         "train_steps": 3250,
-        "stop_after_step": stop,
         "batch_tokens": 524288,
         "microbatch_sequences": 64,
         "train_data": "data/fineweb10B/fineweb_train_*.bin",
@@ -64,14 +61,6 @@ def config_for(fork: int, stop: int, label: str, multiplier: float) -> dict:
             {"name": "broadcast_initial_parameters"},
             {"name": "validate_at_step_boundaries"},
         ],
-        "pre_optimizer": [
-            {"name": "checkpoint_model_at_cadence",
-             "hyperparams": {"every": 125, "dump_dir": f"dumps_{run_id}"}},
-            {"name": "cool_down_learning_rate",
-             "hyperparams": {"cooldown_frac": 0.7,
-                             "fixed_eta_after_step": fork,
-                             "fixed_eta_after": multiplier}},
-        ],
         "post_optimizer": [
             {"name": "print_training_progress"},
             {"name": "validate_at_step_boundaries", "hyperparams": {"every": 125}},
@@ -80,12 +69,51 @@ def config_for(fork: int, stop: int, label: str, multiplier: float) -> dict:
     }
 
 
+def base_config() -> dict:
+    config = common("eos_shared_base")
+    config.update(stop_after_step=2000)
+    config["pre_optimizer"] = [
+            {"name": "dump_training_state_at_steps",
+             "hyperparams": {"steps": [1500, 2000],
+                             "dump_dir": "eos_shared_state"}},
+            {"name": "cool_down_learning_rate", "hyperparams": {"cooldown_frac": 0.7}},
+        ]
+    return config
+
+
+def config_for(fork: int, stop: int, label: str, multiplier: float) -> dict:
+    run_id = f"eos_f{fork}_{label}"
+    config = common(run_id)
+    config.update(start_step=fork, stop_after_step=stop)
+    # load_training_state must follow optimizer construction, data opening, and
+    # parameter broadcast. It restores model + every optimizer shard and then
+    # advances the data stream to the fork batch.
+    config["setup"].insert(-1, {
+        "name": "load_training_state",
+        "hyperparams": {"state_dir": "eos_shared_state", "step": fork,
+                        "skip_batches": fork},
+    })
+    config["pre_optimizer"] = [
+            {"name": "checkpoint_model_at_cadence",
+             "hyperparams": {"every": 125, "dump_dir": f"dumps_{run_id}"}},
+            {"name": "cool_down_learning_rate",
+             "hyperparams": {"cooldown_frac": 0.7,
+                             "fixed_eta_after_step": fork,
+                             "fixed_eta_after": multiplier}},
+        ]
+    return config
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
+    base = base_config()
+    (args.out / "eos_shared_base.yaml").write_text(
+        yaml.safe_dump(base, sort_keys=False))
     manifest = ["run_id\tfork_step\tmultiplier\tstop_after_step\tcurvature_steps"]
+    manifest.append("eos_shared_base\t0\tstandard\t2000\t")
     for fork, stop, checkpoints, arms in PROGRAMS:
         for label, multiplier in arms:
             config = config_for(fork, stop, label, multiplier)
