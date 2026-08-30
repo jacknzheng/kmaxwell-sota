@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-019**.
+Next request number: **REQ-020**.
 
 ## Template
 
@@ -30,54 +30,78 @@ secrets; refer to already-provisioned environment variables.>
 
 ---
 
-## REQ-018: finish the 4+4 scaling-SDPO fleet
+## REQ-019: 9-GPU local-hint SDPO fleet
 
 - status: OPEN
-- requested: Jack / 2026-08-29 17:39 PDT
+- requested: Jack / 2026-08-29 22:30 PDT
 - repo: https://github.com/jacknzheng/scaling-sdpo
 - branch: `fix/hint-output-budget`
-- exact SHA: `3bd7defdeb4c9b3777c2e8d6530aa6135dd76b67`
-- supersedes: REQ-015
+- exact SHA: `e2ff7181305b1f6066ff059ae97bb36993371cd5`
+- supersedes: REQ-018
 - prior evidence: `logs/async_sdpo_req011/`, `logs/async_sdpo_req015/`
 
-Do not preempt REQ-017. Use separate boxes. This is a fresh SDPO execution
-request: fetch the exact SHA, resume the preserved diligence checkpoints,
-launch tau2, and commit the complete logs.
+Request a **9-GPU** box. Jack has operator permission to use a box. The
+operator default of 2 GPUs is not enough and must not be used. Do not
+self-cap at 2, do not shrink to 3+4+1 on an 8-GPU box, and do not fall
+back to OpenRouter hints or `NPROC=1`. If `nvidia-smi` / 
+`torch.cuda.device_count()` shows fewer than 9 visible devices, record
+the listing, update this block, and stop.
+
+Do not preempt REQ-017. Use a separate 9-GPU box.
+
+### Hardware map (required)
+
+```text
+cuda:0-3  policy vLLM TP=4
+cuda:4-7  FSDP2 trainer x4
+cuda:8    frozen hint vLLM TP=1  Qwen/Qwen3.5-9B  no weight sync
+```
+
+`CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7,8`. `torchrun --nproc-per-node=4`.
 
 ### Frozen checkout
 
+Do **not** use SHA `3bd7def` (OpenRouter hints, 4+4 on 8 GPUs). Fetch
+this exact commit. Do not recreate this as an on-box patch.
+
 ```bash
 git fetch origin fix/hint-output-budget
-git checkout 3bd7defdeb4c9b3777c2e8d6530aa6135dd76b67
+git checkout e2ff7181305b1f6066ff059ae97bb36993371cd5
 uv run --no-sync pytest -q -m 'not network'
 ```
 
-Record that SHA and the resolved auxiliary-model slugs in every artifact.
-Do not recreate this as an on-box patch. Offline suite at this SHA:
-`213 passed, 2 skipped, 2 deselected`.
+Record that SHA. Offline suite at this SHA:
+`224 passed, 2 skipped, 2 deselected`.
 
 Resolved defaults that must appear in `config.yaml`:
 
 ```text
 model.model=Qwen/Qwen3-8B
+total_num_gpus=9
+generator.engine.n_rollout_gpus=4
+trainer.n_trainer_gpus=4
+generator.hint.backend=vllm
+generator.hint.model=Qwen/Qwen3.5-9B
+generator.hint.gpu=8
 generator.hint.reasoning_enabled=false
 generator.hint.max_tokens=2048
-generator.hint.model=nvidia/nemotron-3-super-120b-a12b:free
 judge.model=nvidia/nemotron-3-super-120b-a12b:free
 data.user_llm=openrouter/nvidia/nemotron-3-super-120b-a12b:free
 judge.eval_interval=25
 logging.checkpoint_interval=50
 ```
 
+Judge and tau2 user-sim stay on OpenRouter. Hints do not.
+
 ### Preflight
 
-OpenRouter and Parallel Search are funded on the developer account. Before
-renting or restarting a box, send one real request to each and record status
-plus UTC timestamp, never keys.
-
-If a box still returns 402, report which credential/account differs from the
-developer environment and stop that dependent arm. Do not put credentials in
-this repository.
+OpenRouter (judge / user-sim) and Parallel Search are funded. Before
+renting or restarting a box, send one real request to each and record
+status plus UTC timestamp, never keys. Then start the local hint engine
+and issue one production hint through `build_error_hint` / `generate_hint`
+(`backend=vllm`). If the box still returns 402 on judge/search, report
+which credential differs and stop that dependent arm. Do not put
+credentials in this repository.
 
 ### Resume existing diligence work
 
@@ -95,40 +119,33 @@ logging.resume_from=runs/sdpo-diligence/step_50   # answer_free
 logging.resume_from=runs/sdpo-diligence/step_100  # answer_bearing
 ```
 
-`run.py` now loads the checkpoint, restores trainer/optimizer/EMA/staleness
-state, and syncs restored weights into vLLM before new rollouts. Do not
-restart either diligence arm from step zero. Keep pre-fix and post-fix logs
-in separate directories.
-
-Failed pre-fix hints were dropped, not trained, so those checkpoints are
-data-inefficient but not contaminated by empty-hint updates.
+`run.py` loads the checkpoint, restores trainer/optimizer/EMA/staleness
+state, and syncs restored weights into the **rollout** vLLM before new
+rollouts. The hint engine is frozen and must not receive those weights.
+Do not restart either diligence arm from step zero.
 
 ### Hint validation gate
 
-Before the resumed diligence arms run unattended, issue one production hint
-through `build_error_hint` / `generate_hint` and retain sanitized request
-settings plus response metadata. Then, after at least 100 post-fix hint
-attempts on each diligence arm, report:
+After at least 100 post-switch hint attempts on each diligence arm,
+report:
 
 - attempts, successes, total drops, and `drops / attempts`
-- every `hint_drop_*` cause, especially `openrouter_length`
-- count of raw `finish_reason=length` responses
-- comparison against the matching pre-fix REQ-014/REQ-015 window and
-  `logs/async_sdpo_req011/`; recompute from counts, never reuse the old
-  malformed 149% display
+- every `hint_drop_*` cause, especially `vllm_error`, `timeout`, `empty`
+- zero `hint_drop_openrouter_*` on the vLLM path (those mean the local
+  engine was not used)
 
-Gate passes when there are zero `hint_drop_openrouter_length` failures in
-those 100+ attempts and the total drop rate is below 5% while OpenRouter is
+Gate passes when the total drop rate is below 5% while the hint GPU is
 healthy. If the gate fails, preserve raw artifacts, diagnose, update this
-block, and stop. Do not raise concurrency, switch models, enable hint
-reasoning, or train with an empty hint.
+block, and stop. Do not raise concurrency, switch back to OpenRouter
+hints, enable hint reasoning, or train with an empty hint.
 
 ### Tau2
 
 Do not delay diligence on tau2. Resolve the already-reported tau2-bench
 `a2c0247` `get_environment` API drift, add a test covering the pinned
 signature, commit that follow-up to `scaling-sdpo`, then launch tau2 `gold`
-on retail+airline only. Do not use banking on Baseten.
+on retail+airline only. `gold` skips the hint LLM; the ninth GPU may sit
+idle. Do not use banking on Baseten.
 
 ### Frozen experiment
 
@@ -140,12 +157,11 @@ Finish all three arms at `trainer.total_steps=200`:
 
 Runtime per arm:
 
-- 4 vLLM rollout GPUs + 4 FSDP2 trainer ranks
+- 4 vLLM rollout GPUs + 4 FSDP2 trainer ranks + 1 hint GPU
 - `model.model=Qwen/Qwen3-8B`
 - `trainer.mini_batch_size=2`
 - `generator.engine.max_model_len=32768` for tau2
-- hints, judge, and tau2 user sim: Nemotron free slug above
-- never fall back to 4B, `stealth/ox-alpha`, or `NPROC=1`
+- never fall back to 4B, `stealth/ox-alpha`, `NPROC=1`, or 2 GPUs
 
 Resume after recoverable crashes. A rollout without its required hint must
 be dropped. Keep search, hint, user-simulator, judge, sandbox, empty-episode,
@@ -178,7 +194,7 @@ failure occurs.
 Commit and push to this `jerry-agent` branch:
 
 ```text
-logs/async_sdpo_req018/
+logs/async_sdpo_req019/
   README.md
   summary.tsv
   hint-fix-validation.tsv
@@ -194,21 +210,20 @@ logs/async_sdpo_req018/
 For every arm include `args.txt`, `config.yaml`, `ARTIFACTS.txt`,
 `console.log`, `train.log`, every `rankN.log`, `api_failures.jsonl`,
 `evaluations.jsonl`, `rollouts.jsonl`, `sandbox.jsonl`, `training.jsonl`,
-`vllm.jsonl`, sandbox setup logs, and a checkpoint/resume manifest. Use
-`git add -f` for ignored log patterns. Gzip large text artifacts losslessly
-and document decompression. Never commit secrets, environment dumps, model
-weights, or checkpoint tensor files.
+`vllm.jsonl` (including `hint_engine_*` events), sandbox setup logs, and a
+checkpoint/resume manifest. Use `git add -f` for ignored log patterns. Gzip
+large text artifacts losslessly and document decompression. Never commit
+secrets, environment dumps, model weights, or checkpoint tensor files.
 
-`summary.tsv` must include exact SHA and CLI, completed steps, wall time,
-checkpoint history, teacher-minus-student gap, dead-gap fraction, clipping,
-staleness, every failure counter, and held-out metrics. The README must link
-each row to its raw directory and explain any pre-fix/post-fix resume
-boundary.
+`summary.tsv` must include exact SHA and CLI, visible GPU count, completed
+steps, wall time, checkpoint history, teacher-minus-student gap, dead-gap
+fraction, clipping, staleness, every failure counter, and held-out metrics.
+The README must link each row to its raw directory.
 
-Success: hint gate passes and all three arms reach step 200. If a definitive
-external blocker stops the run, first commit and push all progress and raw
-failure logs, then update this block with exact evidence and stop rather
-than restarting from zero.
+Success: 9 visible GPUs, hint gate passes, and all three arms reach step
+200. If a definitive external blocker stops the run, first commit and push
+all progress and raw failure logs, then update this block with exact
+evidence and stop rather than restarting from zero.
 
 ---
 
