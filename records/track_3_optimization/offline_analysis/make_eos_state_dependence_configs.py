@@ -1,8 +1,9 @@
 """Generate the shared-state EoS pinning-law replication configs.
 
 Every arm follows the ordinary Track-3 schedule from initialization to the
-named fork step.  At the fork, ``set_learning_rate_stairs`` replaces that
-schedule with a fixed absolute multiplier.  Identical seed, data order, and
+named fork step. At the fork, the schedule hook replaces that schedule with a
+fixed absolute multiplier. Keeping both phases in one hook prevents an arm's
+post-fork multiplier from leaking into its pre-fork trajectory. Identical seed, data order, and
 pre-fork hooks make the model state shared across arms; launchers must verify
 the fork checkpoint hashes before accepting the fleet.
 """
@@ -66,9 +67,10 @@ def config_for(fork: int, stop: int, label: str, multiplier: float) -> dict:
         "pre_optimizer": [
             {"name": "checkpoint_model_at_cadence",
              "hyperparams": {"every": 125, "dump_dir": f"dumps_{run_id}"}},
-            {"name": "cool_down_learning_rate", "hyperparams": {"cooldown_frac": 0.7}},
-            {"name": "set_learning_rate_stairs",
-             "hyperparams": {"stairs": [[fork, multiplier]]}},
+            {"name": "cool_down_learning_rate",
+             "hyperparams": {"cooldown_frac": 0.7,
+                             "fixed_eta_after_step": fork,
+                             "fixed_eta_after": multiplier}},
         ],
         "post_optimizer": [
             {"name": "print_training_progress"},
