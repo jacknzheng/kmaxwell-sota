@@ -302,16 +302,32 @@
   together. Its details are in Appendix C.</p>
 
   <h2 id="experiment">4. Proposed experiment: are three kernel summaries sufficient?</h2>
-  <p>The experiment asks whether three summaries predict what a momentum kernel
-  does to Muon: mean lag, the average age of its gradients;
-  alternating response <em>F</em> from Section 3; and white-noise gain, the
-  output variance under independent unit-variance gradients. It first asks
-  whether their update angles exceed the divergence between duplicate controls,
-  then whether any resolved difference changes loss or curvature.</p>
-  <p>Within the deployed family of a raw-gradient term plus a nonnegative EMA
-  mixture, matching these summaries identifies essentially one kernel. The test
-  therefore adds the smallest new structure that permits a real comparison:
-  short moving averages maintained by a bounded ring buffer.</p>
+  <p>This experiment decides which of two momentum-design programs is worth
+  pursuing. It tests whether three numbers contain all the useful information
+  in a temporal kernel: <strong>mean lag</strong>, the average age of the
+  gradients it uses; <strong>alternating response</strong> <em>F</em>, the
+  surviving amplitude of a gradient that flips sign every step; and
+  <strong>white-noise gain</strong>, the output variance produced by independent
+  unit-variance gradients.</p>
+  <div class="state-grid">
+    <div><strong>If the three numbers suffice</strong><br>Momentum design reduces
+      to choosing their trajectories over training. The present raw-gradient
+      plus EMA family is already a minimal implementation: two or three EMA
+      streams matched to K8's three-number trajectory should recover its gain.
+      We build that compressed schedule and stop treating kernel shape as a
+      design variable.</div>
+    <div><strong>If they do not suffice</strong><br>Two kernels can agree on all
+      three numbers yet produce different useful updates. Kernel shape is then
+      a genuine control dimension. We retain the short ring-buffer components
+      used by this test and search for the measured training state that predicts
+      which shape helps.</div>
+  </div>
+  <p>A comparison inside the current family cannot decide between these
+  branches. Once constant-gradient response, mean lag, <em>F</em>, and
+  white-noise gain are fixed, a nonnegative mixture of the current gradient and
+  EMA streams is essentially unique. The smallest enlargement that creates two
+  distinct matched kernels adds short moving averages, implemented with a
+  bounded ring buffer.</p>
   <figure class="wide">
     <img src="matched_pair.png" alt="Two temporal kernels with matched mean lag, alternating response, and white-noise gain but different shapes">
     <figcaption>Both kernels have unit response to a constant gradient and agree
@@ -322,30 +338,34 @@
     not. The left panel begins
     at lag one because its horizontal axis is logarithmic.</figcaption>
   </figure>
-  <p>The intended difference is where the kernels place weight across gradient
-  age. The pair is re-solved against the finite history available at each fork;
-  Appendix G gives the construction and matching tolerances.</p>
+  <p>The displayed kernels differ only in how they distribute weight across
+  gradient ages after the four scalar constraints are imposed. The pair is
+  re-solved for the finite gradient history available at each checkpoint;
+  Appendix G gives the construction and numerical tolerances.</p>
   <div class="flow" aria-label="Same-state intervention design">
-    <div class="node"><strong>Shared state</strong><br>Same model, gradient history, data order, and schedule</div>
+    <div class="node"><strong>Shared checkpoint</strong><br>Same model, stored gradient history, next batches, and learning-rate schedule</div>
     <div class="arrow">→</div>
-    <div class="node"><strong>Swap coefficients</strong><br>Apply the matched kernels to the same history</div>
+    <div class="node"><strong>Change only the kernel</strong><br>Apply each matched weighting to that common history</div>
     <div class="arrow">→</div>
-    <div class="node"><strong>Read the effect</strong><br>Update angle now; loss and curvature over a fixed window</div>
+    <div class="node"><strong>Measure consequence</strong><br>Compare the immediate update, then loss and curvature over a fixed continuation</div>
   </div>
   <p>The null is plausible, especially late in training: the kernels differ
   materially only over periods 16–40, where gradient energy has decayed, and any
   remaining energy may lie in directions that do not compete for the momentum
   matrix's leading singular subspace.</p>
-  <p>Three checkpoints test whether sufficiency changes over training. At each
-  checkpoint, matrix cosines and leading-subspace angles measure the immediate
-  difference; duplicate control forks define the resolution floor. A fixed
-  short continuation then asks whether a resolved update difference changes
-  validation loss or curvature. When the later controller search compares
-  candidate kernels at one of these states, it ranks them by measured one-step
-  loss on fresh batches; the fixed continuation decides whether that local
-  ranking survives training. The pre-sign momentum spectrum supplies the
-  measurement missing from Section 3's analyses of momentum scale, update
-  direction, and curvature.</p>
+  <p>Three checkpoints test early, middle, and late training. At each one,
+  matrix cosines and leading-singular-subspace angles measure how much the two
+  Muon updates differ. Two duplicate controls—independent continuations using
+  the same kernel, checkpoint, and data order—measure the small divergence
+  caused by GPU arithmetic. Their difference is the <strong>control
+  floor</strong>: a kernel effect counts as resolved only when it is larger.
+  The <strong>pre-sign momentum spectrum</strong> records the singular values
+  and singular directions of the temporally weighted gradient matrix before
+  Muon's matrix-sign operation, together with each time scale's contribution.
+  It shows how a change in temporal weighting becomes a change in update
+  direction. Fixed continuations then test whether a resolved update difference
+  produces a loss or curvature difference larger than its duplicate-control
+  floor.</p>
   <p>Classify the result sequentially: first ask whether any update angle clears
   its control floor; only then count checkpoints where both that angle and a
   downstream effect clear their floors.</p>
@@ -354,22 +374,40 @@
     <tbody>
       <tr><td>No checkpoint has an update angle above the duplicate-control floor.</td>
         <td>This pair reveals no missing temporal effect over the tested states.</td>
-        <td>Repeat with one independent pair; stop if it also remains below the floor.</td></tr>
+        <td>Repeat with one independent pair; if it also fails, build the compressed EMA schedule.</td></tr>
       <tr><td>An angle clears its floor, but no checkpoint clears both angle and downstream floors.</td>
         <td>The remaining kernel structure changes the update without a detectable short-window consequence.</td>
-        <td>Do not build a controller from the angle alone.</td></tr>
+        <td>Do not retain shape as a design variable without a longer-horizon effect.</td></tr>
       <tr><td>Exactly one checkpoint clears both angle and downstream floors.</td>
         <td>The useful temporal weighting depends on training state.</td>
-        <td>Identify the state variable before extending the window.</td></tr>
+        <td>Retain the ring-buffer family and identify what is special about that state.</td></tr>
       <tr><td>Two or more checkpoints clear both angle and downstream floors.</td>
         <td>The matched summaries omit a reproducible, consequential feature.</td>
-        <td>Fit the smallest state-conditioned rule that predicts the effect.</td></tr>
+        <td>Retain the ring-buffer family and fit the smallest state-conditioned shape rule.</td></tr>
     </tbody>
   </table>
-  <p>The scalar stability claim gets a separate comparison near steps
-  1500–2000, where period-two energy is still present. This fork varies
-  <em>F</em> while matching constant response, mean lag, and white-noise gain,
-  directly testing the period-two prediction from Section 3.</p>
+  <p>If the matched pair establishes that shape matters, candidate kernels are
+  selected without a training sweep. At a shared checkpoint, recorded gradient
+  history constructs each candidate update; fresh minibatches score the true
+  loss change from one complete deployed virtual step, and disjoint batches
+  evaluate the winner. A third-order Taylor decomposition is computed once for
+  the winner and its matched partner: a cubic term that indicates sharpening
+  triggers one curvature-penalized re-solve. In every case, the fixed
+  continuation—not the one-step score—decides whether the selection was useful.
+  Section 5 gives the equations and the rule for compressing a successful
+  selector.</p>
+  <p>A separate early-training fork tests the scalar stability theory. Between
+  steps 1500 and 2000 the gradients still contain substantial period-two
+  oscillation, so changing <em>F</em> while matching constant response, mean lag,
+  and white-noise gain directly tests Section 3's prediction that critical
+  curvature scales as 1/<em>F</em>. The late momentum-free run could not perform
+  this test because its period-two energy had already vanished.</p>
+  <div class="thesis"><p><strong>Decision requested.</strong> Approve the
+  three-checkpoint matched-kernel response map (0.5 aggregate GPU-hours) and
+  its fixed continuations (1.5 aggregate GPU-hours). Together they decide
+  whether to build the compressed EMA schedule or retain kernel shape as a
+  control dimension. The independent early <em>F</em>-fork costs 2 aggregate
+  GPU-hours and tests the scalar stability mechanism.</p></div>
 
   <h2 id="controller">5. Proposed program: from measurement to a small controller</h2>
   <p>A controller is justified only if measured state predicts which temporal
