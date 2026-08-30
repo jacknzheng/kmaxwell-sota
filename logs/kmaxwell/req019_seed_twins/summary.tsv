@@ -1,0 +1,45 @@
+# REQ-019 seed-twins paired comparison (n=4). Reference: plann_bimaxwell_control.
+# diff = bimaxwell_val - candidate_val (positive => candidate better/lower loss).
+# executed SHA ebf53cd, 8xH100 box q4glryq (RELEASED), torch 2.10.0+cu128, seed=CLI override.
+# NOT the official n=8 Track-3 significance test; estimates run-to-run noise for the current decomposition.
+section	candidate	seed	metric	value
+final_val	plann_bimaxwell_control	0	val_loss@3250	3.27511
+final_val	plann_bimaxwell_control	1	val_loss@3250	3.27524
+final_val	plann_bimaxwell_control	2	val_loss@3250	3.27579
+final_val	plann_bimaxwell_control	3	val_loss@3250	3.27625
+final_val	expann_b0p982_b0p944	0	val_loss@3250	3.27497
+final_val	expann_b0p982_b0p944	1	val_loss@3250	3.27482
+final_val	expann_b0p982_b0p944	2	val_loss@3250	3.27544
+final_val	expann_b0p982_b0p944	3	val_loss@3250	3.27602
+final_val	plann_pr357_kernel_control	0	val_loss@3250	3.27228
+final_val	plann_pr357_kernel_control	1	val_loss@3250	3.27250
+final_val	plann_pr357_kernel_control	2	val_loss@3250	3.27289
+final_val	plann_pr357_kernel_control	3	val_loss@3250	3.27365
+paired_final	expann_b0p982_b0p944	0	diff@3250	+0.000140
+paired_final	expann_b0p982_b0p944	1	diff@3250	+0.000420
+paired_final	expann_b0p982_b0p944	2	diff@3250	+0.000350
+paired_final	expann_b0p982_b0p944	3	diff@3250	+0.000230
+paired_final_agg	expann_b0p982_b0p944	-	mean	+0.000285
+paired_final_agg	expann_b0p982_b0p944	-	std	0.000124
+paired_final_agg	expann_b0p982_b0p944	-	stderr	0.000062
+paired_final	plann_pr357_kernel_control	0	diff@3250	+0.002830
+paired_final	plann_pr357_kernel_control	1	diff@3250	+0.002740
+paired_final	plann_pr357_kernel_control	2	diff@3250	+0.002900
+paired_final	plann_pr357_kernel_control	3	diff@3250	+0.002600
+paired_final_agg	plann_pr357_kernel_control	-	mean	+0.002768
+paired_final_agg	plann_pr357_kernel_control	-	std	0.000129
+paired_final_agg	plann_pr357_kernel_control	-	stderr	0.000065
+cooldown_mean	expann_b0p982_b0p944	0	mean_diff_2900_3250	+0.001303
+cooldown_mean	expann_b0p982_b0p944	1	mean_diff_2900_3250	+0.001488
+cooldown_mean	expann_b0p982_b0p944	2	mean_diff_2900_3250	+0.001452
+cooldown_mean	expann_b0p982_b0p944	3	mean_diff_2900_3250	+0.001334
+cooldown_agg	expann_b0p982_b0p944	-	mean	+0.001394
+cooldown_agg	expann_b0p982_b0p944	-	std	0.000089
+cooldown_agg	expann_b0p982_b0p944	-	stderr	0.000045
+cooldown_mean	plann_pr357_kernel_control	0	mean_diff_2900_3250	+0.004473
+cooldown_mean	plann_pr357_kernel_control	1	mean_diff_2900_3250	+0.004339
+cooldown_mean	plann_pr357_kernel_control	2	mean_diff_2900_3250	+0.004508
+cooldown_mean	plann_pr357_kernel_control	3	mean_diff_2900_3250	+0.004257
+cooldown_agg	plann_pr357_kernel_control	-	mean	+0.004394
+cooldown_agg	plann_pr357_kernel_control	-	std	0.000117
+cooldown_agg	plann_pr357_kernel_control	-	stderr	0.000058

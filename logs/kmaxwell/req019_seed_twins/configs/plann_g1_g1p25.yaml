@@ -1,0 +1,104 @@
+loop: gpt_record
+run_id: plann_g1_g1p25
+seed: 0
+require_world_size: 8
+train_steps: 3250
+batch_tokens: 524288
+microbatch_sequences: 64
+train_data: data/fineweb10B/fineweb_train_*.bin
+val_data: data/fineweb10B/fineweb_val_*.bin
+val_tokens: 10485760
+model:
+  vocab_size: 50304
+  num_layers: 12
+  model_dim: 768
+optimizer_groups:
+- pattern: ^embed\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.7
+    weight_decay: 0.001
+- pattern: ^proj\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.004
+    weight_decay: 0.001
+- pattern: ^blocks\..*\.weight$
+  optimizer: annealed_weights_muon
+  hyperparams:
+    lr: 0.025
+    weight_decay: 0.05
+    mu: 0.95
+    decays:
+    - 0.09090909090909091
+    - 0.24111872622503933
+    - 0.502368311286906
+    - 0.7623311132910016
+    - 0.9106446570289752
+    - 0.9700425219426926
+    - 0.9903737640973652
+    - 0.996950183381501
+    - 0.999038110419867
+    - 0.9996970614965162
+    start_weights:
+    - 0.02724997951795451
+    - 0.028185726966677344
+    - 0.08169787928139541
+    - 0.11529410367439434
+    - 0.14294828304083984
+    - 0.14643706982376448
+    - 0.15943621885421805
+    - 0.13103796395723402
+    - 0.1161132927796717
+    - 0.05159948210385036
+    end_weights:
+    - 0.07352179296305039
+    - 0.05642830148559558
+    - 0.15552663816498546
+    - 0.16549000247641796
+    - 0.16513234148314707
+    - 0.11667447965238237
+    - 0.11553649903609135
+    - 0.04249339740311943
+    - 0.09207460203865644
+    - 0.017121945296553944
+    switch_step: 1000
+    anneal_end_step: 3249
+    warm_streams_before_switch: true
+    bias_correct_streams: true
+- pattern: .*
+  optimizer: adamw
+  hyperparams:
+    lr: 0.015
+    weight_decay: 0.001
+setup:
+- name: open_rank_zero_log
+- name: load_validation_tokens
+- name: build_compiled_gpt
+- name: seed_then_initialize_parameters
+- name: assemble_grouped_optimizer
+- name: open_training_batches
+- name: broadcast_initial_parameters
+- name: load_training_state
+  hyperparams:
+    state_dir: warmstart_pl_anneal
+    step: 1000
+    skip_batches: 1000
+- name: validate_at_step_boundaries
+pre_optimizer:
+- name: cool_down_learning_rate
+  hyperparams:
+    cooldown_frac: 0.7
+post_optimizer:
+- name: print_training_progress
+- name: validate_at_step_boundaries
+  hyperparams:
+    every: 125
+    final_tenth_every: 25
+    dense_window:
+    - 2900
+    - 3250
+    dense_every: 10
+teardown:
+- name: mark_log_finished
+start_step: 1000
