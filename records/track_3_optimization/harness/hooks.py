@@ -247,6 +247,24 @@ def cool_down_learning_rate(*, cooldown_frac: float,
     return hook
 
 
+def log_learning_rates_at_steps(*, steps: list[int]) -> Hook:
+    """Logs every resolved optimizer-group LR after schedule hooks run."""
+    pinned = {int(step) for step in steps}
+
+    def hook(config: Config, state: State) -> State:
+        if state["step"] not in pinned:
+            return state
+        values = []
+        for spec, built in state["optimizer"].groups:
+            values.append({"pattern": spec.pattern,
+                           "lr": [float(group["lr"])
+                                  for group in built.param_groups]})
+        state["print_log"](f"learning_rates step:{state['step']} {values}",
+                           console=True)
+        return state
+    return hook
+
+
 # ---------------------------------------------------------------------------
 # validation and progress. The artifacts validate at the top of iteration t, i.e.
 # at parameter state x_t; in the harness that same state exists after the
@@ -753,6 +771,7 @@ _HOOKS: dict[str, Callable[..., Hook]] = {
     "broadcast_initial_parameters": broadcast_initial_parameters,
     "validate_at_step_boundaries": validate_at_step_boundaries,
     "cool_down_learning_rate": cool_down_learning_rate,
+    "log_learning_rates_at_steps": log_learning_rates_at_steps,
     "set_learning_rate_stairs": set_learning_rate_stairs,
     "print_training_progress": print_training_progress,
     "record_paired_averages": record_paired_averages,
