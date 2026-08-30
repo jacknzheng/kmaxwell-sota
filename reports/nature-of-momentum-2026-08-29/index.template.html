@@ -402,6 +402,32 @@
         <td>Retain the ring-buffer family and fit the smallest state-conditioned shape rule.</td></tr>
     </tbody>
   </table>
+  <h3>Immediate result: the three summaries do not determine Muon's update</h3>
+  <p>The first stage has finished. The implemented pair matches mean lag,
+  <em>F</em>, and white-noise gain to 0.1%, yet produces a large directional
+  change from the same recorded gradients. The median cosine between the
+  realized one-step change under kernel A and the control is 0.72–0.73 across
+  the three checkpoints; for kernel B it is 0.83–0.84. Repeating the control
+  gives 0.9999. The leading eight-dimensional update subspaces of A and B are
+  nearly orthogonal. These effects remain roughly constant from the early to
+  the late checkpoint.</p>
+  <p>This answers the first question in the registered decision rule: the
+  update-angle effect is resolved at every checkpoint. It does not yet show
+  that the rotation improves training. Fixed continuations must establish a
+  loss or curvature effect above their duplicate-control floors before kernel
+  shape becomes a useful design variable.</p>
+  <p class="small">The available bi-Maxwell checkpoints have a longer mean lag
+  than the scheduled-EMA reference used to construct the displayed 64-step
+  pair. Matching the bi-Maxwell summaries required a 128-step pair, whose
+  largest frequency-response separation moves toward longer periods. The
+  immediate measurements above use that 128-step construction; its
+  continuations remain gated on approval of this protocol change.</p>
+  <p class="small">A virtual deployed step also separates the kernels in
+  one-step loss: A is better and B worse at the early checkpoint, the gap
+  narrows in the middle, and both approach the control late in the learning-rate
+  cooldown. Those loss comparisons remain provisional until the same evaluation
+  batches are scored on the realized one-step checkpoints. The third-order
+  diagnostic found no kernel-specific sharpening warning.</p>
   <p>If the matched pair establishes that shape matters, candidate kernels are
   selected without a training sweep. At a shared checkpoint, recorded gradient
   history constructs each candidate update; fresh minibatches score the true
