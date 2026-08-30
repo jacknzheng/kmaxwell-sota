@@ -1,0 +1,23 @@
+{
+ "dump_dir": "dumps_eos_f1500_s100",
+ "steps": [
+  1500,
+  2750
+ ],
+ "data": "data/fineweb10B/fineweb_val_*.bin",
+ "tokens": 131072,
+ "mbs": 8,
+ "radius": 1.0,
+ "iters_list": [
+  5,
+  10,
+  20,
+  50
+ ],
+ "restarts": 5,
+ "no_euclidean": true,
+ "euclidean_ritz_iters": 8,
+ "out_tag": "req019_fw_generalized_sharpness",
+ "artifact_dir": "logs/kmaxwell/req019_fw_calibration",
+ "no_dist": false
+}
