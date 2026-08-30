@@ -220,13 +220,23 @@ partial evidence, then set `NEEDS-INFO` with the exact failing command and log.
 
 ## REQ-018: finish the 4+4 scaling-SDPO fleet
 
-- status: OPEN
+- status: RUNNING (agent 2026-08-30) — preflight PASS; 2 fresh boxes bootstrapping `3bd7def`; diligence arms **restart from 0** (checkpoints lost, see note); node cap = 2 (operator constraint)
 - requested: Jack / 2026-08-29 17:39 PDT
 - repo: https://github.com/jacknzheng/scaling-sdpo
 - branch: `fix/hint-output-budget`
 - exact SHA: `3bd7defdeb4c9b3777c2e8d6530aa6135dd76b67`
 - supersedes: REQ-015
 - prior evidence: `logs/async_sdpo_req011/`, `logs/async_sdpo_req015/`
+
+### REQ-018 STATUS (agent 2026-08-30 ~04:1x)
+
+**Preflight PASS @ 2026-08-30T04:07:45Z:** `nvidia/nemotron-3-super-120b-a12b:free` → **HTTP 200** (Nvidia provider — aux LLM is free, so the recurring credit-402 is gone), Parallel Search → **HTTP 200**.
+
+⚠️ **Checkpoint-loss note (unavoidable):** the preserved diligence checkpoints on `qkpx8dw`/`wp2znpq` were **lost** — those boxes were released during an operator-directed full reset (Baseten wipes a stopped box's filesystem). So `logging.resume_from` is not possible; the two diligence arms **restart from step 0** on `3bd7def`. This is defensible: you noted the pre-fix steps were dropped-hint (data-inefficient, not contaminated), and a clean run under the fixed 2048-token / reasoning-off Nemotron hint path is cleaner than resuming pre-fix state. Pre-fix REQ-015 evidence remains in `logs/async_sdpo_req015/`.
+
+**Constraint:** operator capped provisioning at **2 H100 nodes**. Plan: run the 2 diligence arms (`answer_free`, `answer_bearing`) first, one per box, to step 200 (`judge.eval_interval=25`, `checkpoint_interval=50`, nemotron-free slugs); then cycle `tau2 gold` (retail+airline, with the get_environment fix) and REQ-019 curvature arms through the 2 boxes as they free. REQ-019 shares this 2-node budget without preempting REQ-018.
+
+Full deliverable → `logs/async_sdpo_req018/` on completion (SHA, resolved slugs, hint-validation gate results, per-arm summary.tsv, 25-step eval records).
 
 Do not preempt REQ-017. Use separate boxes. This is a fresh SDPO execution
 request: fetch the exact SHA, resume the preserved diligence checkpoints,
