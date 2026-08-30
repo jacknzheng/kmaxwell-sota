@@ -129,6 +129,52 @@ until the merged file is validated. A low-learning-rate arm that remains in
 transient is still a valid deliverable: retain its within-window trajectory so
 the relaxation time can be modeled instead of discarding it.
 
+### Authorized seed-noise fleet
+
+Jeffrey subsequently authorized four paired seeds of the three endpoint runs
+used in the report. Run seeds 0, 1, 2, and 3 for:
+
+1. the exact bi-Maxwell control;
+2. the scheduled single EMA with decay `0.982 -> 0.944` from step 1000 to
+   step 3249;
+3. the exact PR357 K8 kernel control encoded by
+   `make_powerlaw_anneal_configs.py`.
+
+Use one isolated checkout or working directory per seed so the four
+`warmstart_pl_anneal` state directories cannot collide. On each seed's node,
+generate the common fork configs and run one base followed by the three arms:
+
+```bash
+python records/track_3_optimization/offline_analysis/\
+make_powerlaw_anneal_configs.py configs/seed_${SEED}
+python records/track_3_optimization/offline_analysis/\
+make_exponential_anneal_configs.py configs/seed_${SEED} \
+  --start 0.982 --end 0.944
+
+torchrun --standalone --nproc_per_node=8 records/track_3_optimization/run.py \
+  configs/seed_${SEED}/pl_anneal_base.yaml seed=${SEED}
+for config in \
+  plann_bimaxwell_control.yaml \
+  expann_b0p982_b0p944.yaml \
+  plann_pr357_kernel_control.yaml; do
+  torchrun --standalone --nproc_per_node=8 records/track_3_optimization/run.py \
+    configs/seed_${SEED}/${config} seed=${SEED}
+done
+```
+
+Before the three forks launch, verify that the saved step-1000 model and every
+rank's optimizer-state shard exist. These are paired comparisons: for each
+seed, report `bi-Maxwell loss - candidate loss` over every shared validation
+checkpoint and over the dense cooldown window, plus final loss. Then report
+the four-seed mean, standard deviation, standard error, and all individual
+paired differences. This n=4 fleet estimates run-to-run noise for the current
+decomposition; do not present it as the official n=8 Track-3 significance
+test.
+
+Run this wave within the same four-node cap. It may fill nodes after their EoS
+assignments complete, but it must not preempt REQ-018. Section-4 momentum-
+spectrum interventions remain on hold by Jeffrey's instruction.
+
 ### Required artifacts
 
 Commit and push to this `jerry-agent` branch:
@@ -146,6 +192,15 @@ logs/kmaxwell/req019_eos_state_dependence/
     train-log.txt
     req019_per_matrix_curvature.json
     curvature-console.log
+logs/kmaxwell/req019_seed_twins/
+  README.md
+  summary.tsv
+  paired_trajectories.tsv
+  configs/
+  seed_<n>/
+    command.txt
+    console.log
+    train-logs/
 ```
 
 `summary.tsv` must include run ID, fork, multiplier, executed SHA, node/GPU,
@@ -155,9 +210,10 @@ shared-state gate passed. Use `git add -f` for ignored log patterns. Gzip large
 logs losslessly if needed. Never commit model/optimizer checkpoints, FineWeb
 data, secrets, or environment dumps.
 
-Success means all nine frozen arms and their 45 curvature measurements are
-complete, the shared-state checks are explicit, and the artifacts are pushed.
-If a reproducible harness or infrastructure blocker remains, first commit all
+Success means all nine frozen EoS arms and their 45 curvature measurements are
+complete, all twelve endpoint runs across four paired seeds are complete, the
+shared-state checks are explicit, and the artifacts are pushed. If a
+reproducible harness or infrastructure blocker remains, first commit all
 partial evidence, then set `NEEDS-INFO` with the exact failing command and log.
 
 ---
