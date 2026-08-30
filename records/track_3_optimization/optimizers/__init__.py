@@ -9,7 +9,8 @@ import torch
 from torch import nn
 
 from .muon import (AnnealedDecayMuon, AnnealedWeightsMuon, BimaxwellMuon, Muon,
-                   ScheduledWeightsMuon, SgdBlocks, WeightedDecaysMuon)
+                   PerMatrixLrMuon, ScheduledWeightsMuon, SgdBlocks,
+                   WeightedDecaysMuon)
 from .secant_gmres_muon import SecantGmresMuon
 
 
@@ -40,6 +41,7 @@ _REGISTRY: dict[str, Any] = {
     "secant_gmres_muon": SecantGmresMuon,
     "sgd_blocks": SgdBlocks,
     "weighted_decays_muon": WeightedDecaysMuon,
+    "per_matrix_lr_muon": PerMatrixLrMuon,
     "scheduled_weights_muon": ScheduledWeightsMuon,
     "annealed_weights_muon": AnnealedWeightsMuon,
     "annealed_decay_muon": AnnealedDecayMuon,
