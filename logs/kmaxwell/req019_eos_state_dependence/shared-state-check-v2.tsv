@@ -1,0 +1,5 @@
+# REQ-019 RE-RUN gate on corrected SHA f83bfcd (agent 2026-08-30). Config now has fixed_eta_after_step=1500; arms differ only in fixed_eta_after. STILL FAILS.
+# fork-1500 model_step001500 sha256: 6 arms, 6 DISTINCT hashes (each 572213441 B) -> FAIL
+# max_abs_diff (s060 vs s100 @ steps): 26.94 @125, 69.06 @750, 83.75 @1375, 87.25 @1500  -- identical divergence pattern to the pre-fix run.
+# divergence is in REAL WEIGHTS: embed.weight diff=26.9 @125; 173/185 tensors diff>1e-4; only 12 at <1e-5 (nondeterminism). NOT noise.
+# ROOT (refined): config generator fixed (fixed_eta_after_step present, LR-trace validated) BUT the RUNTIME optimizer still applies fixed_eta_after globally from step 0, not gated by fixed_eta_after_step. The bug is in the optimizer/run.py eta-application, not the config.

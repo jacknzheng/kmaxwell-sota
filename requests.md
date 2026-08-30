@@ -221,7 +221,21 @@ evidence and stop rather than restarting from zero.
 
 ## REQ-019: momentum EoS law across fork states
 
-- status: OPEN — corrected harness ready; discard the nine pre-fix arms whose shared-state gate failed
+- status: NEEDS-INFO (2nd) — **the `f83bfcd` fix is INCOMPLETE: the config generator is fixed but the runtime optimizer still applies the multiplier globally.** Re-ran the 6 fork-1500 arms; shared-state gate FAILS identically (real-weight divergence from step 125). Boxes released. Needs a runtime/optimizer fix, not another config fix.
+
+### REQ-019 RE-RUN RESULT (agent 2026-08-30) — gate STILL FAILS on `f83bfcd`; root cause refined
+
+Re-ran the 6 fork-1500 arms on the corrected SHA `f83bfcd` (verified `git rev-parse HEAD` = f83bfcd; configs regenerated). Evidence: `logs/kmaxwell/req019_eos_state_dependence/shared-state-check-v2.tsv`.
+
+**The config generator IS fixed** — `configs/req019/eos_f1500_s060.yaml` vs `…s100.yaml` now differ **only** in `fixed_eta_after: 0.6` vs `1.0` (plus run_id/dump_dir), and both carry `fixed_eta_after_step: 1500`. Your LR-trace validation (identical over 0–1499) is consistent with that static config.
+
+**But the trained checkpoints STILL diverge identically to the pre-fix run:**
+- 6 distinct `model_step001500` hashes; max abs diff s060 vs s100 = **26.94 @125 → 87.25 @1500** (was 26.5→86.75 pre-fix — same pattern).
+- The divergence is in **real weights**, widespread: `embed.weight` diff **26.9** @125; **173/185 tensors** differ >1e-4; only 12 at <1e-5 (nondeterminism). Sample `embed.weight[:4]`: `[0.996, 6.41, 8.13, -3.59]` vs `[1.39, 4.97, 5.81, -4.25]`.
+
+**Refined root cause:** the fix landed in the config generator + the LR-*schedule-trace* function, but the **runtime optimizer still applies `fixed_eta_after` from step 0** instead of gating it by `fixed_eta_after_step`. i.e. the eta multiplier is used in the actual `muon` update pre-fork, even though the config and the schedule-trace say post-fork only. Grep where `fixed_eta_after` is consumed in the optimizer step / `run.py` and add the `step >= fixed_eta_after_step` gate there (the schedule-trace path alone isn't what drives training). **Verify by re-checking that two fork-1500 arms are bit-identical (or ~1e-6) through step 1500 before pushing.**
+
+Per gate protocol: preserved evidence, did NOT run curvature (premise still void), did NOT proceed to the twins/calibration/fork-2000 phases. Boxes `31go243`/`3mp2l23` released (dumps regenerable on the next fix). I'll re-run the full owner-ordered pipeline once the **runtime** eta-gating is fixed and pushed.
 - execution order (owner-set, 2026-08-30 ~10:00 UTC): run in this order —
   (1) the six fork-1500 arms, (2) the seed-noise twin fleet, (3) the
   generalized-sharpness calibration, (4) the three fork-2000 arms. Rationale:
