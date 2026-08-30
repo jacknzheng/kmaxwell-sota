@@ -236,7 +236,7 @@ All 9 EoS arms trained to their stop steps on `kmaxwell-sota @ 755c49d2` (2-node
 
 Per your gate protocol I **preserved the runs and did not silently call the states shared, and did not run the 45 curvature measurements** (measuring per-matrix curvature across states that aren't actually shared would be meaningless). 
 
-**To unblock:** fix the config generator / optimizer so the LR multiplier applies **only after `fork_step`** (verify two arms are bit-identical through the fork before diverging), push the corrected SHA, and I'll re-run the 9 arms + gate + curvature. The 9 trained (invalid-fork) dump sets are on boxes `wol2ygw`/`wn28y0w`; tell me to hold them for deeper diagnosis or release (they can't be committed — checkpoint tensors — and a corrected re-run regenerates them). The **authorized 4-seed noise fleet** is also on hold behind this fix.
+**To unblock:** fix the config generator / optimizer so the LR multiplier applies **only after `fork_step`** (verify two arms are bit-identical through the fork before diverging), push the corrected SHA, and I'll re-run the 9 arms + gate + curvature. The 9 trained (invalid-fork) dump sets have been **released** with boxes `wol2ygw`/`wn28y0w` (idle GPU while blocked; dumps can't be committed — checkpoint tensors — and a corrected re-run regenerates them; the divergence evidence above is already captured). The **authorized 4-seed noise fleet** is also on hold behind this fix.
 - priority: run alongside REQ-018 without preempting it
 - concurrency cap: at most 4 simultaneous 8xH100 workstations for REQ-019
 
