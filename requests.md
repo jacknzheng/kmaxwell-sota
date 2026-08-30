@@ -221,7 +221,7 @@ evidence and stop rather than restarting from zero.
 
 ## REQ-019: momentum EoS law across fork states
 
-- status: NEEDS-INFO (2nd) — **the `f83bfcd` fix is INCOMPLETE: the config generator is fixed but the runtime optimizer still applies the multiplier globally.** Re-ran the 6 fork-1500 arms; shared-state gate FAILS identically (real-weight divergence from step 125). Boxes released. Needs a runtime/optimizer fix, not another config fix.
+- status: OPEN — `ebf53cd` removes independent pre-fork reruns: one serialized base state now feeds every arm
 
 ### REQ-019 RE-RUN RESULT (agent 2026-08-30) — gate STILL FAILS on `f83bfcd`; root cause refined
 
@@ -268,22 +268,20 @@ interventions; those require separate authorization.
 
 - repo: `https://github.com/jacknzheng/kmaxwell-sota`
 - branch: `codex/momentum-kernel-schedules`
-- exact SHA: `f83bfcdca955af57b988ee865388712f81a34a81`
+- exact SHA: `ebf53cd88dad93721c121af80285cf01f239f53e`
 - runner: `records/track_3_optimization/run.py`
 - config generator:
   `records/track_3_optimization/offline_analysis/make_eos_state_dependence_configs.py`
 - curvature tool:
   `records/track_3_optimization/offline_analysis/measure_per_matrix_curvature.py`
 
-The previous generator leaked each arm's learning-rate multiplier into the
-pre-fork trajectory; the shared-state gate caught the error, and those nine
-runs are invalid. The corrected SHA keeps the ordinary Track-3 schedule and
-the post-fork fixed multiplier in one schedule hook. From a fresh public HTTPS
-clone, all six fork-1500 configs produced identical learning-rate traces over
-steps 0--1499 and all three fork-2000 configs did so over steps 0--1999; the
-configured multipliers first appeared at the respective fork steps. Do not
-reuse the preserved pre-fix runs, substitute a private `muoff` checkout, or
-port the harness again.
+The two failed fleets established that separate from-scratch GPU runs do not
+reproduce an identical parameter state, but they did not directly measure the
+runtime learning rate. Inspection found no consumer of `fixed_eta_after`
+outside the correctly gated schedule hook. The corrected design therefore
+removes independent pre-fork execution entirely: `eos_shared_base` writes one
+complete model-and-optimizer state at steps 1500 and 2000, and every arm resumes
+that serialized state at its fork. Do not reuse either failed fleet.
 
 On every workstation:
 
@@ -291,7 +289,7 @@ On every workstation:
 git clone --filter=blob:none --branch codex/momentum-kernel-schedules \
   https://github.com/jacknzheng/kmaxwell-sota.git
 cd kmaxwell-sota
-git checkout f83bfcdca955af57b988ee865388712f81a34a81
+git checkout ebf53cd88dad93721c121af80285cf01f239f53e
 python records/track_3_optimization/offline_analysis/\
 make_eos_state_dependence_configs.py --out configs/req019
 ```
@@ -309,12 +307,23 @@ The generator emits this manifest:
 | 1500 | 0.60, 0.77, 1.00, 1.00 duplicate, 1.30, 1.70 | 2750 | 2250, 2375, 2500, 2625, 2750 |
 | 2000 | 0.60, 1.00, 1.70 | 3249 | 2750, 2875, 3000, 3125, 3249 |
 
-Every arm uses seed 0, bi-Maxwell momentum, the standard planned 3250-step
-Track-3 schedule before its fork, and an absolute constant learning-rate
-multiplier after its fork. Each arm trains from initialization, so it has no
-external checkpoint dependency. Runs at the same fork must reproduce the same
-model and optimizer trajectory through that fork; the duplicate 1.00 arm is a
-run-divergence control.
+First run the generated base config once:
+
+```bash
+torchrun --standalone --nproc_per_node=8 \
+  records/track_3_optimization/run.py configs/req019/eos_shared_base.yaml
+```
+
+It writes `eos_shared_state/` with the model and all eight optimizer-state
+shards at steps 1500 and 2000. Copy that directory losslessly to every node
+that will run an arm and verify every file's SHA-256 against the source copy.
+If no cross-node transfer mechanism is available, run all nine arms on the
+base node; never regenerate the base independently on another node.
+
+Every arm uses seed 0, bi-Maxwell momentum, loads the relevant serialized
+state, resumes the data stream at the matching batch, and applies its absolute
+constant learning-rate multiplier beginning with the fork update. The
+duplicate 1.00 arm measures post-fork run divergence.
 
 Run each generated config with:
 
@@ -332,10 +341,12 @@ REQ-018 needs capacity, reduce REQ-019 concurrency rather than preempting it.
 Before accepting the post-fork measurements, compare the saved model tensors
 at step 1500 across all six fork-1500 arms and at step 2000 across all three
 fork-2000 arms. Report file hashes and the maximum tensorwise absolute
-difference. The expected difference is exactly zero because seed, data order,
-hardware class, and pre-fork hooks are identical. If it is nonzero, preserve
-the runs, set this request to `NEEDS-INFO`, and report the first divergent
-checkpoint; do not silently call the states shared.
+difference. The expected difference is exactly zero because these checkpoints
+are loaded from the same serialized files and saved before the first fork
+update. Also record the learning rate of every optimizer group immediately
+before and after that first update; it must equal base LR times the arm's
+multiplier. If either check fails, preserve the runs, set this request to
+`NEEDS-INFO`, and stop before curvature.
 
 ### Curvature measurement
 
