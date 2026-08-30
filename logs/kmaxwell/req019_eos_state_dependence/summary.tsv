@@ -1,10 +1,13 @@
-# REQ-019 fork-1500 eos_state_dependence summary. SHA ebf53cd, node qvgl1eq 8xH100, torch 2.10.0+cu128.
-# shared-state gate: PASS (see shared-state-check.tsv). Curvature: per-matrix DIAGONAL-block top Hessian eigenvalue (Lanczos, iters=8, 131072 tokens).
-# max_top_eig@S / mean_top_eig@S = max / mean over the 74 matrices at checkpoint S.
-run_id	fork	multiplier	sha	node_gpu	train_wall_s	curv_wall_s	completion	ckpt_count	matrix_count	max_top_eig@2250	max_top_eig@2375	max_top_eig@2500	max_top_eig@2625	max_top_eig@2750	mean_top_eig@2750	failure
-eos_f1500_s060	1500	0.60	ebf53cd	qvgl1eq/8xH100	201.460	1122.7	OK	5	74	884538.2731	884189.7393	938495.4738	1053462.4815	1164457.7026	52951.2672	none
-eos_f1500_s077	1500	0.77	ebf53cd	qvgl1eq/8xH100	201.986	1122.5	OK	5	74	675989.6319	657638.2987	744217.4313	777967.1689	717360.8548	38510.2286	none
-eos_f1500_s100	1500	1.00	ebf53cd	qvgl1eq/8xH100	202.525	1122.8	OK	5	74	441556.3421	406559.8085	428734.0210	510341.1569	396190.8672	22183.3190	none
-eos_f1500_s100dup	1500	1.00	ebf53cd	qvgl1eq/8xH100	201.575	1120.0	OK	5	74	487942.9730	452934.2443	485040.9859	507213.7391	437888.5383	26491.2499	none
-eos_f1500_s130	1500	1.30	ebf53cd	qvgl1eq/8xH100	203.160	1123.6	OK	5	74	263925.6608	249401.1826	277676.3060	276399.0326	270697.7338	16714.0559	none
-eos_f1500_s170	1500	1.70	ebf53cd	qvgl1eq/8xH100	202.080	1123.2	OK	5	74	230512.6260	147262.5792	145983.4014	179671.5278	150454.6752	9206.1768	none
+# REQ-019 eos_state_dependence summary (9 arms: 6 fork-1500 + 3 fork-2000). SHA ebf53cd, node qvgl1eq 8xH100, torch 2.10.0+cu128.
+# shared-state gate: PASS for both forks (shared-state-check.tsv). Curvature = per-matrix DIAGONAL-block top Hessian eigenvalue (Lanczos iters=8, 131072 tokens).
+# max/mean_top_eig@final = max/mean over 74 matrices at each arm's final curvature checkpoint (2750 for fork-1500, 3249 for fork-2000).
+run_id	fork	multiplier	sha	node_gpu	train_wall_s	curv_wall_s	completion	ckpt_count	matrix_count	final_ckpt	max_top_eig_final	mean_top_eig_final	failure
+eos_f1500_s060	1500	0.60	ebf53cd	qvgl1eq/8xH100	201.460	1122.7	OK	5	74	2750	1164457.7026	52951.2672	none
+eos_f1500_s077	1500	0.77	ebf53cd	qvgl1eq/8xH100	201.986	1122.5	OK	5	74	2750	717360.8548	38510.2286	none
+eos_f1500_s100	1500	1.00	ebf53cd	qvgl1eq/8xH100	202.525	1122.8	OK	5	74	2750	396190.8672	22183.3190	none
+eos_f1500_s100dup	1500	1.00	ebf53cd	qvgl1eq/8xH100	201.575	1120.0	OK	5	74	2750	437888.5383	26491.2499	none
+eos_f1500_s130	1500	1.30	ebf53cd	qvgl1eq/8xH100	203.160	1123.6	OK	5	74	2750	270697.7338	16714.0559	none
+eos_f1500_s170	1500	1.70	ebf53cd	qvgl1eq/8xH100	202.080	1123.2	OK	5	74	2750	150454.6752	9206.1768	none
+eos_f2000_s060	2000	0.60	ebf53cd	qvgl1eq/8xH100	202.012	1120.6	OK	5	74	3249	1140570.9365	57041.3543	none
+eos_f2000_s100	2000	1.00	ebf53cd	qvgl1eq/8xH100	202.292	1123.5	OK	5	74	3249	466864.7426	23808.9166	none
+eos_f2000_s170	2000	1.70	ebf53cd	qvgl1eq/8xH100	201.653	1122.6	OK	5	74	3249	188492.3650	11011.5094	none

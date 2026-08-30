@@ -1,0 +1,98 @@
+loop: gpt_record
+run_id: eos_f2000_s170
+seed: 0
+require_world_size: 8
+train_steps: 3250
+batch_tokens: 524288
+microbatch_sequences: 64
+train_data: data/fineweb10B/fineweb_train_*.bin
+val_data: data/fineweb10B/fineweb_val_*.bin
+val_tokens: 10485760
+model:
+  vocab_size: 50304
+  num_layers: 12
+  model_dim: 768
+optimizer_groups:
+- pattern: ^embed\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.7
+    weight_decay: 0.001
+- pattern: ^proj\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.004
+    weight_decay: 0.001
+- pattern: ^blocks\..*\.weight$
+  optimizer: bimaxwell_muon
+  hyperparams:
+    lr: 0.025
+    weight_decay: 0.05
+    mu: 0.95
+    fast_decay: 0.85
+    slow_decay: 0.98
+    fast_weight: 0.4385
+    switch_step: 1000
+- pattern: .*
+  optimizer: adamw
+  hyperparams:
+    lr: 0.015
+    weight_decay: 0.001
+setup:
+- name: open_rank_zero_log
+- name: load_validation_tokens
+- name: build_compiled_gpt
+- name: seed_then_initialize_parameters
+- name: assemble_grouped_optimizer
+- name: open_training_batches
+- name: broadcast_initial_parameters
+- name: load_training_state
+  hyperparams:
+    state_dir: eos_shared_state
+    step: 2000
+    skip_batches: 2000
+- name: validate_at_step_boundaries
+post_optimizer:
+- name: print_training_progress
+- name: validate_at_step_boundaries
+  hyperparams:
+    every: 125
+teardown:
+- name: mark_log_finished
+start_step: 2000
+stop_after_step: 3249
+pre_optimizer:
+- name: checkpoint_model_at_cadence
+  hyperparams:
+    every: 125
+    dump_dir: dumps_eos_f2000_s170
+- name: cool_down_learning_rate
+  hyperparams:
+    cooldown_frac: 0.7
+    fixed_eta_after_step: 2000
+    fixed_eta_after: 1.7
+- name: log_learning_rates_at_steps
+  hyperparams:
+    steps:
+    - 2000
+    - 2001
+
+====================================================================================================
+git HEAD: ebf53cd88dad93721c121af80285cf01f239f53e
+Running PyTorch 2.10.0+cu128 compiled for CUDA 12.8 on NVIDIA H100 80GB HBM3 with world_size 8
+====================================================================================================
+resumed training state from step 2000 in eos_shared_state, skipped 2000 batches
+step:0/3250 val_loss:3.44321 train_time:0.001s step_avg:nanms
+learning_rates step:2000 [{'pattern': '^embed\\.weight$', 'lr': [1.19]}, {'pattern': '^proj\\.weight$', 'lr': [0.0068]}, {'pattern': '^blocks\\..*\\.weight$', 'lr': [0.0425]}, {'pattern': '.*', 'lr': [0.0255]}]
+learning_rates step:2001 [{'pattern': '^embed\\.weight$', 'lr': [1.19]}, {'pattern': '^proj\\.weight$', 'lr': [0.0068]}, {'pattern': '^blocks\\..*\\.weight$', 'lr': [0.0425]}, {'pattern': '.*', 'lr': [0.0255]}]
+step:2125/3250 val_loss:3.70558 train_time:22.083s step_avg:10.39ms
+step:2250/3250 val_loss:3.65731 train_time:42.023s step_avg:159.52ms
+step:2375/3250 val_loss:3.63148 train_time:61.918s step_avg:159.16ms
+step:2500/3250 val_loss:3.61576 train_time:81.840s step_avg:159.38ms
+step:2625/3250 val_loss:3.60375 train_time:101.676s step_avg:158.69ms
+step:2750/3250 val_loss:3.59638 train_time:121.551s step_avg:159.00ms
+step:2875/3250 val_loss:3.58608 train_time:141.443s step_avg:159.13ms
+step:3000/3250 val_loss:3.57831 train_time:161.295s step_avg:158.82ms
+step:3125/3250 val_loss:3.57358 train_time:181.173s step_avg:159.02ms
+step:3250/3250 val_loss:3.56203 train_time:201.653s step_avg:163.84ms
+run finished: 3250 steps, total train_time 201.653s

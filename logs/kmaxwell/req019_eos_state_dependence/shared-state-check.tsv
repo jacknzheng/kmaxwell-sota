@@ -24,3 +24,24 @@ s100dup	1.00	0.7	0.004	0.025	0.015	OK
 s130	1.30	0.91	0.0052	0.0325	0.0195	OK
 s170	1.70	1.19	0.0068	0.0425	0.0255	OK
 # every group = base x mult exactly -> PASS
+#
+# ===================================================================
+# REQ-019 v3 shared-state gate — fork-2000 (3 arms resume eos_shared_state@2000)
+# GATE VERDICT: PASS (all three checks)
+#
+# (1) sha256 model_step002000.pt — expect identical across all 3 arms
+arm	fork	multiplier	sha256_model_step002000	verdict
+s060	2000	0.60	c638b4b6baace9c3772f92731f92ffed31ed6ecab2c9f83e2c8678e7f98c17dd	OK
+s100	2000	1.00	c638b4b6baace9c3772f92731f92ffed31ed6ecab2c9f83e2c8678e7f98c17dd	OK
+s170	2000	1.70	c638b4b6baace9c3772f92731f92ffed31ed6ecab2c9f83e2c8678e7f98c17dd	OK
+# unique-hash count = 1 -> PASS
+#
+# (2) max tensorwise abs-diff, model_step002000 s060 vs s170: 0.000e+00 (185/185 keys, symdiff 0) -> PASS
+#
+# (3) LR of every optimizer group at first fork update (step 2000) = base x multiplier
+# base LRs (mult 1.00, s100): embed=0.7  proj=0.004  blocks=0.025  other=0.015
+arm	mult	embed.weight	proj.weight	blocks.*.weight	.*(other)	verdict
+s060	0.60	0.42	0.0024	0.015	0.009	OK
+s100	1.00	0.7	0.004	0.025	0.015	OK
+s170	1.70	1.19	0.0068	0.0425	0.0255	OK
+# every group = base x mult exactly -> PASS
