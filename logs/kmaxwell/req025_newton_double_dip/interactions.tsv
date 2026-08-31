@@ -1,0 +1,24 @@
+# REQ-025 interaction I(alpha) = [L_short(alpha)-L_short(0)] - [L_record(alpha)-L_record(0)]  (both sign conventions requested).
+# STATUS: UNCOMPUTABLE. The interaction is defined relative to the alpha=0 baseline L(0). In this rerun ALL FOUR alpha=0 arms diverged to NaN
+#   (both forks x both kernels), so L_short(0) and L_record(0) are NaN and every I(alpha) is undefined. See README.md + alpha0-trace-check.tsv.
+# What IS available: the absolute alpha>0 validation losses at the final checkpoint (fork+750). These are healthy and monotone-in-training,
+#   but their between-kernel/between-alpha differences are at the ~1e-3 nondeterminism floor, so no interaction can be read off them without a
+#   stable alpha=0 anchor. Reported here for completeness; NOT an interaction estimate.
+#
+# absolute val_loss @ fork+750 (alpha>0 only; alpha=0 = NaN):
+fork	kernel	alpha	val_loss@fork+750
+1500	record	0.25	3.40535
+1500	record	0.50	3.40351
+1500	short	0.25	3.40320
+1500	short	0.50	3.40373
+2000	record	0.25	3.33464
+2000	record	0.50	3.33369
+2000	short	0.25	3.32857
+2000	short	0.50	3.32855
+#
+# I(alpha) rows (both conventions) — all NaN because L(0) is NaN:
+fork	alpha	I_alpha=[Ls(a)-Ls(0)]-[Lr(a)-Lr(0)]	I_alpha_sign_reversed
+1500	0.25	nan	nan
+1500	0.50	nan	nan
+2000	0.25	nan	nan
+2000	0.50	nan	nan

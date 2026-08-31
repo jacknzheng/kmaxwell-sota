@@ -1,0 +1,18 @@
+# REQ-025 Newton-Muon double-dip grid — per-arm summary. SHA 365c392d (rerun), node qj0z1gw (8xH100), torch 2.10.0+cu128, microbatch_sequences=32 uniform.
+# STATUS: BLOCKED / NEEDS-INFO. All 4 alpha=0 baseline arms diverged to NaN within <=125 steps of the fork; all 8 alpha>0 arms are clean.
+#   => I(alpha) = [L(alpha)-L(0)] is uncomputable (its L(0) reference is NaN). See README.md and alpha0-trace-check.tsv.
+# val_loss below is at the FINAL checkpoint (fork+750): f1500 -> step 2250, f2000 -> step 2750. "nan" = weights diverged (173/185 tensors NaN/Inf).
+# kernel: record = bi-Maxwell (m_fast,m_slow); short = single beta=0.85 EMA seeded from m_fast.
+fork	kernel	alpha	start_step	end_step	val_loss@fork+750	weights_nan	SHA	artifact
+1500	record	0.00	1500	2250	nan	173/185	365c392d	dumps_newton_dd_f1500_record_a0p0
+1500	record	0.25	1500	2250	3.40535	0/185	365c392d	dumps_newton_dd_f1500_record_a0p25
+1500	record	0.50	1500	2250	3.40351	0/185	365c392d	dumps_newton_dd_f1500_record_a0p5
+1500	short	0.00	1500	2250	nan	173/185	365c392d	dumps_newton_dd_f1500_short_a0p0
+1500	short	0.25	1500	2250	3.40320	0/185	365c392d	dumps_newton_dd_f1500_short_a0p25
+1500	short	0.50	1500	2250	3.40373	0/185	365c392d	dumps_newton_dd_f1500_short_a0p5
+2000	record	0.00	2000	2750	nan	173/185	365c392d	dumps_newton_dd_f2000_record_a0p0
+2000	record	0.25	2000	2750	3.33464	0/185	365c392d	dumps_newton_dd_f2000_record_a0p25
+2000	record	0.50	2000	2750	3.33369	0/185	365c392d	dumps_newton_dd_f2000_record_a0p5
+2000	short	0.00	2000	2750	nan	173/185	365c392d	dumps_newton_dd_f2000_short_a0p0
+2000	short	0.25	2000	2750	3.32857	0/185	365c392d	dumps_newton_dd_f2000_short_a0p25
+2000	short	0.50	2000	2750	3.32855	0/185	365c392d	dumps_newton_dd_f2000_short_a0p5

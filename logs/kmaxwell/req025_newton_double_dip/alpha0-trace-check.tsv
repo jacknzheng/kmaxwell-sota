@@ -13,3 +13,21 @@ validation@1750	val_loss newton_a0 / bimax	3.48138 / 3.48157	match to 2e-4
 # touches) match to nondeterminism, confirming alpha=0 is a faithful no-preconditioning baseline. CRITICALLY: all 12 grid arms (record+short, all alphas)
 # carry the SAME hook -> identical RNG shift -> identical data order, so the artifact CANCELS in I(alpha) = [L_short(a)-L_short(0)] - [L_record(a)-L_record(0)].
 # The plain-bimaxwell reference was only a gate probe; it is not part of the 12-arm grid.
+#
+# =========================================================================================================================================
+# GRID RERUN RESULT (SHA 365c392d, node qj0z1gw, microbatch_sequences=32 uniform, 2026-08-31) — the alpha=0 baseline DIVERGED TO NaN.
+# This DIRECTLY CONTRADICTS the gate-probe rows above, which were STABLE (val@1625=3.50100, val@1750=3.48138 on SHA 596d2868).
+check	quantity	value	interpretation
+grid_rerun	f1500_record_a0p0 val@1625	nan	DIVERGED (gate probe @596d2868 was 3.50100 here)
+grid_rerun	f1500_record_a0p0 val@1750	nan	DIVERGED (gate probe @596d2868 was 3.48138 here)
+grid_rerun	f1500_record_a0p0 weights@1750	173/185 NaN or Inf	genuine weight divergence (not a val-path artifact)
+grid_rerun	all 4 alpha=0 arms (both forks, both kernels)	nan	baseline unusable across the whole grid
+grid_rerun	all 8 alpha>0 arms (0.25, 0.5)	clean, 0/185 NaN, 3.52->3.40	preconditioning is load-bearing for stability here
+grid_rerun	base bi-Maxwell own trajectory 1500..2000	monotone 3.52003->3.44257, no NaN	pure bi-Maxwell is NOT intrinsically unstable in this region
+# TRANSITION: alpha=0 was STABLE at SHA 596d2868 (gate probe) and NaN at SHA 365c392d + mb=32 (grid). Two variables changed together:
+#   (1) SHA 596d2868 -> 365c392d (the name-collision hook fix; it re-aliased the hook import and may have shifted the RNG/data-order that this very
+#       file documents alpha=0 is sensitive to), and (2) microbatch_sequences whatever->32. mb=64 could NOT be A/B-tested: it OOMs for this model
+#       (6.14 GiB logits buffer at 65536 tok/microbatch > free HBM) — which is why mb=32 was mandated in the first place.
+# RULED OUT as the cause: preconditioner code (alpha=0 is a verified clean bypass to plain BimaxwellMuon), the activation hook (verified no-op at
+#   alpha=0: gated on ref["collect"], never set when newton_alpha==0), _muon_steps_seen (explicitly persisted+restored across the fork), LR schedule
+#   (base and fork share train_steps=3250, cooldown_frac=0.7, lr=0.025 -> continuous), and state loading (shared-state gate 0.000e+00 for all 12).
