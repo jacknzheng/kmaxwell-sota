@@ -1,0 +1,20 @@
+# REQ-023 shared-state gate (SHA 25d3208, node q4g2jyq). Each config dumps its loaded state at the fork
+# (gate_req023_f<fork>_a<i>) BEFORE the first update. Compare across 3 assignments per fork + vs source.
+# per_matrix_lr_muon adds lr_multipliers metadata to the optimizer state_dict, so the optimizer FILE hash
+# differs from the base source file, but the TENSORS (momentum m_fast/m_slow) are byte-identical (max abs-diff 0).
+# GATE VERDICT: PASS (all 3 assignments per fork load the identical source state; tensors match to 0.000e+00)
+fork	tensor	arm	file_sha256_16	maxtensor_absdiff_vs_source	note
+1500	model	a0	619f8fbb8cb422f6	0.000e+00	matches source model hash
+1500	model	a1	619f8fbb8cb422f6	0.000e+00	identical to a0
+1500	model	a2	619f8fbb8cb422f6	0.000e+00	identical to a0
+1500	optim_r0	a0	b2525c2b1bde4cf9	0.000e+00	330 tensors, symdiff 0 (file-hash differs from source by lr_multipliers metadata only)
+1500	optim_r0	a1	b2525c2b1bde4cf9	0.000e+00	identical to a0
+1500	optim_r0	a2	b2525c2b1bde4cf9	0.000e+00	identical to a0
+1500	source	-	model:619f8fbb8cb422f6 optim_r0:29d1a83c486c6dd1	0	eos_shared_state@1500
+2000	model	a0	88f695b22eb96f15	0.000e+00	matches source model hash
+2000	model	a1	88f695b22eb96f15	0.000e+00	identical to a0
+2000	model	a2	88f695b22eb96f15	0.000e+00	identical to a0
+2000	optim_r0	a0	a504907ed57185e6	0.000e+00	330 tensors, symdiff 0
+2000	optim_r0	a1	a504907ed57185e6	0.000e+00	identical to a0
+2000	optim_r0	a2	a504907ed57185e6	0.000e+00	identical to a0
+2000	source	-	model:88f695b22eb96f15 optim_r0:22317a9edde773ed	0	eos_shared_state@2000
