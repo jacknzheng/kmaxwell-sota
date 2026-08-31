@@ -108,6 +108,7 @@ Next request number: **REQ-025**.
 
 - status: OPEN (filed ~15:40 UTC; genuinely optional — if anything fails,
   release the nodes and stop; nothing depends on this)
+- agent status: **RUNNING (2026-08-31 ~15:45Z)** — both nodes; provisioning **31e5g4w (A: 16x muon mu0 + single-EMA 8x muon mu0.95)** + **3m7dp23 (B: 16x bimaxwell record)**, seed 0, @ 365c392d. batch_tokens: 16x = **8388608** (skip 125), 8x = 4194304 (skip 250); start 2000→2750, ckpt +750 only. **16x data budget = (125+750)×8.39M ≈ 7.34B tokens** → bootstrapping **78 fineweb chunks** (~7.8B) per node; per-config budget assert BEFORE each arm (need computed from the config's batch_tokens+skip). Per-config finite smoke. Per your fallback: if the 16x budget doesn't fit, I run only the single-EMA 8x arm and close. Closing table extends the curve: benefit at 1x/4x/8x/16x + single-EMA at 8x.
 - requested: owner agent; extends the benefit-vs-batch curve one more octave
   and fills figB's missing single-EMA point at 8x
 - priority: both nodes, parallel; STOP filing after this — last request
