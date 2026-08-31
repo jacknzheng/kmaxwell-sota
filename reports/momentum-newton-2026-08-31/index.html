@@ -54,10 +54,17 @@
 
 <figure class="wide" id="figure-2">
   <div class="figure-slot"><img src="figs/fig2_frame_structure.png" alt="Directional curvature and dominant oscillation period across momentum singular directions"></div>
-  <figcaption><strong>Figure 2. The leading momentum subspace is uniformly period two but strongly heterogeneous in curvature.</strong> One point is one pair of hidden weight matrix and singular index at step 2528; each matrix-type panel contains one matrix per transformer block. Color gives block depth. Random directions and period two provide the references.</figcaption>
+  <figcaption><strong>Figure 2. The strongest frequency of every leading momentum direction is period two, while curvature varies sixfold among them.</strong> One point is one pair of hidden weight matrix and singular index at step 2528; each matrix-type panel contains one matrix per transformer block. Color gives block depth. Random directions and period two provide the references.</figcaption>
 </figure>
 
-<p>The first four momentum directions all lie near period two. Curvature nevertheless falls about sixfold from the leading direction to the second. Matrix sign gives both directions the same singular value in the update. Momentum has therefore selected a period-two subspace without equalizing the curvature inside it.</p>
+<p>The dominant frequency alone does not show how concentrated the energy is, so Figure 3 gives the full spectra. For the first two singular directions, the period-two band (periods 2 to 2.46, thirteen of the 64 frequency bins) carries a median 63% and 56% of the series' energy, against the 20% a flat spectrum would place there: sign alternation dominates them. The third and fourth directions carry 43% and 39% -- elevated at twice the flat reference, but tilted rather than dominated, with wide spread across matrices.</p>
+
+<figure class="wide" id="figure-3">
+  <div class="figure-slot"><img src="figs/fig3_atom_spectra.png" alt="Power spectra of the gradient history projected on the leading momentum singular directions"></div>
+  <figcaption><strong>Figure 3. Energy concentrates at period two for the first two momentum directions and dilutes down the spectrum.</strong> One thin line is one matrix's normalized power spectrum for that singular direction (72 matrices, color gives block depth, black gives the median, dashed vertical line marks period two). Right panel: the fraction of each series' energy in the period 2&ndash;2.46 band; one point is one pair of matrix and singular index; the dotted line marks the flat-spectrum reference of 0.20.</figcaption>
+</figure>
+
+<p>Curvature falls about sixfold from the leading direction to the second, and both are dominated by sign alternation. Matrix sign gives both the same singular value in the update. Momentum has therefore selected strongly alternating directions without equalizing the curvature among them.</p>
 
 <h2>Activation preconditioning contributes a separate geometric effect</h2>
 
@@ -69,20 +76,20 @@
 
 <p>where rows of <em>X</em> are layer inputs from the evaluation tokens. We then measured the polar update's directional curvature. A control kept the eigenvalues of <em>P</em><sub>α</sub> and replaced its activation eigenvectors with a random orthogonal basis.</p>
 
-<div class="prediction"><span class="label">Predictions tested in Figures 3 and 4</span><p>If momentum and activation preconditioning correct the same geometry, stronger preconditioning should have a smaller effect after record momentum than after the raw gradient. If their information is independent, the curvature ratio should be nearly the same for all three histories. The random-basis control should preserve any effect caused only by anisotropic eigenvalues and destroy any effect carried by activation directions.</p></div>
+<div class="prediction"><span class="label">Predictions tested in Figures 4 and 5</span><p>If momentum and activation preconditioning correct the same geometry, stronger preconditioning should have a smaller effect after record momentum than after the raw gradient. If their information is independent, the curvature ratio should be nearly the same for all three histories. The random-basis control should preserve any effect caused only by anisotropic eigenvalues and destroy any effect carried by activation directions.</p></div>
 
-<figure class="wide" id="figure-3">
+<figure class="wide" id="figure-4">
   <div class="figure-slot"><img src="figs/fig3_newton_effect.png" alt="Curvature along the realized record-momentum update as activation preconditioning strength increases"></div>
-  <figcaption><strong>Figure 3. Activation eigenvectors carry most of the curvature reduction.</strong> One line is one hidden weight matrix at step 2528, with 12 matrices per matrix-type panel. Solid lines use the activation eigenbasis; dotted lines use random orthogonal eigenvectors with the same eigenvalues. Both are applied to record momentum. Repeating this control at steps 1628 and 3028 preserves the separation between activation and random eigenvectors.</figcaption>
+  <figcaption><strong>Figure 4. Activation eigenvectors carry most of the curvature reduction.</strong> One line is one hidden weight matrix at step 2528, with 12 matrices per matrix-type panel. Solid lines use the activation eigenbasis; dotted lines use random orthogonal eigenvectors with the same eigenvalues. Both are applied to record momentum. Repeating this control at steps 1628 and 3028 preserves the separation between activation and random eigenvectors.</figcaption>
 </figure>
 
 <p>At α = 0.5, the real activation basis reduces curvature along the record-momentum update to roughly 60% of its unpreconditioned value. Replacing the activation eigenvectors with random vectors leaves about 90% of the original curvature. Eigenvalue anisotropy causes rotation, while the activation directions supply most of the movement toward lower curvature.</p>
 
 <p>The activation-basis advantage repeats early and late in training, although its curvature reduction is weaker at the late state. The geometric contribution therefore survives across the measured trajectory.</p>
 
-<figure class="wide" id="figure-4">
+<figure class="wide" id="figure-5">
   <div class="figure-slot"><img src="figs/fig4_independence.png" alt="Per-matrix comparison of activation preconditioning effects across temporal kernels and eigenbases"></div>
-  <figcaption><strong>Figure 4. Curvature reduction matches across temporal kernels, while rotation magnitude does not measure useful Newton content.</strong> One point on the left is one pair of matrix and checkpoint at α = 0.5, for 216 points; the diagonal marks equal curvature reduction for record momentum and the raw gradient. One point on the right is one matrix at step 2528 and α = 1; the diagonal marks equal rotation under activation and random eigenvectors with identical eigenvalues.</figcaption>
+  <figcaption><strong>Figure 5. Curvature reduction matches across temporal kernels, while rotation magnitude does not measure useful Newton content.</strong> One point on the left is one pair of matrix and checkpoint at α = 0.5, for 216 points; the diagonal marks equal curvature reduction for record momentum and the raw gradient. One point on the right is one matrix at step 2528 and α = 1; the diagonal marks equal rotation under activation and random eigenvectors with identical eigenvalues.</figcaption>
 </figure>
 
 <p>The per-matrix comparison reaches the same conclusion as the aggregate. The record kernel changes the baseline curvature of the update; activation preconditioning then multiplies that curvature by nearly the same ratio. The only consistent coupling changes about two percent of the total rotation at the strongest tested preconditioner.</p>
@@ -95,11 +102,11 @@
 
 <div class="definition"><span class="label">Directional signal-to-noise ratio</span><p>At a frozen training state, project each of 32 consecutive microbatch gradients onto a momentum singular direction. The squared mean projection divided by the projection variance defines the plotted signal-to-noise ratio. Consecutive microbatches need not be statistically independent; the token-scaling measurement captures the resulting departure from ideal averaging.</p></div>
 
-<div class="prediction"><span class="label">Predictions tested in Figure 5</span><p>Independent token noise would make variance fall inversely with token count and produce a slope of one for signal-to-noise ratio on log–log axes. A fixed momentum–Newton mixture would also require directional signal-to-noise to remain roughly stationary through training. Failure of either prediction requires online measurement.</p></div>
+<div class="prediction"><span class="label">Predictions tested in Figure 6</span><p>Independent token noise would make variance fall inversely with token count and produce a slope of one for signal-to-noise ratio on log–log axes. A fixed momentum–Newton mixture would also require directional signal-to-noise to remain roughly stationary through training. Failure of either prediction requires online measurement.</p></div>
 
-<figure class="wide" id="figure-5">
+<figure class="wide" id="figure-6">
   <div class="figure-slot"><img src="figs/fig5_snr.png" alt="Directional gradient signal-to-noise ratio across training, singular index, and token count"></div>
-  <figcaption><strong>Figure 5. Directional signal-to-noise collapses through training and improves more slowly than independent-token averaging predicts.</strong> One point on the left is one pair of hidden weight matrix and singular index, computed from 32 consecutive 8192-token microbatches at steps 1628, 2528, or 3028; dotted lines are random-direction references. One thin line on the right is one matrix's leading direction across token counts, bold lines are medians, and the reference has slope one. Because the stream chunks are consecutive, the cross-size slope is the robust comparison.</figcaption>
+  <figcaption><strong>Figure 6. Directional signal-to-noise collapses through training and improves more slowly than independent-token averaging predicts.</strong> One point on the left is one pair of hidden weight matrix and singular index, computed from 32 consecutive 8192-token microbatches at steps 1628, 2528, or 3028; dotted lines are random-direction references. One thin line on the right is one matrix's leading direction across token counts, bold lines are medians, and the reference has slope one. Because the stream chunks are consecutive, the cross-size slope is the robust comparison.</figcaption>
 </figure>
 
 <p>The leading direction's median signal-to-noise ratio falls from 6.2 early in training to 0.40 near the end. Increasing token count raises signal-to-noise with an exponent near 0.55 rather than one. Batch size alone therefore cannot set the momentum–Newton mixture in this regime.</p>
