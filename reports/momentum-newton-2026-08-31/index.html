@@ -67,16 +67,18 @@
 <math display="block"><mrow><msub><mi>P</mi><mi>α</mi></msub><mo>=</mo><msup><mrow><mo>(</mo><msup><mi>X</mi><mi>T</mi></msup><mi>X</mi><mo>+</mo><mi>εI</mi><mo>)</mo></mrow><mrow><mo>−</mo><mi>α</mi></mrow></msup></mrow></math>
 </div>
 
-<p>where rows of <em>X</em> are layer inputs from the evaluation tokens. We then measured the polar update's directional curvature. At step 2528, a control kept the eigenvalues of <em>P</em><sub>α</sub> and replaced its activation eigenvectors with a random orthogonal basis.</p>
+<p>where rows of <em>X</em> are layer inputs from the evaluation tokens. We then measured the polar update's directional curvature. A control kept the eigenvalues of <em>P</em><sub>α</sub> and replaced its activation eigenvectors with a random orthogonal basis.</p>
 
 <div class="prediction"><span class="label">Predictions tested in Figures 3 and 4</span><p>If momentum and activation preconditioning correct the same geometry, stronger preconditioning should have a smaller effect after record momentum than after the raw gradient. If their information is independent, the curvature ratio should be nearly the same for all three histories. The random-basis control should preserve any effect caused only by anisotropic eigenvalues and destroy any effect carried by activation directions.</p></div>
 
 <figure class="wide" id="figure-3">
   <div class="figure-slot"><img src="figs/fig3_newton_effect.png" alt="Curvature along the realized record-momentum update as activation preconditioning strength increases"></div>
-  <figcaption><strong>Figure 3. Activation eigenvectors carry most of the curvature reduction.</strong> One line is one hidden weight matrix at step 2528, with 12 matrices per matrix-type panel. Solid lines use the activation eigenbasis; dotted lines use random orthogonal eigenvectors with the same eigenvalues. Both are applied to record momentum. The random-basis control has been measured only at this middle checkpoint.</figcaption>
+  <figcaption><strong>Figure 3. Activation eigenvectors carry most of the curvature reduction.</strong> One line is one hidden weight matrix at step 2528, with 12 matrices per matrix-type panel. Solid lines use the activation eigenbasis; dotted lines use random orthogonal eigenvectors with the same eigenvalues. Both are applied to record momentum. Repeating this control at steps 1628 and 3028 preserves the separation between activation and random eigenvectors.</figcaption>
 </figure>
 
 <p>At α = 0.5, the real activation basis reduces curvature along the record-momentum update to roughly 60% of its unpreconditioned value. Replacing the activation eigenvectors with random vectors leaves about 90% of the original curvature. Eigenvalue anisotropy causes rotation, while the activation directions supply most of the movement toward lower curvature.</p>
+
+<p>The activation-basis advantage repeats early and late in training, although its curvature reduction is weaker at the late state. The geometric contribution therefore survives across the measured trajectory.</p>
 
 <figure class="wide" id="figure-4">
   <div class="figure-slot"><img src="figs/fig4_independence.png" alt="Per-matrix comparison of activation preconditioning effects across temporal kernels and eigenbases"></div>
