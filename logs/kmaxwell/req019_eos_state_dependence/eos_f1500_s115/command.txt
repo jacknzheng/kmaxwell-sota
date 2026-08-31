@@ -1,0 +1,3 @@
+# eos_f1500_s115 (REQ-022 ladder): SHA ebf53cd, node wxgmk0q (8xH100), resumes eos_shared_state@1500 (regenerated)
+torchrun --standalone --nproc_per_node=8 records/track_3_optimization/run.py configs/req019/eos_f1500_s115.yaml
+torchrun --standalone --nproc_per_node=8 records/track_3_optimization/offline_analysis/measure_per_matrix_curvature.py --no_dist --dump_dir dumps_eos_f1500_s115 --steps 2250 2375 2500 2625 2750 --tokens 131072 --iters 8 --out_tag req019_per_matrix_curvature
