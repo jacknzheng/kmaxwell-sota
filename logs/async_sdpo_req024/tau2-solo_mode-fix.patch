@@ -1,0 +1,100 @@
+=== regenerate patch ===
+From 2ef7240aebea2f7d4ec85f4e6d30854bd847eb05 Mon Sep 17 00:00:00 2001
+From: Jerry Hong <jerry.hong@baseten.co>
+Date: Mon, 31 Aug 2026 10:29:20 +0000
+Subject: [PATCH] Fix tau2 evaluate_simulation call for pinned tau2-bench
+ a2c0247
+
+Two coupled signature mismatches against tau2-bench a2c0247, both surfacing
+only on the tau2 (retail/airline) reward path, not the diligence dataset:
+
+1. evaluate_simulation() now requires a positional solo_mode: bool between
+   evaluation_type and domain. The call omitted it -> TypeError (missing arg).
+   Add solo_mode=False (live half-duplex eval is not solo mode).
+
+2. evaluate_simulation() now forwards solo_mode to the domain env constructor
+   internally, so the env_kwargs we pass must NOT also carry solo_mode, else
+   get_environment() gets it twice ("multiple values for keyword argument
+   solo_mode"). Strip solo_mode from the env_kwargs argument at the eval call
+   site; env_kwargs_for is unchanged so the rollout path (make_env, which calls
+   the constructor directly with solo_mode) still works.
+
+Adds tests/test_tau2_evaluate_signature.py: an inspect.signature guard that
+asserts the harness call supplies every no-default param of the pinned
+evaluate_simulation.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01YKPwGqPuEuP2wzzHuCEhok
+---
+ data/tau_harness.py                   |  4 ++-
+ tests/test_tau2_evaluate_signature.py | 42 +++++++++++++++++++++++++++
+ 2 files changed, 45 insertions(+), 1 deletion(-)
+ create mode 100644 tests/test_tau2_evaluate_signature.py
+
+diff --git a/data/tau_harness.py b/data/tau_harness.py
+index e7b360e..9b4bd30 100644
+--- a/data/tau_harness.py
++++ b/data/tau_harness.py
+@@ -522,8 +522,10 @@ def evaluate_episode(task: Task, tau_messages: list, termination: str, retrieval
+         simulation=sim,
+         task=task.tau2_task,
+         evaluation_type=EvaluationType.ALL,
++        solo_mode=False,
+         domain=task.domain,
+-        env_kwargs=env_kwargs_for(task, retrieval),
++        env_kwargs={k: v for k, v in env_kwargs_for(task, retrieval).items()
++                    if k != "solo_mode"},
+     )
+     return float(info.reward)
+ 
+diff --git a/tests/test_tau2_evaluate_signature.py b/tests/test_tau2_evaluate_signature.py
+new file mode 100644
+index 0000000..7750618
+--- /dev/null
++++ b/tests/test_tau2_evaluate_signature.py
+@@ -0,0 +1,42 @@
++"""Guard: the evaluate_simulation() call in data/tau_harness.py must supply every
++required (no-default) parameter of the pinned tau2 evaluate_simulation signature.
++This would have caught the missing required `solo_mode` (tau2-bench a2c0247)."""
++import ast
++import inspect
++import pathlib
++
++import pytest
++
++tau2 = pytest.importorskip("tau2")
++from tau2.evaluator.evaluator import evaluate_simulation  # noqa: E402
++
++
++def _harness_call_keywords():
++    src = pathlib.Path(__file__).resolve().parents[1] / "data" / "tau_harness.py"
++    tree = ast.parse(src.read_text())
++    for node in ast.walk(tree):
++        if (
++            isinstance(node, ast.Call)
++            and isinstance(node.func, ast.Name)
++            and node.func.id == "evaluate_simulation"
++        ):
++            return {kw.arg for kw in node.keywords if kw.arg is not None}
++    raise AssertionError("no evaluate_simulation(...) call found in data/tau_harness.py")
++
++
++def test_harness_supplies_all_required_params():
++    sig = inspect.signature(evaluate_simulation)
++    required = {
++        name
++        for name, p in sig.parameters.items()
++        if p.default is inspect.Parameter.empty
++        and p.kind
++        in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
++    }
++    supplied = _harness_call_keywords()
++    missing = required - supplied
++    assert not missing, f"evaluate_simulation() call missing required params: {missing}"
++
++
++def test_solo_mode_is_supplied():
++    assert "solo_mode" in _harness_call_keywords()
+-- 
+2.43.0
+
