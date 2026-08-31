@@ -109,7 +109,65 @@
   <li>If the projection of the combined estimator into causal kernels has large held-out error, Newton and momentum cannot be integrated under the deployment constraint; no amount of coefficient tuning repairs that.</li>
 </ol>
 
-<h2>6. Two useful diagnostics that are not yet theories</h2>
+<h2>6. In what order should we average gradients and curvature?</h2>
+
+<div class="claim"><span class="label">Jeffrey's question</span><p>“Suppose we actually were given a stream of finite-token Hessian estimates and a stream of gradients. What is the optimal ordering of gradient accumulation, Hessian accumulation, preconditioning, and <code>msign</code>? Is it kosher to combine gradients preconditioned by different Hessians at different points in time?”</p></div>
+
+<p>There is no ordering that is optimal without assumptions about metric drift and estimator error. There is, however, a clean way to distinguish the choices.</p>
+
+<p>Let <i>M</i><sub>t</sub> be a positive-definite curvature metric: for example, a damped or clipped Hessian, or a GGN estimate. Writing <i>A</i><sub>g</sub> and <i>A</i><sub>M</sub> for causal accumulators gives four apparent orderings:</p>
+
+<table>
+<thead><tr><th>Ordering</th><th>Pre-polar direction</th><th>Interpretation</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><i>A</i><sub>M</sub>(<i>M</i>)<sup>−1</sup> <i>A</i><sub>g</sub>(<i>g</i>)</td><td>Average covectors and metrics, then raise the averaged covector with the current averaged metric.</td></tr>
+<tr><td>2</td><td><i>A</i><sub>g</sub>(<i>M</i><sub>t</sub><sup>−1</sup><i>g</i><sub>t</sub>)</td><td>Raise every noisy covector with its same-step noisy metric, then average vectors.</td></tr>
+<tr><td>3</td><td><span style="white-space:nowrap"><i>M̄</i><sub>t</sub><sup>−1</sup><i>ḡ</i><sub>t</sub></span></td><td>The same algebra as ordering 1 when the bars denote those same accumulators; it differs only if the windows or update schedules differ.</td></tr>
+<tr><td>4</td><td>∑<sub>τ</sub><i>k</i><sub>τ</sub><i>M̄</i><sub>t−τ</sub><sup>−1</sup><i>g</i><sub>t−τ</sub></td><td>Raise each covector with a contemporaneously smoothed metric, then carry the resulting vectors forward and average them.</td></tr>
+</tbody>
+</table>
+
+<h3>6.1 The type question</h3>
+
+<p>In fixed neural-network coordinates, parameter space is affine. Translation gives a canonical identification of tangent spaces at different parameter values, and the dual coordinate basis similarly identifies cotangent spaces. Ordinary momentum already uses this trivial connection when it adds gradients from different steps. Thus all four formulas type-check as arrays in fixed coordinates.</p>
+
+<p>They are not invariant to a change of parameterization. On a genuinely curved statistical manifold, a past covector or vector must be transported before it is combined with a current one. Ordering 1 implicitly transports past covectors by identity and raises them using the current metric. Ordering 4 raises each covector using its historical metric and then transports the resulting vector by identity. These are different connection choices, not merely different numerical schedules.</p>
+
+<h3>6.2 The fixed-metric lemma</h3>
+
+<p>If <i>M</i><sub>t</sub> = <i>M</i> is constant and all accumulators use the same linear weights, preconditioning commutes with accumulation:</p>
+
+<div class="math"><math display="block"><mrow><msup><mi>M</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><munderover><mo>∑</mo><mi>τ</mi><mi>L</mi></munderover><msub><mi>k</mi><mi>τ</mi></msub><msub><mi>g</mi><mrow><mi>t</mi><mo>−</mo><mi>τ</mi></mrow></msub><mo>=</mo><munderover><mo>∑</mo><mi>τ</mi><mi>L</mi></munderover><msub><mi>k</mi><mi>τ</mi></msub><msup><mi>M</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><msub><mi>g</mi><mrow><mi>t</mi><mo>−</mo><mi>τ</mi></mrow></msub><mo>.</mo></mrow></math></div>
+
+<p>All meaningful differences therefore come from metric drift, unequal accumulator windows, finite-token estimation error, or nonlinear operations inserted between the sums. The answer necessarily depends on the gradient kernel's memory: a ten-step kernel sees little metric drift; a thousand-step kernel may span a different geometry.</p>
+
+<h3>6.3 Why averaging the metric before inversion is the safe default</h3>
+
+<p>Matrix inversion is operator-convex on the positive-definite cone. For an unbiased positive-definite estimate <i>M̂</i>,</p>
+
+<div class="math"><math display="block"><mrow><mi mathvariant="normal">E</mi><mo>[</mo><msup><mi>M̂</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo>]</mo><mo>≥</mo><msup><mrow><mo>(</mo><mi mathvariant="normal">E</mi><mo>[</mo><mi>M̂</mi><mo>]</mo><mo>)</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo>.</mo></mrow></math></div>
+
+<p>Inverting each small-token estimate therefore amplifies metric noise on average. This makes ordering 2 a poor default. The statement has limits: it requires a positive-definite metric, and it does not account for correlation between <i>M̂</i> and the gradient estimated from the same tokens. An indefinite Hessian must first be converted into a declared damped, clipped, or trust-region metric. Ordering 2 is not forbidden by a universal theorem; it must overcome a measurable Jensen gap and a same-sample correlation term.</p>
+
+<h3>6.4 The real fork: current metric or historical metric?</h3>
+
+<p>After smoothing curvature before inversion, the substantive choice is ordering 1 versus ordering 4. Their difference is</p>
+
+<div class="math"><math display="block"><mrow><munderover><mo>∑</mo><mi>τ</mi><mi>L</mi></munderover><msub><mi>k</mi><mi>τ</mi></msub><mo>(</mo><msubsup><mi>M̄</mi><mrow><mi>t</mi><mo>−</mo><mi>τ</mi></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msubsup><mo>−</mo><msubsup><mi>M̄</mi><mi>t</mi><mrow><mo>−</mo><mn>1</mn></mrow></msubsup><mo>)</mo><msub><mi>g</mi><mrow><mi>t</mi><mo>−</mo><mi>τ</mi></mrow></msub><mo>.</mo></mrow></math></div>
+
+<p>If the observed metric movement is mostly finite-token noise, one current smoothed metric should be applied retroactively to the whole gradient buffer: ordering 1. If it is mostly genuine rotation of useful features, historical preconditioning may preserve information that a current metric would reinterpret incorrectly: ordering 4, ideally with an explicit transport rather than identity transport.</p>
+
+<p>The measured top-eight subspace overlap over 250 steps rises from 0.24 early to 0.86 late. This predicts a real ordering dependence early and near-indifference late, but only after subtracting the curvature-estimation noise floor. Optimizers that rotate momentum buffers when a preconditioner basis is refreshed implement an approximate discrete transport. A basis refresh without buffer rotation does not.</p>
+
+<h3>6.5 Where matrix sign belongs</h3>
+
+<p>For the estimator architecture studied on this page, matrix sign comes last: first estimate one pre-polar covector or vector, then apply the norm-selection map. Applying matrix sign to every step before accumulation discards magnitude and conditioning information before the temporal estimator can use it.</p>
+
+<p>Accumulating already-polarized updates is still a type-correct optimizer in fixed coordinates. It is momentum in primal update space rather than gradient momentum, and it requires its own transport rule and objective. It should be tested as a separate family rather than treated as another algebraic ordering of the same estimator.</p>
+
+<div class="result"><span class="label">Measurement that decides the fork</span><p>At each checkpoint, estimate curvature frames twice from independent token subsets. Their same-step disagreement is the estimator-noise floor. Compare it with cross-step frame disagreement at several lags. The excess cross-step disagreement estimates true drift. Combine that curve with the candidate gradient kernel's age distribution. Ordering 1 is favored when noise dominates over the ages carrying most kernel weight; ordering 4 or explicit transport is favored when true drift dominates.</p></div>
+
+<h2>7. Two useful diagnostics that are not yet theories</h2>
 
 <h3>Frozen-disturbance replay LQ</h3>
 
@@ -123,7 +181,7 @@
 
 <p>This construction addresses trajectory endogeneity in principle but is expensive: evaluating <i>T</i> requires new training trajectories. One off-policy update using an old trajectory is an approximation, not the fixed-point map.</p>
 
-<h2>7. Palette and kill criteria</h2>
+<h2>8. Palette and kill criteria</h2>
 
 <table>
 <thead><tr><th>Priority</th><th>Functional</th><th>What guarantees a central object exists?</th><th>Immediate kill criterion</th></tr></thead>
@@ -137,11 +195,12 @@
 </tbody>
 </table>
 
-<h2>8. The shortest experimental program</h2>
+<h2>9. The shortest experimental program</h2>
 
 <ol>
   <li><strong>Fit offline from existing recordings.</strong> Compute the polar-tangent quadratic, rolling unique kernels, robust variants, and frozen-replay diagnostic. No training run is needed.</li>
   <li><strong>Run the retrodiction gate.</strong> Hold all K8 weights and outcomes out. Ask whether the fitted impulse responses recover K8 &gt; bi-Maxwell &gt; EMA = lag zero, K8's annealing direction, and the batch curve ending at zero at 16×.</li>
+  <li><strong>Resolve the ordering fork offline.</strong> Subtract same-step, independent-token curvature-frame disagreement from cross-step disagreement, then integrate the remaining drift over each candidate kernel's age distribution. This selects current-metric accumulation, historical-metric accumulation, or explicit transport without a training run.</li>
   <li><strong>Collect the missing same-state references.</strong> Where existing microbatch pools are insufficient, evaluate more tokens at frozen checkpoints and compute subsampled high-token gradients and curvature estimates. This measures both error curves without a parametric noise model.</li>
   <li><strong>Race only preregistered survivors.</strong> Compare the derived kernel, K8, bi-Maxwell, and lag zero in matched short continuations from shared checkpoints. Use at least one held-out training phase before a full Track 3 run.</li>
   <li><strong>Compress.</strong> If rolling unique FIR solutions lie near a low-order exponential manifold, factor them into the smallest K-Maxwell bank that preserves hard-polar behavior. If they do not, the theory predicts that a zero- or one-knob exponential implementation does not exist on this stack.</li>
