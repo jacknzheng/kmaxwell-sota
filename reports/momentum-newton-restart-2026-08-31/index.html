@@ -16,7 +16,7 @@
 
 <div class="takeaway"><span class="label">The question</span><p>Can one shared momentum kernel reconstruct the damped-Newton direction across many curvature directions and parameter matrices? The reconstruction error is the part of Newton that momentum cannot supply.</p></div>
 
-<p>We now have the answer. A residual-verified damped inverse roughly halves curvature along Muon's update and costs a median of three Hessian–vector products at each refresh. A shared temporal kernel reconstructs essentially none of its anisotropic correction on held-out matrices or training states. Momentum and damped Newton are doing different jobs.</p>
+<p>We have one deliberately narrow answer. A residual-verified damped inverse roughly halves curvature along Muon's update and costs a median of three Hessian–vector products at each refresh. On the eight sharpest measured Hessian directions, one shared temporal kernel fails to reconstruct the anisotropic correction produced with damping ρ = λ<sub>8</sub>. This experiment does not determine the overlap at lighter damping or lower-curvature directions.</p>
 
 <h2>1. Put time and curvature in the same coordinates</h2>
 
@@ -69,9 +69,9 @@
 </tbody>
 </table>
 
-<div class="result"><span class="label">Answer to the exercise</span><p>The kernel-expressible share of damped Newton is approximately zero. A shared 129-tap kernel does not transfer the anisotropic inverse-curvature map across matrices or training states; negative shares show that it frequently transfers worse than the zero predictor. Lag-zero-only fits are comparable or better in most splits.</p></div>
+<div class="result"><span class="label">Answer for the tested operator</span><p>For the top-eight curvature band with ρ = λ<sub>8</sub>, the kernel-expressible share is approximately zero. A shared 129-tap kernel does not transfer this anisotropic correction across matrices or training states; negative shares show that it frequently transfers worse than the zero predictor. Lag-zero-only fits are comparable or better in most splits.</p></div>
 
-<p>The scale quotient and train/test splits were registered before the result. Other normalizations may be worth studying, but they cannot replace this failed test after the fact.</p>
+<p>The scale quotient and train/test splits were registered before the result. Other normalizations may be worth studying, but they cannot replace this failed test after the fact. The larger limitation is structural: momentum was already known to have nearly flat gain over these eight directions, while choosing ρ = λ<sub>8</sub> made the damped inverse most graded in the same band. The design therefore compared the operators where overlap was least likely by construction. It cannot support a full-spectrum claim.</p>
 
 <h2>3. Actual damped Newton is both effective and cheap here</h2>
 
@@ -81,9 +81,9 @@
 
 <div class="result"><span class="label">Measured result</span><p>A residual-verified damped inverse approximately halves curvature along Muon's realized update at a cost low enough to consider during training.</p></div>
 
-<figure><img src="figs/figA_correction_ladder.png" alt="Per-matrix curvature ratio under increasingly complete curvature corrections"><figcaption>Each point is one parameter matrix's curvature ratio after an intervention; lower is a larger reduction. Colors mark the three checkpoints and horizontal bars mark medians. The top-eight true-Hessian correction lowers the per-matrix median by only about 5%; expanding to 24 directions helps, while the certified full damped solve is substantially stronger. CG points include only solves passing the final residual and no-breakdown gates.</figcaption></figure>
+<figure><img src="figs/figA_correction_ladder.png" alt="Per-matrix curvature ratio under several curvature corrections"><figcaption>Each point is one parameter matrix's curvature ratio after an intervention; lower is a larger reduction. Colors mark the three checkpoints and horizontal bars mark medians. The top-eight intervention lowers the per-matrix median by about 5%, and the certified full damped solve is stronger. The top-eight, top-24, and full-solve interventions use different spectral gain profiles, so their gaps do not identify which unmeasured eigendirections carry the full solve's effect. CG points include only solves passing the final residual and no-breakdown gates.</figcaption></figure>
 
-<p>The deep eigenframe measurement explains the gap. Median top curvature is about 27,000, while curvature along momentum's leading direction is about 5,000. Each of the 24 sharpest true eigendirections receives only about 0.5% of the update mass. Most of the useful inverse-curvature action lies outside that sharp subspace.</p>
+<p>The deep eigenframe measurement provides scale but does not localize the full solve's effect. Median top curvature is about 27,000, while curvature along momentum's leading direction is about 5,000. Each of the 24 sharpest true eigendirections receives only about 0.5% of the update mass. A localization claim requires a matched comparison that applies the full solve's exact gain profile inside and outside the same subspace.</p>
 
 <p>Breakdown events rise across training—0, 4, then 11—which indicates that a fixed shift ρ stops dominating the negative spectrum late in training. Damping and solver choice must respond to the measured state. A broken solve is excluded rather than frozen and called Newton.</p>
 
@@ -119,20 +119,20 @@
 
 <p>There are two meaningful orders. One can filter the gradient history and apply the current inverse Hessian, or apply the contemporaneous inverse Hessian to each past gradient and then filter. These orders agree when the Hessian is fixed. Their difference measures curvature drift over the kernel's memory window, so refresh cadence and kernel memory must be chosen together.</p>
 
-<h2>6. What the result decides</h2>
+<h2>6. What remains unresolved</h2>
 
 <table>
 <thead><tr><th>Held-out anisotropic share</th><th>Interpretation</th><th>Design consequence</th></tr></thead>
 <tbody>
 <tr><td>High</td><td>Temporal dynamics reliably encode inverse curvature.</td><td>Use the learned kernel and apply only a low-rank or weak residual correction.</td></tr>
 <tr><td>Intermediate</td><td>Momentum recovers coarse curvature classes but not the full spectrum.</td><td>Jointly schedule kernel memory and a measured residual correction.</td></tr>
-<tr><td><strong>Low — observed</strong></td><td>Temporal estimation and inverse curvature are mostly independent.</td><td>Choose the kernel for prediction/denoising and retain a full damped inverse.</td></tr>
+<tr><td>Low</td><td>Temporal estimation and inverse curvature are mostly independent.</td><td>Choose the kernel for prediction/denoising and retain a full damped inverse.</td></tr>
 </tbody>
 </table>
 
-<p>The experiment rules out the hoped-for scalar compensation law: there is no stable “momentum already supplies X% of Newton” coefficient to top up. The simpler design is modular. Choose the temporal kernel for prediction and denoising; estimate inverse curvature separately; use measured reliability to gate the full anisotropic correction.</p>
+<p>The current experiment selects none of these rows for the full operator. It rules out transferable compensation only in the top-eight band at ρ = λ<sub>8</sub>. The next test must first locate momentum's gain elbow over deeper Hessian directions, then repeat the held-out regression across damping values whose graded inverse-curvature bands overlap that elbow. Any comparison between a truncated eigenspace intervention and the full solve must use identical spectral gains. Until those tests are complete, whether momentum and Newton should be modular or compensating remains open.</p>
 
-<div class="caution"><span class="label">Scope</span><p>The batch experiment uses one fork, a 750-step horizon, and no learning-rate rescaling across batch sizes. Its reruns reuse the same sequential data stream and therefore measure run-to-run nondeterminism, not data-distribution robustness. The expressibility regression is held out across matrices and checkpoints but uses one 129-tap linear kernel class and the registered per-matrix normalization; its conclusion is about that operational definition.</p></div>
+<div class="caution"><span class="label">Scope</span><p>The batch experiment uses one fork, a 750-step horizon, and no learning-rate rescaling across batch sizes. Its reruns reuse the same sequential data stream and therefore measure run-to-run nondeterminism, not data-distribution robustness. The expressibility regression is held out across matrices and checkpoints but uses one 129-tap linear kernel, the top-eight Hessian directions, damping ρ = λ<sub>8</sub>, and the registered per-matrix normalization. Its conclusion applies only to that operator and band.</p></div>
 
 <div class="footnotes">“Certified” summaries use only solves satisfying the final residual threshold with no breakdown.</div>
 </main></body></html>
