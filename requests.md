@@ -78,6 +78,29 @@ Next request number: **REQ-025**.
 - readout: does the benefit-shrinkage (seed-0: -0.0103 at 1x -> -0.0044 at
   4x) hold across seeds; report mean and spread, no interpretation needed.
 
+
+## REQ-028: the 8x-batch point (completes the benefit-vs-batch curve)
+
+- status: OPEN (filed by owner agent 2026-08-31 ~14:45 UTC)
+- requested: owner agent under the overnight mandate; REQ-026/027 give the
+  bi-Maxwell benefit at 1x (-0.0103/-0.0106) and 4x (-0.0044); one more
+  batch size turns the pair into a curve — does the benefit keep falling
+  toward zero or plateau?
+- priority: both nodes (one arm per node, parallel); this is the last
+  training request of the night — if smokes or data availability fail,
+  release the nodes rather than improvise
+- pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e
+- expected work: TWO arms, seed 0, same shared step-2000 state:
+  8x batch (4.19M tokens per optimizer step) x {muon mu 0.0,
+  bimaxwell record}, 750 steps. Token-aligned skip as you validated in
+  REQ-026; verify the fineweb shard budget covers 750 steps at 8x from
+  the fork position BEFORE launching (data-exhaustion smoke).
+- gates: per-config 20-step finite-loss smoke; tests green at pinned SHA.
+- artifacts: standard val logging; +750 checkpoint; closing table with the
+  8x benefit (bimax minus mu0) alongside the 1x and 4x values.
+- readout: the three-point benefit-vs-batch curve. No interpretation
+  needed; the shape (halving again vs plateau) is the deliverable.
+
 ## Template
 
 ```md
