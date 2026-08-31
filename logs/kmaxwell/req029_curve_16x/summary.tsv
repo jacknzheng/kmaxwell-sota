@@ -1,0 +1,26 @@
+# REQ-029 curve cleanup: 16x pair + single-EMA 8x. SHA 365c392d, nodes 31e5g4w+3m7dp23 (8xH100), torch 2.10.0+cu128.
+# 16x arms (batch_tokens 8388608, skip 125): first pass exhausted fineweb 17 steps short of 2750 -> re-ran on 86 shards (see DATA note). single-EMA 8x completed first pass.
+# DATA note: the loader (distributed_data_generator) advances to the next shard when < batch_size+1 tokens remain, DISCARDING each shard's sub-batch tail.
+#   At 16x, 100M-token shards yield only floor((100M-1)/8388608)=11 usable batches each -> 78 shards = 858 batches < (125 skip + 750)=875 needed (exhausted @ step 2733).
+#   Fix: 86 shards = 946 usable batches >= 875. The correct budget metric is USABLE BATCHES (sum of floor(shard_tokens/batch_tokens)), not raw tokens.
+# final_val@2750:
+arm	batch	kernel	seed	final_val@2750	source
+16x	16x	mu0	0	3.17362	REQ-029 (86-shard rerun)
+16x	16x	bimax	0	3.17362	REQ-029 (86-shard rerun)
+8x_singleEMA	8x	mu95	0	3.20551	REQ-029
+#
+# === benefit-vs-batch curve: momentum benefit = final_val(bimax) - final_val(mu0), same batch, @2750 ===
+batch	batch_tokens	benefit(bimax-mu0)	source
+1x	524288	-0.01063	REQ-026/027 (seed mean)
+4x	2097152	-0.00438	REQ-026/027 (seed mean)
+8x	4194304	-0.00233	REQ-028 (seed 0)
+16x	8388608	~0.00000	REQ-029 (seed 0; both 3.17362, |benefit| < 1e-5, below the ~2e-4 seed floor)
+#
+# === single-EMA benefit = final_val(muon mu0.95) - final_val(muon mu0), same batch, @2750 (figB) ===
+batch	singleEMA_benefit(mu95-mu0)	source
+1x	+0.00002	REQ-026/027
+4x	-0.00007	REQ-026/027
+8x	-0.00010	REQ-029 (3.20551) vs REQ-028 8x mu0 (3.20561)
+#
+# 16x benefit decays through the run: -0.00065 @2500, -0.00022 @2625, <1e-5 @2750 (both arms verified-distinct configs w/ distinct 2500/2625 trajectories that converge by 2750).
+# SHAPE: benefit keeps FALLING to ~zero by 16x -> NO plateau; the momentum benefit is fully absorbed by large-batch gradient averaging (denoising). Single-EMA ~0 at every batch.

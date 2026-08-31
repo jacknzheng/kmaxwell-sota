@@ -1,0 +1,24 @@
+### req029_b16x_mu0_s0 (rerun, 86 shards)
+step:0/3250 val_loss:3.44428
+step:2125/3250 val_loss:3.29647
+step:2250/3250 val_loss:3.25651
+step:2375/3250 val_loss:3.22844
+step:2500/3250 val_loss:3.20669
+step:2625/3250 val_loss:3.18948
+step:2750/3250 val_loss:3.17362
+### req029_b8x_mu95_s0 (single-EMA)
+step:0/3250 val_loss:3.44428
+step:2125/3250 val_loss:3.32346
+step:2250/3250 val_loss:3.28720
+step:2375/3250 val_loss:3.26143
+step:2500/3250 val_loss:3.24096
+step:2625/3250 val_loss:3.22168
+step:2750/3250 val_loss:3.20551
+### req029_b16x_bimax_s0 (rerun, 86 shards)
+step:0/3250 val_loss:3.44348
+step:2125/3250 val_loss:3.29437
+step:2250/3250 val_loss:3.25468
+step:2375/3250 val_loss:3.22699
+step:2500/3250 val_loss:3.20604
+step:2625/3250 val_loss:3.18926
+step:2750/3250 val_loss:3.17362

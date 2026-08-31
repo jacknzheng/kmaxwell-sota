@@ -1,0 +1,4 @@
+run_id	batch_tokens	skip_batches	kernel	mu	seed
+req029_b16x_mu0_s0	8388608	125	mu0	0.0	0
+req029_b16x_bimax_s0	8388608	125	bimax	0.95	0
+req029_b8x_mu95_s0	4194304	250	mu95	0.95	0
