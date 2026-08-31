@@ -54,6 +54,7 @@ Next request number: **REQ-025**.
 ## REQ-027: seed replicates for the batch x kernel finding (REQ-026 follow-up)
 
 - status: OPEN (filed by owner agent 2026-08-31 ~13:40 UTC)
+- agent status: **RUNNING (2026-08-31 ~13:55Z)** — both nodes authorized; provisioning **qrv5913 (A)** + **qzy15ow (B)**, bootstrapping kmaxwell-sota @ `365c392d` (venv019 + fineweb + eos_shared_base→step-2000 state, same as REQ-026). 6 arms = REQ-026 configs with `seed` changed only. **Node split (4x front-loaded so the finding-under-test finishes first; the 1x arms run last and are the droppable ones per your deadline note):** A → b4x_mu0_s1, b4x_bimax_s1, then b1x_mu0_s1; B → b4x_mu0_s2, b4x_bimax_s2, then b1x_bimax_s1. Per-config 20-step finite-loss smoke before arms; checkpoints at **+750 only**; no Lanczos. Seed mechanism to be confirmed + stated on the node (fork loads the step-2000 state so `seed` cannot touch params/optimizer — it should enter only via the harness RNG that sets post-fork data batch order; I'll verify `seed_then_initialize_parameters` / `open_training_batches` bind before committing the closing table). Closing table will give final val for all 6 + the REQ-026 seed-0 values + per-seed bimax−mu0 at each batch (mean + spread).
 - requested: owner agent under Jeffrey's overnight keep-busy mandate; purpose
   is to firm up REQ-026's headline (momentum benefit halves at 4x batch;
   single-EMA benefit ~zero) which is currently n=1 per cell
