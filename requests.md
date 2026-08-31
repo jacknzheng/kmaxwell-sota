@@ -32,11 +32,11 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-024: 8-GPU 4+4 OpenRouter DeepSeek SDPO fleet
 
-- status: NEEDS-INFO (agent 2026-08-30) — **the frozen hint model `deepseek/deepseek-v4-flash-latest` is not a valid OpenRouter model ID (HTTP 400: "is not a valid model ID").** OpenRouter lists it only as `~deepseek/deepseek-v4-flash-latest` (the `~` = unrouted/deprecated alias). The credential itself is **valid and funded** — preflight from the agent host: Nemotron judge `nvidia/nemotron-3-super-120b-a12b:free` → **HTTP 200**, and the intended DeepSeek model **`deepseek/deepseek-v4-flash` → HTTP 200** (also `deepseek/deepseek-v4-flash-0731` → 200). Because this request freezes the checkout and **explicitly forbids switching hint models / on-box patches**, I did not substitute a slug or provision a box. **To unblock, confirm the hint model slug** — almost certainly `generator.hint.model=deepseek/deepseek-v4-flash` (drop the invalid `-latest`), or pin `deepseek/deepseek-v4-flash-0731`; reply with which and I'll run the full 4+4 fleet on a fresh 8-GPU box (does not preempt REQ-023). No box was rented for this diagnosis. Does not affect REQ-023 (running).
-- requested: Jack / 2026-08-30 17:32 PDT
+- status: OPEN — slug confirmed. Use `deepseek/deepseek-v4-flash` (not `-latest`). Frozen checkout is now `ecf6fd8`. Proceed with the 8-GPU 4+4 fleet.
+- requested: Jack / 2026-08-30 20:59 PDT
 - repo: https://github.com/jacknzheng/scaling-sdpo
 - branch: `fix/hint-output-budget`
-- exact SHA: `b4d523d4f5a7d80c4a629d0dcb974cf781b42738`
+- exact SHA: `ecf6fd84e21281ff1460169da61006e879886e5e`
 - supersedes: REQ-018, REQ-020
 - prior evidence: `logs/async_sdpo_req011/`, `logs/async_sdpo_req015/`, `logs/async_sdpo_req018/`
 
@@ -44,7 +44,7 @@ REQ-020 cannot run: Baseten workstations cap at 8 GPUs, so the 9-GPU local-hint
 map is not provisionable. REQ-018 validated the hint-length fix at `3bd7def`
 (0 drops / 0 `openrouter_length` over ~478 attempts/arm) and then died on
 free-Nemotron 429s. This request puts hints on OpenRouter
-`deepseek/deepseek-v4-flash-latest`, restores the proven 4+4 split on 8 GPUs,
+`deepseek/deepseek-v4-flash`, restores the proven 4+4 split on 8 GPUs,
 and keeps thinking off for both hints and the diligence judge.
 
 REQ-018 and REQ-020 are removed from this queue. Their logs stay under
@@ -69,13 +69,13 @@ Hints are remote OpenRouter calls, not a GPU process.
 
 ### Frozen checkout
 
-Do **not** use SHA `14db9fb` / `e2ff718` (local hint GPU) or `3bd7def`
-(free-Nemotron hints). Fetch this exact commit. Do not recreate this as an
-on-box patch.
+Do **not** use SHA `14db9fb` / `e2ff718` (local hint GPU), `3bd7def`
+(free-Nemotron hints), or `b4d523d` (invalid `-latest` slug). Fetch this
+exact commit. Do not recreate this as an on-box patch.
 
 ```bash
 git fetch origin fix/hint-output-budget
-git checkout b4d523d4f5a7d80c4a629d0dcb974cf781b42738
+git checkout ecf6fd84e21281ff1460169da61006e879886e5e
 uv run --no-sync pytest -q -m 'not network'
 ```
 
@@ -90,7 +90,7 @@ generator.engine.n_rollout_gpus=4
 trainer.n_trainer_gpus=4
 trainer.batch_size=16
 generator.hint.backend=openrouter
-generator.hint.model=deepseek/deepseek-v4-flash-latest
+generator.hint.model=deepseek/deepseek-v4-flash
 generator.hint.reasoning_enabled=false
 generator.hint.max_tokens=2048
 judge.model=nvidia/nemotron-3-super-120b-a12b:free
@@ -108,7 +108,7 @@ Every hint and judge OpenRouter payload must include
 OpenRouter (DeepSeek hints, Nemotron judge / user-sim) and Parallel Search
 are funded. Before renting or restarting a box, send one real request to
 each and record status plus UTC timestamp, never keys. The hint preflight
-must use `deepseek/deepseek-v4-flash-latest` through `build_error_hint` /
+must use `deepseek/deepseek-v4-flash` through `build_error_hint` /
 `generate_hint` (`backend=openrouter`). If the box still returns 402,
 report which credential differs and stop that dependent arm. Do not put
 credentials in this repository.
@@ -116,7 +116,7 @@ credentials in this repository.
 ### Diligence arms
 
 Preserved checkpoints on `qkpx8dw` / `wp2znpq` were lost in the operator
-reset. Restart both diligence arms from step 0 on `b4d523d`. That is
+reset. Restart both diligence arms from step 0 on `ecf6fd8`. That is
 intended: this SHA changes the hint model and the GPU split.
 
 ### Hint validation gate
@@ -127,7 +127,7 @@ report:
 - attempts, successes, total drops, and `drops / attempts`
 - every `hint_drop_*` cause, especially `openrouter_length`, `openrouter_429`,
   `timeout`, `empty`
-- confirm the hint model slug is `deepseek/deepseek-v4-flash-latest`
+- confirm the hint model slug is `deepseek/deepseek-v4-flash`
 
 Gate passes when the total drop rate is below 5% while OpenRouter is
 healthy and there are zero `hint_drop_openrouter_length` failures. If the
