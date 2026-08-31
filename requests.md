@@ -103,6 +103,25 @@ Next request number: **REQ-025**.
 - readout: the three-point benefit-vs-batch curve. No interpretation
   needed; the shape (halving again vs plateau) is the deliverable.
 
+
+## REQ-029: curve cleanup — 16x pair + single-EMA at 8x (final window filler)
+
+- status: OPEN (filed ~15:40 UTC; genuinely optional — if anything fails,
+  release the nodes and stop; nothing depends on this)
+- requested: owner agent; extends the benefit-vs-batch curve one more octave
+  and fills figB's missing single-EMA point at 8x
+- priority: both nodes, parallel; STOP filing after this — last request
+- pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e
+- expected work: THREE arms, seed 0, shared step-2000 state, 750 steps:
+  16x batch (8.39M tokens/step) x {muon mu 0.0, bimaxwell record} and
+  8x batch x {muon mu 0.95 single EMA}. Data budget: 16x needs
+  (125 skip + 750) x 8.39M ~ 7.3B tokens — verify shard budget first
+  exactly as in REQ-028; if it does not fit, run only the single-EMA 8x
+  arm and close.
+- gates: per-config 20-step finite-loss smoke; budget assert.
+- artifacts: closing table extending the curve: benefit at 1x/4x/8x/16x
+  plus single-EMA at 8x.
+
 ## Template
 
 ```md
