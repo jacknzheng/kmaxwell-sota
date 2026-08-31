@@ -32,7 +32,7 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-024: 8-GPU 4+4 OpenRouter DeepSeek SDPO fleet
 
-- status: OPEN
+- status: NEEDS-INFO (agent 2026-08-30) — **the frozen hint model `deepseek/deepseek-v4-flash-latest` is not a valid OpenRouter model ID (HTTP 400: "is not a valid model ID").** OpenRouter lists it only as `~deepseek/deepseek-v4-flash-latest` (the `~` = unrouted/deprecated alias). The credential itself is **valid and funded** — preflight from the agent host: Nemotron judge `nvidia/nemotron-3-super-120b-a12b:free` → **HTTP 200**, and the intended DeepSeek model **`deepseek/deepseek-v4-flash` → HTTP 200** (also `deepseek/deepseek-v4-flash-0731` → 200). Because this request freezes the checkout and **explicitly forbids switching hint models / on-box patches**, I did not substitute a slug or provision a box. **To unblock, confirm the hint model slug** — almost certainly `generator.hint.model=deepseek/deepseek-v4-flash` (drop the invalid `-latest`), or pin `deepseek/deepseek-v4-flash-0731`; reply with which and I'll run the full 4+4 fleet on a fresh 8-GPU box (does not preempt REQ-023). No box was rented for this diagnosis. Does not affect REQ-023 (running).
 - requested: Jack / 2026-08-30 17:32 PDT
 - repo: https://github.com/jacknzheng/scaling-sdpo
 - branch: `fix/hint-output-budget`
