@@ -1,0 +1,15 @@
+# REQ-024 hint validation gate — SHA ecf6fd8, node wgmy26w (8xH100 4+4), hint model deepseek/deepseek-v4-flash (backend=openrouter, reasoning off)
+# Preflight 2026-08-31T04:08Z: deepseek-v4-flash hint via build_error_hint -> OK (433 chars); Nemotron judge -> HTTP 200; Parallel Search -> HTTP 200.
+# GATE (arm=answer_free, sampled at step ~8): PASS
+metric	value	threshold	verdict
+hint_attempts	186	>=100	PASS
+hint_drops_total	0	-	-
+drop_rate	0.00%	<5%	PASS
+hint_drop_openrouter_length	0	0	PASS
+hint_drop_openrouter_429	0	-	PASS
+hint_drop_openrouter_credit	0	-	PASS
+hint_drop_timeout	0	-	PASS
+hint_drop_empty	0	-	PASS
+api_failures.jsonl_entries	0	-	PASS
+hint_model_slug	deepseek/deepseek-v4-flash	deepseek/deepseek-v4-flash	PASS
+# Verdict: hint fix VALIDATED — 0% drop rate, 0 openrouter_length; OpenRouter DeepSeek path healthy. (Continues to accrue; final counts at step 200.)
