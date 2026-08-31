@@ -14,26 +14,26 @@
 
 <h2>1. A hindsight action supplies the target</h2>
 <p class="roadmap">This section defines the action that the momentum kernel will try to reproduce and states the assumption that makes the exercise informative.</p>
-<p>At training step \(t\), consider an update matrix \(u\). For each of the next \(N\) recorded states, let \(g_{t+h}\) be the gradient, \(H_{t+h}\) the Hessian, and \(\omega_h\ge0\) a declared weight. Define the hindsight action \(u_t^*\) by</p>
+<p>At training step \(t\), let \(u\) be the descent matrix in the update \(\theta\leftarrow\theta-u\). For each of the next \(N\) recorded states, let \(g_{t+h}\) be the gradient, \(H_{t+h}\) the Hessian, and \(\omega_h\ge0\) a declared weight. Define the hindsight action \(u_t^*\) by</p>
 <div class="math">\[
-u_t^*=\underset{u}{\operatorname{argmin}}\left[\sum_{h=0}^{N-1}\omega_h\left(\langle g_{t+h},u\rangle+\frac12u^\top H_{t+h}u\right)+\frac{\delta}{2}\lVert u\rVert^2\right].
+u_t^*=\underset{u}{\operatorname{argmin}}\left[\sum_{h=0}^{N-1}\omega_h\left(-\langle g_{t+h},u\rangle+\frac12u^\top H_{t+h}u\right)+\frac{\delta}{2}\lVert u\rVert^2\right].
 \]</div>
 <p>The damping coefficient \(\delta\) is chosen so that \(B_t=\sum_{h=0}^{N-1}\omega_hH_{t+h}+\delta I\) is positive definite. The objective is then strongly convex, and its unique solution is</p>
 <div class="math">\[
-u_t^*=-B_t^{-1}\sum_{h=0}^{N-1}\omega_hg_{t+h}.
+u_t^*=B_t^{-1}\sum_{h=0}^{N-1}\omega_hg_{t+h}.
 \]</div>
-<p>This action rewards descent that persists across the future window and penalizes movement in directions with sustained positive curvature. It can also respond to negative curvature before damping makes the combined quadratic well posed. It therefore describes a controller, rather than an estimate of the current gradient.</p>
+<p>This action rewards descent that persists across the future window and penalizes movement in directions with sustained positive curvature. It therefore describes a controller, rather than an estimate of the current gradient.</p>
 <p>The horizon \(N\), future weights \(\omega_h\), and damping rule define the controller target. They must be fixed on the fitting blocks before any held-out kernel ranking is inspected. The first analysis should compare a small declared set of horizons; instability across that set would reject the target before training runs begin.</p>
 <div class="warning"><span class="label">Assumption under test</span><p>Gradients and Hessians recorded along the baseline trajectory must preserve the ranking of nearby counterfactual kernels within a training phase. Fitting on earlier blocks and predicting later blocks tests this assumption. Short training continuations provide the final check.</p></div>
 <p>The calculation is an offline design expense. A matrix-free solve that takes \(q\) Krylov iterations over \(N\) future Hessians costs \(qN\) Hessian–vector products per state. Direct optimization within a \(K\)-parameter kernel family instead costs \(O(KN)\) Hessian–vector products to form the small quadratic.</p>
 
 <h2>2. The controller target determines one causal kernel</h2>
 <p class="roadmap">This section turns the hindsight action into a deployable momentum rule while respecting the information discarded by Muon's matrix sign.</p>
-<p>Let \(G_{t-\tau}\) be the gradient matrix observed \(\tau\) steps ago. A length-\(L\) causal kernel assigns one weight \(w_\tau\) to each available lag:</p>
+<p>Let \(G_{t-\tau}\) be the gradient matrix observed \(\tau\) steps ago. In Muon's fixed Euclidean coordinates, the gradient matrix is the unique matrix whose Frobenius inner product with any step \(v\) equals the directional derivative in direction \(v\). This identifies gradient covectors and step matrices for the regression; Section 4 shows how the two underlying types transform. A length-\(L\) causal kernel assigns one weight \(w_\tau\) to each available lag:</p>
 <div class="math">\[
 M_t(w)=\sum_{\tau=0}^{L-1}w_\tau G_{t-\tau},\qquad \sum_{\tau=0}^{L-1}w_\tau=1.
 \]</div>
-<p>Muon uses the polar factor of \(M_t\). To compare nearby matrices smoothly, define the regularized polar map</p>
+<p>Muon uses the polar factor of \(M_t\): the semi-orthogonal matrix returned by matrix sign. To compare nearby matrices smoothly, define the regularized polar map</p>
 <div class="math">\[
 P_\varepsilon(M)=M(M^\top M+\varepsilon I)^{-1/2},\qquad\varepsilon>0.
 \]</div>
@@ -46,30 +46,42 @@ F(w)=\sum_{t\in\mathcal T}\left\lVert\mathcal J_t\bigl(M_t(w)-u_t^*\bigr)\right\
 <p>Separate kernels can be fitted for early, middle, and late training. A quadratic penalty on changes between adjacent phase kernels produces a unique schedule. The resulting lag weights can then be approximated by the smallest practical exponential mixture whose held-out score is unchanged.</p>
 <div class="result"><span class="label">Required retrodiction</span><p>Without using validation losses during fitting, the functional must rank scheduled K8 above bi-Maxwell, and bi-Maxwell above both single-EMA momentum and no momentum. It must also predict the direction of K8's annealing. Failure on either test ends this formulation.</p></div>
 
-<h2>3. Momentum and Newton may contain complementary errors</h2>
-<p class="roadmap">This section derives when a temporal estimate and a curvature-based estimate should be combined.</p>
-<p>Let \(m_t\) be the action predicted from gradient history and \(n_t\) the action predicted by a damped Newton calculation. Measure both against \(u_t^*\) in the same polar-visible metric. After centering their errors, write their variances as \(v_m\) and \(v_n\), and their covariance as \(c\).</p>
-<p>For the combined action \(z_t(a)=(1-a)m_t+an_t\), the error variance is</p>
+<h2>3. Momentum and Newton must be composed</h2>
+<p class="roadmap">This section defines the object we need to choose: an ordered pipeline of temporal accumulation, curvature estimation, preconditioning, and matrix sign.</p>
+<p>Momentum combines gradients across time. A Newton preconditioner converts a gradient into a step by applying an inverse curvature operator. These operations can be performed in different orders, and the orders differ whenever curvature changes or is estimated with noise. Section 4 defines the mathematical types and lists the resulting pipelines.</p>
+<p>Compare complete pipelines against the hindsight action \(u_t^*\). Hold the recorded parameter states and the high-token gradients and Hessians used to define \(u_t^*\) fixed. For each replicate \(r\), redraw the finite-token minibatches used by pipeline \(p\), call the matrix entering its final matrix-sign operation \(x_{p,r}\), and compare the resulting step with the polar-normalized hindsight action. The error is</p>
 <div class="math">\[
-V(a)=(1-a)^2v_m+a^2v_n+2a(1-a)c.
+e_{p,r}=P_\varepsilon(x_{p,r})-P_\varepsilon(u_t^*).
 \]</div>
-<p>Differentiating gives the optimal Newton weight</p>
+<p>Three scalar measurements describe each pipeline:</p>
 <div class="math">\[
-a^*=\frac{v_m-c}{v_m+v_n-2c}.
+\operatorname{bias}_p^2=\left\lVert\mathbb E_r[e_{p,r}]\right\rVert_2^2,\qquad
+\operatorname{variance}_p=\mathbb E_r\left\lVert e_{p,r}-\mathbb E_r[e_{p,r}]\right\rVert_2^2,
+\qquad
+\operatorname{MSE}_p=\mathbb E_r\lVert e_{p,r}\rVert_2^2.
 \]</div>
-<p>If the deployed combination must be convex, clip \(a^*\) to \([0,1]\). If either estimator has measurable bias, choose \(a\) by total mean-squared error, which adds the squared bias of \(z_t(a)\) to \(V(a)\). The covariance term distinguishes complementary errors from redundant ones.</p>
-<p>This combination is performed at design time. Its output is projected back into the legal family of causal gradient-history filters. A large projection residual means that momentum cannot implement the curvature correction.</p>
+<p>The identity \(\operatorname{MSE}_p=\operatorname{bias}_p^2+\operatorname{variance}_p\) checks the measurement. Total error chooses the pipeline; the other two scalars explain whether it loses through systematic staleness or finite-token noise.</p>
 
-<h2>4. Averaging curvature trades noise for staleness</h2>
-<p class="roadmap">This section fixes the order of operations and derives how much curvature history to average.</p>
-<p>Suppose \(A_s\) is a curvature-derived linear map and \(g_s\) a gradient. Four expressions recur:</p>
+<h2>4. Types determine which compositions are legal</h2>
+<p class="roadmap">This section defines gradients as covectors, uses their transformation law to constrain the pipeline, then derives the curvature-averaging window.</p>
+<p>A covector is a linear function that maps a possible parameter step to a scalar. The gradient \(g\) is the covector defined by the directional derivative: for a small step \(v\),</p>
+<div class="math">\[
+Df(\theta)[v]=g^\top v.
+\]</div>
+<p>This definition explains how gradients change under a reparameterization. If \(\theta'=S\theta\) for an invertible matrix \(S\), then a step transforms as \(v'=Sv\), while the gradient transforms in the opposite way:</p>
+<div class="math">\[
+g'=S^{-\top}g,\qquad {g'}^\top v'=g^\top v.
+\]</div>
+<p>Thus steps are vectors and gradients are covectors. Covectors may be added to covectors, and vectors may be added to vectors. A curvature inverse \(A^{-1}\) converts a gradient covector into a step vector. Adding a raw gradient to a preconditioned gradient requires an explicit identification such as the Frobenius choice in Section 2, and the result changes under reparameterization. Composition keeps the conversion point explicit.</p>
+<p>Neural-network parameters use a fixed affine coordinate system, which canonically identifies gradients from different training steps by translation. Ordinary momentum uses this identification when it adds historical gradients. On a nonlinear reparameterization, that implicit transport rule changes, as the transformation law above shows.</p>
+<p>Let \(A_s\) be a positive-definite curvature metric at step \(s\), let \(g_s\) be the gradient covector, and let \(\alpha_s\) be the temporal weight assigned to that step. Four expressions recur:</p>
 <table><thead><tr><th>Expression</th><th>Meaning</th></tr></thead><tbody>
-<tr><td>\(\bar A_t^{-1}\bar g_t\)</td><td>Apply one current smoothed metric to one accumulated gradient.</td></tr>
-<tr><td>\(\sum_s\alpha_sA_s^{-1}g_s\)</td><td>Precondition each gradient with the metric measured at the same step, then average.</td></tr>
-<tr><td>\(\sum_s\alpha_s\bar A_t^{-1}g_s\)</td><td>The first expression written as a sum; these coincide when the same weights define \(\bar g_t\).</td></tr>
-<tr><td>\(\sum_s\alpha_s\bar A_s^{-1}g_s\)</td><td>Precondition each stored gradient with the smoothed metric available at its own step.</td></tr>
+<tr><td>\(\bar A_t^{-1}\bar g_t\)</td><td>Accumulate curvature and gradients separately, then precondition the accumulated gradient with the current smoothed metric.</td></tr>
+<tr><td>\(\sum_s\alpha_sA_s^{-1}g_s\)</td><td>Precondition each gradient with its same-step unsmoothed metric, then accumulate step vectors.</td></tr>
+<tr><td>\(\sum_s\alpha_s\bar A_t^{-1}g_s\)</td><td>The first expression expanded as a sum when \(\bar g_t=\sum_s\alpha_sg_s\); it is the same pipeline.</td></tr>
+<tr><td>\(\sum_s\alpha_s\bar A_s^{-1}g_s\)</td><td>Precondition each gradient with the smoothed metric available at its own step, then accumulate step vectors.</td></tr>
 </tbody></table>
-<p>With a fixed positive-definite metric, these orderings coincide. When the metric changes, the first expression interprets old gradients in the current coordinates; the fourth preserves the update vector implied when each gradient was observed. The second also averages matrix inverses. Because inversion is operator convex on positive-definite matrices, averaging inverses tends to amplify noisy low-curvature directions. Held-out controller error chooses between the first and fourth orderings.</p>
+<p>With a fixed positive-definite metric, all four expressions coincide. When the metric changes, the first expression converts every historical gradient using the current metric; the fourth preserves the step vector implied by the metric available when each gradient was observed. The second additionally inverts an unsmoothed metric at every step. Because inversion is operator convex on positive-definite matrices, this tends to amplify noise in low-curvature directions. This argument concerns noise in the metric alone; correlation between a same-minibatch metric and gradient can change the total error. The pipeline MSE from Section 3 therefore makes the final comparison.</p>
 <p>A longer metric window reduces sampling noise but uses older curvature. For a trailing rectangular window of \(W\) steps, assume local linear drift of size \(d_M\) per step and independent same-step estimation variance \(\sigma_M^2\), measured in one matrix distance. The leading mean-squared error and its minimizer are</p>
 <div class="math">\[
 E(W)=\frac{\sigma_M^2}{W}+\frac{d_M^2W^2}{4},\qquad W^*=\left(\frac{2\sigma_M^2}{d_M^2}\right)^{1/3}.
