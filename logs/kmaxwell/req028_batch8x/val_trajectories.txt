@@ -1,0 +1,22 @@
+### req028_b8x_mu0_s0
+step:0/3250 val_loss:3.44361
+step:2125/3250 val_loss:3.32293
+step:2250/3250 val_loss:3.28710
+step:2375/3250 val_loss:3.26113
+step:2500/3250 val_loss:3.24134
+step:2625/3250 val_loss:3.22136
+step:2750/3250 val_loss:3.20561
+### DATA-BUDGET
+DATA-BUDGET shards=48 tokens_avail=4800000000 tokens_need=4194304000 margin=605696000 ok=True
+### smoke
+SMOKE req028_b8x_mu0_s0: step:2125/3250 val_loss:3.32173
+### base@2000
+step:2000/3250 val_loss:3.44361
+### req028_b8x_bimax_s0
+step:0/3250 val_loss:3.44335
+step:2125/3250 val_loss:3.31610
+step:2250/3250 val_loss:3.28212
+step:2375/3250 val_loss:3.25691
+step:2500/3250 val_loss:3.23782
+step:2625/3250 val_loss:3.21946
+step:2750/3250 val_loss:3.20328
