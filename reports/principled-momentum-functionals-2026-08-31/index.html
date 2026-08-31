@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Can gradient and Hessian histories determine a momentum kernel?</title>
+<style>
+:root{--ink:#18222d;--muted:#5b6875;--paper:#fff;--page:#edf1f5;--line:#d7e0e8;--blue:#315fc7;--bluewash:#eef4ff;--green:#087b68;--greenwash:#eaf8f4;--amber:#9b5c08;--amberwash:#fff6e7;--red:#a33b3b;--redwash:#fff0f0}*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font:17px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{width:calc(100% - 56px);max-width:1000px;margin:28px auto;padding:64px 78px 82px;background:var(--paper);box-shadow:0 12px 44px #24344716}h1{margin:0 0 12px;font-size:2.62rem;line-height:1.06;letter-spacing:-.045em}h2{margin:3.15rem 0 .78rem;font-size:1.52rem;line-height:1.25;letter-spacing:-.02em}h3{margin:1.8rem 0 .4rem;font-size:1.1rem}p{margin:.65rem 0 1.02rem}.stamp,.small{color:var(--muted)}.stamp{font-size:.84rem;margin-bottom:2rem}.lead{font-size:1.16rem;line-height:1.62}.claim,.result,.warning,.failure{margin:1.3rem 0 1.7rem;padding:18px 21px;border-left:4px solid var(--blue);background:var(--bluewash)}.result{border-color:var(--green);background:var(--greenwash)}.warning{border-color:var(--amber);background:var(--amberwash)}.failure{border-color:var(--red);background:var(--redwash)}.claim p,.result p,.warning p,.failure p{margin:.15rem 0}.label{display:block;margin-bottom:4px;color:var(--muted);font-size:.76rem;font-weight:750;letter-spacing:.06em;text-transform:uppercase}.math{margin:1.15rem 0 1.4rem;padding:.3rem;text-align:center;overflow-x:auto}.math math{font-size:1.14rem}.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:stretch;gap:10px;margin:1.5rem 0 2rem}.flow>div{padding:15px 16px;border:1px solid var(--line);border-radius:9px;background:#fafbfc}.flow strong{display:block;margin-bottom:4px;color:var(--blue)}.arrow{align-self:center;color:var(--muted);font-size:1.35rem}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:1.25rem 0}.twocol>div{padding:16px 18px;border:1px solid var(--line);border-radius:9px}.twocol strong{display:block;color:var(--green);margin-bottom:4px}table{width:100%;border-collapse:collapse;margin:1.25rem 0 1.8rem;font-size:.9rem}th,td{padding:11px 12px;border:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f3f5f8}.rank{white-space:nowrap;font-weight:700;color:var(--blue)}ol.predictions li,ul li{margin:.45rem 0}.footnotes{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}@media(max-width:740px){main{width:100%;margin:0;padding:38px 22px 58px}h1{font-size:2.12rem}.flow{grid-template-columns:1fr}.arrow{transform:rotate(90deg);text-align:center}.twocol{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<h1>Can gradient and Hessian histories determine a momentum kernel?</h1>
+<p class="stamp">Theory palette · 31 August 2026</p>
+
+<p class="lead">The ambitious version of the question has no solution. A finite training history cannot reveal a universally optimal momentum kernel. It can, however, determine a unique kernel for a declared task. The scientific work is to choose a task whose solution predicts training outcomes that were not used to define it.</p>
+
+<div class="claim"><span class="label">Our leading proposal</span><p>Choose the causal filter that best estimates a high-token gradient in precisely those perturbation directions that can rotate Muon's polar update, with extra weight on rotations into sharp positive curvature. This gives a strictly convex objective and therefore one unique kernel. Newton then enters as a second, fallible estimator measured in the same metric.</p></div>
+
+<h2>1. What uniqueness can mean</h2>
+
+<p>Let a length-<i>L</i> causal kernel <i>w</i> produce the matrix</p>
+
+<div class="math"><math display="block"><mrow><msub><mi>M</mi><mi>t</mi></msub><mo>(</mo><mi>w</mi><mo>)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>τ</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>L</mi><mo>−</mo><mn>1</mn></mrow></munderover><msub><mi>w</mi><mi>τ</mi></msub><msub><mi>G</mi><mrow><mi>t</mi><mo>−</mo><mi>τ</mi></mrow></msub><mo>.</mo></mrow></math></div>
+
+<p>Muon applies matrix sign to <i>M</i><sub>t</sub>. Multiplying every tap by the same positive number leaves that update unchanged. More generally, different pre-polar matrices can have the same polar factor. The data therefore identify equivalence classes unless we fix a convention. We use the gauge ∑<sub>τ</sub><i>w</i><sub>τ</sub> = 1 and an explicit complexity penalty.</p>
+
+<p>A second obstruction is more fundamental. Two objectives can have identical gradients and Hessians at every visited parameter while differing away from the trajectory. They can prefer different kernels after the first counterfactual update. No functional of one recorded path can remove this ambiguity.</p>
+
+<div class="warning"><span class="label">The honest promise</span><p>We seek a unique minimizer of a stated empirical functional. We do not call it “the true kernel.” It earns practical meaning only by predicting held-out kernel rankings, schedules, batch dependence, and continuation loss.</p></div>
+
+<p>The 129-lag Gram matrix is not the limiting factor in the present data. Its median participation ratio rises from about 30 to 55 to 102 across training, with more than 110 directions needed for 95% of its energy late. Many tap directions are numerically excited. Much of that rank may be fresh noise, so the hard problem is generalization to a changed trajectory rather than algebraic recovery on the recorded one.</p>
+
+<h2>2. A unique, <code>msign</code>-aware denoising kernel</h2>
+
+<h3>2.1 The measured reference</h3>
+
+<p>At selected training states, evaluate many tokens at the same parameters and average their gradients. Call the resulting high-token gradient matrix <i>S</i><sub>t</sub>. It is a measured reference with sampling error, not a population oracle. Subsampling the same token pool gives its error curve as a function of token budget.</p>
+
+<p>To express what Muon can see, use the regularized polar map</p>
+
+<div class="math"><math display="block"><mrow><msub><mi>P</mi><mi>ε</mi></msub><mo>(</mo><mi>M</mi><mo>)</mo><mo>=</mo><mi>M</mi><msup><mrow><mo>(</mo><msup><mi>M</mi><mi>T</mi></msup><mi>M</mi><mo>+</mo><mi>ε</mi><mi>I</mi><mo>)</mo></mrow><mrow><mo>−</mo><mn>1</mn><mo>/</mo><mn>2</mn></mrow></msup><mo>,</mo><mspace width="1em"/><mi>ε</mi><mo>></mo><mn>0</mn><mo>.</mo></mrow></math></div>
+
+<p>The matrix inside the inverse square root is positive definite for every <i>M</i>, so <i>P</i><sub>ε</sub> and its derivative exist everywhere. Let <i>J</i><sub>t</sub> be that derivative at <i>S</i><sub>t</sub>. Then <i>J</i><sub>t</sub><i>E</i> is the first-order change in the polar update caused by an estimation error <i>E</i>. Errors annihilated by <i>J</i><sub>t</sub> are locally invisible to Muon.</p>
+
+<h3>2.2 The functional</h3>
+
+<p>Let <i>H</i><sub>t,+</sub> denote the positive-curvature part of the measured Hessian, acting on the vectorized parameter matrix. Define the positive-definite weight <i>C</i><sub>t</sub> = <i>I</i> + γ<i>H</i><sub>t,+</sub>. For a matrix of lagged gradients <i>X</i><sub>t</sub>, minimize</p>
+
+<div class="math"><math display="block"><mrow><mi>F</mi><mo>(</mo><mi>w</mi><mo>)</mo><mo>=</mo><munderover><mo>∑</mo><mi>t</mi><mi>T</mi></munderover><msubsup><mo>∥</mo><mrow><msub><mi>J</mi><mi>t</mi></msub><mo>(</mo><msub><mi>X</mi><mi>t</mi></msub><mi>w</mi><mo>−</mo><msub><mi>S</mi><mi>t</mi></msub><mo>)</mo></mrow><mn>2</mn></msubsup><msub><mi>C</mi><mi>t</mi></msub><mo>+</mo><mi>ξ</mi><msup><mo>∥</mo><mi>w</mi><mo>∥</mo></msup><mn>2</mn><mo>,</mo><mspace width="1em"/><mtext>subject to</mtext><mspace width=".5em"/><msup><mn>1</mn><mi>T</mi></msup><mi>w</mi><mo>=</mo><mn>1</mn><mo>.</mo></mrow></math></div>
+
+<p>The first term asks the filter to estimate the high-token polar frame. The Hessian weight makes an error more expensive when its induced frame rotation points into sharp positive curvature. The second term fixes a unique representative and limits variance.</p>
+
+<div class="result"><span class="label">Existence and uniqueness</span><p>For fixed recordings, this is a quadratic function of <i>w</i>. Every <i>J</i><sub>t</sub><sup>*</sup><i>C</i><sub>t</sub><i>J</i><sub>t</sub> is positive semidefinite, and ξ‖<i>w</i>‖² is strictly convex when ξ &gt; 0. The affine gauge set is closed and nonempty. The functional therefore has exactly one minimizer, obtained by solving one constrained linear system.</p></div>
+
+<p>This theorem concerns the regularized polar tangent. The hard matrix sign remains the deployed operation. We measure the approximation error directly by comparing hard-polar frames on held-out matrices and checkpoints. A large tangent-to-hard discrepancy kills the functional.</p>
+
+<h3>2.3 Kernel order and schedule</h3>
+
+<p>The uniqueness theorem first produces FIR taps. To ask whether those taps have a simple implementation, project them onto a nested sequence of <em>fixed, canonical</em> causal dictionaries: lag zero, a fixed exponential grid, and K-Maxwell banks with <i>K</i> = 4, 6, 8, …. Coefficients are unique within each fixed dictionary under the same ridge. Optimizing pole locations is nonlinear and is not covered by the theorem. Choose the smallest dictionary whose blocked held-out score is within one standard error of the best score. This is a declared complexity rule rather than an inferred law.</p>
+
+<p>For scheduling, solve jointly for kernels at several training phases and add a quadratic penalty on changes between adjacent phases. The joint objective remains strictly convex. Interpolating the unique phase kernels gives a fully specified schedule. K8's raw coefficients are not the primary target because exponential mixtures have permutation and scaling ambiguities; its normalized impulse response is.</p>
+
+<ol class="predictions">
+  <li><strong>Known-order retrodiction.</strong> On held-out states, the scores must recover K8 &gt; bi-Maxwell &gt; one EMA ≈ lag zero. This ordering is a test; nesting alone does not guarantee it out of sample.</li>
+  <li><strong>Batch endpoint.</strong> At 16× batch, the fitted nonzero-lag mass and the held-out advantage over lag zero should be statistically indistinguishable from zero.</li>
+  <li><strong>Schedule.</strong> Rolling fits should recover K8's annealed impulse-response trajectory without using K8 coefficients or outcomes during fitting.</li>
+  <li><strong>Visibility.</strong> K8's advantage should appear in hard-polar frame error and curvature along the update. A gain visible only before matrix sign is irrelevant.</li>
+</ol>
+
+<h2>3. A different target: the best action in hindsight</h2>
+
+<p>The denoising functional assumes the high-token current gradient is the right object to estimate. A second functional asks which single local action would have looked best given the next <i>N</i> recorded gradients and Hessians. Define</p>
+
+<div class="math"><math display="block"><mrow><msubsup><mi>u</mi><mi>t</mi><mo>*</mo></msubsup><mo>=</mo><munder><mi>argmin</mi><mi>u</mi></munder><mrow><mo>[</mo><munderover><mo>∑</mo><mrow><mi>h</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></munderover><msub><mi>ω</mi><mi>h</mi></msub><mo>(</mo><mo>⟨</mo><msub><mi>g</mi><mrow><mi>t</mi><mo>+</mo><mi>h</mi></mrow></msub><mo>,</mo><mi>u</mi><mo>⟩</mo><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><msup><mi>u</mi><mi>T</mi></msup><msub><mi>H</mi><mrow><mi>t</mi><mo>+</mo><mi>h</mi></mrow></msub><mi>u</mi><mo>)</mo><mo>+</mo><mfrac><mi>ρ</mi><mn>2</mn></mfrac><msup><mo>∥</mo><mi>u</mi><mo>∥</mo></msup><mn>2</mn><mo>]</mo><mo>.</mo></mrow></mrow></math></div>
+
+<p>Choose ρ above the magnitude of the most negative eigenvalue of the weighted Hessian sum, plus a fixed positive margin. The objective is then strongly convex, so <i>u</i><sub>t</sub><sup>*</sup> exists uniquely. Fit a causal kernel to these actions with the same strictly convex regression used above.</p>
+
+<p>This target incorporates future curvature and persistent descent rather than declaring a Newton solve perfect. It also has a serious limitation: the future derivatives were recorded along the baseline trajectory, not the counterfactual trajectory the new kernel would generate. The functional is a local ranking device. Its solution must transfer across time blocks and survive actual continuations.</p>
+
+<div class="warning"><span class="label">Horizon rule</span><p>One-step selection previously reversed after continuation. We therefore fit several declared horizons and accept a kernel only when its blocked ranking stabilizes. The horizon is not assumed to be a universal constant; it may vary with learning rate, batch, and training phase.</p></div>
+
+<h2>4. Make either functional robust to the realized path</h2>
+
+<p>An average fit can exploit one phase of training. Partition the history into blocks using the measured Hessian-frame drift curve, and let <i>F</i><sub>b</sub>(<i>w</i>) be the polar-tangent or hindsight loss on block <i>b</i>. The robust kernel solves</p>
+
+<div class="math"><math display="block"><mrow><munder><mi>min</mi><mi>w</mi></munder><mspace width=".5em"/><munder><mi>max</mi><mi>b</mi></munder><mspace width=".5em"/><msub><mi>F</mi><mi>b</mi></msub><mo>(</mo><mi>w</mi><mo>)</mo><mo>+</mo><mi>ξ</mi><msup><mo>∥</mo><mi>w</mi><mo>∥</mo></msup><mn>2</mn><mo>.</mo></mrow></math></div>
+
+<p>A maximum of convex quadratics is convex; the positive ridge makes it strictly convex. A unique minimizer therefore exists. A smoother <i>H</i><sub>∞</sub>-style variant takes the worst case over the convex hull of measured gradient residuals and Hessian-drift increments. Compact measured envelopes give existence by Weierstrass; the same ridge gives uniqueness.</p>
+
+<p>The robust version makes a sharp tradeoff. Extra K8 poles survive only when they help multiple phases or protect against a measured disturbance extreme. If they merely interpolate fresh late-training noise—the lag Gram's participation ratio reaches 102—they should disappear.</p>
+
+<h2>5. Momentum and Newton as fallible partners</h2>
+
+<p>Use the same high-token reference and polar-tangent metric to measure two error curves:</p>
+
+<div class="twocol">
+  <div><strong>Temporal estimator</strong>Error versus history length, kernel shape, and Hessian-frame staleness.</div>
+  <div><strong>Curvature estimator</strong>Error versus tokens used to estimate curvature, Hessian–vector products, damping, and refresh age.</div>
+</div>
+
+<p>The errors are correlated because both estimators use the same gradients. Simple inverse-variance weighting is therefore unjustified. For each state, estimate their two-by-two error covariance and biases from token subsamples and held-out blocks. Generalized least squares gives the unique minimum-error linear combination when the covariance is positive definite; adding a declared ridge gives a unique solution when it is singular.</p>
+
+<p>Newton remains design-time-only in the current commission. The combined estimate becomes a target, and we project it back into the causal-kernel class using the lead functional. The projection residual answers whether the proposed compensation is deployable without Hessian access. If runtime Newton is later allowed, that is a separate optimizer class.</p>
+
+<ol class="predictions">
+  <li>The weight assigned to curvature correction should rise with curvature-token and HVP budget, then fall as the estimate becomes stale.</li>
+  <li>The optimal temporal memory should grow as gradient SNR falls, but cannot exceed the measured frame-coherence time.</li>
+  <li>At 16× batch, the incremental value assigned to temporal filtering should reach zero on the measured 750-step task.</li>
+  <li>If the projection of the combined estimator into causal kernels has large held-out error, Newton and momentum cannot be integrated under the deployment constraint; no amount of coefficient tuning repairs that.</li>
+</ol>
+
+<h2>6. Two useful diagnostics that are not yet theories</h2>
+
+<h3>Frozen-disturbance replay LQ</h3>
+
+<p>In a tracked positive-curvature eigendirection, freeze the recorded scalar-gradient sequence and integrate a counterfactual filtered update through the recorded curvature sequence. For a finite FIR basis the state is affine in the taps, so accumulated positive-curvature cost is a positive-semidefinite quadratic. Ridge makes its minimizer unique and closed form.</p>
+
+<p>This is cheap and may reveal an alternating tap or a curvature-dependent gain elbow. It is valid only as a local diagnostic near the kernel that generated the path. Richer nested bases necessarily fit its in-sample quadratic at least as well; that fact does not explain why K8 lowers validation loss. Held-out time blocks and real continuations carry the explanatory burden.</p>
+
+<h3>A regularized self-consistent kernel</h3>
+
+<p>Let <i>T</i>(<i>w</i>) be the unique response of one of the convex functionals when evaluated on a trajectory generated by <i>w</i>. With deterministic data order, a smooth polar map, and a compact convex normalized FIR class, the trajectory and response maps can be made continuous. Brouwer's theorem then gives at least one fixed point <i>T</i>(<i>w</i>) = <i>w</i>. It does not give uniqueness. Hard matrix sign, stochastic data, or a nonunique response invalidates the existence argument unless regularized first.</p>
+
+<p>This construction addresses trajectory endogeneity in principle but is expensive: evaluating <i>T</i> requires new training trajectories. One off-policy update using an old trajectory is an approximation, not the fixed-point map.</p>
+
+<h2>7. Palette and kill criteria</h2>
+
+<table>
+<thead><tr><th>Priority</th><th>Functional</th><th>What guarantees a central object exists?</th><th>Immediate kill criterion</th></tr></thead>
+<tbody>
+<tr><td class="rank">1</td><td>Polar-tangent curvature-weighted denoising</td><td>Every regularized polar derivative exists; PSD quadratic plus ridge is strictly convex.</td><td>Fails to retrodict K8 ordering, schedule, or hard-polar frame quality.</td></tr>
+<tr><td class="rank">2</td><td>Hindsight-jet projection</td><td>Measured damping makes each future-jet action strongly convex; causal projection is strictly convex.</td><td>Kernel ranking changes across reasonable horizons or fails continuation transfer.</td></tr>
+<tr><td class="rank">3</td><td>Robust block / measured-envelope synthesis</td><td>Maximum of convex losses is convex; ridge makes the minimizer unique on a compact domain.</td><td>Robust kernel collapses to lag zero at 1× or sacrifices K8's held-out gain.</td></tr>
+<tr><td class="rank">4</td><td>Two-sided momentum–Newton error geometry</td><td>Measured covariance plus ridge gives one GLS combination; causal projection uses priority 1.</td><td>Combined target cannot be projected into a causal kernel on held-out states.</td></tr>
+<tr><td class="rank">Diagnostic</td><td>Frozen replay LQ</td><td>Local positive-curvature replay is a PSD quadratic; ridge selects one solution.</td><td>Predictions do not transfer across time blocks or nearby continuations.</td></tr>
+<tr><td class="rank">Long-term</td><td>Regularized fixed point</td><td>Continuity and compact convexity give existence; uniqueness remains open.</td><td>Response map is discontinuous or has multiple stable fixed points.</td></tr>
+</tbody>
+</table>
+
+<h2>8. The shortest experimental program</h2>
+
+<ol>
+  <li><strong>Fit offline from existing recordings.</strong> Compute the polar-tangent quadratic, rolling unique kernels, robust variants, and frozen-replay diagnostic. No training run is needed.</li>
+  <li><strong>Run the retrodiction gate.</strong> Hold all K8 weights and outcomes out. Ask whether the fitted impulse responses recover K8 &gt; bi-Maxwell &gt; EMA = lag zero, K8's annealing direction, and the batch curve ending at zero at 16×.</li>
+  <li><strong>Collect the missing same-state references.</strong> Where existing microbatch pools are insufficient, evaluate more tokens at frozen checkpoints and compute subsampled high-token gradients and curvature estimates. This measures both error curves without a parametric noise model.</li>
+  <li><strong>Race only preregistered survivors.</strong> Compare the derived kernel, K8, bi-Maxwell, and lag zero in matched short continuations from shared checkpoints. Use at least one held-out training phase before a full Track 3 run.</li>
+  <li><strong>Compress.</strong> If rolling unique FIR solutions lie near a low-order exponential manifold, factor them into the smallest K-Maxwell bank that preserves hard-polar behavior. If they do not, the theory predicts that a zero- or one-knob exponential implementation does not exist on this stack.</li>
+</ol>
+
+<div class="failure"><span class="label">What would end this program?</span><p>If none of the unique history functionals retrodicts K8's held-out ordering and schedule, full gradient and Hessian histories are insufficient under these declared utilities. The correct response would be to stop deriving kernels from local histories and return to direct continuation optimization—not to invent a more elaborate latent oracle.</p></div>
+
+<div class="footnotes">Notation: λ remains reserved for curvature throughout the project; ξ denotes ridge strength and ρ denotes damping. All claimed uniqueness is conditional on the displayed gauge, kernel class, and positive regularization.</div>
+</main></body></html>
