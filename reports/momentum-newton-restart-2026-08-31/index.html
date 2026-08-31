@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How much Newton is already in momentum?</title>
+<style>
+:root{--ink:#18212b;--muted:#5a6673;--paper:#fff;--page:#edf1f5;--line:#d8e0e8;--blue:#315fc7;--bluewash:#eef4ff;--green:#087b68;--greenwash:#eaf8f4;--amber:#9b5c08;--amberwash:#fff6e7}*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font:17px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{width:calc(100% - 56px);max-width:980px;margin:28px auto;padding:64px 78px 80px;background:var(--paper);box-shadow:0 12px 44px #24344716}h1{margin:0 0 12px;font-size:2.65rem;line-height:1.05;letter-spacing:-.045em}h2{margin:3.1rem 0 .75rem;font-size:1.55rem;line-height:1.25;letter-spacing:-.02em}h3{margin:1.8rem 0 .35rem;font-size:1.08rem}p{margin:.65rem 0 1rem}.stamp,.small{color:var(--muted)}.stamp{font-size:.84rem;margin-bottom:2rem}.lead{font-size:1.16rem;line-height:1.62}.takeaway,.result,.caution{margin:1.3rem 0 1.7rem;padding:18px 21px;border-left:4px solid var(--blue);background:var(--bluewash)}.result{border-color:var(--green);background:var(--greenwash)}.caution{border-color:var(--amber);background:var(--amberwash)}.takeaway p,.result p,.caution p{margin:.15rem 0}.label{display:block;margin-bottom:4px;color:var(--muted);font-size:.76rem;font-weight:750;letter-spacing:.06em;text-transform:uppercase}.math{margin:1.1rem 0 1.35rem;padding:.25rem;text-align:center;overflow-x:auto}.math math{font-size:1.15rem}.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:center;margin:1.45rem 0 1.8rem}.flow div{min-height:108px;padding:15px;border:1px solid var(--line);border-radius:9px;background:#fafbfc}.flow strong{display:block;color:var(--blue);margin-bottom:4px}.arrow{color:var(--muted);font-size:1.4rem}.split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:1.25rem 0}.split>div{padding:16px 18px;border:1px solid var(--line);border-radius:9px}.split strong{display:block;margin-bottom:4px;color:var(--green)}table{width:100%;border-collapse:collapse;margin:1.2rem 0 1.7rem;font-size:.91rem}th,td{padding:11px 12px;border:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f3f5f8}figure{margin:2rem 0}figure img{display:block;width:100%;height:auto}figcaption{margin:.65rem auto 0;color:var(--muted);font-size:.86rem;line-height:1.48;text-align:center}.pending{padding:28px;border:1px dashed #9ca9b7;border-radius:10px;background:#fafbfc;color:var(--muted);text-align:center}.footnotes{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}@media(max-width:720px){main{width:100%;margin:0;padding:38px 22px 58px}h1{font-size:2.15rem}.flow{grid-template-columns:1fr}.arrow{transform:rotate(90deg);text-align:center}.split{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<h1>How much Newton is already in momentum?</h1>
+<p class="stamp">Working report · 31 August 2026 · regression result pending</p>
+
+<p class="lead">Momentum uses the time history of gradients. Newton's method uses their spatial curvature. These appear to be different sources of information, but edge-of-stability dynamics connect them: sharp directions often oscillate quickly. A temporal filter can therefore imitate part of an inverse Hessian without ever measuring a Hessian.</p>
+
+<div class="takeaway"><span class="label">The question</span><p>Can one shared momentum kernel reconstruct the damped-Newton direction across many curvature directions and parameter matrices? The reconstruction error is the part of Newton that momentum cannot supply.</p></div>
+
+<p>We now have the measurement needed to answer this question. A residual-verified damped inverse roughly halves curvature along Muon's update and costs a median of three Hessian–vector products at each refresh. The remaining unknown is how much of that correction is already encoded in gradient history. That regression is running.</p>
+
+<h2>1. Put time and curvature in the same coordinates</h2>
+
+<p>At one training state, let <i>H</i> be the true Hessian. Its eigenvector <i>y</i><sub>i</sub> has curvature λ<sub>i</sub>. Project the last 128 gradients onto that direction:</p>
+
+<div class="math"><math display="block"><mrow><msub><mi>a</mi><mi>i</mi></msub><mo>(</mo><mi>τ</mi><mo>)</mo><mo>=</mo><mo>⟨</mo><msub><mi>g</mi><mrow><mi>t</mi><mo>−</mo><mi>τ</mi></mrow></msub><mo>,</mo><msub><mi>y</mi><mi>i</mi></msub><mo>⟩</mo><mo>.</mo></mrow></math></div>
+
+<p>The sequence <i>a</i><sub>i</sub>(0), …, <i>a</i><sub>i</sub>(127) tells us how the gradient evolved along one measured curvature direction. A kernel with taps <i>c</i><sub>τ</sub> turns that history into one coefficient:</p>
+
+<div class="math"><math display="block"><mrow><msub><mi>q</mi><mi>i</mi></msub><mo>(</mo><mi>c</mi><mo>)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>τ</mi><mo>=</mo><mn>0</mn></mrow><mn>127</mn></munderover><msub><mi>c</mi><mi>τ</mi></msub><msub><mi>a</mi><mi>i</mi></msub><mo>(</mo><mi>τ</mi><mo>)</mo><mo>.</mo></mrow></math></div>
+
+<p>Separately, start with the recorded momentum estimate <i>z</i> and compute a damped Newton direction <i>p</i>:</p>
+
+<div class="math"><math display="block"><mrow><mo>(</mo><mi>H</mi><mo>+</mo><mi>ρ</mi><mi>I</mi><mo>)</mo><mi>p</mi><mo>=</mo><mi>z</mi><mo>,</mo><mspace width="1.5em"/><msub><mi>b</mi><mi>i</mi></msub><mo>=</mo><mo>⟨</mo><mi>p</mi><mo>,</mo><msub><mi>y</mi><mi>i</mi></msub><mo>⟩</mo><mo>.</mo></mrow></math></div>
+
+<p>Here ρ is damping; λ is reserved for curvature. The target coefficient <i>b</i><sub>i</sub> is what damped Newton wants along direction <i>y</i><sub>i</sub>. We fit one set of taps <i>c</i> to reproduce all the <i>b</i><sub>i</sub> values across curvature directions and matrices.</p>
+
+<div class="flow">
+  <div><strong>Gradient history</strong>128 coefficients along every measured Hessian eigenvector</div><span class="arrow">→</span>
+  <div><strong>One shared kernel</strong>The same 128 taps for every direction and matrix</div><span class="arrow">→</span>
+  <div><strong>Damped Newton target</strong>Coefficients from a residual-verified inverse solve</div>
+</div>
+
+<p>This is a demanding test. The kernel sees time but not λ<sub>i</sub>. It can reproduce inverse curvature only when temporal behavior predicts curvature consistently across the model.</p>
+
+<h2>2. The percentage has two meanings</h2>
+
+<p>The literal kernel-expressible share is one minus the held-out least-squares residual:</p>
+
+<div class="math"><math display="block"><mrow><msub><mi>X</mi><mtext>raw</mtext></msub><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><msup><mrow><mo>∥</mo><mi>A</mi><msup><mi>c</mi><mo>*</mo></msup><mo>−</mo><mi>b</mi><mo>∥</mo></mrow><mn>2</mn></msup><msup><mrow><mo>∥</mo><mi>b</mi><mo>∥</mo></mrow><mn>2</mn></msup></mfrac><mo>.</mo></mrow></math></div>
+
+<p>Strong damping makes much of the inverse look like a common scalar. A lag-zero tap can recover that scalar, and matrix sign would discard it anyway. We therefore also remove each matrix's best scalar multiple of <i>z</i> before fitting. The resulting quantity, <i>X</i><sub>aniso</sub>, measures how much of Newton's direction-dependent correction is present in the time history.</p>
+
+<div class="split">
+  <div><strong>Raw share, X<sub>raw</sub></strong>How much of the complete damped-Newton vector a kernel reconstructs.</div>
+  <div><strong>Anisotropic share, X<sub>aniso</sub></strong>How much of the curvature-dependent correction a kernel reconstructs after removing common scale.</div>
+</div>
+
+<div class="result"><span class="label">Preregistered expectation</span><p>We expect the kernel to explain 15–40% of the anisotropic correction on held-out matrices and checkpoints. A larger value would mean that gradient history contains a surprisingly complete measurement of inverse curvature.</p></div>
+
+<div class="pending"><strong>Pending result</strong><br>The held-out expressibility regression is running on the persisted true-Hessian eigenvectors and damped-Newton solutions. This panel will be replaced with the measured raw and anisotropic shares.</div>
+
+<h2>3. Actual damped Newton is both effective and cheap here</h2>
+
+<p>The inverse solves use the true Hessian through Hessian–vector products. At three training checkpoints, 72/72, 70/72, and 66/72 matrix solves reached the residual threshold. The median solve required three iterations: three Hessian–vector products per refresh.</p>
+
+<p>The polar update changed very little by cosine—approximately 0.99—yet curvature along that update fell to 47%, 36%, and 53% of its original value. The correct interpretation is geometric: a small rotation can remove a large projection onto the sharpest directions. Cosine alone misses the effect.</p>
+
+<div class="result"><span class="label">Measured result</span><p>A residual-verified damped inverse approximately halves curvature along Muon's realized update at a cost low enough to consider during training.</p></div>
+
+<p>The deep eigenframe measurement explains why the full solve matters. Median top curvature is about 27,000, while curvature along momentum's leading direction is about 5,000. Each of the 24 sharpest true eigendirections receives only about 0.5% of the update mass. Correcting only that top-24 subspace reduces realized curvature to 76% of baseline; the full damped solve reaches 47% at the matched checkpoint. Most of the useful correction therefore lies outside the top-24 sharp subspace.</p>
+
+<p>Breakdown events rise across training—0, 4, then 11—which indicates that a fixed shift ρ stops dominating the negative spectrum late in training. Damping and solver choice must respond to the measured state. A broken solve is excluded rather than frozen and called Newton.</p>
+
+<h2>4. Batch size changes which momentum is useful</h2>
+
+<p>A matched continuation from step 2000 compared no momentum, a single EMA, and bi-Maxwell at the standard batch and at four times as many tokens per step. The single EMA was indistinguishable from no momentum at both batch sizes. Bi-Maxwell improved validation loss by about 0.0103 at the standard batch and 0.0044 at four times the batch.</p>
+
+<div class="result"><span class="label">Measured result</span><p>In this experiment, the benefit came from the two-rate kernel shape rather than generic exponential momentum, and that benefit roughly halved when the batch grew fourfold.</p></div>
+
+<p>This favors a denoising contribution: more tokens reduce the value of the expressive temporal filter. The benefit does not vanish, so the experiment does not establish that denoising is the kernel's only role. It does establish that “momentum versus no momentum” is the wrong comparison here. Kernel shape is the active variable.</p>
+
+<p>The result supplies the minibatch dependence required by the optimizer. Let <i>S</i><sub>t</sub> be directional signal-to-noise ratio measured at the actual batch size, and let α<sub>t</sub> control how much residual Newton correction is trusted:</p>
+
+<div class="math"><math display="block"><mrow><msub><mi>Δ</mi><mi>t</mi></msub><mo>=</mo><mo>−</mo><msub><mi>η</mi><mi>t</mi></msub><mi>msign</mi><mo>(</mo><msub><mi>p</mi><mi>K</mi></msub><mo>+</mo><msub><mi>α</mi><mi>t</mi></msub><mi>r</mi><mo>)</mo><mo>,</mo><mspace width="1.5em"/><msub><mi>α</mi><mi>t</mi></msub><mo>=</mo><mi>φ</mi><mo>(</mo><msub><mi>S</mi><mi>t</mi></msub><mo>)</mo><mo>.</mo></mrow></math></div>
+
+<p>At low curvature-estimation SNR, α approaches zero and the spatial correction becomes passthrough. At high reliability, α approaches one. The temporal kernel may move in the opposite direction: longer or more expressive memory becomes more useful as gradient SNR falls.</p>
+
+<h2>5. “Apply the remaining Newton” has an exact meaning</h2>
+
+<p>Let <i>p</i><sub>K</sub> be the best direction reconstructible by a temporal kernel. Define the missed Newton component by</p>
+
+<div class="math"><math display="block"><mrow><mi>r</mi><mo>=</mo><mi>p</mi><mo>−</mo><msub><mi>p</mi><mi>K</mi></msub><mo>.</mo></mrow></math></div>
+
+<p>The proposed update is <i>msign</i>(<i>p</i><sub>K</sub> + α<i>r</i>). This avoids dividing by a small or sign-changing kernel coefficient. It also makes the boundary cases transparent:</p>
+
+<ul>
+  <li>When curvature is isotropic, damped Newton differs from passthrough only by common scale. The anisotropic residual is zero, and a stationary deterministic problem needs only the lag-zero gradient.</li>
+  <li>When too few tokens are available to estimate curvature, α tends to zero. The uncertain Newton correction switches off.</li>
+  <li>When curvature is reliable and the kernel explains little of it, α tends to one and the inverse solve supplies the missing spatial correction.</li>
+</ul>
+
+<p>There are two meaningful orders. One can filter the gradient history and apply the current inverse Hessian, or apply the contemporaneous inverse Hessian to each past gradient and then filter. These orders agree when the Hessian is fixed. Their difference measures curvature drift over the kernel's memory window, so refresh cadence and kernel memory must be chosen together.</p>
+
+<h2>6. What the pending number decides</h2>
+
+<table>
+<thead><tr><th>Held-out anisotropic share</th><th>Interpretation</th><th>Design consequence</th></tr></thead>
+<tbody>
+<tr><td>High</td><td>Temporal dynamics reliably encode inverse curvature.</td><td>Use the learned kernel and apply only a low-rank or weak residual correction.</td></tr>
+<tr><td>Intermediate</td><td>Momentum recovers coarse curvature classes but not the full spectrum.</td><td>Jointly schedule kernel memory and a measured residual correction.</td></tr>
+<tr><td>Low</td><td>Temporal estimation and inverse curvature are mostly independent.</td><td>Choose the kernel for prediction/denoising and retain a full damped inverse.</td></tr>
+</tbody>
+</table>
+
+<p>The final optimizer should not expose this entire search space. The immediate experiment uses it to discover a simpler rule: ideally one measured state variable and one knob α that divides labor between temporal estimation and curvature correction.</p>
+
+<div class="caution"><span class="label">Scope</span><p>The batch experiment is one seed, one fork, a 750-step horizon, and no learning-rate rescaling across batch sizes. The current eigenframe covers measured parameter matrices and finite rank. The regression must be evaluated on held-out matrices and checkpoints before its percentage is treated as a property of the optimizer.</p></div>
+
+<div class="footnotes">Draft status: complete argument and current measurements; expressibility result and final figures pending. “Certified” summaries in the release will use only solves satisfying the final residual threshold with no breakdown.</div>
+</main></body></html>
