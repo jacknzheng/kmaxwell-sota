@@ -1,0 +1,14 @@
+# REQ-026 batch-size x momentum-kernel grid. SHA 365c392d, node wp9pj83 (8xH100), torch 2.10.0+cu128.
+# Six 750-step continuations from the shared step-2000 state (base val@2000 = 3.44367).
+# batch: 1x = batch_tokens 524288 (skip_batches 2000), 4x = 2097152 (skip_batches 500, token-aligned to the same fork data position).
+# kernel: mu0 = muon(mu=0.0, no momentum); mu95 = muon(mu=0.95, single EMA); bimax = bimaxwell_muon record (fast/slow two-rate, switch_step 1000).
+# lr=0.025, weight_decay=0.05 held fixed across all three kernels; LR schedule (cooldown_frac 0.7) identical across all 6 arms.
+# All arms ARM_EXIT=0. Checkpoints saved at 2250/2500/2750 (+ the fork 2000) per arm on-box (offline curvature later; not committed).
+# val_loss at each validation boundary:
+arm	batch	kernel	mu	smoke@2125	val@2250	val@2500	val@2750
+req026_b1x_mu0	1x	muon	0.0	3.44336	3.42467	3.38693	3.34586
+req026_b1x_mu95	1x	muon	0.95	3.44315	3.42483	3.38689	3.34588
+req026_b1x_bimax	1x	bimaxwell	0.95	3.42535	3.40680	3.37225	3.33557
+req026_b4x_mu0	4x	muon	0.0	3.35577	3.32653	3.28094	3.24333
+req026_b4x_mu95	4x	muon	0.95	3.35493	3.32492	3.28073	3.24326
+req026_b4x_bimax	4x	bimaxwell	0.95	3.34714	3.31666	3.27414	3.23892

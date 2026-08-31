@@ -1,0 +1,21 @@
+# REQ-026 readout: momentum benefit = (kernel val_loss) - (mu0 val_loss) at the SAME batch size.
+# Negative = the kernel LOWERS loss vs no-momentum (momentum helps). This within-batch-size comparison
+# is the primary readout (it shares any LR-schedule confound, per the request). n=1 per cell -> discovery, not significance.
+# Jeffrey's expectation: benefit PERSISTS at large batch (geometry). Alternative: benefit SHRINKS toward 0 (denoising).
+batch	kernel	benefit@2250	benefit@2500	benefit@2750
+1x	mu95_minus_mu0	+0.00016	-0.00004	+0.00002
+1x	bimax_minus_mu0	-0.01787	-0.01468	-0.01029
+4x	mu95_minus_mu0	-0.00161	-0.00021	-0.00007
+4x	bimax_minus_mu0	-0.00987	-0.00680	-0.00441
+#
+# bimaxwell benefit, 1x vs 4x (the batch-awareness axis):
+# step	1x_benefit	4x_benefit	ratio_1x/4x
+# 2250	-0.01787	-0.00987	1.81
+# 2500	-0.01468	-0.00680	2.16
+# 2750	-0.01029	-0.00441	2.33
+#
+# READOUT: the bimaxwell (two-rate record) kernel gives a clear, monotone benefit over no-momentum at BOTH batch sizes,
+#   but that benefit is ~1.8-2.3x SMALLER at 4x than 1x and the ratio widens over training -> DENOISING-leaning
+#   (benefit shrinks with batch), though it does NOT vanish (4x bimax still helps by ~0.0044 @2750).
+#   Single-EMA momentum (mu=0.95 plain muon) shows NO durable benefit over mu=0 at either batch (all |Δ| <= ~0.0016,
+#   decaying to noise by 2750) -> the benefit here is specific to the two-rate bimaxwell structure, not momentum per se.

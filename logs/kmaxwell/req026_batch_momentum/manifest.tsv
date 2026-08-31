@@ -1,0 +1,7 @@
+run_id	batch_tokens	batch_x	kernel	optimizer	mu	start	stop	ckpts
+req026_b1x_mu0	524288	1x	mu0	muon	0.0	2000	2750	2250,2500,2750
+req026_b1x_mu95	524288	1x	mu95	muon	0.95	2000	2750	2250,2500,2750
+req026_b1x_bimax	524288	1x	bimax	bimaxwell_muon	0.95	2000	2750	2250,2500,2750
+req026_b4x_mu0	2097152	4x	mu0	muon	0.0	2000	2750	2250,2500,2750
+req026_b4x_mu95	2097152	4x	mu95	muon	0.95	2000	2750	2250,2500,2750
+req026_b4x_bimax	2097152	4x	bimax	bimaxwell_muon	0.95	2000	2750	2250,2500,2750

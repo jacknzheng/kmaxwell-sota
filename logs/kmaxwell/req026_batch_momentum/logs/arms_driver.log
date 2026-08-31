@@ -1,0 +1,14 @@
+[req026-arms 11:37:17] START req026_b1x_mu0
+[req026-arms 11:39:46] DONE req026_b1x_mu0 ARM_EXIT=0 finalval=step:2750/3250 val_loss:3.34586
+[req026-arms 11:39:46] START req026_b1x_mu95
+[req026-arms 11:42:15] DONE req026_b1x_mu95 ARM_EXIT=0 finalval=step:2750/3250 val_loss:3.34588
+[req026-arms 11:42:15] START req026_b1x_bimax
+[req026-arms 11:44:44] DONE req026_b1x_bimax ARM_EXIT=0 finalval=step:2750/3250 val_loss:3.33557
+[req026-arms 11:44:44] START req026_b4x_mu0
+[req026-arms 11:52:35] DONE req026_b4x_mu0 ARM_EXIT=0 finalval=step:2750/3250 val_loss:3.24333
+[req026-arms 11:52:35] START req026_b4x_mu95
+[req026-arms 12:00:25] DONE req026_b4x_mu95 ARM_EXIT=0 finalval=step:2750/3250 val_loss:3.24326
+[req026-arms 12:00:25] START req026_b4x_bimax
+[req026-arms 12:08:16] DONE req026_b4x_bimax ARM_EXIT=0 finalval=step:2750/3250 val_loss:3.23892
+[req026-arms 12:08:16] ALL ARMS DONE
+ARMS_RC=0
