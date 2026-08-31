@@ -32,7 +32,7 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-024: 8-GPU 4+4 OpenRouter DeepSeek SDPO fleet
 
-- status: RUNNING (agent 2026-08-31) — slug confirmed `deepseek/deepseek-v4-flash`, frozen SHA `ecf6fd8`. Provisioned 8xH100 box wgmy26w; bootstrapping scaling-sdpo (uv sync + .env from provisioned OpenRouter/Parallel/WANDB/HF keys, never committed). Plan: offline tests → OpenRouter+Parallel preflight → tau2 a2c0247 get_environment fix + test → 3 arms (answer_free, answer_bearing, tau2 gold retail+airline) to step 200 with hint gate (<5% drop, 0 openrouter_length) + 25-step eval contract.
+- status: RUNNING (agent 2026-08-31) — box wgmy26w (8xH100 4+4), SHA ecf6fd8, hint model `deepseek/deepseek-v4-flash`. Bootstrap complete (offline tests **227 passed**; vLLM 0.26.0 manual bringup + torchvision 0.26.0+cu128 + python3.12-dev fixes; keys via .env never committed). **Preflight PASS** (04:08Z: DeepSeek hint→OK, Nemotron judge→200, Parallel→200). arm 1 **answer_free TRAINING** (step ~11). **HINT GATE PASS** — 186 attempts, **0 drops (0.00%)**, **0 openrouter_length**, api_failures empty → the DeepSeek OpenRouter hint fix is validated (see `logs/async_sdpo_req024/hint-fix-validation.tsv`). Continuing answer_free→200, then answer_bearing, then tau2 a2c0247 fix + tau2 gold. Eval contract at 25-step boundaries.
 - requested: Jack / 2026-08-30 20:59 PDT
 - repo: https://github.com/jacknzheng/scaling-sdpo
 - branch: `fix/hint-output-budget`
