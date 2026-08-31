@@ -1,0 +1,67 @@
+loop: gpt_record
+run_id: req027_b1x_mu0_s1
+seed: 1
+require_world_size: 8
+train_steps: 3250
+batch_tokens: 524288
+microbatch_sequences: 64
+train_data: data/fineweb10B/fineweb_train_*.bin
+val_data: data/fineweb10B/fineweb_val_*.bin
+val_tokens: 10485760
+model:
+  vocab_size: 50304
+  num_layers: 12
+  model_dim: 768
+optimizer_groups:
+- pattern: ^embed\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.7
+    weight_decay: 0.001
+- pattern: ^proj\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.004
+    weight_decay: 0.001
+- pattern: ^blocks\..*\.weight$
+  optimizer: muon
+  hyperparams:
+    lr: 0.025
+    weight_decay: 0.05
+    mu: 0.0
+- pattern: .*
+  optimizer: adamw
+  hyperparams:
+    lr: 0.015
+    weight_decay: 0.001
+setup:
+- name: open_rank_zero_log
+- name: load_validation_tokens
+- name: build_compiled_gpt
+- name: seed_then_initialize_parameters
+- name: assemble_grouped_optimizer
+- name: open_training_batches
+- name: broadcast_initial_parameters
+- name: load_training_state
+  hyperparams:
+    state_dir: eos_shared_state
+    step: 2000
+    skip_batches: 2000
+- name: validate_at_step_boundaries
+pre_optimizer:
+- name: checkpoint_model_at_cadence
+  hyperparams:
+    every: 2750
+    dump_dir: dumps_req027_b1x_mu0_s1
+- name: cool_down_learning_rate
+  hyperparams:
+    cooldown_frac: 0.7
+post_optimizer:
+- name: print_training_progress
+- name: validate_at_step_boundaries
+  hyperparams:
+    every: 125
+teardown:
+- name: mark_log_finished
+start_step: 2000
+stop_after_step: 2750

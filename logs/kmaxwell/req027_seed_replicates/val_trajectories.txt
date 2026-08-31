@@ -1,0 +1,52 @@
+### req027_b4x_mu0_s1
+step:0/3250 val_loss:3.44335
+step:2125/3250 val_loss:3.35626
+step:2250/3250 val_loss:3.32531
+step:2375/3250 val_loss:3.30012
+step:2500/3250 val_loss:3.28059
+step:2625/3250 val_loss:3.26209
+step:2750/3250 val_loss:3.24354
+### req027_b4x_bimax_s1
+step:0/3250 val_loss:3.44335
+step:2125/3250 val_loss:3.34747
+step:2250/3250 val_loss:3.31623
+step:2375/3250 val_loss:3.29236
+step:2500/3250 val_loss:3.27370
+step:2625/3250 val_loss:3.25649
+step:2750/3250 val_loss:3.23895
+### req027_b1x_mu0_s1
+step:0/3250 val_loss:3.44335
+step:2125/3250 val_loss:3.44341
+step:2250/3250 val_loss:3.42423
+step:2375/3250 val_loss:3.40606
+step:2500/3250 val_loss:3.38668
+step:2625/3250 val_loss:3.36529
+step:2750/3250 val_loss:3.34582
+### SEEDCHECK (node A: same b4x_mu0 config, seed=0 vs seed=1, to 2125)
+[req027 14:01:18] base val@2000: step:2000/3250 val_loss:3.44335
+SEEDCHECK seed=0 val@2125: step:2125/3250 val_loss:3.35602
+SEEDCHECK seed=1 val@2125: step:2125/3250 val_loss:3.35584
+### req027_b4x_mu0_s2
+step:0/3250 val_loss:3.44373
+step:2125/3250 val_loss:3.35554
+step:2250/3250 val_loss:3.32397
+step:2375/3250 val_loss:3.30006
+step:2500/3250 val_loss:3.27968
+step:2625/3250 val_loss:3.26150
+step:2750/3250 val_loss:3.24280
+### req027_b4x_bimax_s2
+step:0/3250 val_loss:3.44373
+step:2125/3250 val_loss:3.34675
+step:2250/3250 val_loss:3.31655
+step:2375/3250 val_loss:3.29299
+step:2500/3250 val_loss:3.27338
+step:2625/3250 val_loss:3.25618
+step:2750/3250 val_loss:3.23866
+### req027_b1x_bimax_s1
+step:0/3250 val_loss:3.44373
+step:2125/3250 val_loss:3.42400
+step:2250/3250 val_loss:3.40593
+step:2375/3250 val_loss:3.38927
+step:2500/3250 val_loss:3.37190
+step:2625/3250 val_loss:3.35279
+step:2750/3250 val_loss:3.33485

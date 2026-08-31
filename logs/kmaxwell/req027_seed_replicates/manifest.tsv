@@ -1,0 +1,7 @@
+run_id	batch_tokens	batch_x	kernel	mu	seed	start	stop	ckpt
+req027_b4x_mu0_s1	2097152	4x	mu0	0.0	1	2000	2750	2750
+req027_b4x_bimax_s1	2097152	4x	bimax	0.95	1	2000	2750	2750
+req027_b4x_mu0_s2	2097152	4x	mu0	0.0	2	2000	2750	2750
+req027_b4x_bimax_s2	2097152	4x	bimax	0.95	2	2000	2750	2750
+req027_b1x_mu0_s1	524288	1x	mu0	0.0	1	2000	2750	2750
+req027_b1x_bimax_s1	524288	1x	bimax	0.95	1	2000	2750	2750

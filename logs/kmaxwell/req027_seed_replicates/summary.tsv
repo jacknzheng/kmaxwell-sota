@@ -1,0 +1,17 @@
+# REQ-027 seed replicates of the REQ-026 batch x kernel finding. SHA 365c392d, nodes qrv5913(A)+qzy15ow(B) (8xH100), torch 2.10.0+cu128.
+# 6 arms = REQ-026 configs with `seed` changed only (checkpoints at +750 only). REQ-026 rows (seed 0) included for reference.
+# Seed mechanism (measured): same b4x_mu0 config at seed=0 vs seed=1 to step 2125 -> 3.35602 vs 3.35584 (delta 1.8e-4, nondeterminism-level).
+#   The harness reads the token stream SEQUENTIALLY (distributed_data_generator = contiguous tokens, no RNG shuffle), has no dropout, and the
+#   fork LOADS params+optimizer -> `seed` only reseeds the (overwritten) param init, so it does NOT resample data order. The cross-seed spread
+#   below is therefore accumulated run-to-run nondeterminism, not data-order resampling. All arms ARM_EXIT=0; base val@2000 = 3.4437 (all nodes, within noise).
+batch	kernel	seed	source	final_val@2750
+1x	mu0	0	REQ-026	3.34586
+1x	mu0	1	REQ-027	3.34582
+1x	bimax	0	REQ-026	3.33557
+1x	bimax	1	REQ-027	3.33485
+4x	mu0	0	REQ-026	3.24333
+4x	mu0	1	REQ-027	3.24354
+4x	mu0	2	REQ-027	3.24280
+4x	bimax	0	REQ-026	3.23892
+4x	bimax	1	REQ-027	3.23895
+4x	bimax	2	REQ-027	3.23866

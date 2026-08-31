@@ -1,0 +1,19 @@
+# REQ-027 readout: per-seed momentum benefit = final_val(bimax) - final_val(mu0) at the SAME batch, @2750. Negative = bimaxwell helps.
+# Question: does REQ-026's benefit-shrinkage (seed-0: -0.0103 @1x -> -0.0044 @4x) hold across seeds? Report mean + spread, no interpretation.
+batch	seed	benefit(bimax-mu0)@2750
+1x	0	-0.01029
+1x	1	-0.01097
+4x	0	-0.00441
+4x	1	-0.00459
+4x	2	-0.00414
+#
+# per-batch aggregate over seeds:
+batch	n_seeds	mean_benefit	min	max	range(spread)	std
+1x	2	-0.01063	-0.01097	-0.01029	0.00068	0.00048
+4x	3	-0.00438	-0.00459	-0.00414	0.00045	0.00023
+#
+# RESULT: the benefit-shrinkage HOLDS across every seed. 1x mean -0.0106, 4x mean -0.0044 (ratio ~2.4x). The 1x-vs-4x gap (~6.2e-3)
+#   is ~10-25x the per-seed spread (~2-7e-4), so the "momentum benefit halves at 4x batch" finding is robust to run-to-run variation.
+#   Every individual seed shows |1x benefit| > |4x benefit| (1x in [-0.0110,-0.0103], 4x in [-0.0046,-0.0041]; the ranges do not overlap).
+#   CAVEAT (mechanism): the spread here is nondeterminism, not data-order resampling (see summary.tsv header) -> this bounds run-to-run
+#   robustness, NOT data-distribution robustness. True data-order variance would need seed-dependent data sampling, which this harness does not do.
