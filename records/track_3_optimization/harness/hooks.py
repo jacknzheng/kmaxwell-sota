@@ -12,7 +12,8 @@ import yaml
 
 from optimizers import GroupedOptimizers, find_muon_family_group, parse_group_specs
 from optimizers.secant_gmres_muon import SecantGmresMuon
-from optimizers.muon import attach_newton_muon_activation_stats, owned_param_indices
+from optimizers.muon import owned_param_indices
+from optimizers.muon import attach_newton_muon_activation_stats as install_activation_covariance_hooks_on_model
 from secant_gmres_solver import serialization
 from secant_gmres_solver.diagnostics import measure_symmetry_defect
 from secant_gmres_solver.solve import solve_secant_least_squares
@@ -149,7 +150,10 @@ def attach_newton_muon_activation_stats() -> Hook:
                       float(entry.get("hyperparams", {}).get("newton_alpha", 0)) > 0
                       for entry in config["optimizer_groups"])
         if enabled:
-            state["newton_activation_hook_handles"] = attach_newton_muon_activation_stats(
+            # the optimizer-level helper is imported under an alias: the hook
+            # factory below shares its public name, and an unaliased import is
+            # shadowed at call time (the REQ-025 alpha>0 crash)
+            state["newton_activation_hook_handles"] = install_activation_covariance_hooks_on_model(
                 state["model"])
         return state
     return hook
