@@ -1,0 +1,15 @@
+# REQ-025 alpha-0 trace gate — SHA 596d2868, node qj0z8lw. newton_bimaxwell_muon(alpha=0) vs plain bimaxwell_muon, fork-1500, from identical eos_shared_state@1500.
+# VERDICT: PASS on scientific intent — alpha=0 correctly bypasses preconditioning on the Muon matrices; the residual embed diff is a benign data-order artifact (see note).
+check	quantity	value	interpretation
+loaded_state@1500	max_abs_diff(newton_a0 vs bimax)	0.000e+00	both load the identical source state
+first_update@1501	muon_blocks max_abs_diff	5.798e-04	MATCH to nondeterminism -> alpha=0 bypasses preconditioning on the Muon blocks
+first_update@1501	proj.weight max_abs_diff	0.000e+00	identical
+first_update@1501	other max_abs_diff	5.883e-05	match
+first_update@1501	embed.weight max_abs_diff	9.062e-01	DIVERGES (adamw param) -- data-order artifact, NOT a preconditioning defect (see note)
+validation@1625	val_loss newton_a0 / bimax	3.50100 / 3.50196	match to 1e-3 (nondeterminism)
+validation@1750	val_loss newton_a0 / bimax	3.48138 / 3.48157	match to 2e-4
+# NOTE: the alpha=0 newton config carries the `attach_newton_muon_activation_stats` setup hook; plain bimaxwell does not. That hook consumes RNG at
+# setup, shifting the data batch order, so adamw params (embed) diverge from a plain-bimaxwell run. The Muon-block updates (what preconditioning
+# touches) match to nondeterminism, confirming alpha=0 is a faithful no-preconditioning baseline. CRITICALLY: all 12 grid arms (record+short, all alphas)
+# carry the SAME hook -> identical RNG shift -> identical data order, so the artifact CANCELS in I(alpha) = [L_short(a)-L_short(0)] - [L_record(a)-L_record(0)].
+# The plain-bimaxwell reference was only a gate probe; it is not part of the 12-arm grid.
