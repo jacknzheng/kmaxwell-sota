@@ -15,6 +15,38 @@ have landed in the appropriate repository paths.
 
 Next request number: **REQ-025**.
 
+
+## REQ-026: batch-size x momentum-kernel grid (does momentum survive large batch?)
+
+- status: OPEN (filed by owner agent 2026-08-31 ~11:00 UTC)
+- requested: Jeffrey (standing directive: the momentum/Newton design must be
+  minibatch-aware; he suspects momentum still matters at large batch — this
+  grid tests that suspicion and gives the batch axis of the design)
+- priority: ONE node only (REQ-024 holds the other); sequential arms fine;
+  target completion within ~9h
+- pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e (same branch as
+  REQ-025's fix; none of these arms use the newton optimizers)
+- expected work: SIX 750-step continuations from the shared step-2000 state
+  (same eos_shared_base machinery as REQ-025), grid =
+  batch {1x, 4x tokens per optimizer step} x kernel
+  {muon with mu 0.0 (no momentum), muon with mu 0.95 (single EMA),
+  bimaxwell_muon record settings}. 4x batch = 4x sequences per optimizer
+  step via the accumulation loop; you bind the exact config keys and state
+  the config diff in your status commit. LR schedule UNCHANGED across arms
+  (documented caveat: primary readout is the within-batch-size kernel
+  comparison, which shares any LR confound).
+- gates (hard, learned from REQ-025): (1) per-config 20-step smoke with
+  finite loss before any arm — the alpha=0 NaN from REQ-025 is undiagnosed;
+  if you determined its cause, report it in your first status commit even
+  though REQ-025 is withdrawn; (2) tests green at the pinned SHA.
+- artifacts: standard val-loss logging; save model checkpoints at
+  +250/+500/+750 per arm (curvature is measured offline later — do NOT run
+  Lanczos in this request); final val loss table in your closing commit.
+- readout: momentum benefit (kernel arm minus mu-0 arm, same batch) at 1x
+  vs 4x. Jeffrey's stated expectation: the benefit persists at large batch
+  (geometry story); the alternative (benefit shrinks toward zero) is the
+  denoising story. Either outcome is decision-relevant.
+
 ## Template
 
 ```md
