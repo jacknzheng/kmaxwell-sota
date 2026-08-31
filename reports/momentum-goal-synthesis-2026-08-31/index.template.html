@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>From momentum kernels to a momentum rule</title>
+<link rel="stylesheet" href="../nature-of-momentum-2026-08-29/katex.min.css">
+<style>
+:root{--ink:#17202a;--muted:#596575;--paper:#fff;--page:#eef1f5;--line:#d9e0e8;--purple:#5746d9;--wash:#f2f0ff;--teal:#16877b;--tealwash:#eaf8f5;--amber:#a35e00;--amberwash:#fff6e6}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:var(--page);font:17px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{width:calc(100% - 64px);max-width:1000px;margin:32px auto;padding:64px 82px 84px;background:var(--paper);box-shadow:0 12px 44px #24344716}h1{margin:0 0 12px;font-size:2.65rem;line-height:1.06;letter-spacing:-.045em}h2{margin:3.25rem 0 .9rem;font-size:1.48rem;line-height:1.25;letter-spacing:-.02em}h3{margin:1.9rem 0 .45rem;font-size:1.1rem}p{margin:.65rem 0 1.05rem}.stamp,.caption,.small{color:var(--muted)}.stamp{font-size:.84rem;margin-bottom:2rem}.lead{font-size:1.16rem;line-height:1.62}.thesis,.result,.caution{margin:1.4rem 0 1.8rem;padding:19px 22px;border-left:4px solid var(--purple);background:var(--wash)}.result{border-color:var(--teal);background:var(--tealwash)}.caution{border-color:var(--amber);background:var(--amberwash)}.thesis p,.result p,.caution p{margin:.2rem 0}.map{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:1.4rem 0}.map div{padding:15px 17px;border:1px solid var(--line);border-radius:9px;background:#fafbfc}.map strong{display:block;color:var(--purple);margin-bottom:3px}figure{margin:2rem 0 2.3rem}figure.wide{width:calc(100% + 70px);margin-left:-35px}figure img{display:block;width:100%;height:auto}figcaption{max-width:790px;margin:.7rem auto 0;color:var(--muted);font-size:.86rem;line-height:1.48;text-align:center}.equation{margin:1rem 0 1.2rem;padding:.5rem;overflow-x:auto;text-align:center}.decision{width:100%;border-collapse:collapse;margin:1.25rem 0 1.8rem;font-size:.94rem}.decision th,.decision td{padding:12px 13px;border:1px solid var(--line);vertical-align:top}.decision th{background:#f4f6f9;text-align:left}.roadmap{counter-reset:s;list-style:none;padding:0}.roadmap li{counter-increment:s;position:relative;padding:0 0 19px 48px}.roadmap li:before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--teal);color:white;font-weight:800}.roadmap strong{display:block}.footnotes{font-size:.86rem;color:var(--muted);border-top:1px solid var(--line);margin-top:3rem;padding-top:1rem}@media(max-width:760px){main{width:100%;margin:0;padding:38px 22px 58px}h1{font-size:2.1rem}.map{grid-template-columns:1fr}figure.wide{width:100%;margin-left:0}.decision{font-size:.84rem}}
+</style></head><body><main>
+<h1>From momentum kernels to a momentum rule</h1>
+<p class="stamp">Current empirical synthesis and the shortest path to a principled implementation · 31 August 2026</p>
+
+<p class="lead">The aim is to derive temporal weighting from what the optimizer needs at its present state: an update direction that makes progress while preserving the edge-of-stability behavior that appears to regularize training.</p>
+
+<p>A temporal kernel assigns weights to gradients of different ages before Muon takes the matrix sign. Its <strong>period-two response</strong>, <em>F</em> = |<em>H</em>(π)|, measures how much of a gradient component that reverses sign on every step remains in the momentum matrix.</p>
+
+<div class="thesis"><p><strong>Our current best hypothesis has two parts.</strong> Period-two response is a guardrail: eliminating it is destructive, but its precise value across a broad working range does not control either loss or curvature. Within that range, useful kernels differ through the matrix directions they create. The eventual rule should therefore choose a kernel from measured state, matrix by matrix, and constrain that choice by the realized stability of the resulting update.</p></div>
+
+<div class="map">
+  <div><strong>Established</strong>Expressive temporal weighting contributes substantially beyond scheduling a single EMA. Scalar kernel summaries do not predict the resulting Muon direction. Per-matrix learning rate causally controls the local sharpness state.</div>
+  <div><strong>Proposed</strong>Select temporal weights for immediate directional quality, subject to a measured stability boundary. Let the changing state produce the schedule instead of prescribing training step as the schedule.</div>
+</div>
+
+<h2>1. Period-two response is a feasibility constraint</h2>
+
+<p>The first question was whether this single scalar selects a unique optimum. The scan below answers it.</p>
+
+<figure class="wide"><img src="period2_scan.png" alt="Validation loss is poor when period-two response is zero, then nearly flat from approximately 0.02 through 0.09"><figcaption>Continuations from a shared step-1000 training state while changing period-two response. Removing the component entirely causes a large failure. Inside the working range, changing it by several-fold produces no resolved trend in loss. Separate curvature measurements are also flat within this range.</figcaption></figure>
+
+<p>This changes the role of <em>F</em> in the research program. We should preserve some period-two response. Inside the plateau, kernel selection must depend on other properties. The proposed inverse law—equilibrium curvature proportional to 1/<em>F</em>—also fails directly: reducing <em>F</em> by factors of two and four barely changes curvature where the law predicts large increases.</p>
+
+<div class="result"><p><strong>Decision.</strong> Treat the measured plateau as a constraint on admissible kernels. The cliff at <em>F</em> = 0 remains mechanistically interesting, but it is a separate question from what sets equilibrium curvature or chooses the best kernel inside the working regime.</p></div>
+
+<h2>2. Inside the plateau, momentum is a direction selector</h2>
+
+<p>Scheduling one EMA recovers about one tenth of K8's improvement over bi-Maxwell in the cleanest matched comparison. Higher-dimensional temporal weighting accounts for most of the measured gain in this stack.</p>
+
+<figure class="wide"><img src="../nature-of-momentum-2026-08-29/gain_decomposition.png" alt="Across four paired seeds, scheduled K8 improves validation loss by about ten times as much as the tested scheduled single EMA"><figcaption>Each bar is the mean validation-loss reduction relative to the same bi-Maxwell control across four paired seeds; error bars are standard errors. This comparison separates the tested single-EMA schedule from the expressive scheduled K8 kernel. It estimates scale in this training stack, rather than a universal percentage attribution.</figcaption></figure>
+
+<p>The same-state comparisons show where that work enters. Applying different kernels to the same gradient history produces Muon updates with cosine similarities around 0.72–0.83. Matching mean age, period-two response, and total white-noise gain does not restore the direction. Momentum therefore remains consequential even though matrix sign removes a common scalar multiplier from the momentum matrix.</p>
+
+<p>A natural description starts with the gradient-noise spectrum <em>S</em><sub>g</sub>(ω). If <em>H</em><sub>w</sub>(ω) is the frequency response of kernel <em>w</em>, then the scalar noise power after temporal weighting is</p>
+<div class="equation">{{display:filtered_spectrum}}</div>
+<p>The surviving late-training oscillations are concentrated at periods of roughly 16–40 steps, and candidate kernels differ in this range. But a scalar integral of <em>D</em><sub>w</sub>(ω) cannot by itself specify a Muon update: matrix sign depends on which matrix directions carry that power. The serious object is the frequency-resolved covariance across matrix modes.</p>
+
+<div class="result"><p><strong>Next discrimination.</strong> A common-tail kernel pair will match the candidate kernels beyond the observed history window while changing their weighting inside periods 16–40. If the update and continuation ordering follow the in-window change, long unseen tails are unnecessary. If they do not, the finite-window spectral account is incomplete.</p></div>
+
+<h2>3. The regularizing state is local and steerable</h2>
+
+<p>The search for one corrected critical curvature led to a matrix-resolved state. For matrix <em>i</em>, define the norm-corrected curvature</p>
+<div class="equation">{{display:residual}}</div>
+<p>where λ<sub>i</sub> is the leading Hessian eigenvalue restricted to that matrix and <em>W</em><sub>i</sub> is its weight matrix. Multiplying one matrix's learning rate changes its own λ<sub>i</sub>, norm, and residual <em>R</em><sub>i</sub>. Matrices left at the control learning rate barely move in aggregate. Each matrix's learning rate therefore acts locally on its sharpness state.</p>
+
+<figure class="wide"><img src="per_matrix_response.png" alt="Per-matrix learning-rate interventions move curvature down, squared norm up, and their residual product down"><figcaption>One point is a median over the matrices assigned the indicated multiplier in a single causal intervention from a shared state. Lowering a matrix's learning rate raises its curvature; increasing it lowers curvature. Weight-norm scaling explains much of this response, while the residual R also moves systematically. Fine-grained interventions replicate the direction and reveal stable within-state matrix heterogeneity.</figcaption></figure>
+
+<p>The aggregate response of <em>R</em> is smooth, but individual matrix slopes differ and drift across training. Thus <em>R</em> supplies a curvature-side actuator target; a complete momentum constraint still needs a directional measurement. The per-matrix learning-rate experiment gives us the control knob required to test a local boundary causally.</p>
+
+<h2>4. Direction and stability must be measured together</h2>
+
+<p>An update that wins one true step can lose after 100–400 training steps. In the matched kernel experiment, the one-step ordering reverses over the continuation while the leading scalar curvature does not explain the reversal. Optimizing immediate alignment alone is therefore insufficient; the update changes the state that judges subsequent updates.</p>
+
+<p>The proposed stability measurement is derived from the quadratic change in loss:</p>
+<div class="equation">{{display:quadratic}}</div>
+<p>For the realized full-model update Δ<sub>t</sub>, define its directional curvature <em>D</em><sub>t</sub> and its descent boundary <em>A</em><sub>t</sub> by</p>
+<div class="equation">{{display:boundary}}</div>
+<p>The quadratic loss change is zero when <em>D</em><sub>t</sub>/<em>A</em><sub>t</sub> = 1. A ratio below one leaves local descent margin; a ratio above one predicts local ascent at quadratic order. Unlike a leading Hessian eigenvalue, this quantity evaluates the direction and scale of the step the optimizer actually took.</p>
+
+<div class="caution"><p><strong>The coupling is essential.</strong> <em>A</em><sub>t</sub> contains −⟨<em>g</em><sub>t</sub>, Δ<sub>t</sub>⟩, the same alignment we want to improve. Choosing a new kernel changes both the objective and its allowable boundary. The two terms must be evaluated jointly. Per-matrix versions are local diagnostics; the equality is exact only for the full update because cross-matrix Hessian terms can contribute.</p></div>
+
+<p>The candidate design problem is therefore</p>
+<div class="equation">{{display:program}}</div>
+<p>where the plateau 𝒫 prevents the known period-two failure and the ratios ρ<sub>i,t</sub> ask each matrix to remain near its realized local boundary. This candidate becomes an algorithm only after it explains the existing horizon reversal and selects a held-out kernel at a new training state.</p>
+
+<table class="decision"><thead><tr><th>Observed result</th><th>Interpretation</th><th>Consequence for the rule</th></tr></thead><tbody>
+<tr><td>The one-step winner has ρ well below one; the deployed kernel remains near one.</td><td>The immediate winner left the marginal regime.</td><td>Keep the alignment-plus-boundary hypothesis and test it prospectively.</td></tr>
+<tr><td>Both kernels have similar ρ, despite their continuation reversal.</td><td>This boundary misses the trajectory variable that matters.</td><td>Reject this two-term rule; promote multi-step shadow dynamics or another state variable.</td></tr>
+<tr><td>The retrospective split works, but a held-out kernel is misranked.</td><td>The explanation fitted one comparison without becoming predictive.</td><td>Reject or enlarge the measured state before engineering an optimizer.</td></tr>
+</tbody></table>
+
+<h2>5. The shortest path to a principled implementation</h2>
+
+<p>The end product should be a compact state-to-kernel map. A schedule then emerges because the measured state changes during training. If the map has simple structure, we compress it into a zero- or one-knob implementation after the predictive test succeeds.</p>
+
+<ol class="roadmap">
+<li><strong>Measure the realized boundary on existing trajectories.</strong> Compute <em>D</em><sub>t</sub>/<em>A</em><sub>t</sub> for the matched kernel continuations. This is the first necessary check of whether the horizon reversal is a direction–stability tradeoff.</li>
+<li><strong>Resolve what temporal information selects the direction.</strong> Run the common-tail, in-band-matched kernel pair and compare matrix update subspaces, one-step loss, and continuation loss.</li>
+<li><strong>Calibrate local control.</strong> Use the wide per-matrix learning-rate intervention to test for cross-talk and measure how reliably learning rate moves each matrix's residual <em>R</em> at multiple states.</li>
+<li><strong>Separate norm geometry from residual dynamics.</strong> The fixed-norm perturbation test asks whether changes in <em>R</em> persist after removing the universal weight-norm response.</li>
+<li><strong>Make one prospective selection.</strong> At a held-out state, choose among kernels using only measurements available before continuation. A correct continuation ranking is the minimum evidence for a principled rule.</li>
+</ol>
+
+<div class="thesis"><p><strong>What success would mean.</strong> Momentum would no longer be “EMA with a decay chosen by convention.” It would be a local temporal controller: retain enough alternating response to stay in the working regime, use the observed matrix-valued gradient history to propose a productive direction, and adjust that proposal until the realized update remains near the matrix's active stability boundary.</p></div>
+
+<div class="footnotes"><p><strong>Scope.</strong> The loss scans are discovery measurements from shared checkpoint forks, not seed-fleet estimates. The approximately ten-percent scheduling attribution is stack-sensitive. The period-two plateau has been observed in this NanoGPT/Muon regime and is not claimed to be universal.</p></div>
+</main></body></html>
