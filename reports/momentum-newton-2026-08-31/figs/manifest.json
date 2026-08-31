@@ -1,0 +1,27 @@
+{
+ "fig1": {
+  "file": "fig1_ns_response.png",
+  "one_point": "one (matrix, singular index) pair; 72 matrices at the step-2528 checkpoint; the tail column is each matrix's median response over directions with singular value below 0.1 of its largest",
+  "takeaway": "the deployed 12-iteration Newton-Schulz reproduces the exact polar factor at every resolved singular index; suppression exists only in the small-singular tail and only below 8 iterations"
+ },
+ "fig2": {
+  "file": "fig2_frame_structure.png",
+  "one_point": "one (matrix, singular index) pair at the step-2528 checkpoint; 12 matrices per panel (one per block)",
+  "takeaway": "the momentum's four leading singular directions all oscillate at period two, and curvature falls roughly sixfold from the first to the second singular direction; the polar factor then assigns all of them equal step size"
+ },
+ "fig3": {
+  "file": "fig3_newton_effect.png",
+  "one_point": "one line = one matrix at the step-2528 checkpoint (record kernel; 12 lines per panel per basis)",
+  "takeaway": "the activation preconditioner cuts curvature along the realized update to roughly 60 percent at alpha 0.5; replacing its eigenbasis with a random one (same eigenvalues) removes most of the effect, so the value is carried by the basis"
+ },
+ "fig4": {
+  "file": "fig4_independence.png",
+  "one_point": "left: one (matrix, checkpoint), 216 points, diagonal = identical Newton effect under both momenta; right: one matrix at step 2528, diagonal = rotation independent of basis choice",
+  "takeaway": "the preconditioner's curvature effect is the same whichever momentum it acts on, and how far it rotates the update is set by its eigenvalue spread alone -- rotation does not measure Newton content"
+ },
+ "fig5": {
+  "file": "fig5_snr.png",
+  "one_point": "left: one (matrix, singular index) from 32 consecutive 8192-token microbatches drawn from the training stream at a frozen checkpoint, three checkpoints overlaid; right: one line = one matrix (leading direction) across microbatch sizes at step 2528, two sizes at step 3028",
+  "takeaway": "the leading direction's signal-to-noise ratio collapses across training (about 6 to 2 to 0.4) and grows sublinearly with tokens (log-log slope about 0.55, below the slope-1 line that independent tokens would give); microbatches are consecutive stream chunks, so the cross-size slope is the robust readout and the noise a batch delivers must be measured, not derived from batch size"
+ }
+}

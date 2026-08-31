@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How momentum and Newton divide the work</title>
+<style>
+:root{--ink:#18202a;--muted:#5d6876;--paper:#fff;--page:#edf1f5;--line:#d9e0e8;--purple:#5746d9;--wash:#f3f1ff;--teal:#087f72;--tealwash:#eaf8f5;--amber:#955900;--amberwash:#fff7e8}
+*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font:17px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{width:calc(100% - 64px);max-width:1040px;margin:32px auto;padding:64px 82px 84px;background:var(--paper);box-shadow:0 12px 44px #24344716}h1{margin:0 0 12px;font-size:2.7rem;line-height:1.05;letter-spacing:-.045em}h2{margin:3.2rem 0 .85rem;font-size:1.55rem;line-height:1.25;letter-spacing:-.02em}p{margin:.65rem 0 1.05rem}.stamp,.small{color:var(--muted)}.stamp{font-size:.84rem;margin-bottom:2rem}.lead{font-size:1.17rem;line-height:1.62}.takeaway,.definition,.prediction,.caution{margin:1.35rem 0 1.7rem;padding:18px 21px;border-left:4px solid var(--teal);background:var(--tealwash)}.definition{border-color:var(--purple);background:var(--wash)}.prediction{border-color:#3975c6;background:#eef4ff}.caution{border-color:var(--amber);background:var(--amberwash)}.takeaway p,.definition p,.prediction p,.caution p{margin:.2rem 0}.label{display:block;margin-bottom:4px;color:var(--muted);font-size:.76rem;font-weight:750;letter-spacing:.06em;text-transform:uppercase}.math{margin:1.25rem 0;text-align:center;overflow-x:auto}.math math{font-size:1.17rem}figure{margin:2rem 0 2.35rem}figure.wide{width:calc(100% + 100px);margin-left:-50px}figure img{display:block;width:100%;height:auto}.figure-slot{min-height:310px;display:grid;place-items:center;border:1px dashed #aab4c0;border-radius:10px;background:#f8fafc;color:var(--muted);font-size:.9rem}.figure-slot img{width:100%}.figure-slot:has(img[src=""]){padding:40px}figcaption{max-width:850px;margin:.7rem auto 0;color:var(--muted);font-size:.87rem;line-height:1.48;text-align:center}.requirements{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:1.3rem 0}.requirements div{padding:16px 18px;border:1px solid var(--line);border-radius:9px;background:#fafbfc}.requirements strong{display:block;margin-bottom:3px;color:var(--purple)}table{width:100%;border-collapse:collapse;margin:1.2rem 0 1.8rem;font-size:.91rem}th,td{padding:11px 12px;border:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f3f5f8}.refs{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--line);color:var(--muted);font-size:.86rem}.refs a{color:#3d52b8}@media(max-width:760px){main{width:100%;margin:0;padding:38px 22px 58px}h1{font-size:2.15rem}figure.wide{width:100%;margin-left:0}.requirements{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<h1>How momentum and Newton divide the work</h1>
+<p class="stamp">A measurement campaign in Muon language-model training · 31 August 2026</p>
+
+<p class="lead">A temporal momentum kernel and a Newton-type preconditioner can both reduce how strongly an update responds to high-curvature motion. If they suppress the same directions, combining them applies the correction twice. If they use different information, the combination should preserve both effects.</p>
+
+<p>We studied this question in a 3250-step NanoGPT training run whose hidden weight matrices use Muon. At iteration <em>t</em>, Muon forms a momentum matrix <em>M</em><sub>t</sub> from present and past gradients. If <em>M</em><sub>t</sub> has singular value decomposition <em>U S V</em><sup>T</sup>, Muon uses the polar factor <em>U V</em><sup>T</sup> as its update direction. The two-average configuration that currently holds the benchmark speed record constructs <em>M</em><sub>t</sub> from exponential moving averages with different decay rates; we call it the <strong>record kernel</strong>.</p>
+
+<p>A Newton-type addition changes the matrix before the polar factor is taken. We use the right preconditioner proposed by Du and Su: the momentum matrix is multiplied by a negative power of the input-activation second moment. The exponent α controls the strength; α = 0 leaves the matrix unchanged. This construction supplies feature-space information that a temporal kernel may not contain.</p>
+
+<div class="takeaway"><p><strong>The measurements separate the two mechanisms at one update.</strong> The temporal kernel selects a curvature-stratified subspace dominated by period-two motion. Activation preconditioning then moves the update toward flatter directions by almost the same factor for raw gradients, short momentum, and record momentum. The remaining question is whether this separation survives hundreds of training steps.</p></div>
+
+<h2>Matrix sign erases in-frame preconditioning</h2>
+
+<p>Write msign(<em>M</em>) for the polar factor <em>U V</em><sup>T</sup>. A positive reweighting of <em>M</em>'s own singular values cannot change the exact Muon direction:</p>
+
+<div class="math" aria-label="Matrix sign of U f of S V transpose equals U V transpose">
+<math display="block"><mrow><mi>msign</mi><mo>(</mo><mi>U</mi><mi>f</mi><mo>(</mo><mi>S</mi><mo>)</mo><msup><mi>V</mi><mi>T</mi></msup><mo>)</mo><mo>=</mo><mi>U</mi><msup><mi>V</mi><mi>T</mi></msup></mrow></math>
+</div>
+
+<p>The equality holds whenever <em>f</em> is positive on the nonzero singular values. A useful preconditioner placed before matrix sign must therefore change the singular vectors, change the supported rank, or exploit error in the finite algorithm used to approximate the polar factor.</p>
+
+<div class="definition"><span class="label">Newton–Schulz response in Figure 1</span><p>For each input singular direction, the response is the output singular value divided by the value produced by exact matrix sign. Exact matrix sign therefore has response one at every nonzero input singular value.</p></div>
+
+<div class="prediction"><span class="label">Prediction tested in Figure 1</span><p>If the deployed 12-iteration Newton–Schulz algorithm leaves useful singular-value dependence, its response should remain below one in the singular directions carrying high curvature. A response of one means that changing those input singular values cannot change the update.</p></div>
+
+<figure class="wide" id="figure-1">
+  <div class="figure-slot"><img src="figs/fig1_ns_response.png" alt="Response of finite Newton-Schulz iterations across singular directions"></div>
+  <figcaption><strong>Figure 1. Twelve Newton–Schulz iterations reproduce the exact polar response at every resolved singular index.</strong> One point is one pair of hidden weight matrix and singular index at step 2528; the tail column is each matrix's median over directions whose singular value is below one tenth of its largest. Suppression remains only in that tail and only below eight iterations.</figcaption>
+</figure>
+
+<p>The finite implementation gives no useful exception. The leading singular responses differ from one only at roughly the fourth decimal place, and the residual update has much lower directional curvature than the polar update itself. The same conclusion holds exactly in algebra and numerically in the optimizer.</p>
+
+<p>This result agrees with a complementary observation from Kaon: replacing Muon's singular values while preserving its singular vectors can retain language-model training performance. Together, the results shift attention from singular values to the directions selected before matrix sign.</p>
+
+<h2>Momentum concentrates period-two motion into a sharply stratified subspace</h2>
+
+<p>The temporal kernel can affect Muon by changing which singular vectors appear in the momentum matrix. We measured curvature along each of the leading momentum singular directions and estimated the dominant oscillation period of the gradient projected onto the same direction.</p>
+
+<div class="definition"><span class="label">One direction in Figure 2</span><p>For singular vectors <em>u</em><sub>i</sub> and <em>v</em><sub>i</sub>, the matrix direction is their outer product. Its directional curvature is the Hessian quadratic form after Frobenius normalization. Its dominant period is the strongest Fourier component of the recorded scalar sequence ⟨<em>g</em><sub>t</sub>, <em>u</em><sub>i</sub><em>v</em><sub>i</sub><sup>T</sup>⟩.</p></div>
+
+<div class="prediction"><span class="label">Prediction tested in Figure 2</span><p>If the record kernel behaves like a scalar curvature correction, curvature should vary smoothly with the oscillation frequency it transmits. If it mainly selects an edge-of-stability subspace, several leading directions can share the same period while carrying very different curvature.</p></div>
+
+<figure class="wide" id="figure-2">
+  <div class="figure-slot"><img src="figs/fig2_frame_structure.png" alt="Directional curvature and dominant oscillation period across momentum singular directions"></div>
+  <figcaption><strong>Figure 2. The leading momentum subspace is uniformly period two but strongly heterogeneous in curvature.</strong> One point is one pair of hidden weight matrix and singular index at step 2528; each matrix-type panel contains one matrix per transformer block. Color gives block depth. Random directions and period two provide the references.</figcaption>
+</figure>
+
+<p>The first four momentum directions all lie near period two. Curvature nevertheless falls about sixfold from the leading direction to the second. Matrix sign gives both directions the same singular value in the update. Momentum has therefore selected a period-two subspace without equalizing the curvature inside it.</p>
+
+<h2>Activation preconditioning contributes a separate geometric effect</h2>
+
+<p>Holding model parameters and gradient history fixed isolates the instantaneous composition. At each saved training state, we reconstructed three matrices: the current raw gradient, a short exponential moving average with decay 0.85, and the record two-average momentum. Each matrix was right-multiplied by</p>
+
+<div class="math" aria-label="P alpha equals activation second moment plus epsilon I to negative alpha">
+<math display="block"><mrow><msub><mi>P</mi><mi>α</mi></msub><mo>=</mo><msup><mrow><mo>(</mo><msup><mi>X</mi><mi>T</mi></msup><mi>X</mi><mo>+</mo><mi>εI</mi><mo>)</mo></mrow><mrow><mo>−</mo><mi>α</mi></mrow></msup></mrow></math>
+</div>
+
+<p>where rows of <em>X</em> are layer inputs from the evaluation tokens. We then measured the polar update's directional curvature. At step 2528, a control kept the eigenvalues of <em>P</em><sub>α</sub> and replaced its activation eigenvectors with a random orthogonal basis.</p>
+
+<div class="prediction"><span class="label">Predictions tested in Figures 3 and 4</span><p>If momentum and activation preconditioning correct the same geometry, stronger preconditioning should have a smaller effect after record momentum than after the raw gradient. If their information is independent, the curvature ratio should be nearly the same for all three histories. The random-basis control should preserve any effect caused only by anisotropic eigenvalues and destroy any effect carried by activation directions.</p></div>
+
+<figure class="wide" id="figure-3">
+  <div class="figure-slot"><img src="figs/fig3_newton_effect.png" alt="Curvature along the realized record-momentum update as activation preconditioning strength increases"></div>
+  <figcaption><strong>Figure 3. Activation eigenvectors carry most of the curvature reduction.</strong> One line is one hidden weight matrix at step 2528, with 12 matrices per matrix-type panel. Solid lines use the activation eigenbasis; dotted lines use random orthogonal eigenvectors with the same eigenvalues. Both are applied to record momentum. The random-basis control has been measured only at this middle checkpoint.</figcaption>
+</figure>
+
+<p>At α = 0.5, the real activation basis reduces curvature along the record-momentum update to roughly 60% of its unpreconditioned value. Replacing the activation eigenvectors with random vectors leaves about 90% of the original curvature. Eigenvalue anisotropy causes rotation, while the activation directions supply most of the movement toward lower curvature.</p>
+
+<figure class="wide" id="figure-4">
+  <div class="figure-slot"><img src="figs/fig4_independence.png" alt="Per-matrix comparison of activation preconditioning effects across temporal kernels and eigenbases"></div>
+  <figcaption><strong>Figure 4. Curvature reduction matches across temporal kernels, while rotation magnitude does not measure useful Newton content.</strong> One point on the left is one pair of matrix and checkpoint at α = 0.5, for 216 points; the diagonal marks equal curvature reduction for record momentum and the raw gradient. One point on the right is one matrix at step 2528 and α = 1; the diagonal marks equal rotation under activation and random eigenvectors with identical eigenvalues.</figcaption>
+</figure>
+
+<p>The per-matrix comparison reaches the same conclusion as the aggregate. The record kernel changes the baseline curvature of the update; activation preconditioning then multiplies that curvature by nearly the same ratio. The only consistent coupling changes about two percent of the total rotation at the strongest tested preconditioner.</p>
+
+<p>Rotation magnitude by itself is uninformative here. Real and random eigenvectors rotate the polar update by similar angles because anisotropic eigenvalues determine how much the singular frame moves. Only the real activation eigenvectors steer the update toward substantially flatter directions.</p>
+
+<h2>The mix must respond to measured minibatch information</h2>
+
+<p>Approximate independence for one update does not determine how much memory or preconditioning to use. Their estimation errors respond differently to the available data. The relevant state variable is the signal-to-noise ratio in the directions selected by momentum.</p>
+
+<div class="definition"><span class="label">Directional signal-to-noise ratio</span><p>At a frozen training state, project each of 32 consecutive microbatch gradients onto a momentum singular direction. The squared mean projection divided by the projection variance defines the plotted signal-to-noise ratio. Consecutive microbatches need not be statistically independent; the token-scaling measurement captures the resulting departure from ideal averaging.</p></div>
+
+<div class="prediction"><span class="label">Predictions tested in Figure 5</span><p>Independent token noise would make variance fall inversely with token count and produce a slope of one for signal-to-noise ratio on log–log axes. A fixed momentum–Newton mixture would also require directional signal-to-noise to remain roughly stationary through training. Failure of either prediction requires online measurement.</p></div>
+
+<figure class="wide" id="figure-5">
+  <div class="figure-slot"><img src="figs/fig5_snr.png" alt="Directional gradient signal-to-noise ratio across training, singular index, and token count"></div>
+  <figcaption><strong>Figure 5. Directional signal-to-noise collapses through training and improves more slowly than independent-token averaging predicts.</strong> One point on the left is one pair of hidden weight matrix and singular index, computed from 32 consecutive 8192-token microbatches at steps 1628, 2528, or 3028; dotted lines are random-direction references. One thin line on the right is one matrix's leading direction across token counts, bold lines are medians, and the reference has slope one. Because the stream chunks are consecutive, the cross-size slope is the robust comparison.</figcaption>
+</figure>
+
+<p>The leading direction's median signal-to-noise ratio falls from 6.2 early in training to 0.40 near the end. Increasing token count raises signal-to-noise with an exponent near 0.55 rather than one. Batch size alone therefore cannot set the momentum–Newton mixture in this regime.</p>
+
+<div class="requirements">
+  <div><strong>Well-conditioned limit</strong>When the residual condition number approaches one, optimal momentum should approach zero.</div>
+  <div><strong>Token-starved limit</strong>When the minibatch cannot estimate curvature reliably, the Newton preconditioner should approach the identity.</div>
+</div>
+
+<p>The gradients needed to estimate this state already exist on each data-parallel worker before all-reduce. A recorder can project those local gradients onto the momentum directions without another forward or backward pass. The projection, singular-value decomposition, communication, and storage still have overhead, which must be measured in the instrumented run.</p>
+
+<h2>A candidate rule and the prospective training test</h2>
+
+<p>A temporal kernel can express only corrections indexed by temporal frequency. The part of an activation preconditioner predictable from that frequency response is exposed to double counting; its remaining cross-basis action contains information unavailable to the kernel. This decomposition is a proposed design, not yet a trained optimizer.</p>
+
+<p>The candidate rule uses measured directional signal-to-noise to divide responsibility. Low signal-to-noise calls for longer averaging and a preconditioner closer to identity. High signal-to-noise permits shorter memory and stronger activation correction. Residual conditioning supplies the second boundary: momentum vanishes as the corrected problem becomes well conditioned.</p>
+
+<p>A training experiment is now crossing α ∈ {0, 0.25, 0.5} with record and short momentum from two shared training states. Before seeing those losses, the expected interaction is small compared with the main effect of α. Curvature is measured after 250, 500, and 750 continuation steps because the optimizer may move to a new state where curvature again reaches its stability boundary.</p>
+
+<div class="caution"><p><strong>The training result can overturn the instantaneous measurement.</strong> In an earlier kernel comparison, the direction with better immediate loss produced worse continuation loss. A large momentum–Newton interaction would show that the present one-update factorization also fails after the optimizer changes its own state.</p></div>
+
+<h2>Reproduction</h2>
+
+<table><tbody>
+<tr><th>Training stack</th><td>Track 3 NanoGPT; 12 transformer blocks; Muon on 72 hidden weight matrices; AdamW on embeddings, output head, and scalar parameters; 3250 training steps.</td></tr>
+<tr><th>Record temporal kernel</th><td>Two exponential moving averages with decays 0.85 and 0.98; fast-buffer mixture weight 0.4385; applied after step 1000; Nesterov mixture coefficient 0.95.</td></tr>
+<tr><th>Short temporal kernel</th><td>One exponential moving average with decay 0.85, initialized from the serialized fast buffer.</td></tr>
+<tr><th>Activation preconditioner</th><td>Right multiplication by a damped activation second-moment power; α ∈ {0, 0.25, 0.5, 1.0} in the same-state measurements. Full input covariance in the offline geometry measurement.</td></tr>
+<tr><th>Saved training states and data</th><td>Steps 1628, 2528, and 3028 of the same 3250-step record trajectory. Activation moments and curvature use 131072 held-out tokens. Noise measurements use 32 consecutive 8192-token chunks from the training stream.</td></tr>
+<tr><th>Code and data</th><td>Measurement scripts and scored tensors live in the `muoff` campaign; the explicit training grid uses public branch `codex/req025-newton-muon` at commit `596d2868282b0ae4af4fecd5c9446f713c923423`.</td></tr>
+</tbody></table>
+
+<div class="refs">
+<p><strong>References.</strong> Zhehang Du and Weijie Su, <a href="https://arxiv.org/abs/2604.01472">The Newton-Muon Optimizer</a>. Zakhar Shumaylov et al., <a href="https://arxiv.org/abs/2605.11181">Muon is Not That Special: Random or Inverted Spectra Work Just as Well</a>.</p>
+<p><strong>Scope.</strong> The fixed-parameter geometry and signal-to-noise measurements use one training trajectory and repeated hidden matrices within that trajectory. The running training comparison uses shared saved states and is a mechanism test rather than a multi-seed estimate of final validation performance.</p>
+</div>
+</main></body></html>
