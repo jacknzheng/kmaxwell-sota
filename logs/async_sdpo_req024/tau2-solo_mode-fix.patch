@@ -1,38 +1,32 @@
-=== regenerate patch ===
-From 2ef7240aebea2f7d4ec85f4e6d30854bd847eb05 Mon Sep 17 00:00:00 2001
+From 9e10f691447fdf603155a9ac240139d7cd4d3d82 Mon Sep 17 00:00:00 2001
 From: Jerry Hong <jerry.hong@baseten.co>
 Date: Mon, 31 Aug 2026 10:29:20 +0000
-Subject: [PATCH] Fix tau2 evaluate_simulation call for pinned tau2-bench
- a2c0247
+Subject: [PATCH] Fix tau2 evaluate_simulation for pinned a2c0247 + harden
+ user-sim against transient 429s
 
-Two coupled signature mismatches against tau2-bench a2c0247, both surfacing
-only on the tau2 (retail/airline) reward path, not the diligence dataset:
+Three tau2 (retail/airline) reward-path fixes against tau2-bench a2c0247:
 
-1. evaluate_simulation() now requires a positional solo_mode: bool between
-   evaluation_type and domain. The call omitted it -> TypeError (missing arg).
-   Add solo_mode=False (live half-duplex eval is not solo mode).
+1. evaluate_simulation() requires a positional solo_mode: bool -> add solo_mode=False.
+2. evaluate_simulation() forwards solo_mode to the domain env constructor, so the
+   env_kwargs we pass must not also carry it (get_environment() got multiple values
+   for solo_mode) -> strip solo_mode from the eval-call env_kwargs; env_kwargs_for is
+   unchanged so the rollout make_env path (which calls the ctor directly) still works.
+3. The user-simulator call re-raised on any exception, so a transient upstream 429
+   (OpenRouter shared-pool overload on the user-sim/judge model) killed the whole run.
+   Add bounded retry-with-backoff (_retry_transient) on transient provider errors.
 
-2. evaluate_simulation() now forwards solo_mode to the domain env constructor
-   internally, so the env_kwargs we pass must NOT also carry solo_mode, else
-   get_environment() gets it twice ("multiple values for keyword argument
-   solo_mode"). Strip solo_mode from the env_kwargs argument at the eval call
-   site; env_kwargs_for is unchanged so the rollout path (make_env, which calls
-   the constructor directly with solo_mode) still works.
-
-Adds tests/test_tau2_evaluate_signature.py: an inspect.signature guard that
-asserts the harness call supplies every no-default param of the pinned
-evaluate_simulation.
+Adds tests/test_tau2_evaluate_signature.py: an inspect.signature guard for #1.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01YKPwGqPuEuP2wzzHuCEhok
 ---
- data/tau_harness.py                   |  4 ++-
+ data/tau_harness.py                   | 28 ++++++++++++++++--
  tests/test_tau2_evaluate_signature.py | 42 +++++++++++++++++++++++++++
- 2 files changed, 45 insertions(+), 1 deletion(-)
+ 2 files changed, 68 insertions(+), 2 deletions(-)
  create mode 100644 tests/test_tau2_evaluate_signature.py
 
 diff --git a/data/tau_harness.py b/data/tau_harness.py
-index e7b360e..9b4bd30 100644
+index e7b360e..12c92b8 100644
 --- a/data/tau_harness.py
 +++ b/data/tau_harness.py
 @@ -522,8 +522,10 @@ def evaluate_episode(task: Task, tau_messages: list, termination: str, retrieval
@@ -47,6 +41,44 @@ index e7b360e..9b4bd30 100644
      )
      return float(info.reward)
  
+@@ -681,6 +683,28 @@ def _to_tau_messages(messages: list[dict]):
+     return out
+ 
+ 
++
++async def _retry_transient(fn, *, tries: int = 6, base: float = 1.5, cap: float = 30.0):
++    """Retry a thread-executed LLM op through transient provider errors (429 /
++    upstream overload / timeout). Re-raises the last error once tries are spent."""
++    import asyncio as _asyncio
++    last = None
++    for i in range(tries):
++        try:
++            return await _asyncio.to_thread(fn)
++        except Exception as exc:  # noqa: BLE001
++            last = exc
++            s = f"{type(exc).__name__} {exc}".lower()
++            transient = any(k in s for k in (
++                "ratelimit", "429", "rate-limited", "overload", "engine_overloaded",
++                "timeout", "timed out", "temporarily", "503", "502", "unavailable"))
++            if i + 1 < tries and transient:
++                await _asyncio.sleep(min(base * (2 ** i), cap))
++                continue
++            raise
++    raise last
++
++
+ async def run_tau2_episode(
+     task: Task,
+     *,
+@@ -712,7 +736,7 @@ async def run_tau2_episode(
+ 
+         started = time.monotonic()
+         try:
+-            user_msg, _ = await asyncio.to_thread(_call)
++            user_msg, _ = await _retry_transient(_call)
+         except Exception as exc:
+             logger.exception(
+                 "tau2 user simulator failed for task %s (%s)",
 diff --git a/tests/test_tau2_evaluate_signature.py b/tests/test_tau2_evaluate_signature.py
 new file mode 100644
 index 0000000..7750618
