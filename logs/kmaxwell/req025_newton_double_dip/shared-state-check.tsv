@@ -1,0 +1,16 @@
+# REQ-025 shared-state gate — SHA 365c392d, node qj0z1gw. Each of the 6 arms/fork must load the identical serialized eos_shared_state at the fork step.
+# PASS: all 12 arms load bit-identical model state at the fork (max abs-diff vs source = 0.000e+00). The NaN divergence is therefore NOT a load defect —
+#   every arm begins from identical weights+optimizer state; the only per-arm difference is newton_alpha, and only alpha=0 diverges (see README.md).
+fork	ref	arm	max_abs_diff_vs_source
+1500	model	record_a0p0	0.000e+00
+1500	model	record_a0p25	0.000e+00
+1500	model	record_a0p5	0.000e+00
+1500	model	short_a0p0	0.000e+00
+1500	model	short_a0p25	0.000e+00
+1500	model	short_a0p5	0.000e+00
+2000	model	record_a0p0	0.000e+00
+2000	model	record_a0p25	0.000e+00
+2000	model	record_a0p5	0.000e+00
+2000	model	short_a0p0	0.000e+00
+2000	model	short_a0p25	0.000e+00
+2000	model	short_a0p5	0.000e+00
