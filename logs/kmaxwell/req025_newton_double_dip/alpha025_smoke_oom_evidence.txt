@@ -1,0 +1,6 @@
+# REQ-025 alpha=0.25 smoke gate — SHA 365c392d, node 3y529vw
+# (a)/(b) PASS via standalone API check: 48/48 covariance accumulators nonzero+finite after first collection; 48/48 inverse-power preconditioners finite/installable.
+# (c) on-GPU 10-update run at committed microbatch_sequences=64: OOM (12.28 GiB cross_entropy forward over 80 GiB; expandable_segments applied, reserved reclaimed to 59 MiB, peak still exceeds capacity).
+#     Root: the alpha>0 activation-covariance forward hooks add memory overhead that tips the forward over 80 GiB/GPU. alpha=0 arms fit (no covariance hooks).
+# FIX (validated): microbatch_sequences=32 (CLI override; grad-accum => IDENTICAL effective batch 524288 => identical gradients) -> MB_EXIT=0, 0 OOM, reached step 1510, finite loss.
+# OOM traceback frame: harness/model_gpt.py:114 forward -> cross_entropy (accumulate_global_gradient)
