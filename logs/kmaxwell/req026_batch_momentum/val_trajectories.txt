@@ -1,0 +1,62 @@
+### req026_b1x_mu0
+step:0/3250 val_loss:3.44367
+step:2125/3250 val_loss:3.44336
+step:2250/3250 val_loss:3.42467
+step:2375/3250 val_loss:3.40636
+step:2500/3250 val_loss:3.38693
+step:2625/3250 val_loss:3.36548
+step:2750/3250 val_loss:3.34586
+dumps: model_step002000.pt model_step002250.pt model_step002500.pt model_step002750.pt 
+### req026_b1x_mu95
+step:0/3250 val_loss:3.44367
+step:2125/3250 val_loss:3.44315
+step:2250/3250 val_loss:3.42483
+step:2375/3250 val_loss:3.40642
+step:2500/3250 val_loss:3.38689
+step:2625/3250 val_loss:3.36542
+step:2750/3250 val_loss:3.34588
+dumps: model_step002000.pt model_step002250.pt model_step002500.pt model_step002750.pt 
+### req026_b1x_bimax
+step:0/3250 val_loss:3.44367
+step:2125/3250 val_loss:3.42535
+step:2250/3250 val_loss:3.40680
+step:2375/3250 val_loss:3.39005
+step:2500/3250 val_loss:3.37225
+step:2625/3250 val_loss:3.35324
+step:2750/3250 val_loss:3.33557
+dumps: model_step002000.pt model_step002250.pt model_step002500.pt model_step002750.pt 
+### req026_b4x_mu0
+step:0/3250 val_loss:3.44367
+step:2125/3250 val_loss:3.35577
+step:2250/3250 val_loss:3.32653
+step:2375/3250 val_loss:3.30065
+step:2500/3250 val_loss:3.28094
+step:2625/3250 val_loss:3.26195
+step:2750/3250 val_loss:3.24333
+dumps: model_step002000.pt model_step002250.pt model_step002500.pt model_step002750.pt 
+### req026_b4x_mu95
+step:0/3250 val_loss:3.44367
+step:2125/3250 val_loss:3.35493
+step:2250/3250 val_loss:3.32492
+step:2375/3250 val_loss:3.30090
+step:2500/3250 val_loss:3.28073
+step:2625/3250 val_loss:3.26176
+step:2750/3250 val_loss:3.24326
+dumps: model_step002000.pt model_step002250.pt model_step002500.pt model_step002750.pt 
+### req026_b4x_bimax
+step:0/3250 val_loss:3.44367
+step:2125/3250 val_loss:3.34714
+step:2250/3250 val_loss:3.31666
+step:2375/3250 val_loss:3.29274
+step:2500/3250 val_loss:3.27414
+step:2625/3250 val_loss:3.25655
+step:2750/3250 val_loss:3.23892
+dumps: model_step002000.pt model_step002250.pt model_step002500.pt model_step002750.pt 
+=== base val trajectory ===
+### eos_shared_base
+step:1375/3250 val_loss:3.54670
+step:1500/3250 val_loss:3.52131
+step:1625/3250 val_loss:3.50150
+step:1750/3250 val_loss:3.48161
+step:1875/3250 val_loss:3.46198
+step:2000/3250 val_loss:3.44367
