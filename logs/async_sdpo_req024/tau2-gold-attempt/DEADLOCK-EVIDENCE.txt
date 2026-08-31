@@ -1,0 +1,6 @@
+run: tau2-gold-20260831-112840 (retail+airline, paid nemotron-3-super-120b, retry-hardened)
+reached step 25/200 then DEADLOCKED at the first synchronous eval boundary:
+  evaluation_started=1 (12:53:06Z), evaluation_task_completed=0 after 37+ min
+  RateLimitError/429 count: 443 (upstream shared-pool overload, DeepInfra+DigitalOcean)
+sample upstream-429 (redacted):
+temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations
