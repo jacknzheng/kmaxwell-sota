@@ -13,6 +13,9 @@ from harness import hooks
 import optimizers
 
 LOCKED_HOOK_NAMES = {
+    "log_learning_rates_at_steps",
+    "log_gradient_autocorrelation",
+    "set_learning_rate_stairs",
     "open_rank_zero_log",
     "load_validation_tokens",
     "build_compiled_gpt",
