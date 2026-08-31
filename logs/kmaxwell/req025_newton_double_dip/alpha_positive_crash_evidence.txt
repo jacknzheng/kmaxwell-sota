@@ -1,0 +1,23 @@
+# REQ-025 alpha>0 crash evidence — frozen SHA 596d2868
+# Bug: name collision in records/track_3_optimization/harness/hooks.py
+#   line 15:  from optimizers.muon import attach_newton_muon_activation_stats, owned_param_indices   (1-arg helper)
+#   line 145: def attach_newton_muon_activation_stats() -> Hook:   (0-arg factory; SHADOWS the import)
+#   line 152: state[...]=attach_newton_muon_activation_stats(state["model"])   (calls helper name w/ model -> hits shadowing 0-arg factory)
+# Triggered only when newton_alpha>0 (line ~149 guard). alpha=0 arms bypass the hook and run fine.
+
+=== EXIT summary (fork-1500 arms) ===
+EXIT=0 END_EPOCH=1788154406 rid=newton_dd_f1500_record_a0p0
+EXIT=1 END_EPOCH=1788154422 rid=newton_dd_f1500_record_a0p25
+EXIT=1 END_EPOCH=1788154440 rid=newton_dd_f1500_record_a0p5
+EXIT=0 END_EPOCH=1788154594 rid=newton_dd_f1500_short_a0p0
+EXIT=1 END_EPOCH=1788154611 rid=newton_dd_f1500_short_a0p25
+EXIT=1 END_EPOCH=1788154627 rid=newton_dd_f1500_short_a0p5
+
+=== traceback (record_a0p25) ===
+[rank7]:   File "/root/kmaxwell-sota/records/track_3_optimization/harness/hooks.py", line 847, in inject
+[rank7]:     state = hook(config, state)
+[rank7]:             ^^^^^^^^^^^^^^^^^^^
+[rank7]:   File "/root/kmaxwell-sota/records/track_3_optimization/harness/hooks.py", line 152, in hook
+[rank7]:     state["newton_activation_hook_handles"] = attach_newton_muon_activation_stats(
+[rank7]:                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank7]: TypeError: attach_newton_muon_activation_stats() takes 0 positional arguments but 1 was given
