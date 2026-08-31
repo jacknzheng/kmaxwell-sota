@@ -10,7 +10,7 @@
 </head>
 <body><main>
 <h1>How much Newton is already in momentum?</h1>
-<p class="stamp">Working report · 31 August 2026 · central regression complete</p>
+<p class="stamp">Research report · 31 August 2026</p>
 
 <p class="lead">Momentum uses the time history of gradients. Newton's method uses their spatial curvature. These appear to be different sources of information, but edge-of-stability dynamics connect them: sharp directions often oscillate quickly. A temporal filter can therefore imitate part of an inverse Hessian without ever measuring a Hessian.</p>
 
@@ -89,11 +89,11 @@
 
 <h2>4. Batch size changes which momentum is useful</h2>
 
-<p>A matched continuation from step 2000 compared no momentum, a single EMA, and bi-Maxwell at the standard batch and at four times as many tokens per step. The single EMA was indistinguishable from no momentum at both batch sizes. Bi-Maxwell improved validation loss by about 0.0103 at the standard batch and 0.0044 at four times the batch.</p>
+<p>A matched continuation from step 2000 compared no momentum, a single EMA, and bi-Maxwell at the standard batch and at four times as many tokens per step. The single EMA was indistinguishable from no momentum at both batch sizes. Bi-Maxwell improved validation loss by about 0.0106 at the standard batch and 0.0044 at four times the batch. At eight times the batch, its improvement fell again to 0.0023: the curve has not plateaued, and the benefit remains nonzero at every measured batch.</p>
 
 <div class="result"><span class="label">Measured result</span><p>In this experiment, the benefit came from the two-rate kernel shape rather than generic exponential momentum, and that benefit roughly halved when the batch grew fourfold.</p></div>
 
-<figure><img src="figs/figB_batch_benefit.png" alt="Validation-loss benefit of momentum kernels at standard and four-times batch"><figcaption>Each filled point is the validation-loss change relative to no momentum after a 750-step continuation from the same step-2000 state; lower is better. Single-EMA momentum remains at zero benefit, while bi-Maxwell's benefit shrinks by more than half at four times the batch. Independent reruns reproduce the separation with non-overlapping ranges; because the harness reuses the same sequential data stream, these replicas measure run-to-run nondeterminism rather than robustness to resampling the data.</figcaption></figure>
+<figure><img src="figs/figB_batch_benefit.png" alt="Validation-loss benefit of momentum kernels at standard, four-times, and eight-times batch"><figcaption>Each circle is one bi-Maxwell continuation from the same step-2000 state; the squares show single-EMA controls, and lower is better. Bi-Maxwell's benefit falls from 0.0106 to 0.0044 to 0.0023 as the batch grows from 1× to 4× to 8×. The standard and 4× reruns reproduce the separation with non-overlapping ranges; because the harness reuses the same sequential data stream, these replicas measure run-to-run nondeterminism rather than robustness to resampling the data. The 8× point has one run.</figcaption></figure>
 
 <p>This favors a denoising contribution: more tokens reduce the value of the expressive temporal filter. The benefit does not vanish, so the experiment does not establish that denoising is the kernel's only role. It does establish that “momentum versus no momentum” is the wrong comparison here. Kernel shape is the active variable.</p>
 
@@ -134,5 +134,5 @@
 
 <div class="caution"><span class="label">Scope</span><p>The batch experiment uses one fork, a 750-step horizon, and no learning-rate rescaling across batch sizes. Its reruns reuse the same sequential data stream and therefore measure run-to-run nondeterminism, not data-distribution robustness. The expressibility regression is held out across matrices and checkpoints but uses one 129-tap linear kernel class and the registered per-matrix normalization; its conclusion is about that operational definition.</p></div>
 
-<div class="footnotes">Draft status: central result integrated; final audit in progress. “Certified” summaries use only solves satisfying the final residual threshold with no breakdown.</div>
+<div class="footnotes">“Certified” summaries use only solves satisfying the final residual threshold with no breakdown.</div>
 </main></body></html>
