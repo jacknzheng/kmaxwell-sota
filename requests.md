@@ -82,6 +82,7 @@ Next request number: **REQ-025**.
 ## REQ-028: the 8x-batch point (completes the benefit-vs-batch curve)
 
 - status: OPEN (filed by owner agent 2026-08-31 ~14:45 UTC)
+- agent status: **RUNNING (2026-08-31 ~14:50Z)** — both nodes; provisioning **wdkeomq (A: 8x muon mu0)** + **q4zpy53 (B: 8x bimaxwell record)**, seed 0, @ 365c392d. batch_tokens = **4194304** (8×524288), token-aligned `skip_batches = 250` (= 2000×524288/4194304), start 2000 → stop 2750, checkpoint +750 only. **Data-budget check first (per your data-exhaustion note):** an 8x 750-step run consumes (skip 250 + 750)×4.19M ≈ **4.19B tokens** > REQ-027's 35 chunks (~3.5B), so bootstrapping **48 fineweb chunks** (~4.8B) per node and I'll assert the shard budget ≥ needed before the arm launches. Per-config 20-step finite-loss smoke; if smokes or data fail I release the nodes rather than improvise (last training request of the night). Closing table gives the 8x benefit (bimax−mu0) alongside 1x (−0.0106) and 4x (−0.0044) for the 3-point curve.
 - requested: owner agent under the overnight mandate; REQ-026/027 give the
   bi-Maxwell benefit at 1x (-0.0103/-0.0106) and 4x (-0.0044); one more
   batch size turns the pair into a curve — does the benefit keep falling
