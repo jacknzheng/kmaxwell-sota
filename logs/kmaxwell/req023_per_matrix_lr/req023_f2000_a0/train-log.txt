@@ -1,0 +1,173 @@
+loop: gpt_record
+run_id: req023_f2000_a0
+seed: 0
+require_world_size: 8
+train_steps: 3250
+start_step: 2000
+stop_after_step: 2850
+batch_tokens: 524288
+microbatch_sequences: 64
+train_data: data/fineweb10B/fineweb_train_*.bin
+val_data: data/fineweb10B/fineweb_val_*.bin
+val_tokens: 10485760
+model:
+  vocab_size: 50304
+  num_layers: 12
+  model_dim: 768
+optimizer_groups:
+- pattern: ^embed\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.7
+    weight_decay: 0.001
+- pattern: ^proj\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.004
+    weight_decay: 0.001
+- pattern: ^blocks\..*\.weight$
+  optimizer: per_matrix_lr_muon
+  hyperparams:
+    lr: 0.025
+    weight_decay: 0.05
+    mu: 0.95
+    fast_decay: 0.85
+    slow_decay: 0.98
+    fast_weight: 0.4385
+    switch_step: 1000
+    lr_multipliers:
+    - 1.0
+    - 0.6
+    - 0.6
+    - 0.6
+    - 1.0
+    - 1.7
+    - 1.0
+    - 1.0
+    - 1.7
+    - 1.7
+    - 0.6
+    - 1.7
+    - 1.7
+    - 1.7
+    - 1.0
+    - 1.0
+    - 1.7
+    - 0.6
+    - 0.6
+    - 1.7
+    - 1.0
+    - 0.6
+    - 0.6
+    - 1.0
+    - 1.0
+    - 1.0
+    - 1.0
+    - 0.6
+    - 1.7
+    - 1.7
+    - 1.0
+    - 1.7
+    - 1.0
+    - 0.6
+    - 1.7
+    - 1.7
+    - 0.6
+    - 0.6
+    - 0.6
+    - 1.0
+    - 0.6
+    - 1.0
+    - 0.6
+    - 1.7
+    - 1.7
+    - 0.6
+    - 1.7
+    - 0.6
+    - 1.0
+    - 1.7
+    - 0.6
+    - 0.6
+    - 1.0
+    - 0.6
+    - 1.0
+    - 1.7
+    - 0.6
+    - 1.7
+    - 1.7
+    - 1.0
+    - 1.7
+    - 1.0
+    - 0.6
+    - 1.0
+    - 1.7
+    - 1.0
+    - 1.7
+    - 0.6
+    - 0.6
+    - 1.7
+    - 1.0
+    - 1.0
+- pattern: .*
+  optimizer: adamw
+  hyperparams:
+    lr: 0.015
+    weight_decay: 0.001
+setup:
+- name: open_rank_zero_log
+- name: load_validation_tokens
+- name: build_compiled_gpt
+- name: seed_then_initialize_parameters
+- name: assemble_grouped_optimizer
+- name: open_training_batches
+- name: broadcast_initial_parameters
+- name: load_training_state
+  hyperparams:
+    state_dir: eos_shared_state
+    step: 2000
+    skip_batches: 2000
+- name: validate_at_step_boundaries
+pre_optimizer:
+- name: dump_training_state_at_steps
+  hyperparams:
+    steps:
+    - 2000
+    dump_dir: gate_req023_f2000_a0
+- name: checkpoint_model_at_cadence
+  hyperparams:
+    every: 125
+    dump_dir: dumps_req023_f2000_a0
+- name: set_learning_rate_stairs
+  hyperparams:
+    stairs:
+    - - 2000
+      - 1.0
+- name: log_learning_rates_at_steps
+  hyperparams:
+    steps:
+    - 2000
+    - 2001
+post_optimizer:
+- name: print_training_progress
+- name: validate_at_step_boundaries
+  hyperparams:
+    every: 125
+teardown:
+- name: mark_log_finished
+
+====================================================================================================
+git HEAD: 25d320879087eacc57fbc8d51b6007c18bb97ca6
+Running PyTorch 2.10.0+cu128 compiled for CUDA 12.8 on NVIDIA H100 80GB HBM3 with world_size 8
+====================================================================================================
+resumed training state from step 2000 in eos_shared_state, skipped 2000 batches
+step:0/3250 val_loss:3.44309 train_time:0.001s step_avg:nanms
+train_state dump muon_step:2000 wrote gate_req023_f2000_a0/train_state_step002000_rank0of8.pt
+learning_rates step:2000 [{'pattern': '^embed\\.weight$', 'lr': [0.7]}, {'pattern': '^proj\\.weight$', 'lr': [0.004]}, {'pattern': '^blocks\\..*\\.weight$', 'lr': [0.025], 'per_matrix': [{'sorted_index': 0, 'name': 'blocks.0.mlp.fc.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 1, 'name': 'blocks.1.mlp.fc.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 2, 'name': 'blocks.2.mlp.fc.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 3, 'name': 'blocks.3.mlp.fc.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 4, 'name': 'blocks.4.mlp.fc.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 5, 'name': 'blocks.5.mlp.fc.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 6, 'name': 'blocks.6.mlp.fc.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 7, 'name': 'blocks.7.mlp.fc.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 8, 'name': 'blocks.8.mlp.fc.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 9, 'name': 'blocks.9.mlp.fc.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 10, 'name': 'blocks.10.mlp.fc.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 11, 'name': 'blocks.11.mlp.fc.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 12, 'name': 'blocks.0.mlp.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 13, 'name': 'blocks.1.mlp.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 14, 'name': 'blocks.2.mlp.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 15, 'name': 'blocks.3.mlp.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 16, 'name': 'blocks.4.mlp.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 17, 'name': 'blocks.5.mlp.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 18, 'name': 'blocks.6.mlp.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 19, 'name': 'blocks.7.mlp.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 20, 'name': 'blocks.8.mlp.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 21, 'name': 'blocks.9.mlp.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 22, 'name': 'blocks.10.mlp.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 23, 'name': 'blocks.11.mlp.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 24, 'name': 'blocks.0.attn.q.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 25, 'name': 'blocks.0.attn.k.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 26, 'name': 'blocks.0.attn.v.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 27, 'name': 'blocks.0.attn.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 28, 'name': 'blocks.1.attn.q.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 29, 'name': 'blocks.1.attn.k.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 30, 'name': 'blocks.1.attn.v.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 31, 'name': 'blocks.1.attn.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 32, 'name': 'blocks.2.attn.q.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 33, 'name': 'blocks.2.attn.k.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 34, 'name': 'blocks.2.attn.v.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 35, 'name': 'blocks.2.attn.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 36, 'name': 'blocks.3.attn.q.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 37, 'name': 'blocks.3.attn.k.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 38, 'name': 'blocks.3.attn.v.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 39, 'name': 'blocks.3.attn.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 40, 'name': 'blocks.4.attn.q.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 41, 'name': 'blocks.4.attn.k.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 42, 'name': 'blocks.4.attn.v.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 43, 'name': 'blocks.4.attn.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 44, 'name': 'blocks.5.attn.q.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 45, 'name': 'blocks.5.attn.k.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 46, 'name': 'blocks.5.attn.v.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 47, 'name': 'blocks.5.attn.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 48, 'name': 'blocks.6.attn.q.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 49, 'name': 'blocks.6.attn.k.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 50, 'name': 'blocks.6.attn.v.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 51, 'name': 'blocks.6.attn.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 52, 'name': 'blocks.7.attn.q.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 53, 'name': 'blocks.7.attn.k.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 54, 'name': 'blocks.7.attn.v.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 55, 'name': 'blocks.7.attn.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 56, 'name': 'blocks.8.attn.q.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 57, 'name': 'blocks.8.attn.k.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 58, 'name': 'blocks.8.attn.v.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 59, 'name': 'blocks.8.attn.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 60, 'name': 'blocks.9.attn.q.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 61, 'name': 'blocks.9.attn.k.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 62, 'name': 'blocks.9.attn.v.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 63, 'name': 'blocks.9.attn.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 64, 'name': 'blocks.10.attn.q.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 65, 'name': 'blocks.10.attn.k.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 66, 'name': 'blocks.10.attn.v.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 67, 'name': 'blocks.10.attn.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 68, 'name': 'blocks.11.attn.q.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 69, 'name': 'blocks.11.attn.k.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 70, 'name': 'blocks.11.attn.v.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 71, 'name': 'blocks.11.attn.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}]}, {'pattern': '.*', 'lr': [0.015]}]
+learning_rates step:2001 [{'pattern': '^embed\\.weight$', 'lr': [0.7]}, {'pattern': '^proj\\.weight$', 'lr': [0.004]}, {'pattern': '^blocks\\..*\\.weight$', 'lr': [0.025], 'per_matrix': [{'sorted_index': 0, 'name': 'blocks.0.mlp.fc.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 1, 'name': 'blocks.1.mlp.fc.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 2, 'name': 'blocks.2.mlp.fc.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 3, 'name': 'blocks.3.mlp.fc.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 4, 'name': 'blocks.4.mlp.fc.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 5, 'name': 'blocks.5.mlp.fc.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 6, 'name': 'blocks.6.mlp.fc.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 7, 'name': 'blocks.7.mlp.fc.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 8, 'name': 'blocks.8.mlp.fc.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 9, 'name': 'blocks.9.mlp.fc.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 10, 'name': 'blocks.10.mlp.fc.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 11, 'name': 'blocks.11.mlp.fc.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 12, 'name': 'blocks.0.mlp.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 13, 'name': 'blocks.1.mlp.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 14, 'name': 'blocks.2.mlp.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 15, 'name': 'blocks.3.mlp.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 16, 'name': 'blocks.4.mlp.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 17, 'name': 'blocks.5.mlp.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 18, 'name': 'blocks.6.mlp.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 19, 'name': 'blocks.7.mlp.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 20, 'name': 'blocks.8.mlp.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 21, 'name': 'blocks.9.mlp.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 22, 'name': 'blocks.10.mlp.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 23, 'name': 'blocks.11.mlp.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 24, 'name': 'blocks.0.attn.q.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 25, 'name': 'blocks.0.attn.k.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 26, 'name': 'blocks.0.attn.v.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 27, 'name': 'blocks.0.attn.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 28, 'name': 'blocks.1.attn.q.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 29, 'name': 'blocks.1.attn.k.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 30, 'name': 'blocks.1.attn.v.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 31, 'name': 'blocks.1.attn.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 32, 'name': 'blocks.2.attn.q.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 33, 'name': 'blocks.2.attn.k.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 34, 'name': 'blocks.2.attn.v.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 35, 'name': 'blocks.2.attn.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 36, 'name': 'blocks.3.attn.q.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 37, 'name': 'blocks.3.attn.k.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 38, 'name': 'blocks.3.attn.v.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 39, 'name': 'blocks.3.attn.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 40, 'name': 'blocks.4.attn.q.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 41, 'name': 'blocks.4.attn.k.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 42, 'name': 'blocks.4.attn.v.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 43, 'name': 'blocks.4.attn.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 44, 'name': 'blocks.5.attn.q.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 45, 'name': 'blocks.5.attn.k.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 46, 'name': 'blocks.5.attn.v.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 47, 'name': 'blocks.5.attn.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 48, 'name': 'blocks.6.attn.q.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 49, 'name': 'blocks.6.attn.k.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 50, 'name': 'blocks.6.attn.v.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 51, 'name': 'blocks.6.attn.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 52, 'name': 'blocks.7.attn.q.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 53, 'name': 'blocks.7.attn.k.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 54, 'name': 'blocks.7.attn.v.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 55, 'name': 'blocks.7.attn.proj.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 56, 'name': 'blocks.8.attn.q.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 57, 'name': 'blocks.8.attn.k.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 58, 'name': 'blocks.8.attn.v.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 59, 'name': 'blocks.8.attn.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 60, 'name': 'blocks.9.attn.q.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 61, 'name': 'blocks.9.attn.k.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 62, 'name': 'blocks.9.attn.v.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 63, 'name': 'blocks.9.attn.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 64, 'name': 'blocks.10.attn.q.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 65, 'name': 'blocks.10.attn.k.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 66, 'name': 'blocks.10.attn.v.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 67, 'name': 'blocks.10.attn.proj.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 68, 'name': 'blocks.11.attn.q.weight', 'multiplier': 0.6, 'effective_lr': 0.015}, {'sorted_index': 69, 'name': 'blocks.11.attn.k.weight', 'multiplier': 1.7, 'effective_lr': 0.0425}, {'sorted_index': 70, 'name': 'blocks.11.attn.v.weight', 'multiplier': 1.0, 'effective_lr': 0.025}, {'sorted_index': 71, 'name': 'blocks.11.attn.proj.weight', 'multiplier': 1.0, 'effective_lr': 0.025}]}, {'pattern': '.*', 'lr': [0.015]}]
+step:2125/3250 val_loss:3.55153 train_time:23.455s step_avg:11.04ms
+step:2250/3250 val_loss:3.54116 train_time:43.304s step_avg:158.79ms
+step:2375/3250 val_loss:3.53148 train_time:63.207s step_avg:159.22ms
+step:2500/3250 val_loss:3.52465 train_time:83.032s step_avg:158.60ms
+step:2625/3250 val_loss:3.51686 train_time:102.843s step_avg:158.49ms
+step:2750/3250 val_loss:3.51217 train_time:122.690s step_avg:158.78ms
+run finished: 3250 steps, total train_time 122.690s

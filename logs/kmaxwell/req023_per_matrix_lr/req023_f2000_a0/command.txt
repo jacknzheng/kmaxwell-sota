@@ -1,0 +1,2 @@
+# req023_f2000_a0: SHA 25d3208, node q4g2jyq (released), resumes eos_shared_state@2000, per_matrix_lr_muon assignment 0
+torchrun --standalone --nproc_per_node=8 records/track_3_optimization/run.py configs/req023/req023_f2000_a0.yaml

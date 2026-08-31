@@ -1,0 +1,49 @@
+# REQ-023 per-matrix LR intervention analysis. SHA 25d3208.
+# Response: log(lambda_top) [raw] and log(lambda_top*||W||_F^2) [gauge] at LATE checkpoint (f1500=2250, f2000=2750).
+# beta = direct own-multiplier slope, WITHIN-MATRIX (matrix fixed effects) regression on x=log(own multiplier).
+#   Interpretation: response ~ beta * log(multiplier); EoS predicts beta<0 (higher LR -> lower curvature).
+# cross_<group> = slope of the within-matrix residual (own-multiplier removed) on the mean log-multiplier of that neighbor group.
+#   LOCAL law -> cross ~ 0; COLLECTIVE redistribution -> cross systematically != 0.
+# n=3 assignments is the replication unit; SEs are approximate (few clusters). Discovery experiment, NOT a significance claim.
+# CHECKPOINT-GRID CAVEAT: frozen config dumped step%125==0 -> late ckpt used is {2250,2750}, NOT the request's {2350,2850}
+#   (checkpoint_model_at_cadence every:125; step_is_due fires at step%125==0 or train_steps-1=3249, never reached).
+val_loss@late	fork	assignment	val_loss
+val	1500	a0	3.52016
+val	1500	a1	3.52099
+val	1500	a2	3.52089
+val	2000	a0	3.51217
+val	2000	a1	3.51089
+val	2000	a2	3.51149
+effect	fork	response	estimate	se
+direct_own_mult_beta	1500	raw	-1.2866	0.0979
+cross_same_block	1500	raw	0.0048	0.2448
+cross_adj_block	1500	raw	1.5584	0.3947
+cross_same_type	1500	raw	0.0000	1.0772
+cross_all_other	1500	raw	0.0000	6.9529
+per_assignment_slope_a0	1500	raw	-1.1389	-
+per_assignment_slope_a1	1500	raw	-1.0913	-
+per_assignment_slope_a2	1500	raw	-1.6295	-
+direct_own_mult_beta	1500	gauge	-0.5737	0.0975
+cross_same_block	1500	gauge	-0.0579	0.2437
+cross_adj_block	1500	gauge	1.5940	0.3918
+cross_same_type	1500	gauge	-0.0000	1.0726
+cross_all_other	1500	gauge	-0.0000	6.9232
+per_assignment_slope_a0	1500	gauge	-0.4584	-
+per_assignment_slope_a1	1500	gauge	-0.3465	-
+per_assignment_slope_a2	1500	gauge	-0.9163	-
+direct_own_mult_beta	2000	raw	-1.3768	0.0992
+cross_same_block	2000	raw	-0.0155	0.2479
+cross_adj_block	2000	raw	-0.0876	0.4206
+cross_same_type	2000	raw	0.0000	1.0907
+cross_all_other	2000	raw	0.0000	7.0397
+per_assignment_slope_a0	2000	raw	-1.3585	-
+per_assignment_slope_a1	2000	raw	-1.0761	-
+per_assignment_slope_a2	2000	raw	-1.6957	-
+direct_own_mult_beta	2000	gauge	-0.5911	0.0982
+cross_same_block	2000	gauge	-0.0806	0.2453
+cross_adj_block	2000	gauge	-0.0430	0.4165
+cross_same_type	2000	gauge	0.0000	1.0799
+cross_all_other	2000	gauge	0.0000	6.9704
+per_assignment_slope_a0	2000	gauge	-0.6045	-
+per_assignment_slope_a1	2000	gauge	-0.2604	-
+per_assignment_slope_a2	2000	gauge	-0.9084	-
