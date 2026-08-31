@@ -1,0 +1,17 @@
+# REQ-028 the 8x-batch point + the full benefit-vs-batch curve. SHA 365c392d, nodes wdkeomq(mu0)+q4zpy53(bimax) (8xH100), torch 2.10.0+cu128.
+# 2 arms, seed 0, 8x batch (batch_tokens 4194304, token-aligned skip_batches 250), 750 steps from the shared step-2000 state. Checkpoints +750 only. Both ARM_EXIT=0.
+# Data-budget gate PASS: 48 shards = 4.80B tokens avail vs 4.19B need (margin 0.61B). Finite-loss smoke PASS (b8x_mu0 @2125 = 3.32173).
+# final_val@2750:
+batch	kernel	seed	final_val@2750	source
+8x	mu0	0	3.20561	REQ-028
+8x	bimax	0	3.20328	REQ-028
+#
+# === benefit-vs-batch curve: momentum benefit = final_val(bimax) - final_val(mu0), same batch, @2750 ===
+# (1x, 4x from REQ-026 seed-0 / REQ-027 seed-mean; 8x from REQ-028)
+batch	batch_tokens	benefit(bimax-mu0)	source
+1x	524288	-0.01063	REQ-026/027 (mean of seeds 0,1)
+4x	2097152	-0.00438	REQ-026/027 (mean of seeds 0,1,2)
+8x	4194304	-0.00233	REQ-028 (seed 0)
+#
+# Shape: benefit keeps falling, no plateau. Per-2x-batch decay factor: 1x->4x ~= /2.4 over 4x (~/1.55 per doubling);
+#   4x->8x = 0.00438/0.00233 = /1.88 over one doubling. Roughly a halving per batch doubling, heading toward zero (denoising-consistent).
