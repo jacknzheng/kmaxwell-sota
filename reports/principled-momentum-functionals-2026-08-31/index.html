@@ -44,7 +44,7 @@ F(w)=\sum_{t\in\mathcal T}\left\lVert\mathcal J_t\bigl(M_t(w)-u_t^*\bigr)\right\
 \]</div>
 <p>Every data-fit term is quadratic and positive semidefinite in \(w\); the ridge term is strictly convex. The normalization constraint is affine, so exactly one kernel minimizes \(F\).</p>
 <p>Separate kernels can be fitted for early, middle, and late training. A quadratic penalty on changes between adjacent phase kernels produces a unique schedule. The resulting lag weights can then be approximated by the smallest practical exponential mixture whose held-out score is unchanged.</p>
-<div class="result"><span class="label">Required retrodiction</span><p>Without using validation losses during fitting, the functional must rank scheduled K8 above bi-Maxwell, and bi-Maxwell above both single-EMA momentum and no momentum. It must also predict the direction of K8's annealing. Failure on either test ends this formulation.</p></div>
+<div class="result"><span class="label">Required known-ordering test</span><p>Without using validation losses during fitting, the functional must rank scheduled K8 above bi-Maxwell, and bi-Maxwell above both single-EMA momentum and no momentum. It must also predict the direction of K8's annealing. Failure on either test ends this formulation.</p></div>
 
 <h2>3. Momentum and Newton must be composed</h2>
 <p class="roadmap">This section defines the object we need to choose: an ordered pipeline of temporal accumulation, curvature estimation, preconditioning, and matrix sign.</p>
@@ -94,10 +94,10 @@ E(W)=\frac{\sigma_M^2}{W}+\frac{d_M^2W^2}{4},\qquad W^*=\left(\frac{2\sigma_M^2}
 <ol>
 <li><strong>Fit the controller target.</strong> At early, middle, and late checkpoints, compute \(u_t^*\) for several future horizons and check whether its held-out ranking is stable.</li>
 <li><strong>Derive causal kernels.</strong> Solve the convex kernel problem on blocked intervals. Report polar-visible fit error and the residual after projection into practical exponential mixtures.</li>
-<li><strong>Attempt the known retrodictions.</strong> Predict K8 \(>\) bi-Maxwell \(>\) single EMA \(\approx\) no momentum, K8's annealing direction, and weaker temporal weighting as batch size increases.</li>
+<li><strong>Reproduce the known results.</strong> Predict K8 \(>\) bi-Maxwell \(>\) single EMA \(\approx\) no momentum, K8's annealing direction, and weaker temporal weighting as batch size increases.</li>
 <li><strong>Measure the curvature window.</strong> Express same-step noise and cross-step drift in one distance, calculate \(W^*(t)\), and compare the first and fourth orderings.</li>
 <li><strong>Run continuations for survivors.</strong> Fork from identical checkpoints and test whether predicted rankings persist in realized loss. Duplicate controls measure ordinary run divergence.</li>
 </ol>
 <div class="warning"><span class="label">Keep or kill</span><p>Continue only if blocked fits recover both the known kernel ordering and the direction of K8's schedule, and those predictions survive short continuations. Otherwise the future local quadratic is not a useful design target for momentum, even though its minimizer is unique.</p></div>
-<div class="footnotes"><p><strong>Status.</strong> The single-EMA and batch-size results motivate the controller framing. The controller functional itself has not yet passed its retrodiction tests.</p></div>
+<div class="footnotes"><p><strong>Status.</strong> The single-EMA and batch-size results motivate the controller framing. The controller functional has not yet reproduced the known kernel ordering or schedule.</p></div>
 </main></body></html>
