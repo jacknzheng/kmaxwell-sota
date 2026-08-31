@@ -1,0 +1,98 @@
+model:
+  model: Qwen/Qwen3-8B
+  smoke_model: Qwen/Qwen3-0.6B
+  dtype: bfloat16
+generator:
+  engine:
+    backend: vllm
+    n_rollout_gpus: 4
+    gpu_memory_utilization: 0.85
+    max_prompt_tokens: 8192
+    max_model_len: 32768
+    store_capacity: 512
+    weight_sync_interval: 1
+    weight_sync_host: 127.0.0.1
+    weight_sync_port: 51216
+    weight_sync_timeout_s: 180.0
+    weight_sync_bucket_mb: 512
+    disable_custom_all_reduce: true
+  sampling_params:
+    temperature: 1.0
+    top_p: 1.0
+    max_tokens: 1536
+  hint:
+    prompt: gold
+    backend: openrouter
+    model: deepseek/deepseek-v4-flash
+    gpu: 7
+    concurrency: 4
+    timeout: 90.0
+    max_retries: 5
+    max_tokens: 2048
+    reasoning_enabled: false
+  max_steps: 30
+trainer:
+  optimizer:
+    learning_rate: 1.0e-06
+    weight_decay: 0.0
+    max_grad_norm: 1.0
+    warmup_steps: 10
+  algorithm:
+    clip_ratio_low: 0.8
+    clip_ratio_high: 1.4
+    use_one_sided_clip: false
+    one_sided_clip_max: 2.0
+    adv_clip_mult: 3.0
+    adv_ema_decay: 0.99
+    adv_ema_bias_correction: true
+    use_kl_penalty: false
+    max_staleness: 3
+    group_size: 1
+    keep_failures: true
+    use_sod: true
+    sod_eps: 1.0e-06
+    sod_delta: 0.2
+  fsdp:
+    cpu_offload: false
+  n_trainer_gpus: 4
+  batch_size: 16
+  eval_batch_size: 16
+  mini_batch_size: 2
+  gradient_checkpointing: true
+  total_steps: 200
+  epochs: 10
+  seed: 1234
+  compile_trainer: true
+data:
+  dataset: tau2
+  dataset_name: paperinstruments/diligence-bench
+  dataset_split: test
+  domains:
+  - retail
+  - airline
+  n_heldout: 27
+  split_seed: 0
+  retrieval: alltools-qwen
+  user_llm: openrouter/nvidia/nemotron-3-super-120b-a12b
+  search_mode: fast
+  search_timeout: 30.0
+  search_max_chars: 12000
+judge:
+  model: nvidia/nemotron-3-super-120b-a12b
+  max_concurrency: 4
+  max_retries: 5
+  timeout: 120.0
+  eval_interval: 25
+  reasoning_enabled: false
+logging:
+  log_interval: 1
+  checkpoint_interval: 50
+  output_dir: runs/sdpo-tau2
+  resume_from: null
+  log_dir: /log
+  run_name: tau2-gold-20260831-112840
+  wandb_project: sdpo-tau2
+  wandb_entity: ''
+  wandb_enabled: true
+total_num_gpus: 8
+num_workers: 32
