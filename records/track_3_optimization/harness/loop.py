@@ -45,6 +45,7 @@ def run(config: Config) -> None:
     state = inject(hooks["setup"], config, {})
     for step in range(config.get("start_step", 0), config["train_steps"]):
         state["step"] = step
+        state["optimizer"].prepare_forward(step)
         accumulate_global_gradient(state["model"], next(state["train_batches"]),
                                    config["microbatch_sequences"])
         state = inject(hooks["pre_optimizer"], config, state)

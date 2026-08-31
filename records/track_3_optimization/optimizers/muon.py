@@ -9,6 +9,48 @@ from torch import Tensor
 from secant_gmres_solver.serialization import PR340_BIMAXWELL
 
 
+@torch.compiler.disable
+@torch.no_grad()
+def _accumulate_activation_covariance(module: torch.nn.Module,
+                                      inputs: tuple[Tensor, ...], output: Tensor) -> None:
+    """Accumulate X'X only on optimizer-selected refresh steps."""
+    ref = getattr(module, "_newton_covariance_ref", None)
+    if ref is None or not ref["collect"]:
+        return
+    x = inputs[0].detach().reshape(-1, inputs[0].shape[-1]).float()
+    blocks = ref["blocks"]
+    width = x.shape[-1] // blocks
+    xb = x.reshape(x.shape[0], blocks, width).transpose(0, 1)
+    ref["accum"].add_(torch.bmm(xb.transpose(1, 2), xb))
+    ref["count"].add_(x.shape[0])
+
+
+def attach_newton_muon_activation_stats(model: torch.nn.Module) -> list[Any]:
+    """Attach shared activation-covariance records to GPT hidden-matrix weights."""
+    handles: list[Any] = []
+
+    def attach(linear: torch.nn.Module, blocks: int = 1) -> dict[str, Any]:
+        width = linear.weight.shape[1] // blocks
+        ref: dict[str, Any] = {
+            "blocks": blocks, "collect": False,
+            "accum": torch.zeros(blocks, width, width, device=linear.weight.device),
+            "count": torch.zeros((), device=linear.weight.device),
+        }
+        linear.weight._newton_covariance_ref = ref
+        linear._newton_covariance_ref = ref
+        handles.append(linear.register_forward_hook(_accumulate_activation_covariance))
+        return ref
+
+    for block in model.blocks:
+        qkv = attach(block.attn.q)
+        block.attn.k.weight._newton_covariance_ref = qkv
+        block.attn.v.weight._newton_covariance_ref = qkv
+        attach(block.attn.proj)
+        attach(block.mlp.fc)
+        attach(block.mlp.proj, blocks=4)
+    return handles
+
+
 def zeropower_via_newtonschulz5(G: Tensor) -> Tensor:
     """The record's Newton-Schulz polar approximation, byte-identical to the anchor
     (train_gpt_simple.py) -- any change alters the compiled kernels and hence the
@@ -72,6 +114,18 @@ def annealed_decay_update(grad: Tensor, momentum: Tensor, beta: Tensor,
     update = zeropower_via_newtonschulz5(update)
     update *= max(1, grad.size(-2) / grad.size(-1))**0.5
     return update
+
+
+def compile_fixed_decay_kernel(decay: float) -> Callable[..., Tensor]:
+    @torch.compile
+    def fixed_decay_update(grad: Tensor, momentum: Tensor,
+                           mu: float = 0.95) -> Tensor:
+        momentum.lerp_(grad, 1 - decay)
+        update = grad.lerp_(momentum, mu)
+        update = zeropower_via_newtonschulz5(update)
+        update *= max(1, grad.size(-2) / grad.size(-1))**0.5
+        return update
+    return fixed_decay_update
 
 
 def order_params_like_record(params: Iterable[torch.nn.Parameter]) -> list[torch.nn.Parameter]:
@@ -207,6 +261,112 @@ class BimaxwellMuon(Muon):
                 return update
             return self._advance_bimaxwell_and_polar(p.grad, state["m_fast"], state["m_slow"], mu=group["mu"])
         return muon_update(p.grad, state["momentum"], mu=group["mu"])
+
+
+class RightPreconditionedMuonMixin:
+    """Right-precondition raw gradients, then apply the selected momentum kernel."""
+    def __init__(self, *args: Any, newton_alpha: float = 0.0,
+                 precond_refresh_interval: int = 10, precond_beta: float = 0.95,
+                 precond_damping: float = 0.2, precond_eps: float = 1e-8,
+                 **kwargs: Any) -> None:
+        assert 0 <= newton_alpha <= 1 and precond_refresh_interval >= 1
+        super().__init__(*args, **kwargs)
+        self.newton_alpha = float(newton_alpha)
+        self.precond_refresh_interval = int(precond_refresh_interval)
+        self.precond_beta = float(precond_beta)
+        self.precond_damping = float(precond_damping)
+        self.precond_eps = float(precond_eps)
+        self._newton_collecting = False
+
+    def _covariance_refs(self) -> list[dict[str, Any]]:
+        refs, seen = [], set()
+        for p in self.sorted_params():
+            ref = getattr(p, "_newton_covariance_ref", None)
+            if ref is not None and id(ref) not in seen:
+                refs.append(ref)
+                seen.add(id(ref))
+        return refs
+
+    @torch.no_grad()
+    def prepare_forward(self, step: int) -> None:
+        if self.newton_alpha == 0:
+            return
+        self._newton_collecting = (step + 1) % self.precond_refresh_interval == 0
+        for ref in self._covariance_refs():
+            ref["collect"] = self._newton_collecting
+            if self._newton_collecting:
+                ref["accum"].zero_()
+                ref["count"].zero_()
+
+    @torch.no_grad()
+    def _refresh_preconditioners(self) -> None:
+        if not self._newton_collecting:
+            return
+        for ref in self._covariance_refs():
+            dist.all_reduce(ref["accum"])
+            dist.all_reduce(ref["count"])
+            batch_cov = ref["accum"] / ref["count"].clamp_min(1)
+            if "covariance" not in ref:
+                ref["covariance"] = torch.eye(
+                    batch_cov.shape[-1], device=batch_cov.device,
+                    dtype=batch_cov.dtype).expand_as(batch_cov).clone().mul_(0.001)
+            ref["covariance"].lerp_(batch_cov, 1 - self.precond_beta)
+            cov = (ref["covariance"] + ref["covariance"].mT) * 0.5
+            values, vectors = torch.linalg.eigh(cov)
+            damping = self.precond_damping * values.mean(dim=-1, keepdim=True)
+            powers = (values.clamp_min(0) + damping + self.precond_eps).pow(-self.newton_alpha)
+            ref["inverse_power"] = (vectors * powers.unsqueeze(-2)) @ vectors.mT
+            ref["collect"] = False
+        self._newton_collecting = False
+
+    def compute_polar_input(self, p: torch.nn.Parameter, state: dict[str, Any],
+                            group: dict[str, Any]) -> Tensor:
+        if self.newton_alpha == 0:
+            return super().compute_polar_input(p, state, group)
+        ref = getattr(p, "_newton_covariance_ref", None)
+        if ref is None or "inverse_power" not in ref:
+            return super().compute_polar_input(p, state, group)
+        raw_grad = p.grad
+        inv = ref["inverse_power"].to(raw_grad.dtype)
+        if ref["blocks"] == 1:
+            p.grad = raw_grad @ inv[0]
+        else:
+            out, total = raw_grad.shape
+            blocks, width = ref["blocks"], total // ref["blocks"]
+            parts = raw_grad.reshape(out, blocks, width).transpose(0, 1)
+            p.grad = torch.bmm(parts, inv).transpose(0, 1).reshape(out, total)
+        try:
+            return super().compute_polar_input(p, state, group)
+        finally:
+            p.grad = raw_grad
+
+    @torch.no_grad()
+    def step(self) -> None:
+        self._refresh_preconditioners()
+        super().step()
+
+
+class NewtonBimaxwellMuon(RightPreconditionedMuonMixin, BimaxwellMuon):
+    """Bi-Maxwell Muon with activation right-preconditioning."""
+    pass
+
+
+class NewtonShortEmaMuon(RightPreconditionedMuonMixin, Muon):
+    """Short-memory control, initialized from a serialized bi-Maxwell fast stream."""
+    def __init__(self, params: list[torch.nn.Parameter], lr: float = 0.02,
+                 weight_decay: float = 0, mu: float = 0.95,
+                 decay: float = 0.85, **kwargs: Any) -> None:
+        super().__init__(params, lr=lr, weight_decay=weight_decay, mu=mu, **kwargs)
+        self.decay = float(decay)
+        self._short_update = compile_fixed_decay_kernel(self.decay)
+
+    def compute_polar_input(self, p: torch.nn.Parameter, state: dict[str, Any],
+                            group: dict[str, Any]) -> Tensor:
+        if "short_momentum" not in state:
+            if "m_fast" not in state:
+                raise RuntimeError("short EMA requires a serialized bi-Maxwell m_fast stream")
+            state["short_momentum"] = state["m_fast"].clone()
+        return self._short_update(p.grad, state["short_momentum"], mu=group["mu"])
 
 
 class AnnealedDecayMuon(Muon):
@@ -455,6 +615,11 @@ class WeightedDecaysMuon(Muon):
                 print(f"bufferdot step:{self._muon_steps_seen - 1} {pairs}",
                       flush=True)
             self._dot_accumulator = None
+
+
+class NewtonWeightedDecaysMuon(RightPreconditionedMuonMixin, WeightedDecaysMuon):
+    """Fixed weighted-decay kernel with activation right-preconditioning."""
+    pass
 
 
 class ScheduledWeightsMuon(WeightedDecaysMuon):
