@@ -10,23 +10,23 @@
 </head>
 <body><main>
 <h1>How much Newton is already in momentum?</h1>
-<p class="stamp">Working report · 31 August 2026 · regression result pending</p>
+<p class="stamp">Working report · 31 August 2026 · central regression complete</p>
 
 <p class="lead">Momentum uses the time history of gradients. Newton's method uses their spatial curvature. These appear to be different sources of information, but edge-of-stability dynamics connect them: sharp directions often oscillate quickly. A temporal filter can therefore imitate part of an inverse Hessian without ever measuring a Hessian.</p>
 
 <div class="takeaway"><span class="label">The question</span><p>Can one shared momentum kernel reconstruct the damped-Newton direction across many curvature directions and parameter matrices? The reconstruction error is the part of Newton that momentum cannot supply.</p></div>
 
-<p>We now have the measurement needed to answer this question. A residual-verified damped inverse roughly halves curvature along Muon's update and costs a median of three Hessian–vector products at each refresh. The remaining unknown is how much of that correction is already encoded in gradient history. That regression is running.</p>
+<p>We now have the answer. A residual-verified damped inverse roughly halves curvature along Muon's update and costs a median of three Hessian–vector products at each refresh. A shared temporal kernel reconstructs essentially none of its anisotropic correction on held-out matrices or training states. Momentum and damped Newton are doing different jobs.</p>
 
 <h2>1. Put time and curvature in the same coordinates</h2>
 
-<p>At one training state, let <i>H</i> be the true Hessian. Its eigenvector <i>y</i><sub>i</sub> has curvature λ<sub>i</sub>. Project the last 128 gradients onto that direction:</p>
+<p>At one training state, let <i>H</i> be the true Hessian. Its eigenvector <i>y</i><sub>i</sub> has curvature λ<sub>i</sub>. Project the current gradient and the 128 recorded past gradients onto that direction:</p>
 
 <div class="math"><math display="block"><mrow><msub><mi>a</mi><mi>i</mi></msub><mo>(</mo><mi>τ</mi><mo>)</mo><mo>=</mo><mo>⟨</mo><msub><mi>g</mi><mrow><mi>t</mi><mo>−</mo><mi>τ</mi></mrow></msub><mo>,</mo><msub><mi>y</mi><mi>i</mi></msub><mo>⟩</mo><mo>.</mo></mrow></math></div>
 
-<p>The sequence <i>a</i><sub>i</sub>(0), …, <i>a</i><sub>i</sub>(127) tells us how the gradient evolved along one measured curvature direction. A kernel with taps <i>c</i><sub>τ</sub> turns that history into one coefficient:</p>
+<p>The sequence <i>a</i><sub>i</sub>(0), …, <i>a</i><sub>i</sub>(128) tells us how the gradient evolved along one measured curvature direction. A kernel with taps <i>c</i><sub>τ</sub> turns that history into one coefficient:</p>
 
-<div class="math"><math display="block"><mrow><msub><mi>q</mi><mi>i</mi></msub><mo>(</mo><mi>c</mi><mo>)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>τ</mi><mo>=</mo><mn>0</mn></mrow><mn>127</mn></munderover><msub><mi>c</mi><mi>τ</mi></msub><msub><mi>a</mi><mi>i</mi></msub><mo>(</mo><mi>τ</mi><mo>)</mo><mo>.</mo></mrow></math></div>
+<div class="math"><math display="block"><mrow><msub><mi>q</mi><mi>i</mi></msub><mo>(</mo><mi>c</mi><mo>)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>τ</mi><mo>=</mo><mn>0</mn></mrow><mn>128</mn></munderover><msub><mi>c</mi><mi>τ</mi></msub><msub><mi>a</mi><mi>i</mi></msub><mo>(</mo><mi>τ</mi><mo>)</mo><mo>.</mo></mrow></math></div>
 
 <p>Separately, start with the recorded momentum estimate <i>z</i> and compute a damped Newton direction <i>p</i>:</p>
 
@@ -35,8 +35,8 @@
 <p>Here ρ is damping; λ is reserved for curvature. The target coefficient <i>b</i><sub>i</sub> is what damped Newton wants along direction <i>y</i><sub>i</sub>. We fit one set of taps <i>c</i> to reproduce all the <i>b</i><sub>i</sub> values across curvature directions and matrices.</p>
 
 <div class="flow">
-  <div><strong>Gradient history</strong>128 coefficients along every measured Hessian eigenvector</div><span class="arrow">→</span>
-  <div><strong>One shared kernel</strong>The same 128 taps for every direction and matrix</div><span class="arrow">→</span>
+  <div><strong>Gradient history</strong>129 coefficients along every measured Hessian eigenvector</div><span class="arrow">→</span>
+  <div><strong>One shared kernel</strong>The same 129 taps for every direction and matrix</div><span class="arrow">→</span>
   <div><strong>Damped Newton target</strong>Coefficients from a residual-verified inverse solve</div>
 </div>
 
@@ -55,19 +55,35 @@
   <div><strong>Anisotropic share, X<sub>aniso</sub></strong>How much of the curvature-dependent correction a kernel reconstructs after removing common scale.</div>
 </div>
 
-<div class="result"><span class="label">Preregistered expectation</span><p>We expect the kernel to explain 15–40% of the anisotropic correction on held-out matrices and checkpoints. A larger value would mean that gradient history contains a surprisingly complete measurement of inverse curvature.</p></div>
+<div class="caution"><span class="label">Preregistered prediction: refuted</span><p>We predicted that the kernel would explain 15–40% of the anisotropic correction. It did not. The held-out share was near zero when positive and often negative.</p></div>
 
-<div class="pending"><strong>Pending result</strong><br>The held-out expressibility regression is running on the persisted true-Hessian eigenvectors and damped-Newton solutions. This panel will be replaced with the measured raw and anisotropic shares.</div>
+<p>The table reports residual fraction <i>R</i>; the expressible share is <i>X</i> = 1 − <i>R</i>. Thus <i>R</i> = 1 means the fitted kernel is no better than predicting zero. Values above one mean that transferring the fitted taps to an unseen matrix or checkpoint makes the prediction worse.</p>
+
+<table>
+<thead><tr><th>Held-out unit</th><th>Target</th><th>Step 1628</th><th>Step 2528</th><th>Step 3028</th></tr></thead>
+<tbody>
+<tr><td>Checkpoint</td><td>Raw Newton vector</td><td><i>R</i> 1.72<br><i>X</i> −0.72</td><td><i>R</i> 0.65<br><i>X</i> 0.35</td><td><i>R</i> 4.38<br><i>X</i> −3.38</td></tr>
+<tr><td>Checkpoint</td><td>Anisotropic correction</td><td><i>R</i> 0.91<br><i>X</i> 0.09</td><td><i>R</i> 0.72<br><i>X</i> 0.28</td><td><i>R</i> 2.21<br><i>X</i> −1.21</td></tr>
+<tr><td>Matrix</td><td>Raw Newton vector</td><td><i>R</i> 1.40<br><i>X</i> −0.40</td><td><i>R</i> 0.85<br><i>X</i> 0.15</td><td><i>R</i> 3.19<br><i>X</i> −2.19</td></tr>
+<tr><td>Matrix</td><td>Anisotropic correction</td><td><i>R</i> 1.86<br><i>X</i> −0.86</td><td><i>R</i> 1.19<br><i>X</i> −0.19</td><td><i>R</i> 4.04<br><i>X</i> −3.04</td></tr>
+</tbody>
+</table>
+
+<div class="result"><span class="label">Answer to the exercise</span><p>The kernel-expressible share of damped Newton is approximately zero. A shared 129-tap kernel does not transfer the anisotropic inverse-curvature map across matrices or training states; negative shares show that it frequently transfers worse than the zero predictor. Lag-zero-only fits are comparable or better in most splits.</p></div>
+
+<p>The scale quotient and train/test splits were registered before the result. Other normalizations may be worth studying, but they cannot replace this failed test after the fact.</p>
 
 <h2>3. Actual damped Newton is both effective and cheap here</h2>
 
 <p>The inverse solves use the true Hessian through Hessian–vector products. At three training checkpoints, 72/72, 70/72, and 66/72 matrix solves reached the residual threshold. The median solve required three iterations: three Hessian–vector products per refresh.</p>
 
-<p>The polar update changed very little by cosine—approximately 0.99—yet curvature along that update fell to 47%, 36%, and 53% of its original value. The correct interpretation is geometric: a small rotation can remove a large projection onto the sharpest directions. Cosine alone misses the effect.</p>
+<p>The polar update changed very little by cosine—approximately 0.99—yet the certified per-matrix median curvature ratio was 0.484, 0.555, and 0.593 at the three checkpoints. The correct interpretation is geometric: a small rotation can remove a large projection onto the sharpest directions. Cosine alone misses the effect.</p>
 
 <div class="result"><span class="label">Measured result</span><p>A residual-verified damped inverse approximately halves curvature along Muon's realized update at a cost low enough to consider during training.</p></div>
 
-<p>The deep eigenframe measurement explains why the full solve matters. Median top curvature is about 27,000, while curvature along momentum's leading direction is about 5,000. Each of the 24 sharpest true eigendirections receives only about 0.5% of the update mass. Correcting only that top-24 subspace reduces realized curvature to 76% of baseline; the full damped solve reaches 47% at the matched checkpoint. Most of the useful correction therefore lies outside the top-24 sharp subspace.</p>
+<figure><img src="figs/figA_correction_ladder.png" alt="Per-matrix curvature ratio under increasingly complete curvature corrections"><figcaption>Each point is one parameter matrix's curvature ratio after an intervention; lower is a larger reduction. Colors mark the three checkpoints and horizontal bars mark medians. The top-eight true-Hessian correction lowers the per-matrix median by only about 5%; expanding to 24 directions helps, while the certified full damped solve is substantially stronger. CG points include only solves passing the final residual and no-breakdown gates.</figcaption></figure>
+
+<p>The deep eigenframe measurement explains the gap. Median top curvature is about 27,000, while curvature along momentum's leading direction is about 5,000. Each of the 24 sharpest true eigendirections receives only about 0.5% of the update mass. Most of the useful inverse-curvature action lies outside that sharp subspace.</p>
 
 <p>Breakdown events rise across training—0, 4, then 11—which indicates that a fixed shift ρ stops dominating the negative spectrum late in training. Damping and solver choice must respond to the measured state. A broken solve is excluded rather than frozen and called Newton.</p>
 
@@ -76,6 +92,8 @@
 <p>A matched continuation from step 2000 compared no momentum, a single EMA, and bi-Maxwell at the standard batch and at four times as many tokens per step. The single EMA was indistinguishable from no momentum at both batch sizes. Bi-Maxwell improved validation loss by about 0.0103 at the standard batch and 0.0044 at four times the batch.</p>
 
 <div class="result"><span class="label">Measured result</span><p>In this experiment, the benefit came from the two-rate kernel shape rather than generic exponential momentum, and that benefit roughly halved when the batch grew fourfold.</p></div>
+
+<figure><img src="figs/figB_batch_benefit.png" alt="Validation-loss benefit of momentum kernels at standard and four-times batch"><figcaption>Each filled point is the validation-loss change relative to no momentum after a 750-step continuation from the same step-2000 state; lower is better. Single-EMA momentum remains at zero benefit, while bi-Maxwell's benefit shrinks by more than half at four times the batch. Independent reruns reproduce the separation with non-overlapping ranges; because the harness reuses the same sequential data stream, these replicas measure run-to-run nondeterminism rather than robustness to resampling the data.</figcaption></figure>
 
 <p>This favors a denoising contribution: more tokens reduce the value of the expressive temporal filter. The benefit does not vanish, so the experiment does not establish that denoising is the kernel's only role. It does establish that “momentum versus no momentum” is the wrong comparison here. Kernel shape is the active variable.</p>
 
@@ -101,20 +119,20 @@
 
 <p>There are two meaningful orders. One can filter the gradient history and apply the current inverse Hessian, or apply the contemporaneous inverse Hessian to each past gradient and then filter. These orders agree when the Hessian is fixed. Their difference measures curvature drift over the kernel's memory window, so refresh cadence and kernel memory must be chosen together.</p>
 
-<h2>6. What the pending number decides</h2>
+<h2>6. What the result decides</h2>
 
 <table>
 <thead><tr><th>Held-out anisotropic share</th><th>Interpretation</th><th>Design consequence</th></tr></thead>
 <tbody>
 <tr><td>High</td><td>Temporal dynamics reliably encode inverse curvature.</td><td>Use the learned kernel and apply only a low-rank or weak residual correction.</td></tr>
 <tr><td>Intermediate</td><td>Momentum recovers coarse curvature classes but not the full spectrum.</td><td>Jointly schedule kernel memory and a measured residual correction.</td></tr>
-<tr><td>Low</td><td>Temporal estimation and inverse curvature are mostly independent.</td><td>Choose the kernel for prediction/denoising and retain a full damped inverse.</td></tr>
+<tr><td><strong>Low — observed</strong></td><td>Temporal estimation and inverse curvature are mostly independent.</td><td>Choose the kernel for prediction/denoising and retain a full damped inverse.</td></tr>
 </tbody>
 </table>
 
-<p>The final optimizer should not expose this entire search space. The immediate experiment uses it to discover a simpler rule: ideally one measured state variable and one knob α that divides labor between temporal estimation and curvature correction.</p>
+<p>The experiment rules out the hoped-for scalar compensation law: there is no stable “momentum already supplies X% of Newton” coefficient to top up. The simpler design is modular. Choose the temporal kernel for prediction and denoising; estimate inverse curvature separately; use measured reliability to gate the full anisotropic correction.</p>
 
-<div class="caution"><span class="label">Scope</span><p>The batch experiment is one seed, one fork, a 750-step horizon, and no learning-rate rescaling across batch sizes. The current eigenframe covers measured parameter matrices and finite rank. The regression must be evaluated on held-out matrices and checkpoints before its percentage is treated as a property of the optimizer.</p></div>
+<div class="caution"><span class="label">Scope</span><p>The batch experiment uses one fork, a 750-step horizon, and no learning-rate rescaling across batch sizes. Its reruns reuse the same sequential data stream and therefore measure run-to-run nondeterminism, not data-distribution robustness. The expressibility regression is held out across matrices and checkpoints but uses one 129-tap linear kernel class and the registered per-matrix normalization; its conclusion is about that operational definition.</p></div>
 
-<div class="footnotes">Draft status: complete argument and current measurements; expressibility result and final figures pending. “Certified” summaries in the release will use only solves satisfying the final residual threshold with no breakdown.</div>
+<div class="footnotes">Draft status: central result integrated; final audit in progress. “Certified” summaries use only solves satisfying the final residual threshold with no breakdown.</div>
 </main></body></html>
