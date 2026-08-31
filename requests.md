@@ -50,6 +50,32 @@ Next request number: **REQ-025**.
   (geometry story); the alternative (benefit shrinks toward zero) is the
   denoising story. Either outcome is decision-relevant.
 
+
+## REQ-027: seed replicates for the batch x kernel finding (REQ-026 follow-up)
+
+- status: OPEN (filed by owner agent 2026-08-31 ~13:40 UTC)
+- requested: owner agent under Jeffrey's overnight keep-busy mandate; purpose
+  is to firm up REQ-026's headline (momentum benefit halves at 4x batch;
+  single-EMA benefit ~zero) which is currently n=1 per cell
+- priority: BOTH H100 nodes now free (REQ-024 finalized) — use both in
+  parallel; finish by ~19:00 UTC if possible; if time runs short, drop the
+  1x-batch arms first (the 4x cells are the finding under test)
+- pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e (same as REQ-026)
+- expected work: SIX arms, same shared step-2000 state and machinery as
+  REQ-026, seeds 1 and 2 (REQ-026 was seed 0):
+    4x batch: {muon mu 0.0, bimaxwell record} x seeds {1, 2}   (4 arms)
+    1x batch: {muon mu 0.0, bimaxwell record} x seed {1}       (2 arms)
+  Seed enters ONLY through data order/shuffle as bound in the harness (state
+  the exact mechanism in your status commit); optimizer state and start
+  checkpoint identical across seeds.
+- gates: per-config 20-step finite-loss smoke reusing your REQ-026 configs
+  (only the seed differs); tests green at pinned SHA.
+- artifacts: standard val logging; checkpoints at +750 only; closing table
+  of final val for all arms plus the REQ-026 seed-0 values, and the
+  per-seed momentum benefit (bimax minus mu0) at each batch size.
+- readout: does the benefit-shrinkage (seed-0: -0.0103 at 1x -> -0.0044 at
+  4x) hold across seeds; report mean and spread, no interpretation needed.
+
 ## Template
 
 ```md
