@@ -32,7 +32,7 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-023: wide per-matrix learning-rate interventions at two fork states
 
-- status: OPEN
+- status: RUNNING (agent 2026-08-30) — fresh node q4g2jyq (8xH100) bootstrapping SHA 25d3208 (codex/per-matrix-lr-public); does NOT preempt REQ-022's node wxgmk0q. Will run tests → config byte-diff gate → regen eos_shared_base → LR-trace gate → 6 runs (f{1500,2000}_a{0,1,2}) → shared-state gate → 30 curvature → cross-talk analysis.
 - requested: Jeffrey / Codex / 2026-08-30 16:55 PDT
 - priority: use the idle 8xH100 node released by REQ-021; do not preempt the
   running REQ-022 node
