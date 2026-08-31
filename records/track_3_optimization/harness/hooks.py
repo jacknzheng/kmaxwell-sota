@@ -12,7 +12,7 @@ import yaml
 
 from optimizers import GroupedOptimizers, find_muon_family_group, parse_group_specs
 from optimizers.secant_gmres_muon import SecantGmresMuon
-from optimizers.muon import owned_param_indices
+from optimizers.muon import attach_newton_muon_activation_stats, owned_param_indices
 from secant_gmres_solver import serialization
 from secant_gmres_solver.diagnostics import measure_symmetry_defect
 from secant_gmres_solver.solve import solve_secant_least_squares
@@ -138,6 +138,19 @@ def assemble_grouped_optimizer() -> Hook:
     def hook(config: Config, state: State) -> State:
         state["optimizer"] = GroupedOptimizers(
             state["model"], parse_group_specs(config["optimizer_groups"]))
+        return state
+    return hook
+
+
+def attach_newton_muon_activation_stats() -> Hook:
+    """Install activation-covariance hooks only for a nonzero-alpha Newton arm."""
+    def hook(config: Config, state: State) -> State:
+        enabled = any(entry["optimizer"].startswith("newton_") and
+                      float(entry.get("hyperparams", {}).get("newton_alpha", 0)) > 0
+                      for entry in config["optimizer_groups"])
+        if enabled:
+            state["newton_activation_hook_handles"] = attach_newton_muon_activation_stats(
+                state["model"])
         return state
     return hook
 
@@ -766,6 +779,7 @@ _HOOKS: dict[str, Callable[..., Hook]] = {
     "load_validation_tokens": load_validation_tokens,
     "build_compiled_gpt": build_compiled_gpt,
     "seed_then_initialize_parameters": seed_then_initialize_parameters,
+    "attach_newton_muon_activation_stats": attach_newton_muon_activation_stats,
     "assemble_grouped_optimizer": assemble_grouped_optimizer,
     "open_training_batches": open_training_batches,
     "broadcast_initial_parameters": broadcast_initial_parameters,

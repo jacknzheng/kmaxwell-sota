@@ -17,6 +17,7 @@ LOCKED_HOOK_NAMES = {
     "load_validation_tokens",
     "build_compiled_gpt",
     "seed_then_initialize_parameters",
+    "attach_newton_muon_activation_stats",
     "assemble_grouped_optimizer",
     "open_training_batches",
     "broadcast_initial_parameters",
@@ -34,7 +35,7 @@ LOCKED_HOOK_NAMES = {
     "mark_log_finished",
 }
 
-LOCKED_OPTIMIZER_NAMES = {"adamw", "muon", "bimaxwell_muon", "secant_gmres_muon", "sgd_blocks", "weighted_decays_muon", "scheduled_weights_muon", "annealed_weights_muon", "annealed_decay_muon"}
+LOCKED_OPTIMIZER_NAMES = {"adamw", "muon", "bimaxwell_muon", "newton_bimaxwell_muon", "newton_short_ema_muon", "newton_weighted_decays_muon", "secant_gmres_muon", "sgd_blocks", "weighted_decays_muon", "scheduled_weights_muon", "annealed_weights_muon", "annealed_decay_muon"}
 
 
 def test_hook_registry_is_locked():

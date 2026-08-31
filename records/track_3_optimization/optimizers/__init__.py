@@ -9,6 +9,7 @@ import torch
 from torch import nn
 
 from .muon import (AnnealedDecayMuon, AnnealedWeightsMuon, BimaxwellMuon, Muon,
+                   NewtonBimaxwellMuon, NewtonShortEmaMuon, NewtonWeightedDecaysMuon,
                    ScheduledWeightsMuon, SgdBlocks, WeightedDecaysMuon)
 from .secant_gmres_muon import SecantGmresMuon
 
@@ -37,6 +38,9 @@ _REGISTRY: dict[str, Any] = {
     "adamw": build_record_adamw,
     "muon": Muon,
     "bimaxwell_muon": BimaxwellMuon,
+    "newton_bimaxwell_muon": NewtonBimaxwellMuon,
+    "newton_short_ema_muon": NewtonShortEmaMuon,
+    "newton_weighted_decays_muon": NewtonWeightedDecaysMuon,
     "secant_gmres_muon": SecantGmresMuon,
     "sgd_blocks": SgdBlocks,
     "weighted_decays_muon": WeightedDecaysMuon,
@@ -133,6 +137,13 @@ class GroupedOptimizers:
         """Steps every group's optimizer, in config order."""
         for _, built in self.groups:
             built.step()
+
+    def prepare_forward(self, step: int) -> None:
+        """Let optimizers enable measurements needed by the coming forward pass."""
+        for _, built in self.groups:
+            prepare = getattr(built, "prepare_forward", None)
+            if prepare is not None:
+                prepare(step)
 
     def scale_learning_rates(self, eta: float) -> None:
         """The single schedule lever: every group's lr becomes its construction-time
