@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-024**.
+Next request number: **REQ-025**.
 
 ## Template
 
@@ -27,6 +27,200 @@ Next request number: **REQ-024**.
 success criteria, artifact paths, and any ordering constraints. Do not include
 secrets; refer to already-provisioned environment variables.>
 ```
+
+---
+
+## REQ-024: 8-GPU 4+4 OpenRouter DeepSeek SDPO fleet
+
+- status: OPEN
+- requested: Jack / 2026-08-30 17:32 PDT
+- repo: https://github.com/jacknzheng/scaling-sdpo
+- branch: `fix/hint-output-budget`
+- exact SHA: `b4d523d4f5a7d80c4a629d0dcb974cf781b42738`
+- supersedes: REQ-018, REQ-020
+- prior evidence: `logs/async_sdpo_req011/`, `logs/async_sdpo_req015/`, `logs/async_sdpo_req018/`
+
+REQ-020 cannot run: Baseten workstations cap at 8 GPUs, so the 9-GPU local-hint
+map is not provisionable. REQ-018 validated the hint-length fix at `3bd7def`
+(0 drops / 0 `openrouter_length` over ~478 attempts/arm) and then died on
+free-Nemotron 429s. This request puts hints on OpenRouter
+`deepseek/deepseek-v4-flash-latest`, restores the proven 4+4 split on 8 GPUs,
+and keeps thinking off for both hints and the diligence judge.
+
+REQ-018 and REQ-020 are removed from this queue. Their logs stay under
+`logs/async_sdpo_req018/`. Do not preempt REQ-022 or REQ-023; use a
+separate 8-GPU box.
+
+Request an **8-GPU** box. Jack has operator permission. The operator default
+of 2 GPUs is not enough. Do not self-cap at 2, do not start a local hint
+engine, do not use `NPROC=1`, and do not recreate the 4+3+1 or 9-GPU maps.
+If `nvidia-smi` / `torch.cuda.device_count()` shows fewer than 8 visible
+devices, record the listing, update this block, and stop.
+
+### Hardware map (required)
+
+```text
+cuda:0-3  policy vLLM TP=4
+cuda:4-7  FSDP2 trainer x4
+```
+
+`CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`. `torchrun --nproc-per-node=4`.
+Hints are remote OpenRouter calls, not a GPU process.
+
+### Frozen checkout
+
+Do **not** use SHA `14db9fb` / `e2ff718` (local hint GPU) or `3bd7def`
+(free-Nemotron hints). Fetch this exact commit. Do not recreate this as an
+on-box patch.
+
+```bash
+git fetch origin fix/hint-output-budget
+git checkout b4d523d4f5a7d80c4a629d0dcb974cf781b42738
+uv run --no-sync pytest -q -m 'not network'
+```
+
+Record that SHA. Offline suite at this SHA: `229 passed, 2 skipped`.
+
+Resolved defaults that must appear in `config.yaml`:
+
+```text
+model.model=Qwen/Qwen3-8B
+total_num_gpus=8
+generator.engine.n_rollout_gpus=4
+trainer.n_trainer_gpus=4
+trainer.batch_size=16
+generator.hint.backend=openrouter
+generator.hint.model=deepseek/deepseek-v4-flash-latest
+generator.hint.reasoning_enabled=false
+generator.hint.max_tokens=2048
+judge.model=nvidia/nemotron-3-super-120b-a12b:free
+judge.reasoning_enabled=false
+data.user_llm=openrouter/nvidia/nemotron-3-super-120b-a12b:free
+judge.eval_interval=25
+logging.checkpoint_interval=50
+```
+
+Every hint and judge OpenRouter payload must include
+`reasoning: {enabled: false, effort: "none"}`. Do not enable thinking.
+
+### Preflight
+
+OpenRouter (DeepSeek hints, Nemotron judge / user-sim) and Parallel Search
+are funded. Before renting or restarting a box, send one real request to
+each and record status plus UTC timestamp, never keys. The hint preflight
+must use `deepseek/deepseek-v4-flash-latest` through `build_error_hint` /
+`generate_hint` (`backend=openrouter`). If the box still returns 402,
+report which credential differs and stop that dependent arm. Do not put
+credentials in this repository.
+
+### Diligence arms
+
+Preserved checkpoints on `qkpx8dw` / `wp2znpq` were lost in the operator
+reset. Restart both diligence arms from step 0 on `b4d523d`. That is
+intended: this SHA changes the hint model and the GPU split.
+
+### Hint validation gate
+
+After at least 100 post-switch hint attempts on each diligence arm,
+report:
+
+- attempts, successes, total drops, and `drops / attempts`
+- every `hint_drop_*` cause, especially `openrouter_length`, `openrouter_429`,
+  `timeout`, `empty`
+- confirm the hint model slug is `deepseek/deepseek-v4-flash-latest`
+
+Gate passes when the total drop rate is below 5% while OpenRouter is
+healthy and there are zero `hint_drop_openrouter_length` failures. If the
+gate fails, preserve raw artifacts, diagnose, update this block, and stop.
+Do not raise concurrency, switch hint models, enable reasoning, start a
+local hint GPU, or train with an empty hint.
+
+### Tau2
+
+Do not delay diligence on tau2. Resolve the already-reported tau2-bench
+`a2c0247` `get_environment` API drift, add a test covering the pinned
+signature, commit that follow-up to `scaling-sdpo`, then launch tau2 `gold`
+on retail+airline only. `gold` skips the hint LLM. Do not use banking on
+Baseten.
+
+### Frozen experiment
+
+Finish all three arms at `trainer.total_steps=200`:
+
+1. diligence `answer_free`
+2. diligence `answer_bearing`
+3. tau2 `gold` on retail+airline
+
+Runtime per arm:
+
+- 4 vLLM rollout GPUs + 4 FSDP2 trainer ranks
+- `model.model=Qwen/Qwen3-8B`
+- `trainer.mini_batch_size=2`
+- `generator.engine.max_model_len=32768` for tau2
+- never fall back to 4B, `stealth/ox-alpha`, `NPROC=1`, 2 GPUs, or a
+  local hint engine
+
+Resume after recoverable crashes. A rollout without its required hint must
+be dropped. Keep search, hint, user-simulator, judge, sandbox, empty-episode,
+stale-rollout, and weight-sync failures as separate counters.
+
+W&B must receive a `samples` table each logged train step with prompt,
+output, `hint_free`, and `hint_bearing`. File artifacts remain the source
+of truth.
+
+### Evaluation contract
+
+Held-out eval runs synchronously at every 25-step boundary (25, 50, 75, 100,
+125, 150, 175, 200). Do not skip a boundary because a prior eval is still
+running.
+
+Write every eval to `evaluations.jsonl`. A W&B screenshot is not a
+substitute.
+
+- Diligence: per-task query, response, token counts, normalized/raw judge
+  scores, per-section earned/possible/fraction, judge error; plus aggregate
+  `judge_score`, `judge_n`, `judge_errors`, section scores, requested count,
+  and rollout-error count.
+- Tau2: per-task domain, query, full transcript, token counts, pass^1, and
+  rollout error; plus overall and per-domain pass^1, sample counts, requested
+  count, and rollout-error count.
+
+Every row and aggregate must include `launched_at_step` and `policy_version`.
+Commit `evaluation_started`, task-completed/task-failed, and
+`evaluation_completed`/`evaluation_failed` even when an API or sandbox
+failure occurs.
+
+### Required artifacts
+
+Commit and push to this `jerry-agent` branch:
+
+```text
+logs/async_sdpo_req024/
+  README.md
+  summary.tsv
+  hint-fix-validation.tsv
+  diligence-answer-free/
+  diligence-answer-bearing/
+  tau2-gold/
+```
+
+For every arm include `args.txt`, `config.yaml`, `ARTIFACTS.txt`,
+`console.log`, `train.log`, every `rankN.log`, `api_failures.jsonl`,
+`evaluations.jsonl`, `rollouts.jsonl`, `sandbox.jsonl`, `training.jsonl`,
+`vllm.jsonl`, sandbox setup logs, and a checkpoint/resume manifest. Use
+`git add -f` for ignored log patterns. Gzip large text artifacts losslessly
+and document decompression. Never commit secrets, environment dumps, model
+weights, or checkpoint tensor files.
+
+`summary.tsv` must include exact SHA and CLI, visible GPU count, completed
+steps, wall time, checkpoint history, teacher-minus-student gap, dead-gap
+fraction, clipping, staleness, every failure counter, and held-out metrics.
+The README must link each row to its raw directory.
+
+Success: 8 visible GPUs, hint gate passes, thinking stays off, and all three
+arms reach step 200. If a definitive external blocker stops the run, first
+commit and push all progress and raw failure logs, then update this block
+with exact evidence and stop rather than restarting from zero.
 
 ---
 
@@ -225,195 +419,6 @@ raw evidence before marking `DONE`, `FAILED`, or `NEEDS-INFO`.
   rule; NEEDS-INFO with evidence otherwise.
 - cost estimate: 7 train arms x ~3.5 min + 7 curvature passes x ~19 min on one
   8xH100 node ~= 3 node-hours.
-
-## REQ-020: 9-GPU local-hint SDPO fleet
-
-- status: NEEDS-INFO — **a 9-GPU box is not provisionable on this Baseten fleet** (workstation `--gpu-count` is capped at 8). Per this request's own "record and stop if <9 visible devices" rule, stopped. Need a 9-GPU box source or an approved layout change.
-- requested: Jack / 2026-08-29 23:58 PDT
-
-### REQ-020 STATUS (agent 2026-08-30) — blocked on 9-GPU hardware availability
-
-The operator authorized lifting the 2-node cap for this request. But **the hardware isn't available via the standard tooling**: `truss train workstation --accelerator h100 --gpu-count 9` → `Error: Invalid value for '--gpu-count': 9 is not in the range 1<=x<=8`. Baseten H100 workstations top out at **8 GPUs**. The requested map (`cuda:0-3` policy + `cuda:4-7` trainer + `cuda:8` frozen hint engine) needs 9 on a single box, and REQ-020 explicitly forbids the 8-GPU fallback ("do not shrink to 3+4+1 on an 8-GPU box") and says to stop if fewer than 9 devices are visible — so I did not provision a smaller box.
-
-**To unblock, pick one:** (a) point me at a 9-GPU (or larger) box/source outside `truss train workstation` (a pre-provisioned node, a different accelerator/instance type, or a cluster that offers >8-GPU single nodes); or (b) authorize a modified layout that fits 8 GPUs (e.g. hint engine time-shared on the policy GPUs, or 3 rollout + 4 trainer + 1 hint) — noting you currently forbid that; or (c) revert to the OpenRouter-hint path (REQ-018 `3bd7def`) with a **paid/higher-rate** aux model to sidestep the free-tier 429s. Tell me which and I'll proceed.
-
-REQ-020 supersedes REQ-018, so REQ-018 stays closed (hint-length fix already validated — `logs/async_sdpo_req018/`). REQ-019 (curvature) is unaffected and running on the 2-node budget.
-- repo: https://github.com/jacknzheng/scaling-sdpo
-- branch: `fix/hint-output-budget`
-- exact SHA: `e2ff7181305b1f6066ff059ae97bb36993371cd5`
-- supersedes: REQ-018
-- prior evidence: `logs/async_sdpo_req011/`, `logs/async_sdpo_req015/`, `logs/async_sdpo_req018/`
-
-Request a **9-GPU** box. Jack has operator permission to use a box. The
-operator default / 2-node cap is not enough and must not be used. Do not
-self-cap at 2, do not shrink to 3+4+1 on an 8-GPU box, and do not fall
-back to OpenRouter hints or `NPROC=1`. If `nvidia-smi` /
-`torch.cuda.device_count()` shows fewer than 9 visible devices, record
-the listing, update this block, and stop.
-
-Do not preempt REQ-019. Use a separate 9-GPU box. REQ-018 already
-validated the OpenRouter hint-length fix at `3bd7def` (0 drops / 0
-`openrouter_length` over ~478 attempts per diligence arm) and then died
-on free-Nemotron 429s. This request moves hints onto a frozen local GPU
-so the 429 path is gone.
-
-### Hardware map (required)
-
-```text
-cuda:0-3  policy vLLM TP=4
-cuda:4-7  FSDP2 trainer x4
-cuda:8    frozen hint vLLM TP=1  Qwen/Qwen3.5-9B  no weight sync
-```
-
-`CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7,8`. `torchrun --nproc-per-node=4`.
-
-### Frozen checkout
-
-Do **not** use SHA `3bd7def` (OpenRouter hints, 4+4 on 8 GPUs). Fetch
-this exact commit. Do not recreate this as an on-box patch.
-
-```bash
-git fetch origin fix/hint-output-budget
-git checkout e2ff7181305b1f6066ff059ae97bb36993371cd5
-uv run --no-sync pytest -q -m 'not network'
-```
-
-Record that SHA. Offline suite at this SHA:
-`224 passed, 2 skipped, 2 deselected`.
-
-Resolved defaults that must appear in `config.yaml`:
-
-```text
-model.model=Qwen/Qwen3-8B
-total_num_gpus=9
-generator.engine.n_rollout_gpus=4
-trainer.n_trainer_gpus=4
-generator.hint.backend=vllm
-generator.hint.model=Qwen/Qwen3.5-9B
-generator.hint.gpu=8
-generator.hint.reasoning_enabled=false
-generator.hint.max_tokens=2048
-judge.model=nvidia/nemotron-3-super-120b-a12b:free
-data.user_llm=openrouter/nvidia/nemotron-3-super-120b-a12b:free
-judge.eval_interval=25
-logging.checkpoint_interval=50
-```
-
-Judge and tau2 user-sim stay on OpenRouter. Hints do not.
-
-### Preflight
-
-OpenRouter (judge / user-sim) and Parallel Search are funded. Before
-renting or restarting a box, send one real request to each and record
-status plus UTC timestamp, never keys. Then start the local hint engine
-and issue one production hint through `build_error_hint` / `generate_hint`
-(`backend=vllm`). If the box still returns 402 on judge/search, report
-which credential differs and stop that dependent arm. Do not put
-credentials in this repository.
-
-### Diligence arms
-
-Preserved checkpoints on `qkpx8dw` / `wp2znpq` were lost in the operator
-reset. Restart both diligence arms from step 0 on `e2ff718`. That is
-intended: REQ-018 already showed the pre-fix steps were dropped-hint, not
-contaminated, and this SHA changes the hint backend.
-
-### Hint validation gate
-
-After at least 100 post-switch hint attempts on each diligence arm,
-report:
-
-- attempts, successes, total drops, and `drops / attempts`
-- every `hint_drop_*` cause, especially `vllm_error`, `timeout`, `empty`
-- zero `hint_drop_openrouter_*` on the vLLM path (those mean the local
-  engine was not used)
-
-Gate passes when the total drop rate is below 5% while the hint GPU is
-healthy. If the gate fails, preserve raw artifacts, diagnose, update this
-block, and stop. Do not raise concurrency, switch back to OpenRouter
-hints, enable hint reasoning, or train with an empty hint.
-
-### Tau2
-
-Do not delay diligence on tau2. Resolve the already-reported tau2-bench
-`a2c0247` `get_environment` API drift, add a test covering the pinned
-signature, commit that follow-up to `scaling-sdpo`, then launch tau2 `gold`
-on retail+airline only. `gold` skips the hint LLM; the ninth GPU may sit
-idle. Do not use banking on Baseten.
-
-### Frozen experiment
-
-Finish all three arms at `trainer.total_steps=200`:
-
-1. diligence `answer_free`
-2. diligence `answer_bearing`
-3. tau2 `gold` on retail+airline
-
-Runtime per arm:
-
-- 4 vLLM rollout GPUs + 4 FSDP2 trainer ranks + 1 hint GPU
-- `model.model=Qwen/Qwen3-8B`
-- `trainer.mini_batch_size=2`
-- `generator.engine.max_model_len=32768` for tau2
-- never fall back to 4B, `stealth/ox-alpha`, `NPROC=1`, or 2 GPUs
-
-Resume after recoverable crashes. A rollout without its required hint must
-be dropped. Keep search, hint, user-simulator, judge, sandbox, empty-episode,
-stale-rollout, and weight-sync failures as separate counters.
-
-### Evaluation contract
-
-Held-out eval runs synchronously at every 25-step boundary (25, 50, 75, 100,
-125, 150, 175, 200). Do not skip a boundary because a prior eval is still
-running.
-
-Write every eval to `evaluations.jsonl`. A W&B screenshot is not a
-substitute.
-
-- Diligence: per-task query, response, token counts, normalized/raw judge
-  scores, per-section earned/possible/fraction, judge error; plus aggregate
-  `judge_score`, `judge_n`, `judge_errors`, section scores, requested count,
-  and rollout-error count.
-- Tau2: per-task domain, query, full transcript, token counts, pass^1, and
-  rollout error; plus overall and per-domain pass^1, sample counts, requested
-  count, and rollout-error count.
-
-Every row and aggregate must include `launched_at_step` and `policy_version`.
-Commit `evaluation_started`, task-completed/task-failed, and
-`evaluation_completed`/`evaluation_failed` even when an API or sandbox
-failure occurs.
-
-### Required artifacts
-
-Commit and push to this `jerry-agent` branch:
-
-```text
-logs/async_sdpo_req020/
-  README.md
-  summary.tsv
-  hint-fix-validation.tsv
-  diligence-answer-free/
-  diligence-answer-bearing/
-  tau2-gold/
-```
-
-For every arm include `args.txt`, `config.yaml`, `ARTIFACTS.txt`,
-`console.log`, `train.log`, every `rankN.log`, `api_failures.jsonl`,
-`evaluations.jsonl`, `rollouts.jsonl`, `sandbox.jsonl`, `training.jsonl`,
-`vllm.jsonl` (including `hint_engine_*` events), sandbox setup logs, and a
-checkpoint/resume manifest. Use `git add -f` for ignored log patterns. Gzip
-large text artifacts losslessly and document decompression. Never commit
-secrets, environment dumps, model weights, or checkpoint tensor files.
-
-`summary.tsv` must include exact SHA and CLI, visible GPU count, completed
-steps, wall time, checkpoint history, teacher-minus-student gap, dead-gap
-fraction, clipping, staleness, every failure counter, and held-out metrics.
-The README must link each row to its raw directory.
-
-Success: 9 visible GPUs, hint gate passes, and all three arms reach step
-200. If a definitive external blocker stops the run, first commit and push
-all progress and raw failure logs, then update this block with exact
-evidence and stop rather than restarting from zero.
 
 ## REQ-019: momentum EoS law across fork states
 
@@ -709,211 +714,3 @@ complete, all twelve endpoint runs across four paired seeds are complete, the
 shared-state checks are explicit, and the artifacts are pushed. If a
 reproducible harness or infrastructure blocker remains, first commit all
 partial evidence, then set `NEEDS-INFO` with the exact failing command and log.
-
----
-
-## REQ-018: finish the 4+4 scaling-SDPO fleet
-
-- status: RUNNING (agent 2026-08-30) — preflight PASS; 2 fresh boxes bootstrapping `3bd7def`; diligence arms **restart from 0** (checkpoints lost, see note); node cap = 2 (operator constraint)
-- requested: Jack / 2026-08-29 17:39 PDT
-- repo: https://github.com/jacknzheng/scaling-sdpo
-- branch: `fix/hint-output-budget`
-- exact SHA: `3bd7defdeb4c9b3777c2e8d6530aa6135dd76b67`
-- supersedes: REQ-015
-- prior evidence: `logs/async_sdpo_req011/`, `logs/async_sdpo_req015/`
-
-### REQ-018 STATUS (agent 2026-08-30 ~04:1x)
-
-Any decision about REQ-018's step-200 free-model `429` blocker belongs to Jack,
-the request owner. Preserve the evidence and ask him; do not infer a choice
-from REQ-019 or from this queue edit.
-
-**Preflight PASS @ 2026-08-30T04:07:45Z:** `nvidia/nemotron-3-super-120b-a12b:free` → **HTTP 200** (Nvidia provider — aux LLM is free, so the recurring credit-402 is gone), Parallel Search → **HTTP 200**.
-
-⚠️ **Checkpoint-loss note (unavoidable):** the preserved diligence checkpoints on `qkpx8dw`/`wp2znpq` were **lost** — those boxes were released during an operator-directed full reset (Baseten wipes a stopped box's filesystem). So `logging.resume_from` is not possible; the two diligence arms **restart from step 0** on `3bd7def`. This is defensible: you noted the pre-fix steps were dropped-hint (data-inefficient, not contaminated), and a clean run under the fixed 2048-token / reasoning-off Nemotron hint path is cleaner than resuming pre-fix state. Pre-fix REQ-015 evidence remains in `logs/async_sdpo_req015/`.
-
-**Constraint:** operator capped provisioning at **2 H100 nodes**. Plan: run the 2 diligence arms (`answer_free`, `answer_bearing`) first, one per box, to step 200 (`judge.eval_interval=25`, `checkpoint_interval=50`, nemotron-free slugs); then cycle `tau2 gold` (retail+airline, with the get_environment fix) and REQ-019 curvature arms through the 2 boxes as they free. REQ-019 shares this 2-node budget without preempting REQ-018.
-
-Full deliverable → `logs/async_sdpo_req018/` on completion (SHA, resolved slugs, hint-validation gate results, per-arm summary.tsv, 25-step eval records).
-
-### REQ-018 RESULT (agent 2026-08-30) — ✅ hint-fix gate PASSED; ⚠️ step-200 blocked by FREE-model 429 rate limit
-
-Evidence committed: `logs/async_sdpo_req018/` (`summary.tsv`, per-arm evidence).
-
-**Hint-truncation fix VALIDATED** on both diligence arms @ `3bd7def` (`reasoning_enabled=false`, `max_tokens=2048`, hint model `nvidia/nemotron-3-super-120b-a12b:free`): answer_free **0 drops / 0 `openrouter_length` over 479 attempts**; answer_bearing **0 / 0 over 477**. Gate (≥100 attempts, zero length, <5% drops) passes decisively — the REQ-011 hint-truncation problem is solved. eval@25 ran (nemotron judge; free-tier: 0 vs 6 judge_errors).
-
-**Blocked at step 28:** the FREE Nemotron tier is rate-limited (~**3693 HTTP 429/arm**). Hints retry through them (0 drops), but the eval@25 + rollouts overwhelmed the free endpoint → ~2h stall → vLLM worker `c10::Error` + shm dequeue timeout (`disable_custom_all_reduce=True` already). No checkpoint yet (crash < interval 50) → restart just re-crashes.
-
-**Decision needed to reach 200:** (a) paid/higher-rate aux model, (b) keep free + lighter eval (fewer held-out tasks, `eval_interval≥50`) + a bounded eval timeout, or (c) debug the vLLM `c10::Error`. Tell me which. Meanwhile the 2 boxes are **repurposed for REQ-019** (no external-API dependency) to keep the 2-node budget productive.
-
-Use separate boxes. (REQ-017 was removed as superseded; the constraint now applies to REQ-019.) This is a fresh SDPO execution
-request: fetch the exact SHA, resume the preserved diligence checkpoints,
-launch tau2, and commit the complete logs.
-
-### Frozen checkout
-
-```bash
-git fetch origin fix/hint-output-budget
-git checkout 3bd7defdeb4c9b3777c2e8d6530aa6135dd76b67
-uv run --no-sync pytest -q -m 'not network'
-```
-
-Record that SHA and the resolved auxiliary-model slugs in every artifact.
-Do not recreate this as an on-box patch. Offline suite at this SHA:
-`213 passed, 2 skipped, 2 deselected`.
-
-Resolved defaults that must appear in `config.yaml`:
-
-```text
-model.model=Qwen/Qwen3-8B
-generator.hint.reasoning_enabled=false
-generator.hint.max_tokens=2048
-generator.hint.model=nvidia/nemotron-3-super-120b-a12b:free
-judge.model=nvidia/nemotron-3-super-120b-a12b:free
-data.user_llm=openrouter/nvidia/nemotron-3-super-120b-a12b:free
-judge.eval_interval=25
-logging.checkpoint_interval=50
-```
-
-### Preflight
-
-OpenRouter and Parallel Search are funded on the developer account. Before
-renting or restarting a box, send one real request to each and record status
-plus UTC timestamp, never keys.
-
-If a box still returns 402, report which credential/account differs from the
-developer environment and stop that dependent arm. Do not put credentials in
-this repository.
-
-### Resume existing diligence work
-
-Preserve every current run directory before changing a process.
-
-| arm | box | latest valid checkpoint | last live step |
-| --- | --- | --- | ---: |
-| diligence `answer_free` | `qkpx8dw` | `runs/sdpo-diligence/step_50` | 96 |
-| diligence `answer_bearing` | `wp2znpq` | `runs/sdpo-diligence/step_100` | 116 |
-
-Resume with:
-
-```text
-logging.resume_from=runs/sdpo-diligence/step_50   # answer_free
-logging.resume_from=runs/sdpo-diligence/step_100  # answer_bearing
-```
-
-`run.py` now loads the checkpoint, restores trainer/optimizer/EMA/staleness
-state, and syncs restored weights into vLLM before new rollouts. Do not
-restart either diligence arm from step zero. Keep pre-fix and post-fix logs
-in separate directories.
-
-Failed pre-fix hints were dropped, not trained, so those checkpoints are
-data-inefficient but not contaminated by empty-hint updates.
-
-### Hint validation gate
-
-Before the resumed diligence arms run unattended, issue one production hint
-through `build_error_hint` / `generate_hint` and retain sanitized request
-settings plus response metadata. Then, after at least 100 post-fix hint
-attempts on each diligence arm, report:
-
-- attempts, successes, total drops, and `drops / attempts`
-- every `hint_drop_*` cause, especially `openrouter_length`
-- count of raw `finish_reason=length` responses
-- comparison against the matching pre-fix REQ-014/REQ-015 window and
-  `logs/async_sdpo_req011/`; recompute from counts, never reuse the old
-  malformed 149% display
-
-Gate passes when there are zero `hint_drop_openrouter_length` failures in
-those 100+ attempts and the total drop rate is below 5% while OpenRouter is
-healthy. If the gate fails, preserve raw artifacts, diagnose, update this
-block, and stop. Do not raise concurrency, switch models, enable hint
-reasoning, or train with an empty hint.
-
-### Tau2
-
-Do not delay diligence on tau2. Resolve the already-reported tau2-bench
-`a2c0247` `get_environment` API drift, add a test covering the pinned
-signature, commit that follow-up to `scaling-sdpo`, then launch tau2 `gold`
-on retail+airline only. Do not use banking on Baseten.
-
-### Frozen experiment
-
-Finish all three arms at `trainer.total_steps=200`:
-
-1. diligence `answer_free`
-2. diligence `answer_bearing`
-3. tau2 `gold` on retail+airline
-
-Runtime per arm:
-
-- 4 vLLM rollout GPUs + 4 FSDP2 trainer ranks
-- `model.model=Qwen/Qwen3-8B`
-- `trainer.mini_batch_size=2`
-- `generator.engine.max_model_len=32768` for tau2
-- hints, judge, and tau2 user sim: Nemotron free slug above
-- never fall back to 4B, `stealth/ox-alpha`, or `NPROC=1`
-
-Resume after recoverable crashes. A rollout without its required hint must
-be dropped. Keep search, hint, user-simulator, judge, sandbox, empty-episode,
-stale-rollout, and weight-sync failures as separate counters.
-
-### Evaluation contract
-
-Held-out eval runs synchronously at every 25-step boundary (25, 50, 75, 100,
-125, 150, 175, 200). Do not skip a boundary because a prior eval is still
-running.
-
-Write every eval to `evaluations.jsonl`. A W&B screenshot is not a
-substitute.
-
-- Diligence: per-task query, response, token counts, normalized/raw judge
-  scores, per-section earned/possible/fraction, judge error; plus aggregate
-  `judge_score`, `judge_n`, `judge_errors`, section scores, requested count,
-  and rollout-error count.
-- Tau2: per-task domain, query, full transcript, token counts, pass^1, and
-  rollout error; plus overall and per-domain pass^1, sample counts, requested
-  count, and rollout-error count.
-
-Every row and aggregate must include `launched_at_step` and `policy_version`.
-Commit `evaluation_started`, task-completed/task-failed, and
-`evaluation_completed`/`evaluation_failed` even when an API or sandbox
-failure occurs.
-
-### Required artifacts
-
-Commit and push to this `jerry-agent` branch:
-
-```text
-logs/async_sdpo_req018/
-  README.md
-  summary.tsv
-  hint-fix-validation.tsv
-  diligence-answer-free/
-    pre-fix/
-    post-fix/
-  diligence-answer-bearing/
-    pre-fix/
-    post-fix/
-  tau2-gold/
-```
-
-For every arm include `args.txt`, `config.yaml`, `ARTIFACTS.txt`,
-`console.log`, `train.log`, every `rankN.log`, `api_failures.jsonl`,
-`evaluations.jsonl`, `rollouts.jsonl`, `sandbox.jsonl`, `training.jsonl`,
-`vllm.jsonl`, sandbox setup logs, and a checkpoint/resume manifest. Use
-`git add -f` for ignored log patterns. Gzip large text artifacts losslessly
-and document decompression. Never commit secrets, environment dumps, model
-weights, or checkpoint tensor files.
-
-`summary.tsv` must include exact SHA and CLI, completed steps, wall time,
-checkpoint history, teacher-minus-student gap, dead-gap fraction, clipping,
-staleness, every failure counter, and held-out metrics. The README must link
-each row to its raw directory and explain any pre-fix/post-fix resume
-boundary.
-
-Success: hint gate passes and all three arms reach step 200. If a definitive
-external blocker stops the run, first commit and push all progress and raw
-failure logs, then update this block with exact evidence and stop rather
-than restarting from zero.
-
----
