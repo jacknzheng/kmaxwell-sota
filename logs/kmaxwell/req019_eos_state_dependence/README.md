@@ -45,4 +45,26 @@ At matched multipliers the fork-2000 curvature lands within ~5–25% of the fork
 - `configs/` — the six fork-1500 configs + `eos_shared_base.yaml`.
 - `eos_f1500_<mult>/` — per run: `command.txt`, `console.log` (training), `train-log.txt` (harness), `curvature-console.log`, `req019_per_matrix_curvature.json` (74 matrices × 5 checkpoints, full Lanczos alphas/offdiags).
 
-Both forks are complete (9 arms, 45 curvature measurements). Checkpoints, optimizer shards, the 9.9 GB serialized `eos_shared_state`, FineWeb data, and env dumps are deliberately **not** committed.
+Both REQ-019 forks are complete (9 arms, 45 curvature measurements).
+
+## REQ-022 — fine-grained multiplier ladder at fork-1500 (7 more arms)
+
+Seven additional fork-1500 arms (SHA ebf53cd, node wxgmk0q, **regenerated** `eos_shared_base` — hash `de88e4aa`, gate PASS across all 7) fill in the multiplier axis with {0.65, 0.85, 0.90, 1.10, 1.15, 1.45} plus a 0.85 duplicate for a mid-multiplier noise floor. Combining with the five REQ-019 fork-1500 multipliers gives a 12-point curve (max top-eigenvalue over 74 matrices @ final checkpoint 2750):
+
+| multiplier | max top-eig @2750 | mean top-eig @2750 | source |
+|-----------:|------------------:|-------------------:|:-------|
+| 0.60 | 1,164,458 | 52,951 | REQ-019 |
+| 0.65 | 950,391 | 43,991 | REQ-022 |
+| 0.77 | 717,361 | 38,510 | REQ-019 |
+| 0.85 | 565,557 / 636,993 (dup) | 31,420 / 30,083 | REQ-022 |
+| 0.90 | 605,394 | 31,113 | REQ-022 |
+| 1.00 | 396,191 / 437,889 (dup) | 22,183 / 26,491 | REQ-019 |
+| 1.10 | 382,332 | 19,120 | REQ-022 |
+| 1.15 | 284,475 | 17,089 | REQ-022 |
+| 1.30 | 270,698 | 16,714 | REQ-019 |
+| 1.45 | 268,702 | 12,826 | REQ-022 |
+| 1.70 | 150,455 | 9,206 | REQ-022→REQ-019 |
+
+The **mean** top-eigenvalue is cleanly monotone-decreasing across all 12 multipliers (52,951 → 9,206). The **max** is monotone apart from small within-noise wiggles near the middle (e.g. 0.85 max 565,557 vs 0.90 max 605,394, and 1.30 vs 1.45 essentially tied) — consistent with the mid-multiplier noise floor set by the 0.85 duplicates (565,557 vs 636,993, ~12%) and the 1.00 duplicates (~10%). So the aggregate inverse-LR (momentum-EoS) law holds across the fine ladder, with no large systematic departure from a smooth monotone trend near multiplier 1; the dense per-matrix rows (in each arm's JSON) support the per-matrix-slope and law-curvature regressions the ladder was designed to enable. REQ-022 arms are `eos_f1500_s065 … s145`, `s085dup`; their rows are appended to `summary.tsv`/`manifest.tsv` and their gate is in `shared-state-check.tsv`.
+
+Checkpoints, optimizer shards, the serialized `eos_shared_state`, FineWeb data, and env dumps are deliberately **not** committed.
