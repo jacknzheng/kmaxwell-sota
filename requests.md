@@ -32,7 +32,7 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-024: 8-GPU 4+4 OpenRouter DeepSeek SDPO fleet
 
-- status: OPEN — slug confirmed. Use `deepseek/deepseek-v4-flash` (not `-latest`). Frozen checkout is now `ecf6fd8`. Proceed with the 8-GPU 4+4 fleet.
+- status: RUNNING (agent 2026-08-31) — slug confirmed `deepseek/deepseek-v4-flash`, frozen SHA `ecf6fd8`. Provisioned 8xH100 box wgmy26w; bootstrapping scaling-sdpo (uv sync + .env from provisioned OpenRouter/Parallel/WANDB/HF keys, never committed). Plan: offline tests → OpenRouter+Parallel preflight → tau2 a2c0247 get_environment fix + test → 3 arms (answer_free, answer_bearing, tau2 gold retail+airline) to step 200 with hint gate (<5% drop, 0 openrouter_length) + 25-step eval contract.
 - requested: Jack / 2026-08-30 20:59 PDT
 - repo: https://github.com/jacknzheng/scaling-sdpo
 - branch: `fix/hint-output-budget`
