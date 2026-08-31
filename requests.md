@@ -30,6 +30,151 @@ secrets; refer to already-provisioned environment variables.>
 
 ---
 
+## REQ-025: Newton–Muon double-dip interaction grid
+
+- status: OPEN
+- requested: Jeffrey / Codex / 2026-08-30 21:40 PDT
+- priority: use two available 8xH100 nodes, one fork per node; do not exceed two
+  nodes for this request
+- expected work: twelve 750-step continuations plus standard validation and
+  curvature at three checkpoints per run
+
+### Scientific question
+
+Does explicit activation-covariance preconditioning become less useful when
+Muon already uses a long, expressive momentum kernel? The answer is the
+interaction between preconditioner strength and memory length, measured twice
+from shared optimizer states.
+
+For each fork and alpha, report the loss-scale interaction
+
+```text
+I(alpha) = [L_short(alpha) - L_short(0)]
+           - [L_record(alpha) - L_record(0)].
+```
+
+Negative `I` means explicit preconditioning helps the short-memory arm more
+than the record-kernel arm, consistent with the two mechanisms acting as
+substitutes. Also report the same quantity with the sign reversed as a
+positive "extra benefit under short memory" so the convention cannot be
+misread.
+
+### Frozen checkout
+
+Use a fresh clone of this repository and check out exactly:
+
+```text
+branch: codex/req025-newton-muon
+SHA: 596d2868282b0ae4af4fecd5c9446f713c923423
+parent lineage: ebf53cd88dad93721c121af80285cf01f239f53e
+```
+
+This implementation right-preconditions each raw hidden-matrix gradient by
+`(X'X + damping I)^(-alpha)`, then applies momentum, then the record's 12-step
+Newton–Schulz polar map. Activation second moments are measured on refresh
+steps and their cached inverse power is refreshed every ten steps. Alpha zero
+bypasses activation hooks and preconditioning completely.
+
+Run before launching the fleet:
+
+```bash
+python -m pytest -q \
+  records/track_3_optimization/tests/test_newton_muon.py \
+  records/track_3_optimization/tests/test_newton_double_dip_configs.py \
+  records/track_3_optimization/tests/test_registry_locks.py
+```
+
+Then regenerate the configs and byte-compare them with `requests/req025/`:
+
+```bash
+python records/track_3_optimization/offline_analysis/make_newton_double_dip_configs.py \
+  --out /tmp/req025-configs
+diff -ru requests/req025 /tmp/req025-configs
+```
+
+Do not patch the checkout on the nodes. On a test GPU, smoke one alpha-0 record
+arm and verify its first updates and validation against plain bi-Maxwell from
+the same state before launching alpha-positive arms. Record the trace evidence.
+
+### Frozen grid and state protocol
+
+The committed manifest contains exactly:
+
+```text
+alpha: 0, 0.25, 0.5
+kernel: record bi-Maxwell, short EMA beta=0.85
+fork: 1500, 2000
+continuation: 750 updates
+total: 12 runs
+```
+
+Assign fork 1500 to node 1 and fork 2000 to node 2. Reuse the exact serialized
+REQ-019 bi-Maxwell bases if still available and checksum-identifiable. If they
+are not available, generate one base trajectory per node, dump the assigned
+fork state once, and branch all six node-local arms from that single state.
+Before training, verify every model tensor and loaded optimizer tensor is
+identical across the six arms at that fork. Never regenerate a separate base
+for an individual arm.
+
+The record arm retains both serialized bi-Maxwell streams. The short-memory
+arm is a state-compatible proxy for a short flat window: it uses a single
+beta-0.85 EMA seeded from the serialized `m_fast` stream and begins immediately
+at the fork. Do not replace it with a new zero buffer or a ring buffer.
+
+Two declared approximations belong in the final interpretation:
+
+1. `mlp.proj` uses four 768-dimensional covariance blocks rather than one
+   3072-dimensional eigendecomposition, matching the tractable Su-style
+   block approximation used here.
+2. The short EMA's flip response is about 0.127 versus about 0.089 for the
+   record kernel. Prior plateau interventions suggest this difference is
+   loss-inert, but it remains a small memory-contrast confound.
+
+### Measurements and gates
+
+For every run retain validation loss at the normal 125-step cadence and model
+checkpoints at fork+250, fork+500, and fork+750. Run the established per-matrix
+curvature scorer at all three checkpoints. Record wall time separately for
+alpha zero, 0.25, and 0.5 so the eigendecomposition overhead is visible.
+
+Required gates:
+
+- exact checked-out SHA and clean worktree
+- all targeted tests pass
+- committed/generated configs have no diff
+- alpha-0 record trace matches plain bi-Maxwell from the same fork
+- six arms at each fork pass the shared-model/shared-optimizer-state gate
+- runtime logs show alpha, kernel, fork, refresh interval, and realized LR
+- no duplicate arm and no arm launched from an arm-specific base
+
+### Deliverable
+
+Commit and push:
+
+```text
+logs/kmaxwell/req025_newton_double_dip/
+  README.md
+  summary.tsv
+  interactions.tsv
+  shared-state-check.tsv
+  alpha0-trace-check.tsv
+  configs/
+  <12 run directories with command, console log, train log, validation, and curvature JSON>
+```
+
+`summary.tsv` must include fork, kernel, alpha, start/end step, validation loss,
+wall time, exact SHA, and artifact path. `interactions.tsv` must include both
+sign conventions above at every validation horizon and fork. Plot validation
+loss versus alpha for both kernels, faceted by fork, plus the interaction versus
+horizon with fork-specific curves. Distinguish discovery evidence from a
+multi-seed significance claim; this request is a shared-state mechanism screen.
+
+If a gate fails, preserve evidence, update this block to `NEEDS-INFO`, and stop
+before launching the remaining fleet. Release both nodes after artifacts are
+pushed.
+
+---
+
 ## REQ-024: 8-GPU 4+4 OpenRouter DeepSeek SDPO fleet
 
 - status: RUNNING (agent 2026-08-31) — box wgmy26w (8xH100 4+4), SHA ecf6fd8, hint model `deepseek/deepseek-v4-flash`. Bootstrap complete (offline tests **227 passed**; vLLM 0.26.0 manual bringup + torchvision 0.26.0+cu128 + python3.12-dev fixes; keys via .env never committed). **Preflight PASS** (04:08Z: DeepSeek hint→OK, Nemotron judge→200, Parallel→200). arm 1 **answer_free TRAINING** (step ~11). **HINT GATE PASS** — 186 attempts, **0 drops (0.00%)**, **0 openrouter_length**, api_failures empty → the DeepSeek OpenRouter hint fix is validated (see `logs/async_sdpo_req024/hint-fix-validation.tsv`). Continuing answer_free→200, then answer_bearing, then tau2 a2c0247 fix + tau2 gold. Eval contract at 25-step boundaries.

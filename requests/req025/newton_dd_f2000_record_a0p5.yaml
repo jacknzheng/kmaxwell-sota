@@ -1,0 +1,76 @@
+loop: gpt_record
+run_id: newton_dd_f2000_record_a0p5
+seed: 0
+require_world_size: 8
+train_steps: 3250
+start_step: 2000
+stop_after_step: 2750
+batch_tokens: 524288
+microbatch_sequences: 64
+train_data: data/fineweb10B/fineweb_train_*.bin
+val_data: data/fineweb10B/fineweb_val_*.bin
+val_tokens: 10485760
+model:
+  vocab_size: 50304
+  num_layers: 12
+  model_dim: 768
+optimizer_groups:
+- pattern: ^embed\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.7
+    weight_decay: 0.001
+- pattern: ^proj\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.004
+    weight_decay: 0.001
+- pattern: ^blocks\..*\.weight$
+  optimizer: newton_bimaxwell_muon
+  hyperparams:
+    lr: 0.025
+    weight_decay: 0.05
+    mu: 0.95
+    newton_alpha: 0.5
+    precond_refresh_interval: 10
+    precond_beta: 0.95
+    precond_damping: 0.2
+    fast_decay: 0.85
+    slow_decay: 0.98
+    fast_weight: 0.4385
+    switch_step: 1000
+- pattern: .*
+  optimizer: adamw
+  hyperparams:
+    lr: 0.015
+    weight_decay: 0.001
+setup:
+- name: open_rank_zero_log
+- name: load_validation_tokens
+- name: build_compiled_gpt
+- name: seed_then_initialize_parameters
+- name: attach_newton_muon_activation_stats
+- name: assemble_grouped_optimizer
+- name: open_training_batches
+- name: broadcast_initial_parameters
+- name: load_training_state
+  hyperparams:
+    state_dir: eos_shared_state
+    step: 2000
+    skip_batches: 2000
+- name: validate_at_step_boundaries
+pre_optimizer:
+- name: checkpoint_model_at_cadence
+  hyperparams:
+    every: 250
+    dump_dir: dumps_newton_dd_f2000_record_a0p5
+- name: cool_down_learning_rate
+  hyperparams:
+    cooldown_frac: 0.7
+post_optimizer:
+- name: print_training_progress
+- name: validate_at_step_boundaries
+  hyperparams:
+    every: 125
+teardown:
+- name: mark_log_finished

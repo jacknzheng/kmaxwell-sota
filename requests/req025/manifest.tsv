@@ -1,0 +1,13 @@
+run_id	fork_step	stop_step	kernel	alpha	curvature_steps
+newton_dd_f1500_record_a0p0	1500	2250	record	0.0	1750,2000,2250
+newton_dd_f1500_record_a0p25	1500	2250	record	0.25	1750,2000,2250
+newton_dd_f1500_record_a0p5	1500	2250	record	0.5	1750,2000,2250
+newton_dd_f1500_short_a0p0	1500	2250	short	0.0	1750,2000,2250
+newton_dd_f1500_short_a0p25	1500	2250	short	0.25	1750,2000,2250
+newton_dd_f1500_short_a0p5	1500	2250	short	0.5	1750,2000,2250
+newton_dd_f2000_record_a0p0	2000	2750	record	0.0	2250,2500,2750
+newton_dd_f2000_record_a0p25	2000	2750	record	0.25	2250,2500,2750
+newton_dd_f2000_record_a0p5	2000	2750	record	0.5	2250,2500,2750
+newton_dd_f2000_short_a0p0	2000	2750	short	0.0	2250,2500,2750
+newton_dd_f2000_short_a0p25	2000	2750	short	0.25	2250,2500,2750
+newton_dd_f2000_short_a0p5	2000	2750	short	0.5	2250,2500,2750
