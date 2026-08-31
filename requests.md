@@ -32,7 +32,7 @@ secrets; refer to already-provisioned environment variables.>
 
 ## REQ-025: Newton–Muon double-dip interaction grid
 
-- status: OPEN
+- status: RUNNING (agent 2026-08-31) — node qj0z8lw (8xH100) bootstrapping SHA 596d2868. **Note: running on ONE node (both forks sequential), not two** — REQ-024 holds the other node of the operator's 2-node cap; the 12 runs are identical whether parallel or sequential (only wall time differs), and "do not exceed two nodes" is honored. Plan: tests → config byte-diff → alpha-0 trace gate vs plain bi-Maxwell → regen eos_shared_base → shared-state gate (6 arms/fork) → 12 arms (750-step) + curvature at fork+250/500/750 → interactions.tsv.
 - requested: Jeffrey / Codex / 2026-08-30 21:40 PDT
 - priority: use two available 8xH100 nodes, one fork per node; do not exceed two
   nodes for this request
