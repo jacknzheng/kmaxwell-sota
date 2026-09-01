@@ -1,16 +1,16 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Can future local dynamics choose a momentum kernel?</title>
+<title>How do momentum and Newton interact?</title>
 <script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'}};</script>
 <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 <style>
 :root{--ink:#17212b;--muted:#586574;--paper:#fff;--page:#edf1f4;--line:#d9e1e8;--blue:#2e5db7;--bluewash:#eff4ff;--green:#087461;--greenwash:#eaf7f3;--amber:#925809;--amberwash:#fff6e8}*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font:17px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}main{width:calc(100% - 48px);max-width:940px;margin:24px auto;padding:60px 72px 76px;background:var(--paper);box-shadow:0 12px 40px #24344716}h1{margin:0 0 12px;font-size:2.55rem;line-height:1.08;letter-spacing:-.04em}h2{margin:3.1rem 0 .8rem;font-size:1.5rem;line-height:1.25}p{margin:.62rem 0 1rem}.stamp,.roadmap,.footnotes{color:var(--muted)}.stamp{font-size:.84rem;margin-bottom:2rem}.lead{font-size:1.16rem;line-height:1.62}.box,.result,.warning{margin:1.25rem 0 1.65rem;padding:17px 20px;border-left:4px solid var(--blue);background:var(--bluewash)}.result{border-color:var(--green);background:var(--greenwash)}.warning{border-color:var(--amber);background:var(--amberwash)}.box p,.result p,.warning p{margin:.12rem 0}.label{display:block;margin-bottom:4px;color:var(--muted);font-size:.76rem;font-weight:750;letter-spacing:.06em;text-transform:uppercase}.roadmap{font-style:italic}.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:stretch;margin:1.45rem 0 1.8rem}.flow>div{padding:14px 15px;border:1px solid var(--line);border-radius:8px;background:#fafbfd}.flow strong{display:block;color:var(--blue)}.arrow{align-self:center;color:var(--muted);font-size:1.3rem}figure{margin:1.35rem 0 1.8rem}figure img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:8px}figcaption{margin-top:.55rem;color:var(--muted);font-size:.88rem;line-height:1.5}table{width:100%;border-collapse:collapse;margin:1.2rem 0 1.75rem;font-size:.92rem}th,td{padding:10px 12px;border:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f3f5f7}ol li{margin:.42rem 0}.math{overflow-x:auto}.footnotes{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--line);font-size:.86rem}@media(max-width:720px){main{width:100%;margin:0;padding:36px 21px 54px}h1{font-size:2.05rem}.flow{grid-template-columns:1fr}.arrow{transform:rotate(90deg);text-align:center}}
 </style></head><body><main>
-<h1>Can future local dynamics choose a momentum kernel?</h1>
-<p class="stamp">Research proposal · 31 August 2026</p>
-<p class="lead">Scheduled K8—a momentum kernel built from eight exponential buffers—beats bi-Maxwell, while a single exponential moving average provides no measurable benefit over no momentum. Bi-Maxwell's benefit shrinks as batch size grows. The useful part of momentum therefore depends on temporal shape and on gradient noise; plain averaging does not explain it. This motivates a control problem: which update should the recent gradient history produce at this state?</p>
-<figure><img src="figs/batch_benefit.png" alt="Validation-loss benefit of bi-Maxwell and single-EMA momentum at standard, four-times, and eight-times batch size"><figcaption>Each point is a continuation from the same step-2000 checkpoint; lower is better. Bi-Maxwell's validation-loss advantage falls from 0.0106 at standard batch to 0.0044 at \(4\times\) batch and 0.0023 at \(8\times\) batch. Single-EMA momentum adds no measurable benefit at standard or \(4\times\) batch. The \(8\times\) estimate has one run; the other two settings have replicate ranges.</figcaption></figure>
-<div class="box"><span class="label">Proposal</span><p>Use future gradients and Hessians offline to define the locally best update. Then derive the unique causal momentum kernel whose Muon update best matches that action. The proposal succeeds only if a kernel fitted in one part of training predicts held-out kernel rankings, K8's annealing direction, and short continuation loss.</p></div>
-<div class="flow"><div><strong>Define the action</strong>Use future local quadratics to choose one update.</div><div class="arrow">→</div><div><strong>Derive the kernel</strong>Project that update into a causal gradient-history filter.</div><div class="arrow">→</div><div><strong>Test transfer</strong>Predict kernels and schedules on held-out phases.</div></div>
+<h1>How do momentum and Newton interact?</h1>
+<p class="stamp">Research proposal · revised 1 September 2026</p>
+<p class="lead">Scheduled K8—a momentum kernel built from eight exponential buffers—beats bi-Maxwell, which combines two exponential buffers, while a single exponential moving average provides no measurable benefit over no momentum. Bi-Maxwell's benefit shrinks with batch size and reaches a measured zero at \(16\times\) batch. The useful part of momentum therefore depends on temporal shape and on gradient noise; plain averaging does not explain it. Adding Newton introduces a second operator that acts on many of the same gradient directions. The question is where the two operators duplicate each other and where they contribute independent information.</p>
+<figure><img src="figs/batch_benefit.png" alt="Bi-Maxwell validation-loss benefit decreases across standard, four-times, eight-times, and sixteen-times batch size, reaching zero at sixteen-times"><figcaption>Each point is bi-Maxwell validation loss minus matched no-momentum validation loss after a 750-step continuation from the same step-2000 state; negative is better. The \(1\times\) and \(4\times\) points summarize repeated continuations. The \(8\times\) and \(16\times\) points each use one matched pair. At \(16\times\), both runs end at 3.17362 and agree within \(10^{-5}\). The learning rate was not rescaled with batch size.</figcaption></figure>
+<div class="box"><span class="label">Proposal</span><p>Use future gradients and Hessians to define a common controller target. Measure momentum, Newton, and their composition against that target in fixed curvature bands. Factorization and redundancy then determine which temporal and curvature degrees of freedom can be removed before any optimizer is designed.</p></div>
+<div class="flow"><div><strong>Define the reference</strong>Use future local quadratics to choose one action.</div><div class="arrow">→</div><div><strong>Separate the operators</strong>State what temporal filtering and curvature inversion each change.</div><div class="arrow">→</div><div><strong>Measure interaction</strong>Test factorization and redundancy in fixed curvature bands.</div></div>
 
 <h2>1. A hindsight action supplies the target</h2>
 <p class="roadmap">This section defines the action that the momentum kernel will try to reproduce and states the assumption that makes the exercise informative.</p>
@@ -27,8 +27,8 @@ u_t^*=B_t^{-1}\sum_{h=0}^{N-1}\omega_hg_{t+h}.
 <div class="warning"><span class="label">Assumption under test</span><p>Gradients and Hessians recorded along the baseline trajectory must preserve the ranking of nearby counterfactual kernels within a training phase. Fitting on earlier blocks and predicting later blocks tests this assumption. Short training continuations provide the final check.</p></div>
 <p>The calculation is an offline design expense. A matrix-free solve that takes \(q\) Krylov iterations over \(N\) future Hessians costs \(qN\) Hessian–vector products per state. Direct optimization within a \(K\)-parameter kernel family instead costs \(O(KN)\) Hessian–vector products to form the small quadratic.</p>
 
-<h2>2. The controller target determines one causal kernel</h2>
-<p class="roadmap">This section turns the hindsight action into a deployable momentum rule while respecting the information discarded by Muon's matrix sign.</p>
+<h2>2. The controller target constrains temporal filtering</h2>
+<p class="roadmap">This section states what a momentum kernel must reproduce before its interaction with curvature inversion can be interpreted.</p>
 <p>Let \(G_{t-\tau}\) be the gradient matrix observed \(\tau\) steps ago. In Muon's fixed Euclidean coordinates, the gradient matrix is the unique matrix whose Frobenius inner product with any step \(v\) equals the directional derivative in direction \(v\). This identifies gradient covectors and step matrices for the regression; Section 4 shows how the two underlying types transform. A length-\(L\) causal kernel assigns one weight \(w_\tau\) to each available lag:</p>
 <div class="math">\[
 M_t(w)=\sum_{\tau=0}^{L-1}w_\tau G_{t-\tau},\qquad \sum_{\tau=0}^{L-1}w_\tau=1.
@@ -47,7 +47,7 @@ F(w)=\sum_{t\in\mathcal T}\left\lVert\mathcal J_t\bigl(M_t(w)-u_t^*\bigr)\right\
 <div class="result"><span class="label">Required known-ordering test</span><p>Without using validation losses during fitting, the functional must rank scheduled K8 above bi-Maxwell, and bi-Maxwell above both single-EMA momentum and no momentum. It must also predict the direction of K8's annealing. Failure on either test ends this formulation.</p></div>
 
 <h2>3. Momentum and Newton must be composed</h2>
-<p class="roadmap">This section defines the object we need to choose: an ordered pipeline of temporal accumulation, curvature estimation, preconditioning, and matrix sign.</p>
+<p class="roadmap">This section shows why the interaction depends on composition order and defines a common error measure for complete compositions.</p>
 <p>Momentum combines gradients across time. A Newton preconditioner converts a gradient into a step by applying an inverse curvature operator. These operations can be performed in different orders, and the orders differ whenever curvature changes or is estimated with noise. Section 4 defines the mathematical types and lists the resulting pipelines.</p>
 <p>Compare complete pipelines against the hindsight action \(u_t^*\). Hold the recorded parameter states and the high-token gradients and Hessians used to define \(u_t^*\) fixed. For each replicate \(r\), redraw the finite-token minibatches used by pipeline \(p\), call the matrix entering its final matrix-sign operation \(x_{p,r}\), and compare the resulting step with the polar-normalized hindsight action. The error is</p>
 <div class="math">\[
@@ -81,7 +81,11 @@ g'=S^{-\top}g,\qquad {g'}^\top v'=g^\top v.
 <tr><td>\(\sum_s\alpha_s\bar A_t^{-1}g_s\)</td><td>The first expression expanded as a sum when \(\bar g_t=\sum_s\alpha_sg_s\); it is the same pipeline.</td></tr>
 <tr><td>\(\sum_s\alpha_s\bar A_s^{-1}g_s\)</td><td>Precondition each gradient with the smoothed metric available at its own step, then accumulate step vectors.</td></tr>
 </tbody></table>
-<p>With a fixed positive-definite metric, all four expressions coincide. When the metric changes, the first expression converts every historical gradient using the current metric; the fourth preserves the step vector implied by the metric available when each gradient was observed. The second additionally inverts an unsmoothed metric at every step. Because inversion is operator convex on positive-definite matrices, this tends to amplify noise in low-curvature directions. This argument concerns noise in the metric alone; correlation between a same-minibatch metric and gradient can change the total error. The pipeline MSE from Section 3 therefore makes the final comparison.</p>
+<p>With a fixed positive-definite metric, all four expressions coincide. When the metric changes, the first expression converts every historical gradient using the current metric; the fourth preserves the step vector implied by the metric available when each gradient was observed. The second additionally inverts an unsmoothed metric at every step. For a random positive-definite metric \(A\), operator convexity of inversion gives</p>
+<div class="math">\[
+\mathbb E[A^{-1}]\succeq\bigl(\mathbb E[A]\bigr)^{-1},
+\]</div>
+<p>where \(X\succeq Y\) means that \(X-Y\) is positive semidefinite. Inverting each noisy metric before averaging can therefore amplify low-curvature directions. This argument concerns noise in the metric alone; correlation between a same-minibatch metric and gradient can change the total error. The pipeline MSE from Section 3 makes the final comparison.</p>
 <p>A longer metric window reduces sampling noise but uses older curvature. For a trailing rectangular window of \(W\) steps, assume local linear drift of size \(d_M\) per step and independent same-step estimation variance \(\sigma_M^2\), measured in one matrix distance. The leading mean-squared error and its minimizer are</p>
 <div class="math">\[
 E(W)=\frac{\sigma_M^2}{W}+\frac{d_M^2W^2}{4},\qquad W^*=\left(\frac{2\sigma_M^2}{d_M^2}\right)^{1/3}.
@@ -89,15 +93,29 @@ E(W)=\frac{\sigma_M^2}{W}+\frac{d_M^2W^2}{4},\qquad W^*=\left(\frac{2\sigma_M^2}
 <p>Estimate \(\sigma_M^2\) from independent token subsets at the same parameters. Estimate \(d_M\) from adjacent checkpoints after subtracting that same-step noise floor. Existing curvature overlap rises from about \(0.24\) early to \(0.86\) late over 250 steps, which suggests a longer late window. A numeric schedule requires noise and drift measured in the same distance; overlap alone does not determine it.</p>
 <p>Within this architecture, apply Muon's matrix sign after temporal aggregation and curvature transformation. Accumulating already-polarized updates defines a separate optimizer.</p>
 
-<h2>5. The shortest decisive experiment</h2>
-<p class="roadmap">This section orders inexpensive failure tests before any broad training sweep.</p>
-<ol>
-<li><strong>Fit the controller target.</strong> At early, middle, and late checkpoints, compute \(u_t^*\) for several future horizons and check whether its held-out ranking is stable.</li>
-<li><strong>Derive causal kernels.</strong> Solve the convex kernel problem on blocked intervals. Report polar-visible fit error and the residual after projection into practical exponential mixtures.</li>
-<li><strong>Reproduce the known results.</strong> Predict K8 \(>\) bi-Maxwell \(>\) single EMA \(\approx\) no momentum, K8's annealing direction, and weaker temporal weighting as batch size increases.</li>
-<li><strong>Measure the curvature window.</strong> Express same-step noise and cross-step drift in one distance, calculate \(W^*(t)\), and compare the first and fourth orderings.</li>
-<li><strong>Run continuations for survivors.</strong> Fork from identical checkpoints and test whether predicted rankings persist in realized loss. Duplicate controls measure ordinary run divergence.</li>
-</ol>
-<div class="warning"><span class="label">Keep or kill</span><p>Continue only if blocked fits recover both the known kernel ordering and the direction of K8's schedule, and those predictions survive short continuations. Otherwise the future local quadratic is not a useful design target for momentum, even though its minimizer is unique.</p></div>
-<div class="footnotes"><p><strong>Status.</strong> The single-EMA and batch-size results motivate the controller framing. The controller functional has not yet reproduced the known kernel ordering or schedule.</p></div>
+<h2>5. The decisive offline test measures the interaction by curvature band</h2>
+<p class="roadmap">This section defines the \(2\times2\) factorial that separates algebraic factorization from task-level redundancy.</p>
+<p>At each fixed checkpoint, cross two gradient histories with two curvature operators. Let \(g_t\) be the current gradient, \(m_t^{\mathrm{K8}}\) the phase-matched K8 gradient history, and \(B_t^{-1}=(H_t+\rho I)^{-1}\) the certified damped inverse Hessian, with damping \(\rho\) set to the eighth measured Ritz curvature. The four pre-matrix-sign cells are</p>
+<div class="math">\[
+x_{00}=g_t,\qquad
+x_{10}=m_t^{\mathrm{K8}},\qquad
+x_{01}=B_t^{-1}g_t,\qquad
+x_{11}=B_t^{-1}m_t^{\mathrm{K8}}.
+\]</div>
+<p>The metric is fixed at the evaluation state, so temporal filtering and curvature inversion commute in this first analysis. The factorial therefore isolates redundancy between their effects. The drift measurements in Section 4 quantify when a historical metric breaks that commuting approximation.</p>
+<p>Project each cell into the fixed true-Hessian eigenspaces with curvature ranks 1–8 and 9–24. Recorded gradients projected onto ranks 1–8 alternate sign from one step to the next; ranks 9–24 form the next resolved curvature band. These boundaries are fixed before either interaction score is examined. A matrix enters the comparison only when both inverse-curvature solves satisfy the same residual criterion; results are shown per matrix and checkpoint before aggregation.</p>
+<p>The first score tests whether the two operators factorize. If \(a_{ij,b}\) is the norm of cell \(ij\) in band \(b\), define</p>
+<div class="math">\[
+I_{\mathrm{gain},b}
+=\log a_{11,b}-\log a_{10,b}-\log a_{01,b}+\log a_{00,b}.
+\]</div>
+<p>A value of zero means that temporal filtering and curvature inversion multiply their gains in that band. This is the prediction when the metric is fixed and the two operators commute.</p>
+<p>The second score tests whether the operators improve the controller objective independently. Let \(L_{ij,b}\) be the future-window quadratic excess loss of the polar-normalized cell relative to the hindsight action \(u_t^*\). Define</p>
+<div class="math">\[
+I_{\mathrm{loss},b}
+=L_{11,b}-L_{10,b}-L_{01,b}+L_{00,b}.
+\]</div>
+<p>Positive \(I_{\mathrm{loss},b}\) means that their combined improvement is smaller than the sum of their separate improvements, so they substitute in that band. Negative \(I_{\mathrm{loss},b}\) means that they are complementary. The future window contains the current state and the next two recorded checkpoints, separated by 250 training steps. Those later derivatives come from the baseline trajectory and therefore approximate the counterfactual future of each cell. The cosine between \(P_\varepsilon(x_{ij})\) and \(P_\varepsilon(u_t^*)\) is reported beside both scores so that scale changes erased by matrix sign cannot count as useful interaction.</p>
+<div class="warning"><span class="label">Validity test</span><p>The same future-window objective must reproduce the known ordering K8 \(>\) bi-Maxwell \(>\) single EMA \(\approx\) no momentum. If it fails, its bandwise interaction scores cannot be used to constrain momentum. As of 1 September 2026, the four factorial cells and this ordering test are being scored; no interaction result is claimed here.</p></div>
+<div class="footnotes"><p><strong>Decision rule.</strong> If \(I_{\mathrm{gain}}\) is near zero and \(I_{\mathrm{loss}}>0\) on the edge, one convention can absorb the shared edge response and remove duplicated design freedom. Bands with \(I_{\mathrm{loss}}<0\) retain separate temporal and curvature controls.</p></div>
 </main></body></html>
