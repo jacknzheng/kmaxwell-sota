@@ -101,7 +101,7 @@
   <h2>The gradient candidate has to pass two tests</h2>
   <div class="decision">
     <div class="label">Test A · Does the rule explain the schedule?</div>
-    <p>The intern's eight-buffer K-Maxwell kernel (K8) shortens its average lag from approximately 49 to 36 to 29 steps across the three saved training states. Rising relative noise alone would lengthen an averaging window. Replica-clocked accumulation reproduces the observed shortening only if measured drift grows enough to dominate that effect.</p>
+    <p>The eight-buffer K-Maxwell kernel (K8), the current record kernel, shortens its average lag from approximately 49 to 36 to 29 steps across the three saved training states. Rising relative noise alone would lengthen an averaging window. Replica-clocked accumulation reproduces the observed shortening only if measured drift grows enough to dominate that effect.</p>
   </div>
   <p>The norm, drift lags, smoothing, token conversion, and geometric mapping are fixed before computing the three predictions; no fitted multiplier is allowed. A wrong ordering or a miss outside the uncertainty interval rejects this rule for the momentum schedule. Agreement would explain K8's central timescale. It would not explain K8's loss improvement.</p>
 
@@ -141,17 +141,19 @@
   </table>
 
   <h2>Current work and the decision sequence</h2>
-  <p>The pooled and bandwise clock calculations are running on the serialized gradient histories. The fork-2400 state is being processed first; the other two states follow. No clock result is reported on this page yet.</p>
+  <p>The pooled clock calculation is running on the serialized gradient histories. Two of the three states are being processed; the third follows. The bandwise analysis is specified and its scorer is in construction. No clock result is reported on this page yet.</p>
   <p>The factored accumulation calculation uses the same recordings and proceeds independently of the gradient result. Once the measured factor predicts held-out action better than a fixed decay, the momentum × factored-curvature comparison asks whether the two accumulators can be designed separately.</p>
   <p>Full-Hessian depth remains a bounded comparison requiring separate approval. It becomes relevant only if the factored method leaves a specific discrepancy that a deeper, cross-replicable curvature action could explain.</p>
 
   <table>
     <thead><tr><th>Measurement</th><th>Present state</th><th>Compute already available</th><th>Decision</th></tr></thead>
     <tbody>
-      <tr><td>Tests A and B</td><td class="status">Running</td><td>Serialized dense gradients; no training sweep</td><td>Retain or reject replica-clocked momentum</td></tr>
+      <tr><td>Test A</td><td class="status">Running</td><td>Serialized dense gradients; no training sweep</td><td>Retain or reject the pooled replica clock</td></tr>
+      <tr><td>Test B</td><td>Analysis specified; scorer in construction</td><td>The same serialized gradients</td><td>Retain or reject the clock-bank explanation</td></tr>
       <tr><td>Factor clock and shrinkage</td><td>Analysis specified</td><td>Same recordings plus factor replay</td><td>Produce a measured factored accumulator or its token requirement</td></tr>
       <tr><td>Momentum × factored curvature</td><td>Interaction readouts pending</td><td>Existing three-metric calculations</td><td>Separate or couple temporal and curvature design</td></tr>
       <tr><td>Full-curvature depth</td><td>Parked</td><td>New GPU approval required</td><td>Bound what the factored family leaves unexplained</td></tr>
     </tbody>
   </table>
+  <p class="small">The Test A protocol was fixed in scorer commit <code>a765cfb</code> before any saved state produced an output.</p>
 </main></body></html>
