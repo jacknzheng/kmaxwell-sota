@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A momentum schedule from the measured zigzag</title>
+  <script>
+    window.MathJax = {tex: {inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']]}};
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <style>
+    :root { --ink:#17212b; --muted:#596574; --line:#d9e0e7; --paper:#fff; --page:#eef2f5; --wash:#f5f7f9; --blue:#1769aa; --green:#13795b; --amber:#9a6700; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--page); color:var(--ink); font:17px/1.55 Georgia,"Times New Roman",serif; }
+    main { max-width:940px; margin:32px auto; padding:54px 66px 70px; background:var(--paper); box-shadow:0 2px 20px #23303d18; }
+    h1,h2 { font-family:Inter,ui-sans-serif,system-ui,sans-serif; line-height:1.17; letter-spacing:-.02em; }
+    h1 { margin:0 0 12px; font-size:42px; }
+    h2 { margin:50px 0 14px; padding-top:10px; border-top:1px solid var(--line); font-size:27px; }
+    p { margin:10px 0 15px; }
+    .dek { max-width:780px; color:var(--muted); font:20px/1.45 Inter,ui-sans-serif,system-ui,sans-serif; }
+    .question,.result,.proposal { margin:25px 0; padding:18px 22px; border-left:5px solid var(--blue); background:#eef6fc; }
+    .result { border-color:var(--green); background:#edf8f4; }
+    .proposal { border-color:var(--amber); background:#fff8e8; }
+    .def { margin:22px 0; padding:14px 18px; border:1px solid var(--line); border-left:5px solid var(--amber); background:var(--wash); }
+    .label { color:var(--muted); font:700 12px/1.2 Inter,ui-sans-serif,system-ui,sans-serif; letter-spacing:.08em; text-transform:uppercase; }
+    figure { margin:25px 0 34px; }
+    figure img { display:block; width:100%; height:auto; border:1px solid var(--line); background:#fff; }
+    figcaption { margin-top:9px; color:var(--muted); font:13px/1.45 Inter,ui-sans-serif,system-ui,sans-serif; }
+    table { width:100%; margin:20px 0 30px; border-collapse:collapse; font:14px/1.4 Inter,ui-sans-serif,system-ui,sans-serif; }
+    th { text-align:left; vertical-align:bottom; color:#34404c; background:var(--wash); }
+    th,td { padding:11px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+    td:first-child { font-weight:700; }
+    .small { color:var(--muted); font-size:14px; }
+    .math { font-family:"Times New Roman",serif; font-style:italic; }
+    @media (max-width:720px) { main{margin:0;padding:34px 22px} h1{font-size:34px} }
+  </style>
+</head>
+<body><main>
+  <h1>A momentum schedule from the measured zigzag</h1>
+  <p class="dek">K8 shortens its memory as NanoGPT training proceeds. A rule that holds the transmitted period-two oscillation at one constant level reproduces the direction and scale of that hand-tuned schedule. The rule has one fitted constant; its remaining inputs are measured from the gradient trajectory.</p>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>Can the changing balance between period-two oscillation and slower gradient motion determine how much history momentum should retain?</p>
+  </div>
+
+  <h2>Why the period-two oscillation is the starting point</h2>
+  <p>Muon training contains a large period-two oscillation in the true gradient along high-curvature directions. It persists when minibatch noise is removed. Earlier interventions also found that eliminating the oscillation is harmful, so the design problem is to regulate how much reaches the update rather than cancel it.</p>
+  <p>K8, the current eight-buffer momentum kernel, was found by search. Its average lag falls during training. The proposed mechanism is simple: the raw oscillation becomes weaker relative to the slower gradient motion, and the kernel shortens its memory to keep their ratio in the update near a fixed target.</p>
+
+  <div class="def"><b>Measured zigzag ratio.</b> For each recorded gradient window, (z(t)=E_{2}(t)/E_{\mathrm{slow}}(t)), where (E_{2}) is the median period-two energy across Muon matrices and (E_{\mathrm{slow}}) is the median energy in the slower component used by the profiler.</div>
+
+  <figure>
+    <img src="figs/figA_ratio_decline.png" alt="Measured period-two to slower-gradient energy ratio falls across training">
+    <figcaption><b>Figure 1. The period-two oscillation weakens by about twenty-fold relative to slower gradient motion.</b> One point is the median ratio from one 128-step gradient window. The dashed line marks the start of K8's scheduled kernel change. The ratio is undefined in the final cooldown window because the slower component falls below the measurement floor.</figcaption>
+  </figure>
+
+  <p>The ratio falls from 1.3 early in training to 0.069 late in training. This is the measured state variable that the rule uses. Training step enters only through the measurements.</p>
+
+  <h2>A one-constant rule reproduces the anneal</h2>
+  <p>For a candidate kernel with average lag <span class="math">N</span>, let <span class="math">T<sub>2</sub>(N)</span> denote its period-two transmission and <span class="math">T<sub>slow</sub>(N)</span> its transmission of the slower component. The rule selects the lag that holds the transmitted ratio at a constant <span class="math">ρ</span>:</p>
+  <div class="def"><b>Schedule rule.</b> At each measured state, choose the average lag <span class="math">N</span> that minimizes <span class="math">| z(t) T<sub>2</sub>(N) / T<sub>slow</sub>(N) − ρ |</span>.</div>
+  <p>Fitting <span class="math">ρ</span> once to the deployed K8 schedule gives predicted average lags of 66, 67, 50, and 24 steps. The deployed values at the corresponding phases are 57, 54, 48, and 35 steps.</p>
+
+  <figure>
+    <img src="figs/figB_rule_vs_deployed.png" alt="Mechanism-derived average lag compared with the deployed K8 schedule">
+    <figcaption><b>Figure 2. One fitted target level recovers K8's shortening memory and approximately its scale.</b> Green squares are rule predictions from four measured gradient windows; the blue curve is the hand-tuned K8 average lag. The rule changes more steeply than the deployed schedule.</figcaption>
+  </figure>
+
+  <div class="result">
+    <div class="label">What this establishes</div>
+    <p>A measured closed-loop quantity can explain most of K8's annealing direction and scale with one constant. The candidate passes the standing screen because it regulates a measured optimizer response and makes a falsifiable schedule prediction; it does not estimate a rejected gradient target. This is evidence for zigzag regulation as a design principle. Empirical loss validation remains open.</p>
+  </div>
+
+  <p>The comparison has defined limits. The window before K8 begins is outside its scope because the deployed optimizer still uses a single exponential buffer. The final cooldown window is unusable because the denominator of <span class="math">z(t)</span> is below the noise floor. The rule matches a ratio, so it cannot distinguish kernels that transmit both components at the same ratio but different absolute magnitudes.</p>
+
+  <h2>Switching kernels creates a long-lived optimization shock</h2>
+  <p>The continuation sweep was intended to rank candidate average lags at three saved states. It instead exposed a transient: after the optimizer inherits old momentum buffers and switches kernel weights, longer-memory kernels begin farther behind the shortest-memory comparison and close the gap for hundreds of steps.</p>
+
+  <figure>
+    <img src="figs/fig_transient.png" alt="Validation-loss gap after switching to kernels of different average lag">
+    <figcaption><b>Figure 3. The loss transient grows with the incoming kernel's average lag, decays over hundreds of steps, and becomes much smaller late in training.</b> Each curve is the validation-loss gap from the shortest-memory continuation at the same saved state. Points average two replicas. “Age” in the legend means the target kernel's average lag in steps.</figcaption>
+  </figure>
+
+  <p>The initial gap is about ten times smaller at the late saved state than at the early saved state. At the middle state, the 14-step kernel crosses the 7-step comparison only after roughly 600 steps. Endpoint ordering after a 750-step continuation therefore mixes steady-state quality with the cost of replacing the inherited kernel state.</p>
+  <p>This explains why the sweep cannot validate Figure 2. It also joins two earlier measurements of the same closed-loop problem: one-step selection ranked useful kernels backward, and an update can consume the future gradient component used to score it. Kernel changes must be evaluated from a state consistent with the candidate kernel.</p>
+
+  <h2>The decisive test starts each kernel from its own state</h2>
+  <p>The next experiment trains fixed-average-lag kernels from scratch, avoiding any kernel switch. It asks whether their loss ordering across training states follows the lag predicted by the zigzag rule.</p>
+  <table>
+    <thead><tr><th>Design choice</th><th>Reason</th><th>Decision criterion</th></tr></thead>
+    <tbody>
+      <tr><td>Fixed average lags spanning the predicted range</td><td>Separates kernel quality from a hand-tuned schedule</td><td>The preferred lag should shorten in the order predicted by Figure 2</td></tr>
+      <tr><td>Training from initialization</td><td>Every momentum state is generated by the kernel being tested</td><td>No inherited-state transient can determine the ranking</td></tr>
+      <tr><td>Matched seeds and validation checkpoints</td><td>Compares kernels at the same data and training phase</td><td>Ordering must repeat across seeds before fitting a final rule</td></tr>
+    </tbody>
+  </table>
+
+  <div class="proposal">
+    <div class="label">Decision requested</div>
+    <p>Run the from-scratch fixed-lag comparison. If its preferred lags follow the mechanism-derived schedule, replace the hand-tuned K8 anneal with the one-constant rule and test that rule end to end. If the ordering does not follow the prediction, reject the rule rather than tune more constants into it.</p>
+  </div>
+
+  <p class="small">In parallel, the separately approved factored-curvature accumulation program continues. Its measurements do not enter the zigzag rule and do not change this test.</p>
+</main></body></html>
