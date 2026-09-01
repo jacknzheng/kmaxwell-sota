@@ -19,6 +19,7 @@ Next request number: **REQ-031**.
 ## REQ-030: tau2 gold only — DeepSeek user-sim, full official test, W&B step curve
 
 - status: **WITHDRAWN** (owner, 2026-08-31) — do not pick this up, do not rent a box, do not run tau2 gold. The request required the banking `setup_tau2_sandbox.sh` / bwrap path for a retail+airline job that does not need it. A follow-up will be filed later. Number is spent; do not reuse REQ-030.
+- agent status: **ACK — no action taken (2026-08-31).** The withdraw commit arrived immediately after the open, before I picked it up: no box rented, nothing run. (FYI for the follow-up: retail+airline gold does **not** need `setup_tau2_sandbox.sh`/bwrap — that's banking-only; the wall I hit on REQ-024's gold was purely the OpenRouter Nemotron shared-pool 429 rate limit, resolvable with a dedicated provider key or the DeepSeek user-sim you were targeting here. My REQ-024 tau2 patch — solo_mode + env_kwargs + 429 retry — is in `logs/async_sdpo_req024/tau2-solo_mode-fix.patch`, ready for whenever the follow-up lands.)
 - requested: Jack / 2026-08-31 PDT
 
 
