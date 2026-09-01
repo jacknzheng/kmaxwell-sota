@@ -58,7 +58,7 @@
     \left\lVert \frac{1}{W}\sum_{j=0}^{W-1}G_{t+j}\right\rVert_F^2
     -\frac{\sigma^2}{W}.
   \]
-  The reported state variable is the ratio $z(t)=E_{\mathrm{zig}}(t)/E_{\mathrm{river}}(t)$, using the median energy across Muon matrices. The term $\sigma^2/W$ removes the finite-window sampling bias estimated from replica noise.</div>
+  The reported state variable is the ratio $z(t)=E_{\mathrm{zig}}(t)/E_{\mathrm{river}}(t)$, using the median energy across Muon matrices. Here $W=128$ is the number of recorded steps in the window, and $\sigma^2$ is the per-step sampling variance of the recorded gradient, measured from disjoint token halves. The term $\sigma^2/W$ is the resulting estimator bias subtracted from both energies.</div>
 
   <figure>
     <img src="figs/figA_ratio_decline.png" alt="Measured period-two to slower-gradient energy ratio falls across training">
@@ -76,6 +76,8 @@
     \left(\sqrt{\frac{E_{\mathrm{zig}}(t)}{\rho_*E_{\mathrm{river}}(t)}}-1\right).
   \]
   <p>The single fitted constant is $ρ_*=2.86 × 10^{-5}$, obtained by least squares in $\log N$ over the four annealing-phase windows. The resulting average lags are 66, 67, 50, and 24 steps. The deployed values at the corresponding phases are 57, 54, 48, and 35 steps.</p>
+
+  <p>The gradient recordings determine the input ratio $z(t)$. The constant $ρ_*$ specifies the preferred amount of zigzag remaining in the update, so it is a property of the optimization response rather than of the gradient field alone. Existing interventions bracket that preference: transmitting the oscillation without attenuation wastes progress, while cancelling it is catastrophic. Deriving its value requires a stability analysis that includes the third-order loss response. The present experiment tests the weaker claim that one constant suffices across training.</p>
 
   <figure>
     <img src="figs/figB_rule_vs_deployed.png" alt="Mechanism-derived average lag compared with the deployed K8 schedule">
@@ -115,6 +117,8 @@
     <div class="label">Decision requested</div>
     <p>Run the from-scratch fixed-lag comparison. If its preferred lags follow the mechanism-derived schedule, replace the hand-tuned K8 anneal with the one-constant rule and test that rule end to end. If the ordering does not follow the prediction, reject the rule rather than tune more constants into it.</p>
   </div>
+
+  <p class="small"><b>Status, 2026-09-01 18:47 UTC:</b> the fixed-lag comparison is running. It trains average lags of 10, 20, 30, 45, and 65 steps from initialization with two matched seeds each; every run uses the same single-exponential phase through step 1000 and its assigned fixed lag thereafter.</p>
 
   <p class="small">In parallel, the separately approved factored-curvature accumulation program continues. Its measurements do not enter the zigzag rule and do not change this test.</p>
 </main></body></html>
