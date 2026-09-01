@@ -35,8 +35,15 @@
     details { margin:20px 0 28px; border:1px solid var(--line); border-radius:8px; background:#fbfcfd; }
     summary { padding:14px 18px; cursor:pointer; font:700 15px/1.35 Inter,ui-sans-serif,system-ui,sans-serif; }
     details .inside { padding:0 20px 18px; }
+    .figure-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:20px 0 26px; }
+    figure { margin:0; }
+    figure img { display:block; width:100%; height:auto; border:1px solid var(--line); background:#fff; }
+    figcaption { margin-top:8px; color:var(--muted); font:13px/1.45 Inter,ui-sans-serif,system-ui,sans-serif; }
+    .metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:22px 0 30px; }
+    .metric { padding:15px 16px; border:1px solid var(--line); border-radius:8px; background:var(--wash); font:13px/1.4 Inter,ui-sans-serif,system-ui,sans-serif; }
+    .metric strong { display:block; margin-bottom:5px; color:var(--blue); font-size:23px; letter-spacing:-.03em; }
     code { font-size:.9em; }
-    @media (max-width:720px) { main{margin:0;padding:34px 22px} h1{font-size:34px}.map{grid-template-columns:1fr} }
+    @media (max-width:720px) { main{margin:0;padding:34px 22px} h1{font-size:34px}.map,.figure-grid,.metrics{grid-template-columns:1fr} }
   </style>
 </head>
 <body><main>
@@ -48,9 +55,28 @@
     <p>Can the current training state determine how much gradient history to retain and how much factored curvature history to trust?</p>
   </div>
 
-  <h2>Why this is the remaining problem</h2>
-  <p>The measured momentum benefit is noise-dependent and shape-dependent. Bi-Maxwell's advantage over no momentum shrinks with batch size and reaches measured zero at \(16\times\) batch. A single exponential moving average adds no measurable benefit in the tested comparisons, whereas multi-timescale kernels do.</p>
-  <p>The full Hessian has not yielded a usable accumulation rule. Strongly damped solves replicate across minibatches because damping confines them to a shallow, nearly flat spectral band. Deeper curvature remains unmeasured. We therefore move the second-order target to the factored statistics used by deployable optimizers, whose complete spectra can be measured.</p>
+  <h2>The measurements that constrain the rule</h2>
+  <div class="figure-grid">
+    <figure>
+      <img src="figs/fig_k8_age.png" alt="K8 average lag over training, with saved states at 49, 36, and 29 steps">
+      <figcaption><b>Figure 1. K8 shortens its memory while relative gradient noise rises.</b> Each red point is one saved model state used by Test A; the blue line is the deployed K8 schedule. The target average lags are 49, 36, and 29 steps.</figcaption>
+    </figure>
+    <figure>
+      <img src="../principled-momentum-functionals-2026-08-31/figs/batch_benefit.png" alt="Bi-Maxwell validation-loss benefit decreases to zero as batch size increases">
+      <figcaption><b>Figure 2. Momentum's measured benefit vanishes as batch size grows.</b> One point is a matched bi-Maxwell-minus-no-momentum comparison. Validation-loss changes are −0.0106, −0.0044, −0.0023, and 0.0000 at \(1\times\), \(4\times\), \(8\times\), and \(16\times\) batch; negative is better.</figcaption>
+    </figure>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><strong>6 → 2 → 0.4</strong>Median directional gradient signal-to-noise ratio across the three saved training states, measured from independent data splits.</div>
+    <div class="metric"><strong>0.9915–0.9991</strong>Cosine agreement of damped curvature actions across token halves; after Muon's matrix sign, agreement is 0.9630–0.9973 across the state-by-token-budget checks.</div>
+    <div class="metric"><strong>|interaction| ≤ 0.007</strong>Median loss double-difference between K8 and damped curvature in the certified rank 1–8 and rank 9–24 bands at all three states.</div>
+    <div class="metric"><strong>60% → 25%</strong>Cross-half eigendirection match rate falls from roughly 60% in ranks 1–3 to 25% in ranks 6–8.</div>
+    <div class="metric"><strong>3.2–4.2×</strong>Median ratio of the largest to the 24th measured Hessian eigenvalue across saved states; the certified spectral band is shallow and relatively flat.</div>
+    <div class="metric"><strong>0 gain from one EMA</strong>A single exponential momentum buffer adds no measurable benefit over no momentum at either tested batch size; kernel shape carries the measured gain.</div>
+  </div>
+
+  <p>The evidence points to temporal denoising as the live source of momentum benefit, while the certified full-Hessian correction is stable but shallow. This motivates a state-measured accumulation rule and moves the second-order target to the complete factored statistics used by deployable optimizers.</p>
   <p>The hindsight-action objective is no longer part of the program; Jeffrey vetoed it. Its dense gradient recordings remain useful for measuring temporal noise and drift.</p>
 
   <h2>The candidate: replica-clocked accumulation</h2>
