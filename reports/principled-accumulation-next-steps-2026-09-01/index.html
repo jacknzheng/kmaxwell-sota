@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Next steps toward principled accumulation</title>
+  <script>
+    window.MathJax = {tex: {inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']]}};
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <style>
+    :root { --ink:#17212b; --muted:#596574; --line:#d9e0e7; --paper:#fff; --wash:#f5f7f9; --blue:#1769aa; --green:#13795b; --amber:#9a6700; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#eef2f5; color:var(--ink); font:17px/1.55 Georgia, "Times New Roman", serif; }
+    main { max-width:940px; margin:32px auto; padding:54px 66px 70px; background:var(--paper); box-shadow:0 2px 20px #23303d18; }
+    h1,h2,h3 { font-family:Inter,ui-sans-serif,system-ui,sans-serif; line-height:1.17; letter-spacing:-.02em; }
+    h1 { margin:0 0 12px; font-size:42px; }
+    h2 { margin:54px 0 14px; padding-top:10px; border-top:1px solid var(--line); font-size:27px; }
+    h3 { margin:27px 0 8px; font-size:19px; }
+    p { margin:10px 0 15px; }
+    .dek { max-width:760px; color:var(--muted); font:20px/1.45 Inter,ui-sans-serif,system-ui,sans-serif; }
+    .question,.decision { margin:25px 0; padding:18px 22px; border-left:5px solid var(--blue); background:#eef6fc; }
+    .decision { border-color:var(--green); background:#edf8f4; }
+    .label { color:var(--muted); font:700 12px/1.2 Inter,ui-sans-serif,system-ui,sans-serif; letter-spacing:.08em; text-transform:uppercase; }
+    table { width:100%; margin:20px 0 30px; border-collapse:collapse; font:14px/1.4 Inter,ui-sans-serif,system-ui,sans-serif; }
+    th { text-align:left; vertical-align:bottom; color:#34404c; background:var(--wash); }
+    th,td { padding:11px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+    td:first-child { width:9%; font-weight:750; }
+    .map { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:22px 0 30px; }
+    .node { padding:16px 18px; border:1px solid var(--line); border-radius:8px; background:#fbfcfd; }
+    .node b { font-family:Inter,ui-sans-serif,system-ui,sans-serif; }
+    .arrow { color:var(--blue); font-weight:700; }
+    .status { color:var(--amber); font-weight:700; }
+    .small { color:var(--muted); font-size:14px; }
+    code { font-size:.9em; }
+    @media (max-width:720px) { main{margin:0;padding:34px 22px} h1{font-size:34px}.map{grid-template-columns:1fr} }
+  </style>
+</head>
+<body><main>
+  <h1>Next steps toward principled accumulation</h1>
+  <p class="dek">Practical second-order optimizers already show that factored curvature estimates can improve training. The unresolved problem is how long to accumulate those estimates, how strongly to trust them, and how their accumulation should interact with momentum. Today these choices are tuned. The program below tries to derive them from measured noise and drift.</p>
+
+  <div class="question">
+    <div class="label">The decision</div>
+    <p>Can we replace tuned decay rates in momentum and factored curvature estimation with accumulation windows and shrinkage strengths determined from the training state?</p>
+  </div>
+
+  <h2>What tonight changed</h2>
+  <p>The useful momentum effect is concentrated in noisy, short-timescale gradient history. In the measured NanoGPT comparison, K-Maxwell's advantage over no momentum decreases as batch size rises and reaches measured zero at \(16\times\) batch. A single exponential moving average adds no measurable benefit at either tested batch size. Kernel shape, rather than generic averaging, carries the observed gain.</p>
+  <p>Our full-Hessian measurements cannot yet derive a useful Newton operator. Heavily damped conjugate-gradient solves agree across disjoint minibatches, but their low cost and their shallow spectral reach are the same fact: the damping suppresses the poorly estimated spectrum. Individual eigendirections replicate reliably only near the top of the spectrum. Claims that the full inverse Hessian is cheaply available, that per-rank reliability determines a fractional Newton exponent, and that momentum cannot represent Newton have therefore been withdrawn.</p>
+  <p>The hindsight-action objective has not received a fair test. Existing model snapshots are separated by 250 training steps, while the K-Maxwell kernels differ mainly over lags of roughly 3–64 steps. Sparse sampling therefore removes the temporal structure that the objective is supposed to rank. The known-ordering test failed at all three saved states, as aliasing predicts. Dense consecutive windows have now been serialized; the corrected test is running.</p>
+
+  <h2>The pivot: estimate the curvature object that training systems use</h2>
+  <p>Full-Hessian eigenvectors are an unnecessarily hard starting point for principled accumulation. SOAP, Shampoo, and related methods maintain matrix factors built from gradient statistics. For a gradient matrix \(G_t\), the basic factors have the form</p>
+  \[
+     L_t = G_tG_t^{\mathsf T}, \qquad R_t = G_t^{\mathsf T}G_t.
+  \]
+  <p>The relevant factors are at most a few thousand dimensions in this model. Their complete eigendecompositions are practical, and their time series can be estimated directly from recorded gradients. This changes the statistical problem: instead of guessing which fragments of an enormous Hessian are trustworthy, we can measure the noise and drift of the exact objects used by a deployable optimizer.</p>
+  <p>For either factor \(S_t\in\{L_t,R_t\}\), accumulation over \(W\) steps reduces sampling variance while increasing staleness. Under a local linear-drift approximation, the leading error terms scale as</p>
+  \[
+      \mathcal E(W) \approx \frac{\sigma_t^2}{W} + \frac{d_t^2W^2}{4},
+      \qquad
+      W_t^* = \left(\frac{2\sigma_t^2}{d_t^2}\right)^{1/3},
+  \]
+  <p>where \(\sigma_t^2\) is the measured finite-minibatch variance and \(d_t\) is the measured per-step drift of the factor. This formula is a candidate rule, not a conclusion: disjoint minibatches estimate the first term, neighboring dense checkpoints estimate the second, and held-out factor prediction tests the resulting window. The same held-out test determines how far each spectral correction should be shrunk toward the identity.</p>
+
+  <div class="decision">
+    <div class="label">Core deliverable</div>
+    <p>A state-dependent accumulation rule for the factored metric, with its window and spectral shrinkage determined by disjoint-minibatch prediction rather than a training-step schedule.</p>
+  </div>
+
+  <h2>Which measurements control which decisions</h2>
+  <div class="map">
+    <div class="node"><b>E1 · Dense hindsight test</b><br>Does the offline objective reproduce the known ordering of momentum kernels when gradients are sampled at the kernels' own timescale?<br><span class="arrow">Pass →</span> use it to fit kernels. <span class="arrow">Fail →</span> discard the hindsight objective.</div>
+    <div class="node"><b>E2 · Factored accumulation</b><br>Measure factor noise and drift; derive an accumulation window and operator shrinkage; score both on held-out minibatches and later steps.<br><span class="arrow">Supported →</span> a derived factored metric. <span class="arrow">Unsupported →</span> report the token budget required.</div>
+    <div class="node"><b>E3 · Momentum × factored curvature</b><br>At the same saved state, compare raw-gradient and K-Maxwell histories with identity and factored preconditioning.<br><span class="arrow">Interaction near zero →</span> design temporal and curvature accumulation separately. <span class="arrow">Interaction resolved →</span> identify which kernel freedom the metric removes.</div>
+    <div class="node"><b>E4 · Kernel selection</b><br>Conditional on E1, fit a momentum kernel to the densely observed hindsight action and test the selected kernel in continuation training.<br><span class="arrow">Only E4 depends on E1.</span></div>
+    <div class="node"><b>E5 · Full-curvature bound</b><br>Conditional on separate GPU approval, lower Hessian damping until cross-fitted operator action, positive definiteness, or post-Muon relevance fails.<br><span class="arrow">Purpose:</span> measure what the factored family leaves unexplained.</div>
+  </div>
+
+  <table>
+    <thead><tr><th>Work</th><th>Present state</th><th>Wall-clock estimate</th><th>Compute estimate</th><th>Decision produced</th></tr></thead>
+    <tbody>
+      <tr><td>E1</td><td class="status">Running</td><td>Result expected 13:30–14:00 UTC</td><td>Already allocated</td><td>Keep or discard the hindsight objective</td></tr>
+      <tr><td>E2</td><td>Ready after E1 data checks</td><td>2–4 hours</td><td>About 2 octet-GPU node-hours, dominated by replay and validation</td><td>Derived factor windows and shrinkage, or a measured insufficiency</td></tr>
+      <tr><td>E3</td><td>Protocol defined</td><td>2–3 hours with three nodes</td><td>About 6 octet-GPU node-hours</td><td>Separate or couple temporal and curvature design</td></tr>
+      <tr><td>E4</td><td>Waiting on E1</td><td>About 4 hours offline; continuation cost quoted separately</td><td>About 4 octet-GPU node-hours before training</td><td>A kernel candidate eligible for one continuation test</td></tr>
+      <tr><td>E5</td><td>Parked</td><td>About 6 hours after approval</td><td>About 12 octet-GPU node-hours</td><td>Supported depth of full-curvature correction</td></tr>
+    </tbody>
+  </table>
+  <p class="small">The estimates are planning ranges, not benchmarks. E2 and E3 can proceed if E1 fails. E5 is excluded from the immediate plan and requires a separate compute decision.</p>
+
+  <h2>Hyperparameters become measurements</h2>
+  <table>
+    <thead><tr><th>Quantity</th><th>How it is chosen</th><th>What remains declared</th><th>Failure condition</th></tr></thead>
+    <tbody>
+      <tr><td>Factor accumulation window \(W_t^*\)</td><td>Disjoint-minibatch variance and local temporal drift</td><td>Validation horizon and acceptable estimation error</td><td>No window improves held-out factor prediction over the current minibatch</td></tr>
+      <tr><td>Spectral shrinkage</td><td>Cross-fitted operator-action error relative to the identity map</td><td>Candidate operator class</td><td>The correction does not improve held-out action error or disappears after Muon's matrix sign</td></tr>
+      <tr><td>Momentum kernel</td><td>Dense hindsight fit, only if E1 reproduces the known ordering</td><td>Causal kernel family and maximum stored history</td><td>The dense objective cannot distinguish known kernels</td></tr>
+      <tr><td>Full-Hessian damping \(\rho\)</td><td>Smallest value with positive, cross-replicable, post-Muon-relevant operator action</td><td>Common held-out right-hand sides and confidence threshold</td><td>Loss of positive definiteness, predictive support, or update relevance</td></tr>
+    </tbody>
+  </table>
+
+  <h2>The immediate path</h2>
+  <p>The dense hindsight test finishes first because it decides whether the old objective remains useful. Its outcome does not control the main pivot. The factored-statistic study follows either way and is now the shortest route to a principled accumulation rule.</p>
+  <p>The momentum interaction is tested only after the factored metric is estimated well enough to survive held-out prediction. A negligible interaction would simplify the theory: temporal filtering handles gradient history while factored curvature handles within-step geometry. A measurable interaction would tell us which temporal degrees of freedom curvature preconditioning makes redundant.</p>
+  <p>Full-Hessian depth remains a bounded comparison, not the center of the program. It earns additional compute only if the factored study leaves a specific, measurable discrepancy that deeper curvature could explain.</p>
+</main></body></html>
