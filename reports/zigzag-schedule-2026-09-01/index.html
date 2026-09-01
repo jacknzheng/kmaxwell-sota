@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>A momentum schedule from the measured zigzag</title>
   <script>
-    window.MathJax = {tex: {inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']]}};
+    window.MathJax = {tex: {inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['\\[','\\]']]}};
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
   <style>
@@ -48,7 +48,17 @@
   <p>Muon training contains a large period-two oscillation in the true gradient along high-curvature directions. It persists when minibatch noise is removed. Earlier interventions also found that eliminating the oscillation is harmful, so the design problem is to regulate how much reaches the update rather than cancel it.</p>
   <p>K8, the current eight-buffer momentum kernel, was found by search. Its average lag falls during training. The proposed mechanism is simple: the raw oscillation becomes weaker relative to the slower gradient motion, and the kernel shortens its memory to keep their ratio in the update near a fixed target.</p>
 
-  <div class="def"><b>Measured zigzag ratio.</b> For each recorded gradient window, (z(t)=E_{2}(t)/E_{\mathrm{slow}}(t)), where (E_{2}) is the median period-two energy across Muon matrices and (E_{\mathrm{slow}}) is the median energy in the slower component used by the profiler.</div>
+  <div class="def"><b>Measured zigzag ratio.</b> For each recorded gradient window, the period-two and persistent energies of a gradient matrix are
+  \[
+    E_{\mathrm{zig}}(t)=
+    \left\lVert \frac{1}{W}\sum_{j=0}^{W-1}(-1)^jG_{t+j}\right\rVert_F^2
+    -\frac{\sigma^2}{W},
+    \qquad
+    E_{\mathrm{river}}(t)=
+    \left\lVert \frac{1}{W}\sum_{j=0}^{W-1}G_{t+j}\right\rVert_F^2
+    -\frac{\sigma^2}{W}.
+  \]
+  The reported state variable is the ratio $z(t)=E_{\mathrm{zig}}(t)/E_{\mathrm{river}}(t)$, using the median energy across Muon matrices. The term $\sigma^2/W$ removes the finite-window sampling bias estimated from replica noise.</div>
 
   <figure>
     <img src="figs/figA_ratio_decline.png" alt="Measured period-two to slower-gradient energy ratio falls across training">
@@ -58,9 +68,14 @@
   <p>The ratio falls from 1.3 early in training to 0.069 late in training. This is the measured state variable that the rule uses. Training step enters only through the measurements.</p>
 
   <h2>A one-constant rule reproduces the anneal</h2>
-  <p>For a candidate kernel with average lag <span class="math">N</span>, let <span class="math">T<sub>2</sub>(N)</span> denote its period-two transmission and <span class="math">T<sub>slow</sub>(N)</span> its transmission of the slower component. The rule selects the lag that holds the transmitted ratio at a constant <span class="math">ρ</span>:</p>
-  <div class="def"><b>Schedule rule.</b> At each measured state, choose the average lag <span class="math">N</span> that minimizes <span class="math">| z(t) T<sub>2</sub>(N) / T<sub>slow</sub>(N) − ρ |</span>.</div>
-  <p>Fitting <span class="math">ρ</span> once to the deployed K8 schedule gives predicted average lags of 66, 67, 50, and 24 steps. The deployed values at the corresponding phases are 57, 54, 48, and 35 steps.</p>
+  <p>A normalized exponential moving average with average lag $N$ transmits a persistent component at unit gain and reduces the amplitude of a period-two component by $1/(2N+1)$. Holding the transmitted energy ratio at a constant $ρ_*$ therefore gives</p>
+  \[
+    \frac{E_{\mathrm{zig}}(t)}{(2N(t)+1)^2E_{\mathrm{river}}(t)}=\rho_*,
+    \qquad
+    N(t)=\frac{1}{2}
+    \left(\sqrt{\frac{E_{\mathrm{zig}}(t)}{\rho_*E_{\mathrm{river}}(t)}}-1\right).
+  \]
+  <p>The single fitted constant is $ρ_*=2.86 × 10^{-5}$, obtained by least squares in $\log N$ over the four annealing-phase windows. The resulting average lags are 66, 67, 50, and 24 steps. The deployed values at the corresponding phases are 57, 54, 48, and 35 steps.</p>
 
   <figure>
     <img src="figs/figB_rule_vs_deployed.png" alt="Mechanism-derived average lag compared with the deployed K8 schedule">
