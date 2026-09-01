@@ -47,12 +47,12 @@
   </style>
 </head>
 <body><main>
-  <h1>A measurable rule for accumulation</h1>
-  <p class="dek">Momentum and SOAP both accumulate noisy matrices through time. Their decay rates, schedules, and regularization strengths are usually tuned independently. We propose to derive them from the same two measurements: sampling noise across data-parallel replicas and drift across nearby training steps.</p>
+  <h1>Gradient tracking is the wrong model of momentum</h1>
+  <p class="dek">We tested whether minibatch noise and temporal drift could derive momentum's decay schedule. The measured optimum was far shorter than the record kernel and moved in the opposite direction during training. The same estimation framework remains appropriate for factored curvature accumulation.</p>
 
   <div class="question">
-    <div class="label">Research question</div>
-    <p>Can the current training state determine how much gradient history to retain and how much factored curvature history to trust?</p>
+    <div class="label">Result</div>
+    <p>A filter optimized to estimate the current population gradient does not explain the useful memory in K-Maxwell. Momentum must instead be evaluated as a response-shaping operation on an oscillatory, noisy gradient history.</p>
   </div>
 
   <h2>The measurements that constrain the rule</h2>
@@ -76,10 +76,34 @@
     <div class="metric"><strong>0 gain from one EMA</strong>A single exponential momentum buffer adds no measurable benefit over no momentum at either tested batch size; kernel shape carries the measured gain.</div>
   </div>
 
-  <p>The evidence points to temporal denoising as the live source of momentum benefit, while the certified full-Hessian correction is stable but shallow. This motivates a state-measured accumulation rule and moves the second-order target to the complete factored statistics used by deployable optimizers.</p>
+  <p>The evidence points to temporal noise and oscillation as the live source of momentum benefit, while the certified full-Hessian correction is stable but shallow. The experiment below tests whether ordinary gradient tracking can explain that temporal benefit; its failure separates the momentum problem from the still-viable problem of estimating factored curvature.</p>
   <p>The hindsight-action objective is no longer part of the program; Jeffrey vetoed it. Its dense gradient recordings remain useful for measuring temporal noise and drift.</p>
 
-  <h2>The candidate: replica-clocked accumulation</h2>
+  <h2>Test A rejects the gradient-tracking rule</h2>
+  <div class="figure-grid">
+    <figure>
+      <img src="figs/fig_testA.png" alt="Measured gradient-tracking optima move opposite to the K8 schedule">
+      <figcaption><b>Figure 3. The measured tracking optimum lengthens while K8 shortens.</b> Each brown square is the median optimal average lag across 72 Muon matrices at one saved state; its vertical bar is the interquartile range. The blue line is K8's deployed average lag. The late state remains pending.</figcaption>
+    </figure>
+    <figure>
+      <img src="figs/fig_structfn.png" alt="Measured gradient structure function is nearly flat with lag rather than quadratic">
+      <figcaption><b>Figure 4. Non-noise gradient change is sub-diffusive rather than locally linear.</b> One blue point is the median structure function over 72 matrices at one lag, normalized by the estimated noise floor. The blue band is the interquartile range; the dotted line is the quadratic growth required by linear drift.</figcaption>
+    </figure>
+  </div>
+
+  <table>
+    <thead><tr><th>Saved state</th><th>Measured optimal average lag, median [IQR]</th><th>K8 average lag</th><th>Tracking error at K8 lag divided by minimum, median [IQR]</th><th>Measured drift exponent \(p\)</th></tr></thead>
+    <tbody>
+      <tr><td>Early</td><td>0.5 [0.5, 1.5] steps</td><td>49.1 steps</td><td>1.76 [1.50, 2.40]</td><td>0.28</td></tr>
+      <tr><td>Middle</td><td>15.1 [4.4, 22.4] steps</td><td>36.3 steps</td><td>1.10 [1.05, 1.33]</td><td>0.29</td></tr>
+      <tr><td>Late</td><td>Pending</td><td>29.2 steps</td><td>Pending</td><td>Pending</td></tr>
+    </tbody>
+  </table>
+
+  <p>Test A fails at the early-state level and in the direction of change. The tracking optimum rises from 0.5 to 15.1 steps while K8 falls from 49.1 to 36.3 steps. At the early state, period-two alternation is 9.1 times the noise floor and using K8's lag raises the tracking error by a median factor of 1.76. The middle-state tracking loss is flatter, but its optimum remains shallow. The late measurement cannot repair the early-level contradiction or the backward early-to-middle trend. The fixed protocol therefore rejects gradient tracking as the source of momentum's schedule.</p>
+  <p>The measured structure function grows approximately as \(\Delta^p\) with \(p=0.28\) and \(0.29\), rather than \(p=2\) for local linear drift or \(p=1\) for a random walk. Most non-noise change occurs at short lags and then saturates. The gradient is neither a slowly drifting signal nor the local-level process that would make one exponential buffer an optimal tracker.</p>
+
+  <h2>What Test A actually optimized</h2>
   <p>Eight data-parallel workers produce eight independent microbatch gradients before averaging. Their disagreement estimates finite-minibatch noise at the current model state. Changes across consecutive steps estimate how quickly the object being accumulated has become stale.</p>
   <p>A geometric accumulator assigns lag \(k\) the normalized weight \(w_k=(1-\beta)\beta^k\). Its average lag is</p>
   \[
@@ -115,29 +139,20 @@
   <p>A steady-state Kalman filter for a Gaussian local-level random walk is also a single exponential moving average. That result and the calculation above arise from different state models, but both expose the same limitation: homogeneous noise and one drift scale produce one temporal scale. The measured failure of a single exponential buffer therefore points directly at violated assumptions.</p>
 
   <table>
-    <thead><tr><th>Assumption behind one clock</th><th>Measured conflict</th><th>Consequence for the model</th></tr></thead>
+    <thead><tr><th>Assumption behind gradient tracking</th><th>Measured conflict</th><th>What the failure teaches us</th></tr></thead>
     <tbody>
-      <tr><td>Noise is independent across steps</td><td>Gradient histories contain strong period-two structure early in training</td><td>Estimate colored temporal noise; allow signed frequency-dependent weights. Perfect period-two removal is not assumed because it performed poorly.</td></tr>
-      <tr><td>All components have comparable noise</td><td>Measured directional signal-to-noise ratios range from about 6 to 0.4</td><td>Test a distribution of clocks across fixed temporal bands instead of forcing every component to share one decay.</td></tr>
-      <tr><td>One local drift rate describes the object</td><td>Different temporal bands and matrix directions can move at different rates</td><td>Estimate noise-corrected drift separately in fixed bands; retain multiple clocks only when their held-out errors differ reproducibly.</td></tr>
-      <tr><td>Raw squared error matches optimizer relevance</td><td>Muon's matrix sign discards a common pre-polar scale</td><td>Measure gradient error after minimizing over common rescaling; measure factor quality through held-out preconditioner action.</td></tr>
+      <tr><td>Noise is independent across steps</td><td>Early period-two excess is 9.1 times the noise floor</td><td>The objective must model colored oscillation and its effect on the update. Exact period-two removal is not assumed because it performed poorly.</td></tr>
+      <tr><td>The current population gradient is the target</td><td>The best tracker uses almost no history early, while the winning kernel retains about 49 steps</td><td>Useful momentum is shaping a closed-loop response rather than estimating the current gradient.</td></tr>
+      <tr><td>One local drift rate describes the object</td><td>The measured structure-function exponent is about 0.29, far below linear drift or a random walk</td><td>A bank of tracking windows inherits the wrong target; splitting it into temporal bands cannot repair Test A.</td></tr>
+      <tr><td>Raw squared error matches optimizer relevance</td><td>Muon discards pre-polar scale and changes how gradient-history errors affect the update</td><td>The next objective must score post-filter update geometry or realized optimization response.</td></tr>
     </tbody>
   </table>
 
-  <h2>The gradient candidate has to pass two tests</h2>
-  <div class="decision">
-    <div class="label">Test A · Does the rule explain the schedule?</div>
-    <p>The eight-buffer K-Maxwell kernel (K8), the current record kernel, shortens its average lag from approximately 49 to 36 to 29 steps across the three saved training states. Rising relative noise alone would lengthen an averaging window. Replica-clocked accumulation reproduces the observed shortening only if measured drift grows enough to dominate that effect.</p>
-  </div>
-  <p>The norm, drift lags, smoothing, token conversion, and geometric mapping are fixed before computing the three predictions; no fitted multiplier is allowed. A wrong ordering or a miss outside the uncertainty interval rejects this rule for the momentum schedule. Agreement would explain K8's central timescale. It would not explain K8's loss improvement.</p>
+  <h2>Test B is retired with Test A</h2>
+  <p>Test B would have applied the same current-gradient tracking loss separately to fixed temporal bands. Test A shows that this loss prefers nearly memoryless tracking precisely where long-memory K8 helps most. More bands would add flexibility without correcting the target, so the bandwise scorer will not be used to explain K8.</p>
+  <p>Kernel design returns to response-based questions: which temporal components change Muon's update direction, which components improve continuation loss, and why exact suppression of period-two motion was harmful. The existing frequency-response measurements constrain that work, but they do not yet define a principled kernel objective.</p>
 
-  <div class="decision">
-    <div class="label">Test B · Does the rule explain why one decay is insufficient?</div>
-    <p>K8 uses decay timescales spanning roughly 3–64 steps. We divide the dense histories into fixed octave bands with periods 2–4, 4–8, 8–16, 16–32, 32–64, and 64–128 steps. Replica noise and noise-corrected drift give one predicted \(A_t^*\) per band.</p>
-  </div>
-  <p>The predicted timescales must reproduce both the breadth and training-state movement of K8's fixed timescales under a declared numeric tolerance. Band boundaries are not changed after seeing the result. Agreement supports a bank of clocks; disagreement rejects this explanation of K8's shape. Even agreement does not determine the mixture weights, which require a separate held-out prediction criterion.</p>
-
-  <h2>The same clock applies to factored curvature, with one asymmetry</h2>
+  <h2>Replica clocks remain meaningful for factored curvature</h2>
   <p>SOAP and Shampoo accumulate left and right factors from a gradient matrix \(G_t\):</p>
   \[
       L_t=G_tG_t^{\mathsf T},
@@ -153,33 +168,33 @@
       \varepsilon_t^{(a)\mathsf T}].
   \]
   <p>Cross-replica products estimate \(M_tM_t^{\mathsf T}\); within-replica products estimate \(C_{L,t}\). The right factor has the analogous decomposition. Recombining them at the training batch size prevents minibatch covariance from masquerading as curvature drift.</p>
-  <p>The first factor model uses one measured temporal clock and per-direction spectral shrinkage. Held-out replicas determine how far each inverse-factor correction should move from the identity. This is the smallest extension of SOAP's working design. It remains only if held-out factor-action residuals show no reproducible temporal structure by spectral band; otherwise the factor also needs multiple clocks.</p>
+  <p>The first measurements place the factor-side optimal average lag between 1.8 and 3.0 steps. These values are provisional because the factor expectation contains a batch-size-dependent covariance term; the final clock must be recomputed after the replica decomposition is rescaled to the training batch.</p>
+  <p>The factor model uses one measured temporal clock and per-direction spectral shrinkage. Held-out replicas determine how far each inverse-factor correction should move from the identity. This is the smallest extension of SOAP's working design. It remains only if held-out factor-action residuals show no reproducible temporal structure by spectral band; otherwise the factor also needs multiple clocks.</p>
 
   <h2>What is measured, and what remains chosen</h2>
   <table>
     <thead><tr><th>Current tuned choice</th><th>Proposed measurement</th><th>Still declared by the researcher</th><th>Rejection condition</th></tr></thead>
     <tbody>
-      <tr><td>Momentum decay schedule</td><td>Pooled gradient noise and noise-corrected drift determine \(A_{g,t}^*\)</td><td>Geometric family, error norm, drift lags, smoothing, memory cap</td><td>Test A misses K8's shortening</td></tr>
-      <tr><td>Momentum decay rates</td><td>Fixed-band noise and drift determine the distribution of \(A_{g,t}^*\)</td><td>Band partition and criterion for mixture weights</td><td>Test B misses K8's timescale spread or movement</td></tr>
+      <tr><td>Momentum schedule and shape</td><td>No surviving measurement rule; the tracking objective was rejected</td><td>Response quantity to optimize, causal kernel family, memory cap</td><td>A candidate must explain a measured response property and improve continuation loss</td></tr>
       <tr><td>Factor decay</td><td>Batch-corrected factor noise and drift determine \(A_{S,t}^*\)</td><td>Geometric family, validation horizon, memory cap</td><td>No improvement in held-out factor-action error</td></tr>
       <tr><td>Inverse-root exponent and stabilizer</td><td>Cross-fitted gains shrink each spectral correction toward identity</td><td>Operator family, regularization floor, confidence threshold</td><td>No improvement over identity after Muon's matrix sign</td></tr>
     </tbody>
   </table>
 
   <h2>Current work and the decision sequence</h2>
-  <p>The pooled clock calculation is running on the serialized gradient histories. Two of the three states are being processed; the third follows. The bandwise analysis is specified and its scorer is in construction. No clock result is reported on this page yet.</p>
-  <p>The factored accumulation calculation uses the same recordings and proceeds independently of the gradient result. Once the measured factor predicts held-out action better than a fixed decay, the momentum × factored-curvature comparison asks whether the two accumulators can be designed separately.</p>
+  <p>Test A is rejected on the completed early and middle states. The late-state clock remains queued as a measurement of late behavior, not as a condition for this decision. Test B is retired because it inherits Test A's target.</p>
+  <p>The factored accumulation calculation uses the same recordings and remains active. Once the batch-corrected factor predicts held-out action better than a fixed decay, the momentum × factored-curvature comparison asks whether response-shaped momentum and curvature accumulation can be designed separately.</p>
   <p>Full-Hessian depth remains a bounded comparison requiring separate approval. It becomes relevant only if the factored method leaves a specific discrepancy that a deeper, cross-replicable curvature action could explain.</p>
 
   <table>
     <thead><tr><th>Measurement</th><th>Present state</th><th>Compute already available</th><th>Decision</th></tr></thead>
     <tbody>
-      <tr><td>Test A</td><td class="status">Running</td><td>Serialized dense gradients; no training sweep</td><td>Retain or reject the pooled replica clock</td></tr>
-      <tr><td>Test B</td><td>Analysis specified; scorer in construction</td><td>The same serialized gradients</td><td>Retain or reject the clock-bank explanation</td></tr>
-      <tr><td>Factor clock and shrinkage</td><td>Analysis specified</td><td>Same recordings plus factor replay</td><td>Produce a measured factored accumulator or its token requirement</td></tr>
+      <tr><td>Test A</td><td>Rejected; late state pending</td><td>Two saved states completed under the fixed protocol</td><td>Stop using current-gradient tracking to derive momentum</td></tr>
+      <tr><td>Test B</td><td>Retired</td><td>No additional computation</td><td>Do not add bands to a rejected tracking objective</td></tr>
+      <tr><td>Factor clock and shrinkage</td><td class="status">Active; preliminary lag 1.8–3.0 steps</td><td>Same recordings plus batch-corrected factor replay</td><td>Produce a measured factored accumulator or its token requirement</td></tr>
       <tr><td>Momentum × factored curvature</td><td>Interaction readouts pending</td><td>Existing three-metric calculations</td><td>Separate or couple temporal and curvature design</td></tr>
       <tr><td>Full-curvature depth</td><td>Parked</td><td>New GPU approval required</td><td>Bound what the factored family leaves unexplained</td></tr>
     </tbody>
   </table>
-  <p class="small">The Test A protocol was fixed in scorer commit <code>a765cfb</code> before any saved state produced an output.</p>
+  <p class="small">The Test A protocol was fixed in scorer commit <code>a765cfb</code> before any saved state produced an output. Figures 3 and 4 were generated from the resulting stored measurements.</p>
 </main></body></html>
