@@ -32,99 +32,126 @@
     .arrow { color:var(--blue); font-weight:700; }
     .status { color:var(--amber); font-weight:700; }
     .small { color:var(--muted); font-size:14px; }
+    details { margin:20px 0 28px; border:1px solid var(--line); border-radius:8px; background:#fbfcfd; }
+    summary { padding:14px 18px; cursor:pointer; font:700 15px/1.35 Inter,ui-sans-serif,system-ui,sans-serif; }
+    details .inside { padding:0 20px 18px; }
     code { font-size:.9em; }
     @media (max-width:720px) { main{margin:0;padding:34px 22px} h1{font-size:34px}.map{grid-template-columns:1fr} }
   </style>
 </head>
 <body><main>
-  <h1>Next steps toward principled accumulation</h1>
-  <p class="dek">Practical second-order optimizers already show that factored curvature estimates can improve training. The unresolved problem is how long to accumulate those estimates, how strongly to trust them, and how their accumulation should interact with momentum. Today these choices are tuned. The program below tries to derive them from measured noise and drift.</p>
+  <h1>A measurable rule for accumulation</h1>
+  <p class="dek">Momentum and SOAP both accumulate noisy matrices through time. Their decay rates, schedules, and regularization strengths are usually tuned independently. We propose to derive them from the same two measurements: sampling noise across data-parallel replicas and drift across nearby training steps.</p>
 
   <div class="question">
-    <div class="label">The decision</div>
-    <p>Can we replace tuned decay rates in momentum and factored curvature estimation with accumulation windows and shrinkage strengths determined from the training state?</p>
+    <div class="label">Research question</div>
+    <p>Can the current training state determine how much gradient history to retain and how much factored curvature history to trust?</p>
   </div>
 
-  <h2>What tonight changed</h2>
-  <p>The useful momentum effect is concentrated in noisy, short-timescale gradient history. In the measured NanoGPT comparison, bi-Maxwell's advantage over no momentum decreases as batch size rises and reaches measured zero at \(16\times\) batch. A single exponential moving average adds no measurable benefit at either tested batch size. Kernel shape, rather than generic averaging, carries the observed gain.</p>
-  <p>Our full-Hessian measurements cannot yet derive a useful Newton operator. Heavily damped conjugate-gradient solves agree across disjoint minibatches, but their low cost and their shallow spectral reach are the same fact: the damping suppresses the poorly estimated spectrum. Individual eigendirections replicate reliably only near the top of the spectrum. Claims that the full inverse Hessian is cheaply available, that per-rank reliability determines a fractional Newton exponent, and that momentum cannot represent Newton have therefore been withdrawn.</p>
-  <p>The hindsight-action objective is no longer part of the program. It required future gradients and Hessians to choose a present update, yet it offered no convincing route to a deployable rule. Jeffrey vetoed that target. The dense recordings remain useful because they let us measure the noise and drift that an online accumulator actually sees.</p>
+  <h2>Why this is the remaining problem</h2>
+  <p>The measured momentum benefit is noise-dependent and shape-dependent. Bi-Maxwell's advantage over no momentum shrinks with batch size and reaches measured zero at \(16\times\) batch. A single exponential moving average adds no measurable benefit in the tested comparisons, whereas multi-timescale kernels do.</p>
+  <p>The full Hessian has not yielded a usable accumulation rule. Strongly damped solves replicate across minibatches because damping confines them to a shallow, nearly flat spectral band. Deeper curvature remains unmeasured. We therefore move the second-order target to the factored statistics used by deployable optimizers, whose complete spectra can be measured.</p>
+  <p>The hindsight-action objective is no longer part of the program; Jeffrey vetoed it. Its dense gradient recordings remain useful for measuring temporal noise and drift.</p>
 
-  <h2>A candidate: let replicas set both accumulation clocks</h2>
-  <p>Every training step already produces eight independent microbatch gradients before data-parallel averaging. Their disagreement estimates sampling noise at the current state. Changes across nearby steps estimate drift. Those measurements can set the decay rate for both momentum and factored curvature accumulation.</p>
+  <h2>The candidate: replica-clocked accumulation</h2>
+  <p>Eight data-parallel workers produce eight independent microbatch gradients before averaging. Their disagreement estimates finite-minibatch noise at the current model state. Changes across consecutive steps estimate how quickly the object being accumulated has become stale.</p>
+  <p>A geometric accumulator assigns lag \(k\) the normalized weight \(w_k=(1-\beta)\beta^k\). Its average lag is</p>
+  \[
+      A=\sum_{k\geq0}kw_k=\frac{\beta}{1-\beta}.
+  \]
+  <p>For an object with noise energy \(\sigma_t^2\) and local drift energy \(d_t^2\), the geometric accumulator has the approximate prediction error</p>
+  \[
+      \mathcal E_t(A)=\frac{\sigma_t^2}{2A+1}+d_t^2A^2.
+  \]
+  <p>The first term rewards longer averaging. The second penalizes stale history. Their minimizer \(A_t^*\) determines the decay \(\beta_t=A_t^*/(A_t^*+1)\). Noise and drift are remeasured as training proceeds, so scheduling follows from state rather than step number.</p>
 
-  <p>The rule must be derived for the accumulator that will run during training. Let a geometric accumulator assign lag \(k\) the normalized weight</p>
-  \[
-      w_k=(1-\beta)\beta^k,
-      \qquad
-      A=\sum_{k\geq0}kw_k=\frac{\beta}{1-\beta},
-  \]
-  <p>where \(A\) is the average lag in training steps. If independent sampling noise has squared magnitude \(\sigma_t^2\), geometric averaging leaves \(\sigma_t^2/(2A+1)\). If the target moves locally at rate \(d_t\), stale observations contribute approximately \(d_t^2A^2\). The predicted average lag is therefore the nonnegative solution of</p>
-  \[
-      A_t^*=\underset{A\geq0}{\operatorname{argmin}}
-      \left\{\frac{\sigma_t^2}{2A+1}+d_t^2A^2\right\},
-      \qquad
-      A_t^*(2A_t^*+1)^2=\frac{\sigma_t^2}{d_t^2}.
-  \]
-  <p>The drift fit must subtract sampling noise before solving this equation. For several fixed lags \(\ell\), the local model predicts</p>
-  \[
-      \mathbb E\lVert X_t-X_{t-\ell}\rVert^2
-      \approx 2\sigma_t^2+d_t^2\ell^2.
-  \]
-  <p>The gradient calculation measures error after removing a common scale, because Muon's matrix sign discards that scale. The factor calculation measures held-out preconditioner-action error. A single average lag is fitted per matrix first; frequency-dependent clocks are considered only if scalar residuals exhibit stable spectral structure across training states.</p>
+  <details>
+    <summary>Derivation for a trailing window and a geometric accumulator</summary>
+    <div class="inside">
+      <p>Observe \(y_{t-k}=x_{t-k}+\varepsilon_{t-k}\), where the noise terms are independent with \(\mathbb E\lVert\varepsilon_{t-k}\rVert^2=\sigma_t^2\), and approximate local motion by \(x_{t-k}=x_t-kd_t\).</p>
+      <p>A length-\(W\) trailing average has variance \(\sigma_t^2/W\) and bias \(-(W-1)d_t/2\). Its exact local error is</p>
+      \[
+          \mathcal E_t(W)=\frac{\sigma_t^2}{W}
+          +\frac{d_t^2(W-1)^2}{4}.
+      \]
+      <p>Treating \(W\) as continuous, the minimizer solves \(W^2(W-1)=2\sigma_t^2/d_t^2\). For a long window,</p>
+      \[
+          W_t^*\approx\left(\frac{2\sigma_t^2}{d_t^2}\right)^{1/3}.
+      \]
+      <p>For geometric weights, \(\sum_k w_k^2=1/(2A+1)\) and \(\sum_k kw_k=A\). The exact local objective is therefore \(\sigma_t^2/(2A+1)+d_t^2A^2\), and its optimum solves</p>
+      \[
+          A_t^*(2A_t^*+1)^2=\frac{\sigma_t^2}{d_t^2}.
+      \]
+      <p>The rectangular and geometric rules share cube-root scaling but have different constants. We use the geometric equation because the deployed accumulator is an exponential moving average.</p>
+    </div>
+  </details>
+
+  <p>A steady-state Kalman filter for a Gaussian local-level random walk is also a single exponential moving average. That result and the calculation above arise from different state models, but both expose the same limitation: homogeneous noise and one drift scale produce one temporal scale. The measured failure of a single exponential buffer therefore points directly at violated assumptions.</p>
+
+  <table>
+    <thead><tr><th>Assumption behind one clock</th><th>Measured conflict</th><th>Consequence for the model</th></tr></thead>
+    <tbody>
+      <tr><td>Noise is independent across steps</td><td>Gradient histories contain strong period-two structure early in training</td><td>Estimate colored temporal noise; allow signed frequency-dependent weights. Perfect period-two removal is not assumed because it performed poorly.</td></tr>
+      <tr><td>All components have comparable noise</td><td>Measured directional signal-to-noise ratios range from about 6 to 0.4</td><td>Test a distribution of clocks across fixed temporal bands instead of forcing every component to share one decay.</td></tr>
+      <tr><td>One local drift rate describes the object</td><td>Different temporal bands and matrix directions can move at different rates</td><td>Estimate noise-corrected drift separately in fixed bands; retain multiple clocks only when their held-out errors differ reproducibly.</td></tr>
+      <tr><td>Raw squared error matches optimizer relevance</td><td>Muon's matrix sign discards a common pre-polar scale</td><td>Measure gradient error after minimizing over common rescaling; measure factor quality through held-out preconditioner action.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>The gradient candidate has to pass two tests</h2>
+  <div class="decision">
+    <div class="label">Test A · Does the rule explain the schedule?</div>
+    <p>The intern's eight-buffer K-Maxwell kernel (K8) shortens its average lag from approximately 49 to 36 to 29 steps across the three saved training states. Rising relative noise alone would lengthen an averaging window. Replica-clocked accumulation reproduces the observed shortening only if measured drift grows enough to dominate that effect.</p>
+  </div>
+  <p>The norm, drift lags, smoothing, token conversion, and geometric mapping are fixed before computing the three predictions; no fitted multiplier is allowed. A wrong ordering or a miss outside the uncertainty interval rejects this rule for the momentum schedule. Agreement would explain K8's central timescale. It would not explain K8's loss improvement.</p>
 
   <div class="decision">
-    <div class="label">Lead falsifier</div>
-    <p>With the norm, lags, token scaling, and geometric weights fixed in advance, the gradient rule must reproduce the observed shortening of the intern's eight-buffer K-Maxwell kernel (K8). Its average lag, computed from the normalized kernel weights, is approximately 49, 36, and 29 steps at the three saved training states. A fitted multiplier is forbidden. Failure rejects replica-clocked momentum. Success explains the schedule of average lag; it does not by itself explain K8's multi-timescale kernel shape or training benefit.</p>
+    <div class="label">Test B · Does the rule explain why one decay is insufficient?</div>
+    <p>K8 uses decay timescales spanning roughly 3–64 steps. We divide the dense histories into fixed octave bands with periods 2–4, 4–8, 8–16, 16–32, 32–64, and 64–128 steps. Replica noise and noise-corrected drift give one predicted \(A_t^*\) per band.</p>
   </div>
+  <p>The predicted timescales must reproduce both the breadth and training-state movement of K8's fixed timescales under a declared numeric tolerance. Band boundaries are not changed after seeing the result. Agreement supports a bank of clocks; disagreement rejects this explanation of K8's shape. Even agreement does not determine the mixture weights, which require a separate held-out prediction criterion.</p>
 
-  <h2>The curvature statistic needs a noise correction</h2>
-  <p>SOAP, Shampoo, and related methods accumulate matrix factors formed from a gradient matrix \(G_t\):</p>
+  <h2>The same clock applies to factored curvature, with one asymmetry</h2>
+  <p>SOAP and Shampoo accumulate left and right factors from a gradient matrix \(G_t\):</p>
   \[
       L_t=G_tG_t^{\mathsf T},
       \qquad
       R_t=G_t^{\mathsf T}G_t.
   \]
-  <p>A noisy gradient outer product contains a minibatch-dependent covariance term. Write replica \(a\)'s microbatch gradient as \(G_t^{(a)}=M_t+\varepsilon_t^{(a)}\), with \(\mathbb E[\varepsilon_t^{(a)}]=0\). If \(C_{L,t}=\mathbb E[\varepsilon_t^{(a)}\varepsilon_t^{(a)\mathsf T}]\), then averaging \(r\) independent replicas gives</p>
+  <p>Replica gradients separate the mean-gradient outer product from stochastic covariance. If \(G_t^{(a)}=M_t+\varepsilon_t^{(a)}\) and \(r\) replicas are averaged, then</p>
   \[
       \mathbb E[\bar G_t\bar G_t^{\mathsf T}]
-      =M_tM_t^{\mathsf T}+\frac{1}{r}C_{L,t}.
+      =M_tM_t^{\mathsf T}+\frac{1}{r}C_{L,t},
+      \qquad
+      C_{L,t}=\mathbb E[\varepsilon_t^{(a)}
+      \varepsilon_t^{(a)\mathsf T}].
   \]
-  <p>Cross-replica products estimate \(M_tM_t^{\mathsf T}\); within-replica products supply the covariance term. The right factor has the analogous decomposition. This lets us reconstruct both factors for the actual training batch size. Temporal accumulation reduces estimator variance around these expectations; it cannot remove an uncorrected covariance term from them.</p>
-  <p>The same noise-versus-drift calculation then determines the geometric decay of each factor. Exact eigendecomposition supplies a factored preconditioner, and held-out replica prediction shrinks unreliable spectral corrections toward the identity. Constant factors recover the usual fixed-decay optimizer; a correction unsupported by replica prediction becomes the identity map.</p>
+  <p>Cross-replica products estimate \(M_tM_t^{\mathsf T}\); within-replica products estimate \(C_{L,t}\). The right factor has the analogous decomposition. Recombining them at the training batch size prevents minibatch covariance from masquerading as curvature drift.</p>
+  <p>The first factor model uses one measured temporal clock and per-direction spectral shrinkage. Held-out replicas determine how far each inverse-factor correction should move from the identity. This is the smallest extension of SOAP's working design. It remains only if held-out factor-action residuals show no reproducible temporal structure by spectral band; otherwise the factor also needs multiple clocks.</p>
 
-  <h2>Which measurements control which decisions</h2>
-  <div class="map">
-    <div class="node"><b>E1 · Replica-clocked gradient accumulation</b><br>Estimate gradient noise and drift at the three saved states, then predict an average lag without fitting to K8.<br><span class="arrow">Correct shortening →</span> retain the clock and test its kernel shape. <span class="arrow">Wrong order or scale →</span> reject the candidate.</div>
-    <div class="node"><b>E2 · Replica-clocked factor accumulation</b><br>Decompose factor noise, derive its decay, and test the accumulated preconditioner on held-out replicas and later steps.<br><span class="arrow">Supported →</span> a derived factored metric. <span class="arrow">Unsupported →</span> report the required token budget.</div>
-    <div class="node"><b>E3 · Momentum × factored curvature</b><br>At the same saved state, compare raw-gradient and K8 histories with identity and factored preconditioning.<br><span class="arrow">Interaction near zero →</span> design the two clocks separately. <span class="arrow">Interaction resolved →</span> identify which temporal freedom the metric removes.</div>
-    <div class="node"><b>E4 · Full-curvature bound</b><br>Conditional on separate GPU approval, lower Hessian damping until cross-fitted operator action, positive definiteness, or post-Muon relevance fails.<br><span class="arrow">Purpose:</span> measure what the factored family leaves unexplained.</div>
-  </div>
-
+  <h2>What is measured, and what remains chosen</h2>
   <table>
-    <thead><tr><th>Work</th><th>Present state</th><th>Wall-clock estimate</th><th>Compute estimate</th><th>Decision produced</th></tr></thead>
+    <thead><tr><th>Current tuned choice</th><th>Proposed measurement</th><th>Still declared by the researcher</th><th>Rejection condition</th></tr></thead>
     <tbody>
-      <tr><td>E1</td><td class="status">Ready on serialized gradients</td><td>Under 1 hour</td><td>CPU analysis; no training run</td><td>Retain or reject the replica-clocked momentum rule</td></tr>
-      <tr><td>E2</td><td>Ready on the same recordings</td><td>2–4 hours</td><td>About 2 octet-GPU node-hours, dominated by replay and validation</td><td>Derived factor decays and shrinkage, or a measured insufficiency</td></tr>
-      <tr><td>E3</td><td>Protocol defined</td><td>About 6 hours on the A100 node</td><td>About 6 octet-GPU node-hours</td><td>Separate or couple temporal and curvature design</td></tr>
-      <tr><td>E4</td><td>Parked</td><td>About 6 hours after approval</td><td>About 12 octet-GPU node-hours</td><td>Supported depth of full-curvature correction</td></tr>
-    </tbody>
-  </table>
-  <p class="small">The estimates are planning ranges, not benchmarks. E2 can proceed if E1 fails because the gradient and factor clocks are scored against different held-out targets. E4 is excluded from the immediate plan and requires a separate compute decision.</p>
-
-  <h2>Hyperparameters become measurements</h2>
-  <table>
-    <thead><tr><th>Quantity</th><th>How it is chosen</th><th>What remains declared</th><th>Failure condition</th></tr></thead>
-    <tbody>
-      <tr><td>Gradient average lag \(A_{g,t}^*\)</td><td>Replica noise and noise-corrected temporal drift after minimizing over a common rescaling</td><td>Geometric weights, drift lags, and memory cap</td><td>Predicted lags do not reproduce K8's measured shortening</td></tr>
-      <tr><td>Factor average lag \(A_{S,t}^*\)</td><td>Batch-corrected factor noise and local drift</td><td>Geometric weights, validation horizon, and memory cap</td><td>No decay improves held-out preconditioner action over the single-step factor</td></tr>
-      <tr><td>Spectral shrinkage</td><td>Cross-fitted operator-action error relative to the identity map</td><td>Candidate operator class</td><td>The correction does not improve held-out action error or disappears after Muon's matrix sign</td></tr>
-      <tr><td>Full-Hessian damping \(\rho\)</td><td>Smallest value with positive, cross-replicable, post-Muon-relevant operator action</td><td>Common held-out right-hand sides and confidence threshold</td><td>Loss of positive definiteness, predictive support, or update relevance</td></tr>
+      <tr><td>Momentum decay schedule</td><td>Pooled gradient noise and noise-corrected drift determine \(A_{g,t}^*\)</td><td>Geometric family, error norm, drift lags, smoothing, memory cap</td><td>Test A misses K8's shortening</td></tr>
+      <tr><td>Momentum decay rates</td><td>Fixed-band noise and drift determine the distribution of \(A_{g,t}^*\)</td><td>Band partition and criterion for mixture weights</td><td>Test B misses K8's timescale spread or movement</td></tr>
+      <tr><td>Factor decay</td><td>Batch-corrected factor noise and drift determine \(A_{S,t}^*\)</td><td>Geometric family, validation horizon, memory cap</td><td>No improvement in held-out factor-action error</td></tr>
+      <tr><td>Inverse-root exponent and stabilizer</td><td>Cross-fitted gains shrink each spectral correction toward identity</td><td>Operator family, regularization floor, confidence threshold</td><td>No improvement over identity after Muon's matrix sign</td></tr>
     </tbody>
   </table>
 
-  <h2>The immediate path</h2>
-  <p>The K8 annealing check comes first because it can reject replica-clocked momentum without a training run. Every analytic choice is fixed before the three K8 values are consulted, including the conversion from the recorded one-million-token halves to the 524-thousand-token training batch.</p>
-  <p>The factor clock proceeds independently and is the main second-order deliverable. The momentum interaction is tested only after that factored metric predicts held-out replicas better than a fixed-decay estimate. A negligible interaction would let temporal filtering handle gradient history while factored curvature handles within-step geometry. A measurable interaction would identify which temporal degrees of freedom curvature preconditioning makes redundant.</p>
-  <p>Full-Hessian depth remains a bounded comparison. It earns additional compute only if the factored study leaves a specific discrepancy that deeper curvature could explain.</p>
+  <h2>Current work and the decision sequence</h2>
+  <p>The pooled and bandwise clock calculations are running on the serialized gradient histories. The fork-2400 state is being processed first; the other two states follow. No clock result is reported on this page yet.</p>
+  <p>The factored accumulation calculation uses the same recordings and proceeds independently of the gradient result. Once the measured factor predicts held-out action better than a fixed decay, the momentum × factored-curvature comparison asks whether the two accumulators can be designed separately.</p>
+  <p>Full-Hessian depth remains a bounded comparison requiring separate approval. It becomes relevant only if the factored method leaves a specific discrepancy that a deeper, cross-replicable curvature action could explain.</p>
+
+  <table>
+    <thead><tr><th>Measurement</th><th>Present state</th><th>Compute already available</th><th>Decision</th></tr></thead>
+    <tbody>
+      <tr><td>Tests A and B</td><td class="status">Running</td><td>Serialized dense gradients; no training sweep</td><td>Retain or reject replica-clocked momentum</td></tr>
+      <tr><td>Factor clock and shrinkage</td><td>Analysis specified</td><td>Same recordings plus factor replay</td><td>Produce a measured factored accumulator or its token requirement</td></tr>
+      <tr><td>Momentum × factored curvature</td><td>Interaction readouts pending</td><td>Existing three-metric calculations</td><td>Separate or couple temporal and curvature design</td></tr>
+      <tr><td>Full-curvature depth</td><td>Parked</td><td>New GPU approval required</td><td>Bound what the factored family leaves unexplained</td></tr>
+    </tbody>
+  </table>
 </main></body></html>
