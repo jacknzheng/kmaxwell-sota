@@ -95,12 +95,12 @@ E(W)=\frac{\sigma_M^2}{W}+\frac{d_M^2W^2}{4},\qquad W^*=\left(\frac{2\sigma_M^2}
 
 <h2>5. The decisive offline test measures the interaction by curvature band</h2>
 <p class="roadmap">This section defines the \(2\times2\) factorial that separates algebraic factorization from task-level redundancy.</p>
-<p>At each fixed checkpoint, cross two gradient histories with two curvature operators. Let \(g_t\) be the current gradient, \(m_t^{\mathrm{K8}}\) the phase-matched K8 gradient history, and \(B_t^{-1}=(H_t+\rho I)^{-1}\) the certified damped inverse Hessian, with damping \(\rho\) set to the eighth measured Ritz curvature. The four pre-matrix-sign cells are</p>
+<p>At each fixed checkpoint, cross two gradient summaries with two curvature operators. Let \(g_t\) be the current gradient, let \(m_t^{\mathrm{K8}}\) be the phase-matched K8 momentum matrix formed by the K8-weighted sum of recorded gradients, and let \(C_t=H_t+\rho I\) be the certified damped Hessian, with damping \(\rho\) set to the eighth measured Ritz curvature. The four pre-matrix-sign cells are</p>
 <div class="math">\[
 x_{00}=g_t,\qquad
 x_{10}=m_t^{\mathrm{K8}},\qquad
-x_{01}=B_t^{-1}g_t,\qquad
-x_{11}=B_t^{-1}m_t^{\mathrm{K8}}.
+x_{01}=C_t^{-1}g_t,\qquad
+x_{11}=C_t^{-1}m_t^{\mathrm{K8}}.
 \]</div>
 <p>The metric is fixed at the evaluation state, so temporal filtering and curvature inversion commute in this first analysis. The factorial therefore isolates redundancy between their effects. The drift measurements in Section 4 quantify when a historical metric breaks that commuting approximation.</p>
 <p>Project each cell into the fixed true-Hessian eigenspaces with curvature ranks 1–8 and 9–24. Recorded gradients projected onto ranks 1–8 alternate sign from one step to the next; ranks 9–24 form the next resolved curvature band. These boundaries are fixed before either interaction score is examined. A matrix enters the comparison only when both inverse-curvature solves satisfy the same residual criterion; results are shown per matrix and checkpoint before aggregation.</p>
@@ -117,5 +117,5 @@ I_{\mathrm{loss},b}
 \]</div>
 <p>Positive \(I_{\mathrm{loss},b}\) means that their combined improvement is smaller than the sum of their separate improvements, so they substitute in that band. Negative \(I_{\mathrm{loss},b}\) means that they are complementary. The future window contains the current state and the next two recorded checkpoints, separated by 250 training steps. Those later derivatives come from the baseline trajectory and therefore approximate the counterfactual future of each cell. The cosine between \(P_\varepsilon(x_{ij})\) and \(P_\varepsilon(u_t^*)\) is reported beside both scores so that scale changes erased by matrix sign cannot count as useful interaction.</p>
 <div class="warning"><span class="label">Validity test</span><p>The same future-window objective must reproduce the known ordering K8 \(>\) bi-Maxwell \(>\) single EMA \(\approx\) no momentum. If it fails, its bandwise interaction scores cannot be used to constrain momentum. As of 1 September 2026, the four factorial cells and this ordering test are being scored; no interaction result is claimed here.</p></div>
-<div class="footnotes"><p><strong>Decision rule.</strong> If \(I_{\mathrm{gain}}\) is near zero and \(I_{\mathrm{loss}}>0\) on the edge, one convention can absorb the shared edge response and remove duplicated design freedom. Bands with \(I_{\mathrm{loss}}<0\) retain separate temporal and curvature controls.</p></div>
+<div class="footnotes"><p><strong>Decision rule.</strong> If \(I_{\mathrm{gain}}\) is near zero and \(I_{\mathrm{loss}}>0\) on the edge, fix either the kernel's edge response or the metric's edge attenuation by normalization, because only their product is identifiable there. This removes one duplicated degree of freedom. Bands with \(I_{\mathrm{loss}}<0\) retain separate temporal and curvature controls.</p></div>
 </main></body></html>
