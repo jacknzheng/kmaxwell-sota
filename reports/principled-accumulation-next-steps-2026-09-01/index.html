@@ -46,7 +46,7 @@
   </div>
 
   <h2>What tonight changed</h2>
-  <p>The useful momentum effect is concentrated in noisy, short-timescale gradient history. In the measured NanoGPT comparison, K-Maxwell's advantage over no momentum decreases as batch size rises and reaches measured zero at \(16\times\) batch. A single exponential moving average adds no measurable benefit at either tested batch size. Kernel shape, rather than generic averaging, carries the observed gain.</p>
+  <p>The useful momentum effect is concentrated in noisy, short-timescale gradient history. In the measured NanoGPT comparison, bi-Maxwell's advantage over no momentum decreases as batch size rises and reaches measured zero at \(16\times\) batch. A single exponential moving average adds no measurable benefit at either tested batch size. Kernel shape, rather than generic averaging, carries the observed gain.</p>
   <p>Our full-Hessian measurements cannot yet derive a useful Newton operator. Heavily damped conjugate-gradient solves agree across disjoint minibatches, but their low cost and their shallow spectral reach are the same fact: the damping suppresses the poorly estimated spectrum. Individual eigendirections replicate reliably only near the top of the spectrum. Claims that the full inverse Hessian is cheaply available, that per-rank reliability determines a fractional Newton exponent, and that momentum cannot represent Newton have therefore been withdrawn.</p>
   <p>The hindsight-action objective has not received a fair test. Existing model snapshots are separated by 250 training steps, while the K-Maxwell kernels differ mainly over lags of roughly 3–64 steps. Sparse sampling therefore removes the temporal structure that the objective is supposed to rank. The known-ordering test failed at all three saved states, as aliasing predicts. Dense consecutive windows have now been serialized; the corrected test is running.</p>
 
@@ -82,8 +82,8 @@
     <thead><tr><th>Work</th><th>Present state</th><th>Wall-clock estimate</th><th>Compute estimate</th><th>Decision produced</th></tr></thead>
     <tbody>
       <tr><td>E1</td><td class="status">Running</td><td>Result expected 13:30–14:00 UTC</td><td>Already allocated</td><td>Keep or discard the hindsight objective</td></tr>
-      <tr><td>E2</td><td>Ready after E1 data checks</td><td>2–4 hours</td><td>About 2 octet-GPU node-hours, dominated by replay and validation</td><td>Derived factor windows and shrinkage, or a measured insufficiency</td></tr>
-      <tr><td>E3</td><td>Protocol defined</td><td>2–3 hours with three nodes</td><td>About 6 octet-GPU node-hours</td><td>Separate or couple temporal and curvature design</td></tr>
+      <tr><td>E2</td><td>Ready; uses the serialized dense gradients and is independent of E1</td><td>2–4 hours</td><td>About 2 octet-GPU node-hours, dominated by replay and validation</td><td>Derived factor windows and shrinkage, or a measured insufficiency</td></tr>
+      <tr><td>E3</td><td>Protocol defined</td><td>About 6 hours on the A100 node</td><td>About 6 octet-GPU node-hours</td><td>Separate or couple temporal and curvature design</td></tr>
       <tr><td>E4</td><td>Waiting on E1</td><td>About 4 hours offline; continuation cost quoted separately</td><td>About 4 octet-GPU node-hours before training</td><td>A kernel candidate eligible for one continuation test</td></tr>
       <tr><td>E5</td><td>Parked</td><td>About 6 hours after approval</td><td>About 12 octet-GPU node-hours</td><td>Supported depth of full-curvature correction</td></tr>
     </tbody>
