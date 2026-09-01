@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Next steps toward principled accumulation</title>
+  <title>Toward principled factored-curvature accumulation</title>
   <script>
     window.MathJax = {tex: {inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']]}};
   </script>
@@ -48,128 +48,82 @@
   </style>
 </head>
 <body><main>
-  <h1>The current gradient is the wrong target for momentum</h1>
-  <p class="dek">We tested whether minibatch noise and temporal drift could derive momentum's decay schedule. The measured optimum was far shorter than the record eight-buffer K-Maxwell kernel (K8) and moved in the opposite direction during training. The same estimation framework remains appropriate for factored curvature accumulation.</p>
+  <h1>Toward principled factored-curvature accumulation</h1>
+  <p class="dek">New measurements show that the gradient changes sub-diffusively, that a future-window alignment score is dominated by closed-loop feedback, and that the reproducible part of the full-Hessian correction is shallow. These results narrow the momentum question and point to a measurable accumulation rule for the factored metric.</p>
 
+  <h2>Premises carried into this work</h2>
   <div class="question">
-    <div class="label">Result</div>
-    <p>A filter optimized to estimate the current population gradient does not explain the useful memory in K8. This rejects that specific estimand, while leaving open the possibility that momentum estimates a different persistent component of the gradient history.</p>
+    <div class="label">Premise · oscillation mechanism</div>
+    <p>Direct measurements established before this study that momentum's main role is to attenuate and reshape the period-two zigzag of the true gradient in high-curvature directions. The oscillation exists without minibatch noise. Earlier training runs also showed that cancelling it completely is harmful; the useful response is nonzero and moderate.</p>
   </div>
+  <div class="def"><b>Momentum kernel.</b> The causal sequence of weights applied to present and past gradients. K8, the current record kernel, combines eight exponential buffers.</div>
+  <table>
+    <thead><tr><th>Prior result</th><th>Status entering this study</th><th>Constraint on new work</th></tr></thead>
+    <tbody>
+      <tr><td>Current-gradient and Newton/secant targets</td><td>Failed kernel-ranking tests on 2026-08-23</td><td>Do not use closeness to either object as a momentum objective</td></tr>
+      <tr><td>Estimator versus controller</td><td>Closed-loop framing adopted on 2026-08-24</td><td>Score post-filter update geometry or realized optimization response</td></tr>
+      <tr><td>Kernel response</td><td>Nonzero flip transmission, positive in-phase response, and a finite average-lag range explain the measured family ordering</td><td>Any kernel objective must preserve all three properties</td></tr>
+      <tr><td>Simple averaging</td><td>One exponential buffer adds nothing over no momentum in the tested runs</td><td>A useful rule must explain kernel shape, not averaging alone</td></tr>
+    </tbody>
+  </table>
 
-  <div class="def"><b>Momentum kernel.</b> The causal sequence of weights applied to present and past gradients. K8 combines eight exponential buffers; its average lag is plotted in Figure 1.</div>
-
-  <h2>The measurements that constrain the rule</h2>
-  <p>Test A measures the average lag that best tracks the current population gradient at three saved model states under one fixed scoring protocol.</p>
   <div class="figure-grid">
     <figure>
-      <img src="figs/fig_k8_age.png" alt="K8 average lag over training, with saved states at 49, 36, and 29 steps">
-      <figcaption><b>Figure 1. K8 shortens its memory while relative gradient noise rises.</b> Each red point is one saved model state used by Test A; the blue line is the deployed K8 schedule.</figcaption>
+      <img src="figs/fig_k8_age.png" alt="K8 average lag over training">
+      <figcaption><b>Figure 1. Prior constraint: K8 shortens its average lag during training.</b> The blue line is the deployed schedule; each red point is a saved state used by the new measurements below.</figcaption>
     </figure>
     <figure>
       <img src="../principled-momentum-functionals-2026-08-31/figs/batch_benefit.png" alt="Bi-Maxwell validation-loss benefit decreases to zero as batch size increases">
-      <figcaption><b>Figure 2. Momentum's measured benefit vanishes as batch size grows.</b> One point compares bi-Maxwell, the two-exponential-buffer record baseline before K8, against the same training configuration with no momentum.</figcaption>
+      <figcaption><b>Figure 2. Prior constraint: bi-Maxwell's benefit over no momentum falls to zero as batch size grows.</b> One point is one matched comparison; bi-Maxwell is the two-buffer record baseline that preceded K8.</figcaption>
     </figure>
   </div>
 
-  <div class="metrics">
-    <div class="metric"><strong>6 → 2 → 0.4</strong>Median directional gradient signal-to-noise ratio across the three saved training states, measured from disjoint data splits.</div>
-    <div class="metric"><strong>0.9915–0.9991</strong>Cosine agreement of damped curvature actions across token halves; after Muon's matrix sign, agreement is 0.9630–0.9973 across the state-by-token-budget checks.</div>
-    <div class="metric"><strong>|interaction| ≤ 0.007</strong>Median loss double-difference between K8 and a damped low-rank Hessian correction, within the rank 1–8 and rank 9–24 eigenvalue bands whose curvature actions reproduce across disjoint token halves.</div>
-    <div class="metric"><strong>60% → 25%</strong>Cross-half eigendirection match rate falls from roughly 60% in ranks 1–3 to 25% in ranks 6–8.</div>
-    <div class="metric"><strong>3.2–4.2×</strong>Median ratio of the largest to the 24th measured Hessian eigenvalue across saved states; this reproducible spectral band is shallow and relatively flat.</div>
-    <div class="metric"><strong>0 gain from one EMA</strong>A single exponential momentum buffer adds no measurable benefit over no momentum at either tested batch size; kernel shape carries the measured gain.</div>
-  </div>
-
-  <p>The evidence points to temporal noise and oscillation as a live source of momentum benefit, while the reproducible full-Hessian correction is stable but shallow. The experiment below tests whether ordinary gradient tracking can explain that temporal benefit; its failure separates the momentum problem from the still-viable problem of estimating factored curvature.</p>
-  <p>Dense per-step gradient recordings at each saved state are used below to measure temporal noise and drift.</p>
-
-  <h2>Test A rejects the gradient-tracking rule</h2>
+  <h2>New result: the gradient is sub-diffusive over kernel timescales</h2>
   <div class="figure-grid">
     <figure>
-      <img src="figs/fig_testA.png" alt="Measured gradient-tracking optima move opposite to the K8 schedule">
-      <figcaption><b>Figure 3. The measured tracking optimum lengthens while K8 shortens.</b> Each brown square is the median optimal average lag across 72 Muon matrices at one saved state; its vertical bar is the interquartile range. The blue line is K8's deployed average lag. The late state remains pending.</figcaption>
+      <img src="figs/fig_structfn.png" alt="Measured gradient structure function is nearly flat with lag rather than quadratic">
+      <figcaption><b>Figure 3. Non-noise gradient change saturates quickly with lag.</b> One blue point is the median structure function over 72 Muon matrices, normalized by the measured noise floor. The dotted line is the quadratic growth required by local linear drift.</figcaption>
     </figure>
     <figure>
-      <img src="figs/fig_structfn.png" alt="Measured gradient structure function is nearly flat with lag rather than quadratic">
-      <figcaption><b>Figure 4. Non-noise gradient change is sub-diffusive rather than locally linear.</b> One blue point is the median structure function over 72 matrices at one lag, normalized by the estimated noise floor. The blue band is the interquartile range; the dotted line is the quadratic growth required by linear drift.</figcaption>
+      <img src="figs/fig_testA.png" alt="Measured current-gradient tracking optima move opposite to the K8 schedule">
+      <figcaption><b>Figure 4. A new fixed-protocol measurement agrees with the earlier rejection of current-gradient tracking.</b> Brown squares are median optimal tracking lags across 72 matrices; bars show interquartile ranges. The blue line is K8's deployed average lag.</figcaption>
     </figure>
+  </div>
+  <p>The measured structure function scales approximately as \(\Delta^p\), with \(p=0.28\) early and \(p=0.29\) in the middle of training. Linear drift predicts \(p=2\); a random walk predicts \(p=1\). Most non-noise change occurs within a few steps and then plateaus through the measured window.</p>
+  <p>Under a protocol fixed before output, the median optimal tracking lag rises from 0.5 steps [0.5, 1.5] to 15.1 steps [4.4, 22.4] while K8 shortens from 49.1 to 36.3 steps, independently confirming the prior rejection; the pending late state cannot remove the early-level mismatch or the backward early-to-middle trend.</p>
+
+  <div class="metrics">
+    <div class="metric"><strong>\(p=0.28,\,0.29\)</strong>Structure-function exponents at the completed early and middle states.</div>
+    <div class="metric"><strong>−9 to −36</strong>Inner products between deployed kernel directions and subsequent 32–256-step mean gradients; the raw gradient is near zero.</div>
+    <div class="metric"><strong>0.9915–0.9991</strong>Cross-half cosine agreement of damped curvature actions; after Muon's matrix sign, agreement is 0.9630–0.9973.</div>
+    <div class="metric"><strong>3.2–4.2×</strong>Median ratio of the largest to the 24th measured Hessian eigenvalue; the reproducible band is shallow and flat.</div>
+    <div class="metric"><strong>60% → 25%</strong>Cross-half eigendirection matching falls from the top three directions to ranks 6–8.</div>
+    <div class="metric"><strong>1.8–3.0 steps</strong>Preliminary optimal average lag for factored-curvature statistics before the final batch-composition correction.</div>
   </div>
 
   <table>
-    <thead><tr><th>Saved state</th><th>Measured optimal average lag, median [IQR]</th><th>K8 average lag</th><th>Tracking error at K8 lag divided by minimum, median [IQR]</th><th>Measured drift exponent \(p\)</th></tr></thead>
+    <thead><tr><th>Saved state</th><th>131k tokens per half: full / after matrix sign</th><th>524k tokens per half: full / after matrix sign</th></tr></thead>
     <tbody>
-      <tr><td>Early</td><td>0.5 [0.5, 1.5] steps</td><td>49.1 steps</td><td>1.76 [1.50, 2.40]</td><td>0.28</td></tr>
-      <tr><td>Middle</td><td>15.1 [4.4, 22.4] steps</td><td>36.3 steps</td><td>1.10 [1.05, 1.33]</td><td>0.29</td></tr>
-      <tr><td>Late</td><td>Pending</td><td>29.2 steps</td><td>Pending</td><td>Pending</td></tr>
+      <tr><td>Early</td><td>0.9915 / 0.9630</td><td>0.9975 / 0.9878</td></tr>
+      <tr><td>Late</td><td>0.9970 / 0.9917</td><td>0.9991 / 0.9973</td></tr>
     </tbody>
   </table>
+  <p>Damped curvature actions already reproduce across disjoint token halves at the smaller budget. Within the reproducible rank 1–24 band, the largest measured eigenvalue is only 3.2–4.2 times the 24th, and the median momentum–curvature loss interaction remains within 0.007 of zero. These measurements bound the currently supported full-Hessian correction as stable, shallow, and approximately separable from kernel choice.</p>
 
-  <p>Test A fails at the early-state level and in the direction of change. The tracking optimum rises from 0.5 to 15.1 steps while K8 falls from 49.1 to 36.3 steps. At the early state, period-two alternation is 9.1 times the noise floor and using K8's lag raises the tracking error by a median factor of 1.76. The middle-state tracking loss is flatter, but its optimum remains shallow. The late measurement cannot repair the early-level contradiction or the backward early-to-middle trend. The fixed protocol therefore rejects gradient tracking as the source of momentum's schedule.</p>
-  <p>The measured structure function grows approximately as \(\Delta^p\) with \(p=0.28\) and \(0.29\), rather than \(p=2\) for local linear drift or \(p=1\) for a random walk. Most non-noise change occurs at short lags and then saturates. The gradient is neither a slowly drifting signal nor the local-level process that would make one exponential buffer an optimal tracker.</p>
+  <h2>New result: a future-window score measures controller consumption</h2>
+  <div class="def"><b>Persistent component candidate.</b> The mean reference gradient over a window of \(W\) future steps. The measured gap between period-two motion and slow change motivates \(W\in\{32,64,128,256\}\).</div>
+  <p>An earlier three-seed ranking test on 2026-08-24 was inconclusive because the persistent share sat near its estimator's noise floor; its one-buffer-versus-two-buffer ordering also disagreed with the benchmark. The new dense recordings enabled a different statistic: the inner product between each unit-polar update direction and the subsequent window mean.</p>
+  <p>All four windows give the same ordering. Raw gradients are approximately neutral, while kernel directions have inner products from \(-9\) to \(-36\), with half-split errors of 1.5–2.8. This reproduces a known closed-loop anti-correlation in a new instrument. The future window lies on the trajectory generated by the update being scored, so successful descent consumes and can reverse the later gradients along that direction. The statistic therefore cannot test estimator alignment.</p>
+  <p>The persistent-component candidate remains untested. A proposed clean instrument uses a learning rate reduced by ten for a 256-step continuation, so the reference window is measured near a fixed model state. This continuation requires separate approval.</p>
 
-  <h2>What Test A actually optimized</h2>
-  <p>Eight data-parallel workers produce eight microbatch gradients from consecutive chunks of the data stream before averaging. Their cross-worker variation measures finite-minibatch noise at the actual batch composition. Changes across consecutive steps measure how quickly the object being accumulated has become stale.</p>
-  <p>A geometric accumulator assigns lag \(k\) the normalized weight \(w_k=(1-\beta)\beta^k\). Its average lag is</p>
-  \[
-      A=\sum_{k\geq0}kw_k=\frac{\beta}{1-\beta}.
-  \]
-  <p>For an object with noise energy \(\sigma_t^2\) and local drift energy \(d_t^2\), the geometric accumulator has the approximate prediction error</p>
-  \[
-      \mathcal E_t(A)=\frac{\sigma_t^2}{2A+1}+d_t^2A^2.
-  \]
-  <p>The first term rewards longer averaging. The second penalizes stale history. Their minimizer \(A_t^*\) determines the decay \(\beta_t=A_t^*/(A_t^*+1)\). Noise and drift are remeasured as training proceeds, so scheduling follows from state rather than step number.</p>
-
-  <details>
-    <summary>Derivation for a trailing window and a geometric accumulator</summary>
-    <div class="inside">
-      <p>Observe \(y_{t-k}=x_{t-k}+\varepsilon_{t-k}\), where the noise terms are independent with \(\mathbb E\lVert\varepsilon_{t-k}\rVert^2=\sigma_t^2\), and approximate local motion by \(x_{t-k}=x_t-kd_t\).</p>
-      <p>A length-\(W\) trailing average has variance \(\sigma_t^2/W\) and bias \(-(W-1)d_t/2\). Its exact local error is</p>
-      \[
-          \mathcal E_t(W)=\frac{\sigma_t^2}{W}
-          +\frac{d_t^2(W-1)^2}{4}.
-      \]
-      <p>Treating \(W\) as continuous, the minimizer solves \(W^2(W-1)=2\sigma_t^2/d_t^2\). For a long window,</p>
-      \[
-          W_t^*\approx\left(\frac{2\sigma_t^2}{d_t^2}\right)^{1/3}.
-      \]
-      <p>For geometric weights, \(\sum_k w_k^2=1/(2A+1)\) and \(\sum_k kw_k=A\). The exact local objective is therefore \(\sigma_t^2/(2A+1)+d_t^2A^2\), and its optimum solves</p>
-      \[
-          A_t^*(2A_t^*+1)^2=\frac{\sigma_t^2}{d_t^2}.
-      \]
-      <p>The rectangular and geometric rules share cube-root scaling but have different constants. We use the geometric equation because the deployed accumulator is an exponential moving average.</p>
-    </div>
-  </details>
-
-  <p>A steady-state Kalman filter for a Gaussian local-level random walk is also a single exponential moving average. That result and the calculation above arise from different state models, but both expose the same limitation: homogeneous noise and one drift scale produce one temporal scale. The measured failure of a single exponential buffer therefore points directly at violated assumptions.</p>
-
-  <table>
-    <thead><tr><th>Assumption behind gradient tracking</th><th>Measured conflict</th><th>What the failure teaches us</th></tr></thead>
-    <tbody>
-      <tr><td>Noise is independent across steps</td><td>Early period-two excess is 9.1 times the noise floor</td><td>The objective must model colored oscillation and its effect on the update. Exact period-two removal is not assumed because it performed poorly.</td></tr>
-      <tr><td>The current population gradient is the target</td><td>The best tracker uses almost no history early, while the winning kernel retains about 49 steps</td><td>Useful momentum is shaping a closed-loop response rather than estimating the current gradient.</td></tr>
-      <tr><td>One local drift rate describes the object</td><td>The measured structure-function exponent is about 0.29, far below linear drift or a random walk</td><td>A bank of tracking windows inherits the wrong target; splitting it into temporal bands cannot repair Test A.</td></tr>
-      <tr><td>Raw squared error matches optimizer relevance</td><td>Muon discards pre-polar scale and changes how gradient-history errors affect the update</td><td>The next objective must score post-filter update geometry or realized optimization response.</td></tr>
-    </tbody>
-  </table>
-
-  <h2>Test B is retired with Test A</h2>
-  <p>Test B would have applied the same current-gradient tracking loss separately to fixed temporal bands. Test A shows that this loss prefers nearly memoryless tracking precisely where long-memory K8 helps most. More bands would add flexibility without correcting the target, so the bandwise scorer will not be used to explain K8.</p>
-  <p>This does not reject estimand-based momentum. The current population gradient has now failed two independent tests: an earlier kernel-closeness ranking and Test A's schedule prediction. The Newton/secant direction also failed as a proposed target. A different persistent component of the gradient history remains viable until it receives an unconfounded test.</p>
-
-  <h2>The first persistent-component test measured the controller instead</h2>
-  <div class="def"><b>Persistent gradient component.</b> For a window of \(W\) steps, \(p_t(W)\) is the mean of the per-step reference gradients in that window. The measured structure function has a gap between period-two alternation, fast variation that mixes by lag 2, and a component that changes little through lag 64. The test checks \(W\in\{32,64,128,256\}\) so its conclusion does not depend on one boundary inside that gap.</div>
-  <p>The archived test compared the unit-polar direction produced by each momentum kernel with the mean reference gradient over the subsequent window. Its predicted ordering was K8, bi-Maxwell, one exponential buffer, then the raw gradient. Every tested window produced the reverse qualitative result: raw gradients were approximately neutral, while kernel directions had inner products from \(-9\) to \(-36\), with half-split errors of about 1.5–2.8.</p>
-  <p>The negative values do not falsify the persistent component. The future gradients come from the trajectory driven by the update being scored. A successful controller consumes and can reverse the gradients along its descent direction, so the statistic mixes the field with the controller's response. The identical ranking across all four windows establishes this closed-loop anti-correlation, while leaving estimator alignment unresolved.</p>
-  <p>A clean test would reduce the learning rate by a factor of ten for a 256-step continuation, making the model move little while the reference-gradient window is recorded. Ranking kernels against that nearly fixed-state mean would test the persistent-component estimand with much less controller feedback. This continuation is proposed and awaits compute approval.</p>
-
-  <h2>Replica clocks remain meaningful for factored curvature</h2>
-  <p>SOAP and Shampoo accumulate left and right factors from a gradient matrix \(G_t\):</p>
+  <h2>Live program: measure accumulation in the factored metric</h2>
+  <p>SOAP and Shampoo accumulate left and right factors from each gradient matrix \(G_t\):</p>
   \[
       L_t=G_tG_t^{\mathsf T},
       \qquad
       R_t=G_t^{\mathsf T}G_t.
   \]
-  <p>Replica gradients separate the mean-gradient outer product from stochastic covariance. If \(G_t^{(a)}=M_t+\varepsilon_t^{(a)}\) and the workers are averaged, then</p>
+  <p>The estimation frame is appropriate here because the metric itself is the object being estimated. For the averaged gradient \(\bar G_t\), the left factor decomposes as</p>
   \[
       \mathbb E[\bar G_t\bar G_t^{\mathsf T}]
       =M_tM_t^{\mathsf T}+C_{\bar G,L,t},
@@ -177,36 +131,36 @@
       C_{\bar G,L,t}
       =\mathbb E[(\bar G_t-M_t)(\bar G_t-M_t)^{\mathsf T}].
   \]
-  <p>The right factor has the analogous decomposition. Independent sampling would make the covariance term fall in proportion to inverse token count, but the measured per-direction noise falls only as tokens to the power \(-0.5\) to \(-0.65\). Consecutive-stream correlations therefore matter. The covariance contribution is measured at the training batch composition rather than extrapolated with an independence formula.</p>
-  <p>The first measurements place the factor-side optimal average lag between 1.8 and 3.0 steps. These values are provisional because the factor expectation contains a batch-size-dependent covariance term; the final clock must be recomputed after that term is measured at the training batch composition.</p>
-  <p>The factor model uses one measured temporal clock and per-direction spectral shrinkage. Held-out replicas determine how far each inverse-factor correction should move from the identity. This is the smallest extension of SOAP's working design. It remains only if held-out factor-action residuals show no reproducible temporal structure by spectral band; otherwise the factor also needs multiple clocks.</p>
+  <p>The workers process consecutive stream chunks, so their gradients are not independent draws. Measured directional noise falls with token count only as tokens to the power \(-0.5\) to \(-0.65\). The covariance contribution must therefore be measured at the training batch composition rather than divided by the worker count.</p>
+  <p>The first clock estimates are 1.8–3.0 steps. They remain provisional until the batch-composition correction is complete. The final procedure chooses the factor window by held-out preconditioner-action error, then chooses per-direction spectral shrinkage by the same cross-fitting principle. A correction unsupported on held-out data shrinks toward the identity.</p>
 
-  <h2>What is measured, and what remains chosen</h2>
+  <div class="decision">
+    <div class="label">Candidate-gate result</div>
+    <p>Factored-curvature accumulation passes the standing candidate gate. Its target is a measurable metric statistic, not a previously rejected momentum estimand. Its window and shrinkage are accepted only through held-out operator-action prediction.</p>
+  </div>
+
   <table>
-    <thead><tr><th>Current tuned choice</th><th>Proposed measurement</th><th>Still declared by the researcher</th><th>Rejection condition</th></tr></thead>
+    <thead><tr><th>Tuned choice today</th><th>Proposed measurement</th><th>Still declared</th><th>Stop condition</th></tr></thead>
     <tbody>
-      <tr><td>Momentum schedule and shape</td><td>Current-gradient tracking rejected; persistent-component estimation remains untested</td><td>Candidate estimand or response quantity, causal kernel family, memory cap</td><td>A candidate must pass an unconfounded offline test and improve continuation loss</td></tr>
-      <tr><td>Factor decay</td><td>Batch-corrected factor noise and drift determine \(A_{S,t}^*\), the optimal average lag for the factor accumulators \(L_t\) and \(R_t\)</td><td>Geometric family, validation horizon, memory cap</td><td>No improvement in held-out factor-action error</td></tr>
-      <tr><td>Inverse-root exponent and stabilizer</td><td>Cross-fitted gains shrink each spectral correction toward identity</td><td>Operator family, regularization floor, confidence threshold</td><td>No improvement over identity after Muon's matrix sign</td></tr>
+      <tr><td>Factor decay</td><td>Training-batch factor noise and temporal change select the accumulation window by held-out action error</td><td>Geometric weighting family, validation horizon, memory cap</td><td>No window improves on the fixed-decay factor</td></tr>
+      <tr><td>Inverse-root exponent and stabilizer</td><td>Cross-fitted gains shrink each spectral correction toward identity</td><td>Operator class, numerical floor, confidence threshold</td><td>No improvement over identity after Muon's matrix sign</td></tr>
+      <tr><td>Number of factor clocks</td><td>Residual temporal structure within spectral bands</td><td>Initial band partition</td><td>One clock stays if band-specific windows do not reproduce out of sample</td></tr>
     </tbody>
   </table>
 
-  <h2>Current work and the decision sequence</h2>
-  <p>Test A is rejected on the completed early and middle states. The late-state clock remains queued as a measurement of late behavior, not as a condition for this decision. Test B is retired because it inherits Test A's target.</p>
-  <p>The archived persistent-component statistic has been executed and discarded as a test because it measures closed-loop consumption. The persistent-component estimand remains open; its reduced-learning-rate continuation requires approval.</p>
-  <p>The factored accumulation calculation uses the same recordings and remains active. Once the batch-corrected factor predicts held-out action better than a fixed decay, the momentum × factored-curvature comparison asks whether response-shaped momentum and curvature accumulation can be designed separately.</p>
-  <p>Full-Hessian depth remains a bounded comparison requiring separate approval. It becomes relevant only if the factored method leaves a specific discrepancy that a deeper, cross-replicable curvature action could explain.</p>
+  <h2>Live program: derive a response objective for momentum</h2>
+  <p>The kernel problem remains a closed-loop filtering problem. The next objective must preserve moderate period-two transmission, positive in-phase response across the measured periods, and a finite average lag. It must also survive the known failure of one-step and pre-polar alignment scores, which can rank deployed kernels opposite to continuation loss.</p>
+  <p>No new kernel objective is proposed on this page. Before any candidate receives compute, it must pass the archived falsification list and explain which measured response property its objective controls. The sub-diffusive structure function rules out a linear-drift or random-walk derivation; the future-window result rules out scoring on a trajectory generated by the candidate itself without a counterfactual control.</p>
 
+  <h2>Immediate decisions</h2>
   <table>
-    <thead><tr><th>Measurement</th><th>Present state</th><th>Compute already available</th><th>Decision</th></tr></thead>
+    <thead><tr><th>Work</th><th>Present state</th><th>Next decision</th></tr></thead>
     <tbody>
-      <tr><td>Test A</td><td>Rejected; late state pending</td><td>Two saved states completed under the fixed protocol</td><td>Stop using current-gradient tracking to derive momentum</td></tr>
-      <tr><td>Test B</td><td>Retired</td><td>No additional computation</td><td>Do not add bands to a rejected tracking objective</td></tr>
-      <tr><td>Persistent-component estimand</td><td>Untested; first statistic confounded</td><td>Reduced-learning-rate continuation proposed</td><td>Retain or reject the persistent component using a nearly fixed-state reference window</td></tr>
-      <tr><td>Factor clock and shrinkage</td><td class="status">Active; preliminary lag 1.8–3.0 steps</td><td>Same recordings plus batch-corrected factor replay</td><td>Produce a measured factored accumulator or its token requirement</td></tr>
-      <tr><td>Momentum × factored curvature</td><td>Interaction readouts pending</td><td>Existing three-metric calculations</td><td>Separate or couple temporal and curvature design</td></tr>
-      <tr><td>Full-curvature depth</td><td>Parked</td><td>New GPU approval required</td><td>Bound what the factored family leaves unexplained</td></tr>
+      <tr><td>Training-batch factor clock</td><td class="status">Active; provisional lag 1.8–3.0 steps</td><td>Keep the measured window only if held-out factor action improves</td></tr>
+      <tr><td>Factor spectral shrinkage</td><td>Specified</td><td>Keep each correction only if it transfers across data halves and model states</td></tr>
+      <tr><td>Persistent-component test</td><td>Candidate untested; low-learning-rate continuation proposed</td><td>Run only after compute approval; failure would reject this candidate estimand</td></tr>
+      <tr><td>Oscillation-centric momentum objective</td><td>No candidate yet</td><td>Require one theory-motivated objective to pass the standing candidate gate before compute</td></tr>
+      <tr><td>Full-Hessian depth</td><td>Parked</td><td>Reopen only for a discrepancy that the factored metric cannot explain</td></tr>
     </tbody>
   </table>
-  <p class="small">The Test A protocol was fixed in scorer commit <code>a765cfb</code> before any saved state produced an output. Figures 3 and 4 were generated from the resulting stored measurements.</p>
 </main></body></html>
