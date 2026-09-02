@@ -13,7 +13,194 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-033**.
+Next request number: **REQ-034**.
+
+
+## REQ-033: does the ANNEALED K-Maxwell kernel survive a change of batch size?
+
+- status: OPEN
+- requested: Jack / 2026-09-02 PDT
+- repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
+- pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e (same as REQ-026/027/028/029)
+- priority: arms are 2250 steps each (3x the REQ-026/029 forks), 12 of them. ONE
+  node works but will be slow; TWO nodes preferred if within your ceiling — split
+  by batch size, never by arm within a batch size (arms in a row must share a node
+  so the within-batch contrast is same-hardware).
+
+**Question.** REQ-026→029 established the benefit-vs-batch curve for the **frozen
+two-rate bi-Maxwell** kernel: `1x -0.01063, 4x -0.00438, 8x -0.00233, 16x ~0.00000`
+— halving per doubling, no plateau, fully absorbed by large-batch averaging.
+
+That curve was never measured for the **annealed K=8 K-Maxwell** kernel of
+[PR #357](https://github.com/KellerJordan/modded-nanogpt/pull/357) (verified: no
+mention of the annealed kernel anywhere in req026/028/029). That kernel is a
+different object — its mean age *changes over training* (58 -> 26 steps), and that
+extra degree of freedom is exactly what could have absorbed batch-specific noise
+structure. It is also the kernel in the open PR, so its batch-robustness is
+load-bearing for the claim.
+
+**Every timescale in the recipe is in STEPS**, but momentum reduces gradient
+variance and noise scales as 1/batch. The tokens each buffer averages over is
+`age x batch_tokens`. So the tuned ages are only meaningful at the batch size they
+were tuned at. Arm D tests the obvious repair: scale the ages with the batch ratio.
+
+### Expected work — 12 arms, 2250-step continuations from a shared step-1000 state
+
+Same `eos_shared_base` machinery as REQ-026/029, but **dump the shared state at
+step 1000, not 2000** — 1000 is `transition_step_to_kmaxwell`, the step at which
+PR #357's kernel first engages. Forking there means arms C/D run the **full,
+uncompressed 58 -> 26 anneal over the PR's own 2250 steps, ending at the real step
+3250**. Record the base val@1000 as REQ-026 recorded val@2000 = 3.44367.
+Grid = batch {0.25x, 0.5x, 2x} x kernel {A, B, C, D} = 12. **The 1x row is
+deliberately omitted**: 1x full-run baselines already exist at n=8
+(`logs/kmaxwell/{bimaxwell339_n8,ablation_anneal_n8}`), and re-running 1x here as a
+step-1000 fork would not be comparable to them anyway (fork-vs-full-run). The
+consequence is stated plainly in the readout: **the curve has no cell at the batch
+size the recipe was tuned at**, so it is read as a trend across 0.25x / 0.5x / 2x,
+with the existing n=8 1x runs as out-of-band context only — never differenced
+against these arms.
+
+| kernel | optimizer | meaning |
+|---|---|---|
+| **A** | `muon{mu:0.95}` | single-EMA control |
+| **B** | `bimaxwell_muon` record settings | the already-curved reference |
+| **C** | `annealed_weights_muon`, ages AS SHIPPED | PR #357 kernel, unmodified |
+| **D** | `annealed_weights_muon`, ages x (1x/batch) | ages rescaled to the batch |
+
+**The 12 arms explicitly:**
+
+| # | batch | kernel | # | batch | kernel |
+|---|---|---|---|---|---|
+| 1 | 0.25x | A single-EMA | 7 | 0.5x | C shipped |
+| 2 | 0.25x | B bimaxwell | 8 | 0.5x | D rescaled |
+| 3 | 0.25x | C shipped | 9 | 2x | A single-EMA |
+| 4 | 0.25x | D rescaled | 10 | 2x | B bimaxwell |
+| 5 | 0.5x | A single-EMA | 11 | 2x | C shipped |
+| 6 | 0.5x | B bimaxwell | 12 | 2x | D rescaled |
+
+Arm B is included **so the annealed curve can be laid directly against the
+bi-Maxwell curve on the same axes, same fork, same node** — REQ-026/029 measured
+bi-Maxwell against `mu:0.0`, not against single-EMA, so a fresh B arm is what makes
+the two curves comparable.
+
+### Exact config keys
+
+Batch axis (`microbatch_sequences` must shrink at small batch — per-GPU sequences
+IS the microbatch bound there; 64 is illegal at 0.25x):
+
+| batch | `batch_tokens` | `microbatch_sequences` | `skip_batches` (token-aligned) | fineweb chunks |
+|---|---|---|---|---|
+| 0.25x | 131072 | 16 | 4000 | 9 |
+| 0.5x | 262144 | 32 | 2000 | 12 |
+| 2x | 1048576 | 64 | 500 | 29 |
+
+All three skips are exact integers -> every arm resumes at the same ~0.524B-token
+data position. Budget in **usable batches** (`sum floor(shard_tokens/batch_tokens)`),
+the REQ-029 metric, not raw tokens; chunk counts above already use it. **Bootstrap 30
+chunks** — 2x is the binding case at 29.
+
+`lr: 0.025, weight_decay: 0.05, mu: 0.95` fixed across ALL arms so the kernel is the
+only varied axis within a batch size. `start_step: 1000, stop_after_step: 3250`,
+`cool_down_learning_rate cooldown_frac: 0.7`, no `fixed_eta_after` — identical
+schedule across arms, same documented confound as REQ-026 (within-batch-size
+comparison controls for it). Checkpoint at 3250 only (+2250). No Lanczos.
+
+Dense validation over `[3000, 3250]` every 10 steps, as the PR's own records do, so
+the tail is resolved; the standard cadence elsewhere.
+
+**Arm B** (`bimaxwell_muon`): `fast_decay: 0.85, slow_decay: 0.98,
+fast_weight: 0.4385, switch_step: 1000` — the record settings from REQ-026.
+
+**Arms C/D** (`annealed_weights_muon`): `switch_step: 1000`,
+`anneal_steps: 2250` — i.e. **exactly the PR's own schedule, uncompressed.** The
+fork point IS the switch step, so the shared base is plain Muon with no K-buffers to
+inherit and the buffers lazy-init from the existing momentum precisely as they do in
+the PR at step 1000. Each arm is therefore a faithful continuation of PR #357's own
+schedule from step 1000 onward at its batch size, not an approximation of it.
+
+Weight lists are **scale-invariant** — identical for C and every D. Only `decays`
+changes. (Derived via `km/solve.py:solve_weights(k=8, shape='linear')`; the arm-C
+decays reproduce the PR's published `kmaxwell_decay_rates` to <1e-12.)
+
+```yaml
+start_weights: [0.005093975, 0.010187949, 0.015281924, 0.020375898,
+                0.025469873, 0.030563847, 0.035657822, 0.857368713]   # mean age 58*s
+end_weights:   [0.032261839, 0.064523678, 0.096785516, 0.129047355,
+                0.161309194, 0.193571033, 0.225832871, 0.096668514]   # mean age 26*s
+```
+
+`decays` per arm (tau = 8 log-spaced ages; beta = tau/(tau+1)):
+
+```yaml
+# C, all batches: tau [3, 64], age 58->26   (PR #357 as shipped)
+[0.75, 0.822852439855, 0.877930338626, 0.917598547218,
+ 0.945180941073, 0.963893920846, 0.97637869689, 0.984615384615]
+
+# D @ 0.25x: tau [12, 256], age 232->104   (x4)
+[0.923076923077, 0.948927596166, 0.966407077116, 0.978042648561,
+ 0.985707613901, 0.99072224263, 0.993988168757, 0.996108949416]
+
+# D @ 0.5x: tau [6, 128], age 116->52   (x2)
+[0.857142857143, 0.902818485868, 0.934997769159, 0.957028830199,
+ 0.971818015605, 0.981615056307, 0.988048189779, 0.992248062016]
+
+# D @ 2x: tau [1.5, 32], age 29->13   (x0.5)
+[0.6, 0.699022338163, 0.782420529533, 0.84774327017,
+ 0.896059786816, 0.930304280845, 0.953847574219, 0.969696969697]
+```
+
+### Gates (hard)
+
+1. Per-config 20-step finite-loss smoke before any full arm (REQ-025 precedent).
+2. Usable-batch budget assert per config BEFORE launch (REQ-029 precedent — the 16x
+   run exhausted fineweb 17 steps short because raw-token budgeting is wrong).
+3. Tests green at the pinned SHA.
+4. `microbatch_sequences` divides `batch_tokens/(8*1024)` — at 0.25x/0.5x the
+   default 64 is illegal and will trip the accumulation assert.
+
+### Artifacts
+
+`logs/kmaxwell/req033_annealed_batch_curve/{README.md,summary.tsv,readout.tsv,
+val_trajectories.txt,manifest.tsv,make_req033_configs.py,configs/,logs/}` — the
+REQ-026/029 shape.
+
+### Readout
+
+Primary: **momentum benefit = final_val(kernel) - final_val(arm A), within batch
+size**, at step 3250. Absolute loss is NOT comparable across batch sizes (2x sees
+8x the tokens of 0.25x); only the within-batch contrast is.
+
+Closing table, directly against the existing bi-Maxwell curve:
+
+```
+batch  batch_tokens  benefit(C-A)  benefit(D-A)  benefit(B-A)  bimax-mu0 (REQ-029)
+```
+
+The shape is the deliverable, no interpretation needed:
+
+- **C decays toward zero like bi-Maxwell** -> the annealed kernel is also a
+  denoiser; the PR's gain is batch-specific. Expected, given REQ-029.
+- **C holds flat where bi-Maxwell decayed** -> the anneal buys something genuinely
+  different from the frozen two-rate kernel. Would be the interesting result.
+- **C decays but D holds** -> the *idea* is right and only the constants were fitted
+  to one batch size; the recipe should be reparameterised in tokens, not steps.
+
+**Known limitation to record in the README, do not paper over it:** age-scaling does
+NOT fully restore constant update noise. Using `nesterov_filter_stats`, relative
+update-noise variance vs 1x at the anneal endpoint is: arm C = {4.00, 2.00, 0.50}
+at {0.25x, 0.5x, 2x}; arm D = {1.28, 1.11, 0.92}. Arm D removes most
+but not all of it — the Nesterov term `h0 = (1-mu) + mu*sum(w*(1-beta))` has a floor
+of `(1-mu)^2 = 0.0025` that no memory-lengthening removes. Exact noise-matching was
+computed and rejected: it needs mean age ~837 at 0.25x, which is bias-dominated and
+no longer the same hypothesis. If a follow-up wants true noise-matching, the knob is
+co-scaling `mu`, not the ages.
+
+**Seeds:** seed 0, n=1 per cell, matching REQ-026/028/029 discovery convention. Per
+REQ-027 the harness reads tokens sequentially with no RNG shuffle and the fork loads
+params+optimizer, so `seed` does not resample data order — cross-seed spread is
+~2e-4 nondeterminism. Read deltas below ~5e-4 as noise. If a cell lands in that
+band and the shape hinges on it, file a follow-up for replicates rather than
+over-reading n=1.
 
 
 ## REQ-032: diligence (answer_free + answer_bearing) + tau2 (gold + step_hint) — 500 steps, H200/27B preferred
@@ -253,121 +440,6 @@ Include `args.txt`, `config.yaml`, `ARTIFACTS.txt`, `console.log`, `train.log`, 
 If a definitive external blocker stops the run, commit and push progress plus raw logs, update this block, and stop. Soft-reset / rebase if a push is rejected. Do not force-push.
 
 
-## REQ-030: tau2 gold only — DeepSeek user-sim, full official test, W&B step curve
-
-- status: **WITHDRAWN** (owner, 2026-08-31) — do not pick this up, do not rent a box, do not run tau2 gold. The request required the banking `setup_tau2_sandbox.sh` / bwrap path for a retail+airline job that does not need it. Follow-up is REQ-031. Number is spent; do not reuse REQ-030.
-- agent status: **ACK — no action taken (2026-08-31).** The withdraw commit arrived immediately after the open, before I picked it up: no box rented, nothing run. (FYI for the follow-up: retail+airline gold does **not** need `setup_tau2_sandbox.sh`/bwrap — that's banking-only; the wall I hit on REQ-024's gold was purely the OpenRouter Nemotron shared-pool 429 rate limit, resolvable with a dedicated provider key or the DeepSeek user-sim you were targeting here. My REQ-024 tau2 patch — solo_mode + env_kwargs + 429 retry — is in `logs/async_sdpo_req024/tau2-solo_mode-fix.patch`, ready for whenever the follow-up lands.)
-- requested: Jack / 2026-08-31 PDT
-
-
-## REQ-026: batch-size x momentum-kernel grid (does momentum survive large batch?)
-
-- status: OPEN (filed by owner agent 2026-08-31 ~11:00 UTC)
-- agent status: **RUNNING (2026-08-31 ~11:05Z)** — accepted; within the 2-node cap (REQ-024 gold holds wgmy26w, REQ-025's qj0z1gw was released). Provisioning node **wp9pj83** (8×H100), bootstrapping kmaxwell-sota @ `365c392d` (venv019 torch2.10cu128 + fineweb + regenerate eos_shared_base → dump the shared step-2000 state, same machinery as REQ-025's f2000 arms). Plan: 6 arms = batch{1x,4x} × kernel{muon mu=0.0, muon mu=0.95, bimaxwell_muon record}; 4x via 4× batch_tokens per optimizer step (same microbatch → 4× accumulation), LR schedule unchanged. Per-config 20-step finite-loss smoke gate before any arm; checkpoints at +250/+500/+750; NO Lanczos. Exact config-key diff to follow once I confirm the registered optimizer names + batch keys on the node. **REQ-025 alpha=0 NaN cause (gate-1 asks):** it was NOT intrinsic to alpha=0 — the base bi-Maxwell and the `596d2868` alpha=0 gate-probe were both stable; the divergence appeared only under `365c392d`+mb=32 (the hook re-alias likely shifted the RNG/data-order the un-preconditioned knife-edge is sensitive to). These REQ-026 arms use plain muon/bimaxwell (no newton hook), so that failure mode should not recur — the 20-step smoke will confirm per config.
-- agent status: **SMOKE GATE PASS → launching 6 arms (2026-08-31 ~11:35Z)**. Bootstrap done (tip 365c392, torch 2.10.0+cu128, targeted tests green, fineweb). State dumped: `eos_shared_state@2000` present (base val@2000 = 3.44367). **Smoke gate 6/6 PASS**, all finite (no NaN — plain kernels are stable here), measured at the first post-fork validation (step 2125, the exact point REQ-025's NaN surfaced): b1x_mu0=3.44309, b1x_mu95=3.44332, b1x_bimax=3.42516; b4x_mu0=3.35554, b4x_mu95=3.35536, b4x_bimax=3.34753. **Exact config diff** vs the REQ-019 fork-continuation template (`make_eos_state_dependence_configs.py`): (a) `batch_tokens` 524288 (1x) / **2097152** (4x, =4×), `microbatch_sequences`=64 fixed (so 4x = 8→32 accumulation steps, identical per-forward memory); (b) blocks-group optimizer = `muon{mu:0.0}` / `muon{mu:0.95}` / `bimaxwell_muon{mu:0.95,fast_decay:0.85,slow_decay:0.98,fast_weight:0.4385,switch_step:1000}`, with `lr:0.025, weight_decay:0.05` held fixed across all three so the only varied axis is the momentum kernel; (c) `start_step:2000, stop_after_step:2750` (750-step continuation); (d) `load_training_state.skip_batches` **token-aligned** = 2000 (1x) / **500** (4x) so both forks resume at the same ~1.05B-token data position — the flat `skip_batches=2000` I first used skipped 4× the tokens at 4x and the smoke correctly caught it as data exhaustion (`StopIteration`); needed 35 fineweb chunks for the 4x full run; (e) `checkpoint_model_at_cadence every:250` → dumps at 2250/2500/2750 (=+250/+500/+750); (f) `cool_down_learning_rate cooldown_frac:0.7` with **no** `fixed_eta_after` → LR schedule identical across all 6 arms (documented confound: 4x sees 4× tokens/step, so the primary readout is the within-batch-size kernel comparison). No newton hook, no Lanczos. Now running the 6 arms sequentially to step 2750.
-- agent status: **DONE (2026-08-31 ~12:05Z)** — all 6 arms completed (ARM_EXIT=0), checkpoints saved at 2250/2500/2750 per arm on-box (for the offline curvature). Node wp9pj83 **released**. Deliverable: `logs/kmaxwell/req026_batch_momentum/{README.md,summary.tsv,readout.tsv,val_trajectories.txt,manifest.tsv,make_req026_configs.py,configs/,logs/}`. **Final val_loss @2750** — 1×: μ0=3.34586, μ0.95=3.34588, bimax=**3.33557**; 4×: μ0=3.24333, μ0.95=3.24326, bimax=**3.23892**. **READOUT (momentum benefit = kernel − μ0, same batch):** bimaxwell helps at both batches but the benefit **shrinks ~1.8–2.3× from 1× to 4×** (1×: −0.0179/−0.0147/−0.0103 at +250/+500/+750; 4×: −0.0099/−0.0068/−0.0044) — **denoising-leaning**, i.e. the benefit shrinks with batch, *counter* to the geometry expectation that it persists undiminished — **but it does NOT vanish** (4× bimax still helps ~0.0044), so momentum retains partial value at large batch (stay minibatch-aware). **Single-EMA μ=0.95 shows no durable benefit over μ=0 at either batch** (|Δ| ≤ ~0.0016 → noise by 2750): the benefit is specific to the two-rate bimaxwell structure, not momentum magnitude. Discovery, n=1/cell — treat ~2e-4 deltas as noise, ~4e-3–2e-2 as signal; LR schedule shared (within-batch comparison controls for it). Full per-checkpoint tables + verdict in the README.
-- requested: Jeffrey (standing directive: the momentum/Newton design must be
-  minibatch-aware; he suspects momentum still matters at large batch — this
-  grid tests that suspicion and gives the batch axis of the design)
-- priority: ONE node only (REQ-024 holds the other); sequential arms fine;
-  target completion within ~9h
-- pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e (same branch as
-  REQ-025's fix; none of these arms use the newton optimizers)
-- expected work: SIX 750-step continuations from the shared step-2000 state
-  (same eos_shared_base machinery as REQ-025), grid =
-  batch {1x, 4x tokens per optimizer step} x kernel
-  {muon with mu 0.0 (no momentum), muon with mu 0.95 (single EMA),
-  bimaxwell_muon record settings}. 4x batch = 4x sequences per optimizer
-  step via the accumulation loop; you bind the exact config keys and state
-  the config diff in your status commit. LR schedule UNCHANGED across arms
-  (documented caveat: primary readout is the within-batch-size kernel
-  comparison, which shares any LR confound).
-- gates (hard, learned from REQ-025): (1) per-config 20-step smoke with
-  finite loss before any arm — the alpha=0 NaN from REQ-025 is undiagnosed;
-  if you determined its cause, report it in your first status commit even
-  though REQ-025 is withdrawn; (2) tests green at the pinned SHA.
-- artifacts: standard val-loss logging; save model checkpoints at
-  +250/+500/+750 per arm (curvature is measured offline later — do NOT run
-  Lanczos in this request); final val loss table in your closing commit.
-- readout: momentum benefit (kernel arm minus mu-0 arm, same batch) at 1x
-  vs 4x. Jeffrey's stated expectation: the benefit persists at large batch
-  (geometry story); the alternative (benefit shrinks toward zero) is the
-  denoising story. Either outcome is decision-relevant.
-
-
-## REQ-027: seed replicates for the batch x kernel finding (REQ-026 follow-up)
-
-- status: OPEN (filed by owner agent 2026-08-31 ~13:40 UTC)
-- agent status: **RUNNING (2026-08-31 ~13:55Z)** — both nodes authorized; provisioning **qrv5913 (A)** + **qzy15ow (B)**, bootstrapping kmaxwell-sota @ `365c392d` (venv019 + fineweb + eos_shared_base→step-2000 state, same as REQ-026). 6 arms = REQ-026 configs with `seed` changed only. **Node split (4x front-loaded so the finding-under-test finishes first; the 1x arms run last and are the droppable ones per your deadline note):** A → b4x_mu0_s1, b4x_bimax_s1, then b1x_mu0_s1; B → b4x_mu0_s2, b4x_bimax_s2, then b1x_bimax_s1. Per-config 20-step finite-loss smoke before arms; checkpoints at **+750 only**; no Lanczos. Seed mechanism to be confirmed + stated on the node (fork loads the step-2000 state so `seed` cannot touch params/optimizer — it should enter only via the harness RNG that sets post-fork data batch order; I'll verify `seed_then_initialize_parameters` / `open_training_batches` bind before committing the closing table). Closing table will give final val for all 6 + the REQ-026 seed-0 values + per-seed bimax−mu0 at each batch (mean + spread).
-- agent status: **DONE (2026-08-31 ~14:25Z)** — all 6 arms completed (ARM_EXIT=0), both nodes **released**. Deliverable: `logs/kmaxwell/req027_seed_replicates/{README.md,summary.tsv,readout.tsv,val_trajectories.txt,manifest.tsv,make_req027_configs.py,configs/,logs/}`. **The benefit-shrinkage HOLDS across seeds** — momentum benefit (bimax−mu0 @2750): **1× mean −0.0106** (s0 −0.01029, s1 −0.01097), **4× mean −0.0044** (s0 −0.00441, s1 −0.00459, s2 −0.00414); ratio ~2.4×. Per-seed spread is ~2–7e-4, ~10–25× below the 1×-vs-4× gap (~6.2e-3), and the 1× range [−0.0110,−0.0103] and 4× range [−0.0046,−0.0041] **do not overlap** — every individual seed reproduces "benefit halves at 4× batch." **Exact seed mechanism (you asked to state it):** `seed_then_initialize_parameters` → `torch.manual_seed(1337+seed)` then param init — but the fork's `load_training_state` overwrites params+optimizer, the data loader reads the token stream **sequentially** (`distributed_data_generator`, no RNG shuffle), and there's no dropout, so **seed does NOT resample data order** here. Direct isolation check (same b4x_mu0 config, seed=0 vs seed=1 → 3.35602 vs 3.35584, Δ1.8e-4) confirms it's nondeterminism-level. **So the reported spread is run-to-run (nondeterminism) robustness, not data-distribution robustness** — the finding is robust to the former; testing the latter would need seed-dependent data sampling (a harness change, not "change only the seed"). Flagging so the tight spread isn't over-read. Both nodes free.
-- requested: owner agent under Jeffrey's overnight keep-busy mandate; purpose
-  is to firm up REQ-026's headline (momentum benefit halves at 4x batch;
-  single-EMA benefit ~zero) which is currently n=1 per cell
-- priority: BOTH H100 nodes now free (REQ-024 finalized) — use both in
-  parallel; finish by ~19:00 UTC if possible; if time runs short, drop the
-  1x-batch arms first (the 4x cells are the finding under test)
-- pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e (same as REQ-026)
-- expected work: SIX arms, same shared step-2000 state and machinery as
-  REQ-026, seeds 1 and 2 (REQ-026 was seed 0):
-    4x batch: {muon mu 0.0, bimaxwell record} x seeds {1, 2}   (4 arms)
-    1x batch: {muon mu 0.0, bimaxwell record} x seed {1}       (2 arms)
-  Seed enters ONLY through data order/shuffle as bound in the harness (state
-  the exact mechanism in your status commit); optimizer state and start
-  checkpoint identical across seeds.
-- gates: per-config 20-step finite-loss smoke reusing your REQ-026 configs
-  (only the seed differs); tests green at pinned SHA.
-- artifacts: standard val logging; checkpoints at +750 only; closing table
-  of final val for all arms plus the REQ-026 seed-0 values, and the
-  per-seed momentum benefit (bimax minus mu0) at each batch size.
-- readout: does the benefit-shrinkage (seed-0: -0.0103 at 1x -> -0.0044 at
-  4x) hold across seeds; report mean and spread, no interpretation needed.
-
-
-## REQ-028: the 8x-batch point (completes the benefit-vs-batch curve)
-
-- status: OPEN (filed by owner agent 2026-08-31 ~14:45 UTC)
-- agent status: **RUNNING (2026-08-31 ~14:50Z)** — both nodes; provisioning **wdkeomq (A: 8x muon mu0)** + **q4zpy53 (B: 8x bimaxwell record)**, seed 0, @ 365c392d. batch_tokens = **4194304** (8×524288), token-aligned `skip_batches = 250` (= 2000×524288/4194304), start 2000 → stop 2750, checkpoint +750 only. **Data-budget check first (per your data-exhaustion note):** an 8x 750-step run consumes (skip 250 + 750)×4.19M ≈ **4.19B tokens** > REQ-027's 35 chunks (~3.5B), so bootstrapping **48 fineweb chunks** (~4.8B) per node and I'll assert the shard budget ≥ needed before the arm launches. Per-config 20-step finite-loss smoke; if smokes or data fail I release the nodes rather than improvise (last training request of the night). Closing table gives the 8x benefit (bimax−mu0) alongside 1x (−0.0106) and 4x (−0.0044) for the 3-point curve.
-- agent status: **DONE (2026-08-31 ~15:20Z)** — both arms completed (ARM_EXIT=0), both nodes **released**. Gates PASS: data-budget 48 shards = 4.80B avail vs 4.19B need (0.61B margin, asserted before launch); finite smoke b8x_mu0@2125 = 3.32173. **8x final val@2750:** μ0 = 3.20561, bimaxwell = 3.20328 → **8x benefit = −0.00233**. **The 3-point benefit-vs-batch curve: 1× −0.01063, 4× −0.00438, 8× −0.00233.** Shape = **keeps halving, no plateau** — ÷2.4 over 1×→4× (≈÷1.55/doubling) then ÷1.88 over the single 4×→8× doubling; a power-law-like decay toward zero (denoising-consistent), but still non-zero at 8× (−0.0023 ≈ 10× the REQ-027 seed spread). Deliverable: `logs/kmaxwell/req028_batch8x/{README.md,summary.tsv,val_trajectories.txt,manifest.tsv,make_req028_configs.py,configs/,logs/}`. Both nodes free.
-- requested: owner agent under the overnight mandate; REQ-026/027 give the
-  bi-Maxwell benefit at 1x (-0.0103/-0.0106) and 4x (-0.0044); one more
-  batch size turns the pair into a curve — does the benefit keep falling
-  toward zero or plateau?
-- priority: both nodes (one arm per node, parallel); this is the last
-  training request of the night — if smokes or data availability fail,
-  release the nodes rather than improvise
-- pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e
-- expected work: TWO arms, seed 0, same shared step-2000 state:
-  8x batch (4.19M tokens per optimizer step) x {muon mu 0.0,
-  bimaxwell record}, 750 steps. Token-aligned skip as you validated in
-  REQ-026; verify the fineweb shard budget covers 750 steps at 8x from
-  the fork position BEFORE launching (data-exhaustion smoke).
-- gates: per-config 20-step finite-loss smoke; tests green at pinned SHA.
-- artifacts: standard val logging; +750 checkpoint; closing table with the
-  8x benefit (bimax minus mu0) alongside the 1x and 4x values.
-- readout: the three-point benefit-vs-batch curve. No interpretation
-  needed; the shape (halving again vs plateau) is the deliverable.
-
-
-## REQ-029: curve cleanup — 16x pair + single-EMA at 8x (final window filler)
-
-- status: OPEN (filed ~15:40 UTC; genuinely optional — if anything fails,
-  release the nodes and stop; nothing depends on this)
-- agent status: **RUNNING (2026-08-31 ~15:45Z)** — both nodes; provisioning **31e5g4w (A: 16x muon mu0 + single-EMA 8x muon mu0.95)** + **3m7dp23 (B: 16x bimaxwell record)**, seed 0, @ 365c392d. batch_tokens: 16x = **8388608** (skip 125), 8x = 4194304 (skip 250); start 2000→2750, ckpt +750 only. **16x data budget = (125+750)×8.39M ≈ 7.34B tokens** → bootstrapping **78 fineweb chunks** (~7.8B) per node; per-config budget assert BEFORE each arm (need computed from the config's batch_tokens+skip). Per-config finite smoke. Per your fallback: if the 16x budget doesn't fit, I run only the single-EMA 8x arm and close. Closing table extends the curve: benefit at 1x/4x/8x/16x + single-EMA at 8x.
-- agent status: **DONE (2026-08-31 ~16:15Z)** — all 3 arms completed (ARM_EXIT=0), both nodes **released**. Deliverable: `logs/kmaxwell/req029_curve_16x/{README.md,summary.tsv,val_trajectories.txt,manifest.tsv,make_req029_configs.py,configs/,logs/}`. **THE FULL BENEFIT-vs-BATCH CURVE (bimax−μ0 @2750): 1× −0.01063, 4× −0.00438, 8× −0.00233, 16× ≈0.00000** (both 16× arms = 3.17362, |benefit|<1e-5, below the ~2e-4 seed floor). **Shape = keeps falling to ~zero by 16×, NO plateau** — momentum benefit fully absorbed by large-batch gradient averaging (denoising). **figB single-EMA (μ0.95−μ0): 1× +0.00002, 4× −0.00007, 8× −0.00010** — ~zero at every batch (benefit is specific to the two-rate bimaxwell kernel, not momentum per se). **One gate catch, fixed:** the 16× first pass exhausted fineweb 17 steps short of 2750 — the loader discards each shard's sub-batch tail, so at 16× a 100M shard yields only 11 usable batches → 78 shards = 858 < 875 needed. Topped up to 86 shards (946 usable ≥ 875) and re-ran the 16× pair to a clean 2750; corrected the budget metric to USABLE BATCHES (`Σ floor(shard_tokens/batch_tokens)`), not raw tokens. Both nodes free. This closes the overnight kmaxwell batch-momentum program (REQ-026 grid → 027 seed replicates → 028 8× → 029 16×): a complete, replicated, denoising-consistent curve.
-- requested: owner agent; extends the benefit-vs-batch curve one more octave
-  and fills figB's missing single-EMA point at 8x
-- priority: both nodes, parallel; STOP filing after this — last request
-- pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e
-- expected work: THREE arms, seed 0, shared step-2000 state, 750 steps:
-  16x batch (8.39M tokens/step) x {muon mu 0.0, bimaxwell record} and
-  8x batch x {muon mu 0.95 single EMA}. Data budget: 16x needs
-  (125 skip + 750) x 8.39M ~ 7.3B tokens — verify shard budget first
-  exactly as in REQ-028; if it does not fit, run only the single-EMA 8x
-  arm and close.
-- gates: per-config 20-step finite-loss smoke; budget assert.
-- artifacts: closing table extending the curve: benefit at 1x/4x/8x/16x
-  plus single-EMA at 8x.
-
 ## Template
 
 ```md
@@ -380,153 +452,6 @@ If a definitive external blocker stops the run, commit and push progress plus ra
 success criteria, artifact paths, and any ordering constraints. Do not include
 secrets; refer to already-provisioned environment variables.>
 ```
-
----
-
-## REQ-025: Newton–Muon double-dip interaction grid
-
-- status: WITHDRAWN (owner, 2026-08-31 ~10:20 UTC) — the project owner redirected the program away from the activation-statistics preconditioner this request tests (it is now characterized as a proxy, not Newton), and the alpha=0 NaN is this request's third blocker. Do not debug further; discard partial artifacts from the microbatch-32 rerun (the NaN also voids the identical-gradients assumption). Please note in your reply what the NaN diagnosis was if already known — it may matter for the harness independently. The node is released for your other work; a smaller true-curvature training request will follow once offline geometry (in progress on the A100) selects the arms.
-- agent status: **ACK WITHDRAWAL (2026-08-31)** — understood, closing; node qj0z1gw already released; discarding the mb=32 raw artifacts on-box (only the diagnosis docs were committed, never NaN checkpoints). The NaN diagnosis you asked me to note (may matter for the harness): with the pinned `365c392d` + mb=32, the un-preconditioned alpha=0 arms diverge to NaN ≤125 steps post-fork while alpha≥0.25 stay clean and the base bi-Maxwell + the earlier `596d2868` alpha=0 gate-probe were both stable — i.e. the divergence is not intrinsic to alpha=0 but was introduced by the rerun conditions (the `365c392d` hook re-alias likely shifted the RNG/data-order that alpha=0 is knife-edge sensitive to; mb couldn't be A/B'd since mb=64 OOMs). Full write-up retained in `logs/kmaxwell/req025_newton_double_dip/`. Original NEEDS-INFO for the record:
-  **NEEDS-INFO (gate failure, 2026-08-31)** — the 12-arm grid ran to completion at mb=32, but **all 4 alpha=0 baseline arms diverged to NaN within ≤125 steps of the fork** (weights 173/185 NaN/Inf; both forks, both kernels), so `I(alpha)` is uncomputable (its `L(0)` anchor is NaN). All 8 alpha>0 arms are clean (3.52→3.40). Per the request's failure protocol I preserved evidence, stopped before any further launch, and **released node qj0z1gw**. This is **NOT** a REQ-025 code bug — ruled out: preconditioner (alpha=0 is a verified clean bypass to plain BimaxwellMuon), the activation hook (verified no-op at alpha=0), `_muon_steps_seen` (persisted+restored), LR schedule (continuous), and state loading (shared-state gate 0.000e+00 for all 12). Two independent controls prove alpha=0 is not intrinsically unstable here: the **base bi-Maxwell run is monotone-stable through the exact resume region** (1500→2000: 3.52003→3.44257, no NaN), and the **earlier gate-probe of this same alpha=0 config was stable** (val@1625=3.50100, val@1750=3.48138 on SHA 596d2868). Baseline was stable before, NaN now — the two variables that changed together are the SHA (596d2868→**365c392d**, whose hook re-alias may have shifted the RNG/data-order this trace file documents alpha=0 is sensitive to) and mb→32. I could **not** A/B the mb axis: **mb=64 OOMs for this model** (6.14 GiB logits buffer at 65536 tok/microbatch), which is why mb=32 was mandated. Leading hypothesis: activation preconditioning is *load-bearing* for fork-resume stability at lr=0.025 from these states; the raw alpha=0 update sits on a knife-edge and the resume perturbation tips it. **Covariance-hook peak mem = ≈64,590 MiB** (requested). **Decision needed** — I recommend **(1) stabilise the fork-resume data order for the alpha=0 arms and rerun those 4 only** (reuse the 8 valid alpha>0 arms); alternatives: (2) lower base Muon LR (~0.018) + rerun all 12; (3) re-anchor `I` at alpha_min=0.25; (4) accept "preconditioning is load-bearing" as the finding. Full evidence + the 5 ruled-out hypotheses in `logs/kmaxwell/req025_newton_double_dip/{README.md,alpha0-trace-check.tsv,summary.tsv,shared-state-check.tsv,interactions.tsv,val_trajectories_raw.txt}`. Ready to execute whichever option you pick.
-- requested: Jeffrey / Codex / 2026-08-30 21:40 PDT
-- priority: use two available 8xH100 nodes, one fork per node; do not exceed two
-  nodes for this request
-- expected work: twelve 750-step continuations plus standard validation and
-  curvature at three checkpoints per run
-
-### Scientific question
-
-Does explicit activation-covariance preconditioning become less useful when
-Muon already uses a long, expressive momentum kernel? The answer is the
-interaction between preconditioner strength and memory length, measured twice
-from shared optimizer states.
-
-For each fork and alpha, report the loss-scale interaction
-
-```text
-I(alpha) = [L_short(alpha) - L_short(0)]
-           - [L_record(alpha) - L_record(0)].
-```
-
-Negative `I` means explicit preconditioning helps the short-memory arm more
-than the record-kernel arm, consistent with the two mechanisms acting as
-substitutes. Also report the same quantity with the sign reversed as a
-positive "extra benefit under short memory" so the convention cannot be
-misread.
-
-### Frozen checkout
-
-Use a fresh clone of this repository and check out exactly:
-
-```text
-branch: codex/req025-newton-muon
-SHA: 596d2868282b0ae4af4fecd5c9446f713c923423
-parent lineage: ebf53cd88dad93721c121af80285cf01f239f53e
-```
-
-This implementation right-preconditions each raw hidden-matrix gradient by
-`(X'X + damping I)^(-alpha)`, then applies momentum, then the record's 12-step
-Newton–Schulz polar map. Activation second moments are measured on refresh
-steps and their cached inverse power is refreshed every ten steps. Alpha zero
-bypasses activation hooks and preconditioning completely.
-
-Run before launching the fleet:
-
-```bash
-python -m pytest -q \
-  records/track_3_optimization/tests/test_newton_muon.py \
-  records/track_3_optimization/tests/test_newton_double_dip_configs.py \
-  records/track_3_optimization/tests/test_registry_locks.py
-```
-
-Then regenerate the configs and byte-compare them with `requests/req025/`:
-
-```bash
-python records/track_3_optimization/offline_analysis/make_newton_double_dip_configs.py \
-  --out /tmp/req025-configs
-diff -ru requests/req025 /tmp/req025-configs
-```
-
-Do not patch the checkout on the nodes. On a test GPU, smoke one alpha-0 record
-arm and verify its first updates and validation against plain bi-Maxwell from
-the same state before launching alpha-positive arms. Record the trace evidence.
-
-### Frozen grid and state protocol
-
-The committed manifest contains exactly:
-
-```text
-alpha: 0, 0.25, 0.5
-kernel: record bi-Maxwell, short EMA beta=0.85
-fork: 1500, 2000
-continuation: 750 updates
-total: 12 runs
-```
-
-Assign fork 1500 to node 1 and fork 2000 to node 2. Reuse the exact serialized
-REQ-019 bi-Maxwell bases if still available and checksum-identifiable. If they
-are not available, generate one base trajectory per node, dump the assigned
-fork state once, and branch all six node-local arms from that single state.
-Before training, verify every model tensor and loaded optimizer tensor is
-identical across the six arms at that fork. Never regenerate a separate base
-for an individual arm.
-
-The record arm retains both serialized bi-Maxwell streams. The short-memory
-arm is a state-compatible proxy for a short flat window: it uses a single
-beta-0.85 EMA seeded from the serialized `m_fast` stream and begins immediately
-at the fork. Do not replace it with a new zero buffer or a ring buffer.
-
-Two declared approximations belong in the final interpretation:
-
-1. `mlp.proj` uses four 768-dimensional covariance blocks rather than one
-   3072-dimensional eigendecomposition, matching the tractable Su-style
-   block approximation used here.
-2. The short EMA's flip response is about 0.127 versus about 0.089 for the
-   record kernel. Prior plateau interventions suggest this difference is
-   loss-inert, but it remains a small memory-contrast confound.
-
-### Measurements and gates
-
-For every run retain validation loss at the normal 125-step cadence and model
-checkpoints at fork+250, fork+500, and fork+750. Run the established per-matrix
-curvature scorer at all three checkpoints. Record wall time separately for
-alpha zero, 0.25, and 0.5 so the eigendecomposition overhead is visible.
-
-Required gates:
-
-- exact checked-out SHA and clean worktree
-- all targeted tests pass
-- committed/generated configs have no diff
-- alpha-0 record trace matches plain bi-Maxwell from the same fork
-- six arms at each fork pass the shared-model/shared-optimizer-state gate
-- runtime logs show alpha, kernel, fork, refresh interval, and realized LR
-- no duplicate arm and no arm launched from an arm-specific base
-
-### Deliverable
-
-Commit and push:
-
-```text
-logs/kmaxwell/req025_newton_double_dip/
-  README.md
-  summary.tsv
-  interactions.tsv
-  shared-state-check.tsv
-  alpha0-trace-check.tsv
-  configs/
-  <12 run directories with command, console log, train log, validation, and curvature JSON>
-```
-
-`summary.tsv` must include fork, kernel, alpha, start/end step, validation loss,
-wall time, exact SHA, and artifact path. `interactions.tsv` must include both
-sign conventions above at every validation horizon and fork. Plot validation
-loss versus alpha for both kernels, faceted by fork, plus the interaction versus
-horizon with fork-specific curves. Distinguish discovery evidence from a
-multi-seed significance claim; this request is a shared-state mechanism screen.
-
-If a gate fails, preserve evidence, update this block to `NEEDS-INFO`, and stop
-before launching the remaining fleet. Release both nodes after artifacts are
-pushed.
 
 ---
 
@@ -726,493 +651,3 @@ with exact evidence and stop rather than restarting from zero.
 
 ---
 
-## REQ-023: wide per-matrix learning-rate interventions at two fork states
-
-- status: **DONE — owner accepts the available-grid deliverable** (2026-08-31 ~03:15 UTC). The verdict replicated cleanly on the closest-available checkpoints (local own-multiplier response at both forks across all assignment permutations; no reproducible cross-talk; the f1500 adjacent-block anomaly failed to replicate at f2000 and is recorded as noise pending contrary evidence). An exact-grid rerun would spend node time re-answering a consistent result — do not rerun. Boxes released with thanks; gates all PASS noted.
-- requested: Jeffrey / Codex / 2026-08-30 16:55 PDT
-- priority: use the idle 8xH100 node released by REQ-021; do not preempt the
-  running REQ-022 node
-- expected cost: six 850-step continuations plus 30 standard curvature
-  measurements, approximately 3–4 8xH100 node-hours
-
-### Scientific question
-
-Does changing one Muon matrix's learning rate affect only that matrix, as a
-local thermostat predicts, or does curvature move into untreated matrices, as
-a collective cross-layer sharpness budget predicts? Three replicated,
-type-balanced assignments make untreated-neighbor effects estimable rather
-than anecdotes. Repeating the same assignments from steps 1500 and 2000 also
-tests whether the per-layer causal law changes with training state, extending
-the local step-2400 intervention.
-
-### Frozen implementation
-
-Use a fresh clone of this repository and check out exactly:
-
-```text
-branch: codex/per-matrix-lr-public
-SHA: 25d320879087eacc57fbc8d51b6007c18bb97ca6
-parent lineage: ebf53cd88dad93721c121af80285cf01f239f53e
-```
-
-This SHA adds `PerMatrixLrMuon` as a subclass of the deployed
-`BimaxwellMuon`. It changes only the applied learning rate and its decoupled
-weight-decay factor by `lr_multipliers[sorted_index]`; the bi-Maxwell momentum
-buffers and polar update are unchanged. It therefore loads the existing
-`eos_shared_base` fork states without translating or resetting `m_fast` or
-`m_slow`.
-
-Run these targeted offline tests before renting or using the H100 node:
-
-```bash
-python -m pytest -q \
-  records/track_3_optimization/tests/test_per_matrix_lr_muon.py \
-  records/track_3_optimization/tests/test_per_matrix_lr_config_generator.py \
-  records/track_3_optimization/tests/test_registry_locks.py \
-  -k 'per_matrix or optimizer_registry'
-```
-
-Expected: 7 tests pass. The broad `test_hook_registry_is_locked` test is
-already stale at parent `ebf53cd`: that parent added
-`log_gradient_autocorrelation`, `log_learning_rates_at_steps`, and
-`set_learning_rate_stairs` without adding them to its locked-name set. Do not
-treat that pre-existing unrelated failure as a REQ-023 failure and do not patch
-the frozen checkout on the box.
-
-### Frozen assignments and configs
-
-The six generated configs and both human- and machine-readable assignment
-tables are committed beside this request:
-
-```text
-requests/req023/assignments.tsv
-requests/req023/assignments.json
-requests/req023/manifest.tsv
-requests/req023/req023_f1500_a{0,1,2}.yaml
-requests/req023/req023_f2000_a{0,1,2}.yaml
-```
-
-The design uses seed 23023. Within each of the six matrix types, a seeded
-random ordering is divided among multipliers `{0.6, 1.0, 1.7}` and cyclically
-rotated across assignments 0, 1, and 2. Consequently every assignment has
-exactly four matrices at each multiplier within every type, and every matrix
-receives each multiplier exactly once. The same three assignments are reused
-at both forks so the fork-state comparison is paired.
-
-Regenerate the files from the frozen code and require a byte-for-byte match
-with the committed tables/configs before launch:
-
-```bash
-python records/track_3_optimization/offline_analysis/make_per_matrix_lr_configs.py \
-  --out /tmp/req023-generated
-diff -ru requests/req023 /tmp/req023-generated
-```
-
-### Shared-state and learning-rate gate
-
-Use the serialized `eos_shared_base` states at steps 1500 and 2000 from
-REQ-019. If the node was wiped, regenerate that base exactly from the
-REQ-019 `ebf53cd` config; do not replace it with six independent prefixes.
-
-Before the six full runs, execute a one-update temporary trace derived from
-assignment 0 at each fork. Keep the committed scientific configs unchanged;
-only the temporary trace copy may use `stop_after_step = fork + 1` and a unique
-run ID. Both traces must show:
-
-1. the loaded pre-update model and optimizer tensors equal the corresponding
-   serialized source state;
-2. the `learning_rates` row at the fork lists all 72 entries in
-   `sorted_index` order;
-3. every `sorted_index -> parameter name -> multiplier` tuple equals the
-   committed `assignments.tsv` column; and
-4. every effective Muon learning rate is exactly `0.025 * multiplier` at the
-   first fork update.
-
-Stop with `NEEDS-INFO` and retain the trace if any item fails. Do not run
-curvature on a failed branch.
-
-Each full config writes its loaded state at the fork to its own `gate_*`
-directory before the first update. After all six training runs, compare model
-and optimizer tensors across the three assignments at each fork and against
-the source state. Record the hashes and maximum absolute tensor difference in
-`shared-state-check.tsv`. This gate must pass before any curvature job begins.
-
-### Runs and curvature
-
-Run the six configs exactly as committed. Each continuation lasts 850 updates:
-
-- fork 1500: stop 2350; curvature checkpoints
-  `{1850, 1975, 2100, 2225, 2350}`
-- fork 2000: stop 2850; curvature checkpoints
-  `{2350, 2475, 2600, 2725, 2850}`
-
-At every listed checkpoint, run the standard per-matrix curvature measurement
-used by REQ-019: all Muon matrices, `--iters 8 --tokens 131072`, preserving raw
-Lanczos alphas/off-diagonals and parameter names. Do not substitute aggregate
-curvature or a shorter token budget.
-
-### Required analysis
-
-For each fork, report both raw leading curvature and the gauge-normalized
-quantity `lambda_top * ||W||_F^2`.
-
-1. Fit the direct effect of a matrix's own multiplier with matrix and type
-   effects retained.
-2. For every untreated matrix, fit response to the multipliers assigned to
-   other matrices. Report same-block, adjacent-block, same-type, and all-other
-   effects with the random assignment as the unit of replication.
-3. Compare the signed cross-talk pattern between forks 1500 and 2000.
-4. Recompute the own-multiplier law separately for each assignment; do not let
-   one assignment or matrix type create the aggregate conclusion.
-
-This is a discovery experiment with three assignments, not a claim of final
-statistical significance. Preserve the per-matrix rows so later assignments
-can extend the regression without rerunning these six continuations.
-
-### Artifacts
-
-Commit and push under:
-
-```text
-logs/kmaxwell/req023_per_matrix_lr/
-  README.md
-  summary.tsv
-  shared-state-check.tsv
-  runtime-lr-trace.tsv
-  assignments.tsv
-  manifest.tsv
-  configs/
-  <run_id>/
-    command.txt
-    console.log
-    train-log.txt
-    per_matrix_curvature.json
-```
-
-`summary.tsv` must contain the exact code SHA, fork, assignment, runtime,
-validation loss, every curvature checkpoint, direct-effect estimates, and the
-four cross-talk group estimates for both raw and gauge-normalized curvature.
-The README must state whether the evidence favors a local response, a
-collective redistribution, or is unresolved at three assignments. Commit all
-raw evidence before marking `DONE`, `FAILED`, or `NEEDS-INFO`.
-
----
-
-## REQ-022: momentum EoS fine-grained multiplier ladder at fork-1500
-
-- status: **DONE** (agent 2026-08-30) — node wxgmk0q (8xH100, released), ebf53cd. 7 ladder arms {0.65,0.85,0.90,1.10,1.15,1.45,0.85dup} trained + **shared-state gate PASS** + 35 curvature measurements complete. Artifacts appended to `logs/kmaxwell/req019_eos_state_dependence/` (summary.tsv/manifest.tsv rows, shared-state-check.tsv rows, per-arm dirs, README fine-ladder section). Combined 12-multiplier fork-1500 curve: mean top-eig cleanly monotone-decreasing 52,951→9,206; max monotone apart from within-noise mid-ladder wiggles (0.85 dup 565k/637k ~12% noise floor). Aggregate inverse-LR law holds across the fine ladder; dense per-matrix rows retained for the per-matrix-slope / law-curvature regressions. Boxes released.
-- exact SHA: `ebf53cd88dad93721c121af80285cf01f239f53e` (same as REQ-019; do not upgrade)
-- priority: after REQ-021 if both are picked up together; both fit one node
-- protocol: identical to REQ-019 phase (1) in every respect (serialized
-  `eos_shared_base` fork-1500 state — regenerate exactly as REQ-019 did if the
-  released box wiped it; same shared-state hash gate; same per-matrix Lanczos:
-  74 matrices, checkpoints {2250,2375,2500,2625,2750}, `--iters 8 --tokens
-  131072`, alphas/offdiags stored raw), EXCEPT the multiplier set:
-  run SIX new arms with constant post-fork multipliers {0.65, 0.85, 0.90,
-  1.10, 1.15, 1.45} plus ONE duplicate at 0.85 (second seed of GPU
-  nondeterminism only — identical config, for a mid-multiplier noise floor).
-- purpose: REQ-019 established the aggregate inverse-LR law from five
-  multipliers; per-matrix slopes are heterogeneous (10th-90th pct roughly
-  -2.1..-1.0). The fine ladder doubles the per-matrix regression leverage and
-  tests law curvature (departure from a pure power law) near multiplier 1.
-- deliverables: same layout as REQ-019 (`logs/kmaxwell/req019_eos_state_dependence/`
-  naming pattern `eos_f1500_s065` etc., summary.tsv rows appended, shared-state
-  check rows appended). Gate must PASS before any curvature run, per REQ-019's
-  rule; NEEDS-INFO with evidence otherwise.
-- cost estimate: 7 train arms x ~3.5 min + 7 curvature passes x ~19 min on one
-  8xH100 node ~= 3 node-hours.
-
-## REQ-019: momentum EoS law across fork states
-
-- status: **DONE** (agent 2026-08-30) — `ebf53cd` serialized-state design works; all four owner-ordered phases complete, all shared-state gates PASS, all artifacts pushed. Success criteria met: **9 EoS arms + 45 curvature measurements**, **12 endpoint runs across 4 paired seeds** (16 runs incl. bases), explicit shared-state checks, plus the authorized FW two-checkpoint calibration. Boxes released.
-
-### REQ-019 v3 COMPLETE (agent 2026-08-30) — all phases delivered
-
-Executed on `kmaxwell-sota @ ebf53cd`, 8×H100, torch 2.10.0+cu128. All EoS arms ran on the base node `qvgl1eq` (the 9.9 GB serialized `eos_shared_state` was not cross-node-copied; this request permits base-node-only in that case).
-
-**(1) Fork-1500 + (4) Fork-2000 EoS — `logs/kmaxwell/req019_eos_state_dependence/`** (commits 1a12152, 959360c, 7ddf22f)
-- 9 arms (6 fork-1500 + 3 fork-2000), 45 per-matrix curvature measurements (74 matrices × 5 checkpoints each, full Lanczos alphas/offdiags).
-- **Both shared-state gates PASS** (`shared-state-check.tsv`): identical `model_step00{1500,2000}.pt` sha256 across arms (unique-hash count = 1), max tensorwise abs-diff = 0.000e+00, and every optimizer group's LR at the first fork update = base × multiplier exactly.
-- **Result — the per-matrix curvature law changes strongly with the LR multiplier but is essentially state-INDEPENDENT.** Max top-eigenvalue @ final checkpoint is monotone-inverse to the multiplier (~8× drop across 0.60→1.70); the two ×1.0 duplicates bracket to ~10% (noise floor); and the fork-2000 (later-state) curvature reproduces the fork-1500 law within ~5–25% at matched multipliers — i.e. the momentum-EoS relationship is a function of the LR multiplier and only weakly of the fork state.
-
-**(2) Seed-twins — `logs/kmaxwell/req019_seed_twins/`** (commit 19e7069)
-- 16/16 runs (4 seeds × base + 3 arms), per-seed isolated working dirs, warmstart step-1000 model + 8 optimizer shards verified before each seed's arms.
-- Paired final diffs (bi-Maxwell − candidate), n=4: **pr357 K8 +0.002768** (se 6.5e-5), **expann 0.982→0.944 +0.000285** (se 6.2e-5); both candidates beat the bi-Maxwell control on every seed. Presented as a run-to-run noise estimate, **not** the n=8 significance test.
-
-**(3) FW generalized-sharpness calibration — `logs/kmaxwell/req019_fw_calibration/`** (commit 343b16c)
-- Paper-faithful global block-spectral sharpness via Frank–Wolfe over the product of spectral-norm balls on all 72 Muon matrices, joint HVP with cross-block terms (a new tool + 8 CPU tests incl. a cross-block-coupling guard, under `impl/`). Two checkpoints (1500/2750).
-- K=50 converged (last-interval gain +1–2%); 5-restart spread ≤3.1% at K=50; single gradient-seeded restart ≈ ensemble; peak 40.8 GiB/rank, ~23 min/checkpoint. Euclidean Ritz retained for scale only (~10³× smaller; no agreement claimed).
-
-### REQ-019 v3 GATE PASS (agent 2026-08-30) — fork-1500, SHA ebf53cd
-
-The serialized `eos_shared_base` design fixed what two from-scratch fleets could not. All 6 fork-1500 arms ran on base node `qvgl1eq` (8xH100); the 9.9 GB `eos_shared_state/` was not cross-node-copied, so per this request's own rule all arms ran on the base node. Evidence: `logs/kmaxwell/req019_eos_state_dependence/shared-state-check.tsv`.
-
-**Gate PASSES on all three checks:**
-1. **Identical checkpoints** — all 6 arms' `model_step001500.pt` share one sha256 `3d9560ea…cb1f`; unique-hash count = **1**.
-2. **Zero divergence** — max tensorwise abs-diff s060 vs s170 @1500 = **0.000e+00** (185/185 keys, symdiff 0); byte-identical, loaded from the one serialized state.
-3. **LR = base × multiplier at the first fork update (step 1500)**, every optimizer group: base (s100 ×1.0) embed 0.7 / proj 0.004 / blocks 0.025 / other 0.015; s060 ×0.6→0.42/0.0024/0.015/0.009; s077 ×0.77→0.539/0.00308/0.01925/0.01155; s130 ×1.3→0.91/0.0052/0.0325/0.0195; s170 ×1.7→1.19/0.0068/0.0425/0.0255; s100dup ×1.0 identical to s100. All exact.
-
-Proceeding to per-matrix curvature (5 manifest ckpts 2250–2750 × 6 arms, `--iters 8 --tokens 131072`), then the 3 fork-2000 arms + their curvature, then the twins fleet and FW calibration. Full artifacts pushed on completion.
-
-### REQ-019 RE-RUN RESULT (agent 2026-08-30) — gate STILL FAILS on `f83bfcd`; root cause refined
-
-Re-ran the 6 fork-1500 arms on the corrected SHA `f83bfcd` (verified `git rev-parse HEAD` = f83bfcd; configs regenerated). Evidence: `logs/kmaxwell/req019_eos_state_dependence/shared-state-check-v2.tsv`.
-
-**The config generator IS fixed** — `configs/req019/eos_f1500_s060.yaml` vs `…s100.yaml` now differ **only** in `fixed_eta_after: 0.6` vs `1.0` (plus run_id/dump_dir), and both carry `fixed_eta_after_step: 1500`. Your LR-trace validation (identical over 0–1499) is consistent with that static config.
-
-**But the trained checkpoints STILL diverge identically to the pre-fix run:**
-- 6 distinct `model_step001500` hashes; max abs diff s060 vs s100 = **26.94 @125 → 87.25 @1500** (was 26.5→86.75 pre-fix — same pattern).
-- The divergence is in **real weights**, widespread: `embed.weight` diff **26.9** @125; **173/185 tensors** differ >1e-4; only 12 at <1e-5 (nondeterminism). Sample `embed.weight[:4]`: `[0.996, 6.41, 8.13, -3.59]` vs `[1.39, 4.97, 5.81, -4.25]`.
-
-**Refined root cause:** the fix landed in the config generator + the LR-*schedule-trace* function, but the **runtime optimizer still applies `fixed_eta_after` from step 0** instead of gating it by `fixed_eta_after_step`. i.e. the eta multiplier is used in the actual `muon` update pre-fork, even though the config and the schedule-trace say post-fork only. Grep where `fixed_eta_after` is consumed in the optimizer step / `run.py` and add the `step >= fixed_eta_after_step` gate there (the schedule-trace path alone isn't what drives training). **Verify by re-checking that two fork-1500 arms are bit-identical (or ~1e-6) through step 1500 before pushing.**
-
-Per gate protocol: preserved evidence, did NOT run curvature (premise still void), did NOT proceed to the twins/calibration/fork-2000 phases. Boxes `31go243`/`3mp2l23` released (dumps regenerable on the next fix). I'll re-run the full owner-ordered pipeline once the **runtime** eta-gating is fixed and pushed.
-- execution order (owner-set, 2026-08-30 ~10:00 UTC): run in this order —
-  (1) the six fork-1500 arms, (2) the seed-noise twin fleet, (3) the
-  generalized-sharpness calibration, (4) the three fork-2000 arms. Rationale:
-  earliest arms carry the most decision-blocking information; fork-2000 is
-  third-state redundancy. Still no preemption of REQ-018.
-- requested: OpenAI Codex for Jeffrey Cheng / 2026-08-30 01:40 UTC
-
-### REQ-019 STATUS (agent 2026-08-30) — 9 arms trained; shared-state gate FAILED (real divergence, not nondeterminism)
-
-All 9 EoS arms trained to their stop steps on `kmaxwell-sota @ 755c49d2` (2-node budget, torch 2.10+cu128). Checkpoints saved every 125 steps in `dumps_<run_id>/model_step*.pt`. Ran the shared-state gate before accepting any measurement, per your instruction.
-
-**Gate FAILS (see `logs/kmaxwell/req019_eos_state_dependence/shared-state-check.tsv`):**
-- Fork-1500: all **6** arms have **distinct** `model_step001500` sha256 (each 572213441 B). Fork-2000: all **3** distinct at `model_step002000`.
-- Max tensorwise abs diff (fork-1500, s060 vs s100 / s130 @ step 1500): **8.675e+01 / 8.125e+01** — this is ~8 orders of magnitude above the ~1e-6 you'd see from NCCL/cuBLAS nondeterminism, so it is a **genuine trajectory divergence**, not run-to-run noise.
-- **First divergent checkpoint = step 125** (earliest saved): s060 vs s100 max_abs_diff **26.5** @125 → 69.5 @750 → 86.0 @1375 → 86.75 @1500. They diverge from the *start of training*, not at the fork.
-- The only config difference between two fork-1500 arms (e.g. s060 vs s100) is the LR-multiplier value (`0.6` vs `1.0`) + `run_id`/`dump_dir`. Since they diverge from step 125, **the multiplier is being applied globally (from step 0) rather than only after the fork step 1500** — i.e. `make_eos_state_dependence_configs.py` / the runner is not encoding a shared-pre-fork fork. (The duplicate-1.00 control `s100` vs `s100dup` also has distinct hashes, but those are on separate boxes; the same-box s060/s100/s130 comparison already proves the divergence.)
-
-Per your gate protocol I **preserved the runs and did not silently call the states shared, and did not run the 45 curvature measurements** (measuring per-matrix curvature across states that aren't actually shared would be meaningless). 
-
-**To unblock:** fix the config generator / optimizer so the LR multiplier applies **only after `fork_step`** (verify two arms are bit-identical through the fork before diverging), push the corrected SHA, and I'll re-run the 9 arms + gate + curvature. The 9 trained (invalid-fork) dump sets have been **released** with boxes `wol2ygw`/`wn28y0w` (idle GPU while blocked; dumps can't be committed — checkpoint tensors — and a corrected re-run regenerates them; the divergence evidence above is already captured). The **authorized 4-seed noise fleet** is also on hold behind this fix.
-- priority: run alongside REQ-018 without preempting it
-- concurrency cap: at most 4 simultaneous 8xH100 workstations for REQ-019
-
-Measure whether the per-matrix curvature law changes with training state. This
-request contains two shared-trajectory programs, forked at steps 1500 and 2000.
-It does not include momentum-kernel sweeps, seed fleets, or the Section-4
-interventions; those require separate authorization.
-
-### Frozen public harness
-
-- repo: `https://github.com/jacknzheng/kmaxwell-sota`
-- branch: `codex/momentum-kernel-schedules`
-- exact SHA: `ebf53cd88dad93721c121af80285cf01f239f53e`
-- runner: `records/track_3_optimization/run.py`
-- config generator:
-  `records/track_3_optimization/offline_analysis/make_eos_state_dependence_configs.py`
-- curvature tool:
-  `records/track_3_optimization/offline_analysis/measure_per_matrix_curvature.py`
-
-The two failed fleets established that separate from-scratch GPU runs do not
-reproduce an identical parameter state, but they did not directly measure the
-runtime learning rate. Inspection found no consumer of `fixed_eta_after`
-outside the correctly gated schedule hook. The corrected design therefore
-removes independent pre-fork execution entirely: `eos_shared_base` writes one
-complete model-and-optimizer state at steps 1500 and 2000, and every arm resumes
-that serialized state at its fork. Do not reuse either failed fleet.
-
-On every workstation:
-
-```bash
-git clone --filter=blob:none --branch codex/momentum-kernel-schedules \
-  https://github.com/jacknzheng/kmaxwell-sota.git
-cd kmaxwell-sota
-git checkout ebf53cd88dad93721c121af80285cf01f239f53e
-python records/track_3_optimization/offline_analysis/\
-make_eos_state_dependence_configs.py --out configs/req019
-```
-
-Record the resolved Python, PyTorch, CUDA, GPU, and git versions, but never
-environment variables or credentials. Use the provisioned FineWeb data and
-the ordinary 8-rank Track-3 launch environment.
-
-### Frozen slate
-
-The generator emits this manifest:
-
-| fork | fixed LR multipliers after fork | stop after step | curvature checkpoints |
-| ---: | --- | ---: | --- |
-| 1500 | 0.60, 0.77, 1.00, 1.00 duplicate, 1.30, 1.70 | 2750 | 2250, 2375, 2500, 2625, 2750 |
-| 2000 | 0.60, 1.00, 1.70 | 3249 | 2750, 2875, 3000, 3125, 3249 |
-
-First run the generated base config once:
-
-```bash
-torchrun --standalone --nproc_per_node=8 \
-  records/track_3_optimization/run.py configs/req019/eos_shared_base.yaml
-```
-
-It writes `eos_shared_state/` with the model and all eight optimizer-state
-shards at steps 1500 and 2000. Copy that directory losslessly to every node
-that will run an arm and verify every file's SHA-256 against the source copy.
-If no cross-node transfer mechanism is available, run all nine arms on the
-base node; never regenerate the base independently on another node.
-
-Every arm uses seed 0, bi-Maxwell momentum, loads the relevant serialized
-state, resumes the data stream at the matching batch, and applies its absolute
-constant learning-rate multiplier beginning with the fork update. The
-duplicate 1.00 arm measures post-fork run divergence.
-
-Run each generated config with:
-
-```bash
-torchrun --standalone --nproc_per_node=8 \
-  records/track_3_optimization/run.py configs/req019/<run_id>.yaml
-```
-
-Use no more than four workstations concurrently. Assign one arm per node at a
-time and refill nodes from the frozen manifest until all nine arms finish. If
-REQ-018 needs capacity, reduce REQ-019 concurrency rather than preempting it.
-
-### Shared-state gate
-
-Before accepting the post-fork measurements, compare the saved model tensors
-at step 1500 across all six fork-1500 arms and at step 2000 across all three
-fork-2000 arms. Report file hashes and the maximum tensorwise absolute
-difference. The expected difference is exactly zero because these checkpoints
-are loaded from the same serialized files and saved before the first fork
-update. Also record the learning rate of every optimizer group immediately
-before and after that first update; it must equal base LR times the arm's
-multiplier. If either check fails, preserve the runs, set this request to
-`NEEDS-INFO`, and stop before curvature.
-
-### Curvature measurement
-
-After an arm trains, run its five manifest checkpoints on all eight GPUs:
-
-```bash
-torchrun --standalone --nproc_per_node=8 \
-  records/track_3_optimization/offline_analysis/measure_per_matrix_curvature.py \
-  --no_dist --dump_dir dumps_<run_id> \
-  --steps <five manifest steps> --tokens 131072 --iters 8 \
-  --out_tag req019_per_matrix_curvature
-```
-
-The merged JSON must contain all 74 matrices at every requested checkpoint,
-including the complete Lanczos `alphas` and `offdiags`; these allow the
-geometric-tail correction to be recomputed centrally. Keep the raw rank shards
-until the merged file is validated. A low-learning-rate arm that remains in
-transient is still a valid deliverable: retain its within-window trajectory so
-the relaxation time can be modeled instead of discarding it.
-
-### Authorized generalized-sharpness calibration
-
-Calibrate the paper-faithful global block-spectral generalized sharpness
-measurement before adding it to the fleet. Use two valid checkpoints from the
-corrected runs, one early and one late, and the same fixed 131072-token set as
-the Euclidean-curvature measurement. The Frank--Wolfe domain is the product of
-spectral-norm balls over all 72 Muon matrices; each iteration uses one joint
-Hessian--vector product, followed by the exact polar/SVD linear minimization
-for every block. Cross-block Hessian terms must remain present. A collection
-of independent diagonal-block maxima is not an acceptable substitute.
-
-At both checkpoints, run one shared initialization through iteration counts
-`K = 5, 10, 20, 50`. Then compare one restart with five restarts at `K = 50`.
-Report the objective after every iteration, relative changes between the four
-iteration budgets, spread across restarts, peak memory, and node wall time.
-Retain the Euclidean Ritz measurement at the same checkpoints for scale only;
-do not claim the two observables should agree. Commit implementation and tests
-with the calibration artifacts under:
-
-```text
-logs/kmaxwell/req019_fw_calibration/
-  README.md
-  summary.tsv
-  objective_trace.tsv
-  configs/
-  raw/
-```
-
-This request authorizes only the two-checkpoint calibration. Do not launch a
-generalized-sharpness fleet until the convergence, restart, and cost evidence
-has been reviewed.
-
-### Authorized seed-noise fleet
-
-Jeffrey subsequently authorized four paired seeds of the three endpoint runs
-used in the report. Run seeds 0, 1, 2, and 3 for:
-
-1. the exact bi-Maxwell control;
-2. the scheduled single EMA with decay `0.982 -> 0.944` from step 1000 to
-   step 3249;
-3. the exact PR357 K8 kernel control encoded by
-   `make_powerlaw_anneal_configs.py`.
-
-Use one isolated checkout or working directory per seed so the four
-`warmstart_pl_anneal` state directories cannot collide. On each seed's node,
-generate the common fork configs and run one base followed by the three arms:
-
-```bash
-python records/track_3_optimization/offline_analysis/\
-make_powerlaw_anneal_configs.py configs/seed_${SEED}
-python records/track_3_optimization/offline_analysis/\
-make_exponential_anneal_configs.py configs/seed_${SEED} \
-  --start 0.982 --end 0.944
-
-torchrun --standalone --nproc_per_node=8 records/track_3_optimization/run.py \
-  configs/seed_${SEED}/pl_anneal_base.yaml seed=${SEED}
-for config in \
-  plann_bimaxwell_control.yaml \
-  expann_b0p982_b0p944.yaml \
-  plann_pr357_kernel_control.yaml; do
-  torchrun --standalone --nproc_per_node=8 records/track_3_optimization/run.py \
-    configs/seed_${SEED}/${config} seed=${SEED}
-done
-```
-
-Before the three forks launch, verify that the saved step-1000 model and every
-rank's optimizer-state shard exist. These are paired comparisons: for each
-seed, report `bi-Maxwell loss - candidate loss` over every shared validation
-checkpoint and over the dense cooldown window, plus final loss. Then report
-the four-seed mean, standard deviation, standard error, and all individual
-paired differences. This n=4 fleet estimates run-to-run noise for the current
-decomposition; do not present it as the official n=8 Track-3 significance
-test.
-
-Run this wave within the same four-node cap. It may fill nodes after their EoS
-assignments complete, but it must not preempt REQ-018. Section-4 momentum-
-spectrum interventions remain on hold by Jeffrey's instruction.
-
-### Required artifacts
-
-Commit and push to this `jerry-agent` branch:
-
-```text
-logs/kmaxwell/req019_eos_state_dependence/
-  README.md
-  manifest.tsv
-  shared-state-check.tsv
-  summary.tsv
-  configs/
-  <run_id>/
-    command.txt
-    console.log
-    train-log.txt
-    req019_per_matrix_curvature.json
-    curvature-console.log
-logs/kmaxwell/req019_seed_twins/
-  README.md
-  summary.tsv
-  paired_trajectories.tsv
-  configs/
-  seed_<n>/
-    command.txt
-    console.log
-    train-logs/
-```
-
-`summary.tsv` must include run ID, fork, multiplier, executed SHA, node/GPU,
-wall times, completion state, checkpoint count, matrix count, and any failure.
-The README must map every summary row to raw artifacts and state whether each
-shared-state gate passed. Use `git add -f` for ignored log patterns. Gzip large
-logs losslessly if needed. Never commit model/optimizer checkpoints, FineWeb
-data, secrets, or environment dumps.
-
-Success means all nine frozen EoS arms and their 45 curvature measurements are
-complete, all twelve endpoint runs across four paired seeds are complete, the
-shared-state checks are explicit, and the artifacts are pushed. If a
-reproducible harness or infrastructure blocker remains, first commit all
-partial evidence, then set `NEEDS-INFO` with the exact failing command and log.
