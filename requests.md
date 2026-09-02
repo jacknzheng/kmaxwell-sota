@@ -13,12 +13,111 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-031**.
+Next request number: **REQ-032**.
+
+
+## REQ-031: tau2 gold only — DeepSeek user-sim, no sandbox, unprivileged GPU box
+
+- status: OPEN
+- requested: Jack / 2026-09-01 PDT
+- repo: https://github.com/jacknzheng/scaling-sdpo
+- branch: `fix/hint-output-budget`
+- exact SHA: `ac07c90c1590823427a0a01f66bef6f69f0c3cf4`
+- supersedes gold on REQ-024 (`ecf6fd8`) and withdrawn REQ-030. Do **not** reopen those.
+- do not collide with kmaxwell REQ-021–029 (those numbers are already used)
+
+Tau2 **gold only**. Retail + airline. No diligence, no banking, no hint GPU, no Nemotron user-sim.
+
+Banking and the `srt`/`bwrap` host sandbox were **removed** at this SHA. Do not run `setup_tau2_sandbox.sh` (the file is gone). Do not install bubblewrap. Do not request `--privileged` or `seccomp=unconfined`. Those host-policy changes can break NCCL / the GPU driver. Retail and airline use in-process DB tools only.
+
+Request an **8-GPU** box. Jack has operator permission. If fewer than 8 devices are visible, record the listing, update this block, and stop. Do not self-cap at 2, do not use `NPROC=1`.
+
+### Hardware map (required)
+
+```text
+cuda:0-3  policy vLLM TP=4
+cuda:4-7  FSDP2 trainer x4
+```
+
+`CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`. `torchrun --nproc-per-node=4`. `gold` skips the hint LLM.
+
+### Frozen checkout
+
+```bash
+git fetch origin fix/hint-output-budget
+git checkout ac07c90c1590823427a0a01f66bef6f69f0c3cf4
+uv run --no-sync pytest -q -m 'not network'
+```
+
+Record that SHA. Offline suite on the authoring machine: 228 passed, 2 skipped.
+
+Resolved defaults that must appear in `config.yaml`:
+
+```text
+model.model=Qwen/Qwen3-8B
+total_num_gpus=8
+generator.engine.n_rollout_gpus=4
+trainer.n_trainer_gpus=4
+trainer.batch_size=16
+trainer.total_steps=200
+generator.engine.max_model_len=32768
+generator.hint.prompt=gold
+data.dataset=tau2
+data.domains=[retail,airline]
+data.user_llm=openrouter/deepseek/deepseek-v4-flash
+judge.eval_interval=25
+logging.checkpoint_interval=50
+```
+
+`gold` never calls `judge.model`. Do not point `data.user_llm` at Nemotron or any `:free` slug. User-sim payloads must include `temperature: 0` and `reasoning: {enabled: false, effort: "none"}`. Do not enable thinking.
+
+### Preflight (no sandbox)
+
+1. `uv sync --extra tau2` (not `--extra knowledge`; that extra is gone).
+2. If `.deps/tau2-bench/data` is missing, sparse-clone **data only** at pinned `a2c024725189473d2d7cea3a5cfdbcc67478e41f` (retail/airline `tasks.json`). Set `TAU2_DATA_DIR` to that `data/` dir. This is task JSON, not a sandbox.
+3. OpenRouter DeepSeek is funded. Send one real user-sim-shaped request to `deepseek/deepseek-v4-flash` (thinking off) and record status plus UTC timestamp, never keys. If the box returns 402, report which credential differs and stop.
+
+Do not eval the train split. Held-out is tau2's official `loader("test")`.
+
+### Single launch (baseline → train → final)
+
+```bash
+bash scripts/run_taubench.sh gold trainer.total_steps=200
+```
+
+The script already sets `data.domains=[retail,airline]` and `max_model_len=32768`. One process scores the full official test set at:
+
+1. **baseline** — `eval/phase=baseline`, wandb `step=0`, before rollout
+2. **interval** — 25, 50, …, 175 (`eval/phase=interval`)
+3. **final** — after step 200 (`eval/phase=final`, wandb `step=200`)
+
+W&B must graph `eval/pass1`, `eval/pass1_retail`, `eval/pass1_airline` on the **default `_step` x-axis**. Do not set panel x to `eval/launched_at_step`. File `evaluations.jsonl` remains the source of truth.
+
+Resume after recoverable crashes with `logging.resume_from=latest`. Skip the in-run baseline on resume.
+
+### Required artifacts
+
+```text
+logs/async_sdpo_req031/
+  README.md
+  summary.tsv
+  tau2-gold/
+```
+
+Include `args.txt`, `config.yaml`, `ARTIFACTS.txt`, `console.log`, `train.log`, every `rankN.log`, `api_failures.jsonl`, `evaluations.jsonl`, `rollouts.jsonl`, `training.jsonl`, `vllm.jsonl`. Use `git add -f` for ignored log patterns. Gzip large text losslessly. Never commit secrets, env dumps, weights, or checkpoint tensors.
+
+`summary.tsv`: exact SHA and CLI, visible GPU count, completed steps, wall time, overall and per-domain pass^1 at baseline / each interval / final, user-sim 429 count, every failure counter. README links raw dirs and the W&B URL.
+
+### Success
+
+8 visible GPUs; **no privileged / no bwrap**; user-sim is DeepSeek V4 Flash with thinking off; full official retail+airline test scored at 0, 25, …, 175, 200; those `eval/pass1*` points visible on W&B default step charts; `evaluations.jsonl` complete.
+
+If a definitive external blocker stops the run, commit and push progress plus raw logs, update this block, and stop. Soft-reset / rebase if a push is rejected. Do not force-push.
 
 
 ## REQ-030: tau2 gold only — DeepSeek user-sim, full official test, W&B step curve
 
-- status: **WITHDRAWN** (owner, 2026-08-31) — do not pick this up, do not rent a box, do not run tau2 gold. The request required the banking `setup_tau2_sandbox.sh` / bwrap path for a retail+airline job that does not need it. A follow-up will be filed later. Number is spent; do not reuse REQ-030.
+- status: **WITHDRAWN** (owner, 2026-08-31) — do not pick this up, do not rent a box, do not run tau2 gold. The request required the banking `setup_tau2_sandbox.sh` / bwrap path for a retail+airline job that does not need it. Follow-up is REQ-031. Number is spent; do not reuse REQ-030.
 - agent status: **ACK — no action taken (2026-08-31).** The withdraw commit arrived immediately after the open, before I picked it up: no box rented, nothing run. (FYI for the follow-up: retail+airline gold does **not** need `setup_tau2_sandbox.sh`/bwrap — that's banking-only; the wall I hit on REQ-024's gold was purely the OpenRouter Nemotron shared-pool 429 rate limit, resolvable with a dedicated provider key or the DeepSeek user-sim you were targeting here. My REQ-024 tau2 patch — solo_mode + env_kwargs + 429 retry — is in `logs/async_sdpo_req024/tau2-solo_mode-fix.patch`, ready for whenever the follow-up lands.)
 - requested: Jack / 2026-08-31 PDT
 
@@ -295,8 +394,8 @@ pushed.
 
 ## REQ-024: 8-GPU 4+4 OpenRouter DeepSeek SDPO fleet
 
-- status: **DONE for diligence; gold not delivered** — keep this block as the diagnosis record. Do **not** reopen gold on `ecf6fd8`. REQ-030 (gold follow-up) was withdrawn.
-- agent status: **DILIGENCE DELIVERED / gold STOPPED (deadlocked on provider) — node released (2026-08-31 ~13:35Z).** Update to the above: I let gold grind and it **deadlocked at the first eval boundary**, not just slowed — `evaluation_started=1` at 12:53Z with **0 held-out tasks completed 37+ min later** (443× upstream 429). At that throughput the first eval won't finish, let alone 200 steps, so continuing only burned the node at ~zero output. I **stopped the run and released wgmy26w** (both nodes now free). This is fully **resumable** and preserved (config in `tau2-gold-attempt/gold-config.yaml`, deadlock evidence in `tau2-gold-attempt/DEADLOCK-EVIDENCE.txt`): apply the patch, re-provision, relaunch `bash scripts/run_taubench.sh gold trainer.total_steps=200 "data.domains=[retail,airline]" generator.engine.max_model_len=32768` — but **gold needs a dedicated Nemotron provider key (BYOK)** or a less-contended user-sim/judge model to get through; I don't have one. **REQ-024 net: the core deliverable is done** — both diligence arms @200 + hint-gate PASS + the 3-fix tau2 patch, all in `logs/async_sdpo_req024/` (see `README.md`). Gold (Ablation A) is the only unshipped piece and it's blocked on external OpenRouter capacity, not on anything in the code. Ready to resume gold the moment a working provider key/model is available. **Owner 2026-08-31:** harness fixes are on `fcc6a6b`; do not resume gold via withdrawn REQ-030.
+- status: **DONE for diligence; gold not delivered** — keep this block as the diagnosis record. Do **not** reopen gold on `ecf6fd8`. Gold follow-up is REQ-031 at `ac07c90` (no sandbox).
+- agent status: **DILIGENCE DELIVERED / gold STOPPED (deadlocked on provider) — node released (2026-08-31 ~13:35Z).** Update to the above: I let gold grind and it **deadlocked at the first eval boundary**, not just slowed — `evaluation_started=1` at 12:53Z with **0 held-out tasks completed 37+ min later** (443× upstream 429). At that throughput the first eval won't finish, let alone 200 steps, so continuing only burned the node at ~zero output. I **stopped the run and released wgmy26w** (both nodes now free). This is fully **resumable** and preserved (config in `tau2-gold-attempt/gold-config.yaml`, deadlock evidence in `tau2-gold-attempt/DEADLOCK-EVIDENCE.txt`): apply the patch, re-provision, relaunch `bash scripts/run_taubench.sh gold trainer.total_steps=200 "data.domains=[retail,airline]" generator.engine.max_model_len=32768` — but **gold needs a dedicated Nemotron provider key (BYOK)** or a less-contended user-sim/judge model to get through; I don't have one. **REQ-024 net: the core deliverable is done** — both diligence arms @200 + hint-gate PASS + the 3-fix tau2 patch, all in `logs/async_sdpo_req024/` (see `README.md`). Gold (Ablation A) is the only unshipped piece and it's blocked on external OpenRouter capacity, not on anything in the code. Ready to resume gold the moment a working provider key/model is available. **Owner 2026-09-01:** gold resume is REQ-031 at `ac07c90`; do not resume via withdrawn REQ-030 or `ecf6fd8`.
 - agent status: **DILIGENCE ARMS DELIVERED; tau2 gold BLOCKED-IN-PRACTICE on OpenRouter provider capacity — DECISION NEEDED (2026-08-31 ~12:15Z).** Two more blockers hit on gold after the ones above: (3) the tau2-bench **data dir was missing** → cloned at pinned a2c0247; (4) even the **paid** `nemotron-3-super-120b` user-sim/judge returns **upstream shared-pool 429s** ("temporarily rate-limited upstream / engine_overloaded", DeepInfra+DigitalOcean), and the harness re-raised on them → the run died at step 8. I added **retry-with-backoff hardening** to the user-sim path (3rd fix; the delivered patch now carries all three: solo_mode, env_kwargs, retry). Gold now **survives** (relaunched, run 112840) — but it is **provider-throttled to a crawl: step 13/200 after 45 min, 233 × 429 absorbed via backoff, ≈3.5 min/step ⇒ ~11h to 200** (first eval boundary ~40 min out). Nothing I can change server-side speeds up an external shared-pool rate limit. **Your call:** (a) let it grind (it should finish overnight if the pool doesn't worsen; the 25/50/… evals land as it goes), (b) accept a **partial gold** (e.g. stop at the first 1–2 eval boundaries for the retail+airline pass^1 readout), or (c) drop in a **dedicated Nemotron provider key** (BYOK, per OpenRouter's own remedy hint) to lift the limit — I don't have one. **The core REQ-024 deliverable (both diligence arms @200 + hint-gate validation) is done and collected**; gold is Ablation A on top. I'll keep it running and land whatever evals complete unless you say otherwise. Updated patch: `logs/async_sdpo_req024/tau2-solo_mode-fix.patch` (git am → push to `fix/hint-output-budget`).
 - requested: Jack / 2026-08-30 20:59 PDT
 - repo: https://github.com/jacknzheng/scaling-sdpo
