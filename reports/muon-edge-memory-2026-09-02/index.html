@@ -37,6 +37,9 @@
     .flow { display:grid; grid-template-columns:1fr 38px 1fr 38px 1fr; align-items:center; gap:7px; margin:25px 0; font:14px/1.4 Inter,ui-sans-serif,system-ui,sans-serif; }
     .flow div:nth-child(odd) { min-height:96px; padding:14px; border:1px solid var(--line); border-radius:6px; background:var(--wash); }
     .arrow { color:var(--blue); text-align:center; font-size:25px; }
+    figure { margin:28px 0 34px; }
+    figure img { display:block; width:100%; height:auto; }
+    figcaption { margin-top:9px; color:var(--muted); font:14px/1.45 Inter,ui-sans-serif,system-ui,sans-serif; }
     @media (max-width:720px) {
       main{margin:0;padding:34px 22px} h1{font-size:34px}
       .flow{grid-template-columns:1fr}.arrow{transform:rotate(90deg)}
@@ -72,7 +75,7 @@
     </tbody>
   </table>
 
-  <p>The short-memory run also loses the coherent period-two gradient field and ends with substantially worse validation loss. The long-memory component is carrying the feedback that flattens curvature. Matching the kernel's response at period two does not match that feedback.</p>
+  <p>The short-memory run also loses the coherent period-two gradient field and ends with substantially worse validation loss. By 1,200 steps, its generalized curvature is 1.71 times the long-memory value. The effect is uniform across matrices. The long-memory component is carrying the feedback that flattens the bulk curvature seen by spectral descent. Matching the kernel's response at period two does not match that feedback.</p>
 
   <div class="result">
     <div class="label">Consequence</div>
@@ -152,6 +155,8 @@
 
   <p>The derivation holds for a frozen active direction. Rotation of that direction contributes another term whose sign is not fixed. The calculation supplies a flattening mechanism, not a proof that one scalar stays constant.</p>
 
+  <p>The alternating field is directly measurable. Raising the learning rate increases median cycle work from 221 to 390, and an independent replay reproduces 391 despite rapid trajectory divergence. The ratio of cycle work to slow work barely changes, however, and its registered cross-matrix prediction of later curvature velocity has the wrong sign. Coherent work is therefore part of the mechanism, but that normalized ratio is not its state variable.</p>
+
   <h2>The constant 2 has a narrow meaning</h2>
   <p>For the actual shape-scaled update \(U_t=s\,\operatorname{polar}(p_t)\), the quadratic one-step loss change is</p>
 
@@ -187,6 +192,11 @@
   <h2>Generalized curvature is a bulk quantity</h2>
   <p>The spectral-norm geometry combines many Hessian directions. The first completed checkpoints place the generalized spectral-ball curvature between roughly eleven and fourteen times the top Euclidean Hessian eigenvalue for the median matrix. Individual matrix ratios range from about two to fifty-seven.</p>
 
+  <figure>
+    <img src="assets/measured_curvature_summary.png" alt="Two panels showing generalized curvature has a smaller learning-rate residual than the top Hessian eigenvalue and rises more under the short-memory kernel.">
+    <figcaption><b>Generalized curvature is the cleaner response coordinate.</b> Left: after subtracting matched control drift, the product of learning rate and generalized curvature misses perfect compensation by about 6%, versus 15% for the top eigenvalue; bars show medians and lines show interquartile ranges across 66 matrices. Right: the short-memory kernel leaves generalized curvature 1.58–1.71 times higher than the deployed kernel at the same state, minibatches, and learning rate.</figcaption>
+  </figure>
+
   <table>
     <thead>
       <tr>
@@ -207,23 +217,24 @@
         <td>The numerical maximization is sufficiently resolved for trajectory-scale comparisons.</td>
       </tr>
       <tr>
-        <td>Gradient-norm compensation across learning rates</td>
-        <td>Per-matrix variation falls by 41%</td>
-        <td>The nuclear gradient norm captures part of the learning-rate response.</td>
+        <td>Learning-rate compensation after control-drift subtraction</td>
+        <td>\(\eta M\): median log residual 0.064; \(\eta\lambda_1\): 0.148; \(M\) tighter in 65/66 matrices</td>
+        <td>Bulk generalized curvature tracks the changed learning rate more closely than the top eigenvalue.</td>
       </tr>
       <tr>
-        <td>Gradient-norm compensation across matrices</td>
-        <td>No reduction in spread</td>
-        <td>Matrix-specific geometry remains necessary.</td>
+        <td>Secular variation over 3,700 steps</td>
+        <td>Median log range 0.229 for \(M\), versus 0.522 for \(\lambda_1\)</td>
+        <td>Bulk capacity is steadier along the trajectory, although it still grows with training age.</td>
+      </tr>
+      <tr>
+        <td>Training-age change on the base trajectory</td>
+        <td>Median \(\Delta\log M=+0.861\); 72/72 matrices increase</td>
+        <td>No universal level is visible: generalized curvature grows about 2.4-fold across the measured ages.</td>
       </tr>
     </tbody>
   </table>
 
   <p>Muon uses normalized updates, so the raw value \(M(H)\) has no universal \(2/\eta\) prediction. Without momentum, the corresponding upper diagnostic is \(sM(H)/\lVert g\rVert_*\). Momentum replaces the nuclear-gradient denominator with the alignment between the raw gradient and the history-conditioned polar direction.</p>
-
-  <!-- FIGURE_SLOT_1: generalized-curvature conversion field across checkpoints.
-       Preferred plot: per-matrix M(H)/lambda_1 points, checkpoint color, log y.
-       Caption takeaway: conversion is large, heterogeneous, and stable enough to measure. -->
 
   <!-- FIGURE_SLOT_2: mu_loss vs independently measured kappa.
        Preferred plot: eta*mu_loss against 2/kappa, identity line, raw-polar control.
@@ -246,8 +257,8 @@
         <td>Multiple modes, momentum-induced rotation, or changing polar mobility are essential state variables.</td>
       </tr>
       <tr>
-        <td>Generalized curvature changes similarly while compensation differs between kernels</td>
-        <td>Instantaneous curvature capacity is insufficient; temporal coherence carries the missing state.</td>
+        <td>The short-memory kernel leaves \(M\) 1.6–1.7 times higher</td>
+        <td>The memory-dependent field changes bulk curvature itself; the missing state belongs in the temporal feedback law.</td>
       </tr>
       <tr>
         <td>A memory-and-oscillation model transfers between the matched-period-two-gain kernels</td>
@@ -261,5 +272,5 @@
     <p>Momentum is part of the optimizer's stability state. Its useful role here is to preserve a coherent gradient field long enough for third-order geometry to regulate curvature, while the polar map limits how that field enters each update. A principled momentum rule should therefore respond to measured temporal coherence and curvature feedback rather than follow a fixed schedule or a single Hessian threshold.</p>
   </div>
 
-  <p class="small">Working draft. The generalized-curvature sweep and one-step loss-boundary replay are still running. Their interpretation was fixed before their values were inspected; the two pending figure slots will be filled from those outputs.</p>
+  <p class="small">Working draft. The one-step loss-boundary replay is still running. Its interpretation was fixed before its values were inspected; the remaining figure slot will be filled from that output.</p>
 </main></body></html>
