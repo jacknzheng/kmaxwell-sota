@@ -13,7 +13,140 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-032**.
+Next request number: **REQ-033**.
+
+
+## REQ-032: diligence (answer_free + answer_bearing) + tau2 (gold + step_hint) — 500 steps, H200/27B preferred
+
+- status: OPEN
+- requested: Jack / 2026-09-02 PDT
+- repo: https://github.com/jacknzheng/scaling-sdpo
+- branch: `fix/hint-output-budget`
+- exact SHA: `ac07c90c1590823427a0a01f66bef6f69f0c3cf4`
+- prior diligence/gold diagnosis: https://github.com/jacknzheng/kmaxwell-sota/tree/jerry-agent/logs/async_sdpo_req024
+- do **not** preempt REQ-031 on qv16djq (8×H100, 8B gold). Provision a **separate** box. Within the standing 2-node ceiling, run in parallel with REQ-031 only if both boxes are authorized; otherwise queue behind REQ-031.
+
+Follow-up to [REQ-024](https://github.com/jacknzheng/kmaxwell-sota/tree/jerry-agent/logs/async_sdpo_req024): diligence judge curves were flat at ~0.10 over 200 steps on 8B despite a live `teacher_minus_student_logp` gap. This fleet re-runs four arms at **500 steps** with eval every **25**, preferring a larger model on H200.
+
+Four arms, **sequential on one 8-GPU node** unless Jack authorizes a second box for overlap:
+
+1. diligence `answer_free`
+2. diligence `answer_bearing`
+3. tau2 `gold`
+4. tau2 `step_hint`
+
+### Hardware + model (pick one path; record which in README)
+
+**Preferred — Path A (H200 + 27B)**
+
+- Request **8× NVIDIA H200**.
+- `model.model=Qwen/Qwen3.8-27B`
+- Map: `cuda:0-3` policy vLLM TP=4; `cuda:4-7` FSDP2 trainer ×4.
+- `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` (scripts already export this). Keep default `generator.engine.disable_custom_all_reduce=True`.
+
+**Fallback — Path B (H100 + current 8B), only if H200 is unavailable**
+
+- If H200 cannot be provisioned, **do not wait** — take **8× H100** and use the same model as REQ-024 / current default:
+  - `model.model=Qwen/Qwen3-8B`
+- Same 4+4 map. State clearly in README + `summary.tsv`: `path=B`, GPU model, and that Path A was unavailable (include the provisioner error / empty H200 inventory if any).
+- Do **not** invent a different 9B / Qwen3.5 slug. Path B is exactly the REQ-024 stack at longer horizon.
+
+Confirm **8 GPUs visible** before each arm; stop and record if fewer. `CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`. `torchrun --nproc-per-node=4`.
+
+### Schedule (both paths)
+
+```text
+trainer.total_steps=500
+judge.eval_interval=25
+logging.checkpoint_interval=50
+trainer.batch_size=16
+total_num_gpus=8
+generator.engine.n_rollout_gpus=4
+trainer.n_trainer_gpus=4
+```
+
+Eval at steps **0 (baseline), 25, 50, …, 475, 500 (final)**. Do not use 200.
+
+Let `MODEL` be `Qwen/Qwen3.8-27B` (Path A) or `Qwen/Qwen3-8B` (Path B).
+
+### Frozen checkout
+
+```bash
+git fetch origin fix/hint-output-budget
+git checkout ac07c90c1590823427a0a01f66bef6f69f0c3cf4
+uv run --no-sync pytest -q -m 'not network'
+```
+
+Record SHA. Expect 228 passed, 2 skipped. No sandbox / no bwrap / no `--privileged` (banking path removed at this SHA).
+
+### Preflight (once per box)
+
+1. `uv sync --extra tau2`.
+2. If vLLM missing: `uv pip install vllm==0.26.0`. If torchvision/torchaudio CUDA major checks abort import, apply the same no-op `_check_cuda_version()` patch as REQ-031.
+3. Tau2 data: sparse-clone **data only** at `a2c024725189473d2d7cea3a5cfdbcc67478e41f` → `TAU2_DATA_DIR` (retail + airline).
+4. DeepSeek `deepseek/deepseek-v4-flash` preflight (thinking off); record UTC + HTTP status.
+5. Diligence judge: if eval stalls >30 min with zero held-out completions, stop that arm and document — do not burn the box.
+6. Keys required: `PARALLEL_API_KEY`, `OPENROUTER_API_KEY`, `WANDB_API_KEY`. Never log secrets.
+
+### Arm launches
+
+```bash
+# 1 — diligence answer_free
+bash scripts/run_diligencebench.sh answer_free \
+  model.model=$MODEL \
+  trainer.total_steps=500 \
+  judge.eval_interval=25
+
+# 2 — diligence answer_bearing
+bash scripts/run_diligencebench.sh answer_bearing \
+  model.model=$MODEL \
+  trainer.total_steps=500 \
+  judge.eval_interval=25
+```
+
+W&B: `sdpo-diligence`. Graph judge metrics on default `_step` (not `eval/launched_at_step`). Watch bearing for weight-sync / EngineCore hangs (REQ-024); resume once with `logging.resume_from=latest`, then stop + evidence if it recrashes.
+
+```bash
+# 3 — tau2 gold
+bash scripts/run_taubench.sh gold \
+  model.model=$MODEL \
+  trainer.total_steps=500 \
+  judge.eval_interval=25
+
+# 4 — tau2 step_hint
+bash scripts/run_taubench.sh step_hint \
+  model.model=$MODEL \
+  trainer.total_steps=500 \
+  judge.eval_interval=25 \
+  "data.domains=[retail,airline]" \
+  generator.engine.max_model_len=32768
+```
+
+`gold` / `run_taubench.sh` already pin retail+airline and `max_model_len=32768`. User-sim: DeepSeek V4 Flash, thinking off. W&B: `sdpo-tau2`. Ignore W&B `data.dataset_name=paperinstruments/diligence-bench` on tau2 runs — that field is unused when `data.dataset=tau2`; confirm domains + `eval/pass1*`.
+
+### Training diagnostics (required in summary)
+
+Per arm from `training.jsonl`: mean / p50 / p95 of `teacher_minus_student_logp`; count of steps with `|gap| < 1e-3`; loss @ step 10 vs final.
+
+### Required artifacts
+
+```text
+logs/async_sdpo_req032/
+  README.md          # path A or B, GPU model, MODEL slug, link to req024
+  summary.tsv
+  diligence-answer_free/
+  diligence-answer_bearing/
+  tau2-gold/
+  tau2-step_hint/
+```
+
+Per arm: `args.txt`, `config.yaml`, `ARTIFACTS.txt`, `console.log`, `train.log`, `rank*.log`, `api_failures.jsonl`, `evaluations.jsonl`, `rollouts.jsonl`, `training.jsonl`, `vllm.jsonl`. Gzip large text. `git add -f` for ignored log patterns. No secrets, env dumps, weights, or checkpoint tensors.
+
+`summary.tsv`: path, GPU, MODEL, SHA, CLI, steps completed, wall hours, eval at 0 / 250 / 500, gap stats, failure counters, W&B URL.
+
+### Success
+
+All four arms reach step 500 (or documented stop after one resume attempt); Path A or B recorded; eval every 25 through 500; diligence 30/30 held-out (or documented provider failure); tau2 `eval/pass1*` on W&B default step axis; gap stats in summary.
 
 
 ## REQ-031: tau2 gold only — DeepSeek user-sim, no sandbox, unprivileged GPU box
