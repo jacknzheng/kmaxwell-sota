@@ -19,7 +19,7 @@ Next request number: **REQ-034**.
 ## REQ-033: does the ANNEALED K-Maxwell kernel survive a change of batch size?
 
 - status: OPEN
-- requested: Jack / 2026-09-02 PDT
+- agent status: **RUNNING (2026-09-02 ~21:35Z)** — accepted; runs on a 2nd node in parallel with REQ-032's scaling-sdpo box (within my 2-node ceiling: REQ-032=qrvdr53, this=1 more; REQ-032's arm is API-bound so the kmaxwell node doesn't contend). Provisioning an 8×H100 kmaxwell box, bootstrapping @ `365c392d` (venv019 torch2.10cu128 + **30 fineweb chunks** [2x binding case=29]). Plan: regenerate `eos_shared_base` with the dump at **step 1000** (= transition_step_to_kmaxwell), record base val@1000; generate 12 configs (batch{0.25x,0.5x,2x}×kernel{A muon μ0.95, B bimaxwell record, C annealed_weights_muon shipped decays, D annealed_weights_muon batch-rescaled decays}) from the exact keys you gave (batch_tokens/microbatch_sequences/token-aligned skip 4000/2000/500; start 1000→stop 3250; C/D switch_step 1000 anneal_steps 2250; checkpoint 3250 only; dense val [3000,3250]/10). Hard gates first: **usable-batch budget assert** (REQ-029 metric) + **20-step finite-loss smoke** per config before any full arm. 1x row omitted as specified (out-of-band n=8 context only, never differenced). Deliverable → `logs/kmaxwell/req033_annealed_batch/`.
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e (same as REQ-026/027/028/029)
 - priority: arms are 2250 steps each (3x the REQ-026/029 forks), 12 of them. ONE
