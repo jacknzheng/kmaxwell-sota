@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Why momentum changes Muon's edge of stability</title>
+  <title>Spectral-ball sharpness tracks Muon's learning-rate equilibrium better than the largest Hessian eigenvalue</title>
   <script>
     window.MathJax = {tex: {inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['\\[','\\]']]}};
   </script>
@@ -18,7 +18,7 @@
     body { margin:0; background:var(--page); color:var(--ink); font:17px/1.55 Georgia,"Times New Roman",serif; }
     main { max-width:940px; margin:32px auto; padding:54px 66px 70px; background:var(--paper); box-shadow:0 2px 20px #23303d18; }
     h1,h2 { font-family:Inter,ui-sans-serif,system-ui,sans-serif; line-height:1.17; letter-spacing:-.02em; }
-    h1 { margin:0 0 12px; font-size:42px; }
+    h1 { margin:0 0 12px; font-size:40px; }
     h2 { margin:48px 0 14px; padding-top:10px; border-top:1px solid var(--line); font-size:27px; }
     p { margin:10px 0 15px; }
     .dek { max-width:790px; color:var(--muted); font:20px/1.45 Inter,ui-sans-serif,system-ui,sans-serif; }
@@ -35,23 +35,55 @@
     figure img { display:block; width:100%; height:auto; }
     figcaption { margin-top:9px; color:var(--muted); font:14px/1.45 Inter,ui-sans-serif,system-ui,sans-serif; }
     .small { color:var(--muted); font-size:14px; }
-    @media (max-width:720px) { main{margin:0;padding:34px 22px} h1{font-size:34px} }
+    @media (max-width:720px) { main{margin:0;padding:34px 22px} h1{font-size:33px} }
   </style>
 </head>
 <body><main>
-  <h1>Why momentum changes Muon's edge of stability</h1>
-  <p class="dek">Changing the learning rate makes curvature move in the opposite direction over the next thousand training steps. That response disappears when we remove Muon's long gradient average.</p>
+  <h1>Spectral-ball sharpness tracks Muon's learning-rate equilibrium better than the largest Hessian eigenvalue</h1>
+  <p class="dek">After the learning rate changes, its product with spectral-ball sharpness returns closer to its previous value than its product with the largest Hessian eigenvalue. The typical miss is 6% instead of 15%, and the new measure is better in 65 of 66 matrices.</p>
 
-  <p>We studied a 12-layer, width-768 transformer trained with Muon on FineWeb at NanoGPT speedrun scale. At training step 2,250, we copied the same model and optimizer state into three runs that saw the same minibatches. One run kept the learning rate fixed. The other two multiplied it by 1.30 or 0.77. All three runs remained stable.</p>
+  <p>We studied a 12-layer, width-768 transformer trained with Muon on FineWeb at NanoGPT speedrun scale. For each of its 72 hidden weight matrices, we compared two definitions of sharpness.</p>
 
-  <p>For each of the model's 72 hidden weight matrices, we measured \(\lambda_1\), the largest eigenvalue of the local Hessian for that matrix. The table reports the median change from the shared starting state.</p>
+  <p>The familiar definition is \(\lambda_1(H)\), the largest eigenvalue of the Hessian for one weight matrix. Muon instead constrains each matrix update by its spectral norm, which motivates</p>
 
-  <h2>Curvature moves after the learning rate changes</h2>
+  \[
+    B(H)=\max_{\lVert Z\rVert_2\le1}\langle Z,H[Z]\rangle.
+  \]
+
+  <div class="def">
+    <div class="label">Spectral-ball sharpness</div>
+    <p>\(B(H)\) is the largest Hessian quadratic form among matrix directions \(Z\) whose spectral norm is at most one. It combines curvature from many Euclidean Hessian directions because a matrix can have several singular values equal to one.</p>
+  </div>
+
+  <h2>The product \(\eta B\) returns closer to the same equilibrium value</h2>
+
+  <p>At training step 2,250, we copied one model and optimizer state into three runs that saw the same minibatches. One run kept the learning rate unchanged. The other runs multiplied it by 1.30 or 0.77. Training remained stable in all three runs.</p>
+
+  <p>The edge-of-stability hypothesis predicts inverse scaling between the learning rate and sharpness. If the learning rate changes by a factor \(r\), a sharpness measure \(S\) should approach \(S_{\rm unchanged}/r\). We measure the miss at each later training step by</p>
+
+  \[
+    E_S=\left|\log\frac{rS_{\rm changed}}{S_{\rm unchanged}}\right|.
+  \]
+
+  <p>The unchanged-learning-rate run supplies \(S_{\rm unchanged}\) at the same training step. This comparison removes the curvature change that would have occurred with continued training even without changing the learning rate. A perfect return to the expected value gives \(E_S=0\).</p>
+
+  <figure>
+    <img src="assets/sharpness_equilibrium_comparison.png" alt="Bar chart comparing the learning-rate equilibrium miss for the largest Hessian eigenvalue and spectral-ball sharpness.">
+    <figcaption><b>Figure 1. Spectral-ball sharpness returns closer to the expected value.</b> Each bar is the median \(E_S\) over 66 matrices with converged measurements at every required checkpoint; vertical lines show the interquartile range. The comparison pools the two learning-rate changes and their later checkpoints.</figcaption>
+  </figure>
+
+  <p>Figure 1 shows that spectral-ball sharpness gives the smaller miss in 65 of 66 matrices. This is the main result: \(B(H)\) is a better description of Muon's learning-rate equilibrium than \(\lambda_1(H)\) in this experiment.</p>
+
+  <p>The improvement concerns learning-rate changes from one saved training state. It does not imply a universal value of \(\eta B(H)\). Along the base training trajectory, \(B(H)\) grows by about 2.4 times between the measured early and late states.</p>
+
+  <h2>The network changes curvature over hundreds of training steps</h2>
+
+  <p>The raw \(\lambda_1\) trajectories show what “return toward equilibrium” means. The table reports the median change from the copied state.</p>
 
   <table>
     <thead>
       <tr>
-        <th>Training steps after the change</th>
+        <th>Training steps after the learning-rate change</th>
         <th>Change in \(\lambda_1\) after multiplying the learning rate by 1.30</th>
         <th>Change in \(\lambda_1\) after multiplying the learning rate by 0.77</th>
       </tr>
@@ -64,23 +96,20 @@
     </tbody>
   </table>
 
-  <p>The curvature response has the sign expected at the edge of stability: a larger learning rate is followed by lower curvature, while a smaller learning rate is followed by higher curvature. The response takes hundreds of steps. It is a change in the network reached by training, not an algebraic change inside Muon's polar map.</p>
+  <p>A larger learning rate is followed by lower curvature, while a smaller learning rate is followed by higher curvature. The change takes hundreds of training steps. It is movement of the trained network through parameter space, rather than a modification of the learning rate inside Muon's polar map.</p>
 
-  <div class="def">
-    <div class="label">Measured curvature adjustment</div>
-    <p>Let \(\eta_0\lambda_{1,0}\) denote the product before the learning-rate change. We call the later response a curvature adjustment when \(\eta_t\lambda_{1,t}\) moves back toward that earlier product. This describes the measured trajectory. It does not assert exact equality or imply that either run approached divergence.</p>
-  </div>
+  <h2>Matching the response to exact alternation does not predict momentum's effect</h2>
 
-  <h2>The slow gradient average is required for the curvature response</h2>
+  <p>Momentum hyperparameters obviously affect the training trajectory. The useful question is whether a simple property of those hyperparameters predicts how curvature changes.</p>
 
-  <p>We repeated the 1.30 learning-rate increase from the same saved state and with the same minibatches, changing only the momentum hyperparameters. The two-average run mixed exponential gradient averages with average lags of about 6 and 49 steps. The short-average run retained only the 6-step average.</p>
+  <p>We tested a natural candidate: how much momentum reduces a gradient component that flips sign every training step. Two momentum settings differed by less than 10% on this quantity. The two-average setting mixed exponential gradient averages with average lags of about 6 and 49 steps. The short-average setting used only the 6-step average.</p>
 
-  <p>For a gradient component that flips sign every step, both momentum settings reduce its amplitude by almost the same factor. Their curvature trajectories nevertheless separate over the next 1,200 steps.</p>
+  <p>We increased the learning rate by the same factor from the same saved state, using the same minibatches. The curvature responses were qualitatively different.</p>
 
   <table>
     <thead>
       <tr>
-        <th>Training steps after the increase</th>
+        <th>Training steps after multiplying the learning rate by 1.30</th>
         <th>Change in \(\lambda_1\), two-average momentum</th>
         <th>Change in \(\lambda_1\), short-average momentum</th>
       </tr>
@@ -92,16 +121,21 @@
     </tbody>
   </table>
 
-  <p>The 49-step gradient average is the specific momentum property isolated by this comparison. With it, the network moves to lower curvature after the learning-rate increase. Without it, curvature returns to its starting level and training stagnates. The final validation losses are about 3.45 and 3.544, respectively. A scalar that measures only the response to exact sign alternation cannot explain the difference.</p>
+  <figure>
+    <img src="assets/momentum_average_curvature_comparison.png" alt="Line plot comparing curvature under two-average and short-average momentum.">
+    <figcaption><b>Figure 2. Removing the 49-step gradient average leaves both sharpness measures higher.</b> One point is the median ratio between the short-average and two-average runs at the stated training step. Both runs start from the same model and optimizer state, use the same minibatches, and use the larger learning rate.</figcaption>
+  </figure>
+
+  <p>Figure 2 shows the effect of removing the 49-step average. The short-average run finishes about 0.09 nats worse in validation loss. In this comparison, simplifying momentum to one exponential average removes the curvature adjustment and harms training. The nearly matched response to exact alternation therefore misses the property of momentum that matters here.</p>
 
   <div class="result">
-    <div class="label">What the comparison establishes</div>
-    <p>Momentum affects the slow evolution of curvature through information retained in its gradient averages. The relevant state includes more than the current weights, current gradient, and current Hessian.</p>
+    <div class="label">What the momentum comparison adds</div>
+    <p>The result goes beyond the fact that momentum changes the trajectory. A number that records only how momentum scales exact alternation cannot predict the curvature response. The information retained over tens of training steps matters independently.</p>
   </div>
 
-  <h2>The stability calculation must include the momentum buffers</h2>
+  <h2>The stability calculation must include the gradient averages</h2>
 
-  <p>Muon first combines the current gradient matrix with exponential gradient averages, then applies the polar map. For one weight matrix, the implemented recurrence is</p>
+  <p>Muon combines the current gradient matrix with exponential gradient averages before applying the polar map. For one weight matrix, the implemented recurrence is</p>
 
   \[
     m_{j,t}=\beta_jm_{j,t-1}+(1-\beta_j)g_t,\qquad
@@ -111,7 +145,9 @@
     X_{t+1}=(1-\eta d)X_t-\eta s\,\operatorname{polar}(p_t).
   \]
 
-  <p>Here \(m_{j,t}\) is one gradient average, \(\beta_j\) sets its average lag, \(a_j\) sets its relative weight, and \(\alpha\) sets the total momentum mixture. The remaining scalars \(d\) and \(s\) are weight decay and Muon's matrix-shape scale. A perturbation changes both the weights and every gradient average:</p>
+  <p>Here \(m_{j,t}\) is one gradient average, \(\beta_j\) sets its average lag, \(a_j\) sets its relative weight, and \(\alpha\) sets the total momentum mixture. The remaining scalars \(d\) and \(s\) are weight decay and Muon's matrix-shape scale.</p>
+
+  <p>A perturbation changes both the weights and every gradient average:</p>
 
   \[
   \begin{aligned}
@@ -125,13 +161,13 @@
   \end{aligned}
   \]
 
-  <p>The exact local stability boundary is determined by the largest multiplier of this augmented recurrence. Here \(H_t\) is the Hessian operator at \(X_t\), and \(D\operatorname{polar}_{p_t}\) is the derivative of the polar map at \(p_t\). The multiplier depends on the Hessian, the contents of the gradient averages, their decay rates, and \(p_t\). No scalar computed from the current Hessian contains all of this information.</p>
+  <p>The local stability boundary is determined by the largest multiplier of this combined recurrence. Here \(H_t\) is the Hessian operator at \(X_t\), and \(D\operatorname{polar}_{p_t}\) is the derivative of the polar map at \(p_t\). The multiplier depends on the Hessian, the contents of the gradient averages, their decay rates, and \(p_t\). A scalar computed from the current Hessian omits the other inputs.</p>
 
-  <p>Scale invariance gives the same conclusion. Multiplying the loss by a positive constant rescales the gradients, the gradient averages, and the Hessian, while the exact polar direction is unchanged. A Hessian quantity that rescales with the loss cannot be Muon's complete critical invariant.</p>
+  <p>Rescaling the loss gives the same constraint. Multiplying the loss by a positive constant rescales the gradients, the gradient averages, and the Hessian, while the exact polar direction remains unchanged. A Hessian measure that rescales with the loss cannot by itself define criticality for Muon.</p>
 
-  <h2>An alternating gradient field produces a slow flattening force</h2>
+  <h2>An alternating gradient component can reduce curvature slowly</h2>
 
-  <p>The experiment also reveals a candidate mechanism. After the learning rate increases, a coherent gradient component that changes sign every step grows immediately. Curvature falls only later. Removing the 49-step average suppresses both the persistent alternating component and the later curvature decrease.</p>
+  <p>The measured timing suggests a mechanism. After the learning rate increases, a gradient component that changes sign every training step grows immediately. Curvature falls later. Removing the 49-step average suppresses both the persistent alternating component and the later curvature decrease.</p>
 
   <p>Write one alternating weight displacement as \(X_t=\bar X+(-1)^taZ\), where \(a\) is its amplitude and \(Z\) is its matrix direction. Expanding the gradient around the slowly moving center \(\bar X\) gives</p>
 
@@ -139,7 +175,7 @@
     g_t=\bar g+(-1)^taH[Z]+\frac{a^2}{2}D^3L[Z,Z,\cdot]+O(a^3).
   \]
 
-  <p>The linear term changes sign and cancels over two steps. The quadratic-in-amplitude term has the same sign on both steps. Let \(q\) denote the alternating component of the matrix presented to the polar map. Averaging the two polar updates leaves the slow contribution</p>
+  <p>The linear term cancels when two consecutive steps are averaged. The term proportional to \(a^2\) does not. Let \(q\) denote the alternating component of the matrix presented to the polar map. The remaining slow contribution is</p>
 
   \[
     \Delta\bar X_{\rm slow}
@@ -148,15 +184,13 @@
     D\operatorname{polar}_{q}\!\left[D^3L[Z,Z,\cdot]\right].
   \]
 
-  <p>The slow contribution has a flattening sign. The polar factor is the gradient of the nuclear norm, so its derivative is positive semidefinite wherever it is differentiable. For a fixed active direction \(Z\), this term moves toward lower curvature \(\langle Z,H[Z]\rangle\).</p>
+  <p>The contribution reduces curvature along a fixed direction \(Z\). The polar factor is the gradient of the nuclear norm, so its derivative is positive semidefinite wherever it is differentiable. Rotation of \(Z\) adds a term with no fixed sign, which prevents this local calculation from determining the final sharpness exactly.</p>
 
-  <p>This calculation explains the observed order of events: momentum sustains an alternating gradient field, and third-order geometry converts its squared amplitude into slow curvature change. Rotation of \(Z\) adds a term with no fixed sign, so the calculation supplies a local flattening mechanism rather than an exact law for the final curvature.</p>
+  <p>A direct scalar test shows that amplitude is insufficient. The negative inner product between the alternating parts of consecutive updates and gradients is reproducible across reruns that diverge at the weight level. After normalization by its non-alternating counterpart, it predicts later matrix-by-matrix curvature change with the wrong sign. The polar derivative and the contents of the gradient averages remain necessary.</p>
 
-  <p>A direct scalar test shows what is still missing. The negative inner product between the alternating parts of consecutive updates and gradients is reproducible across reruns that diverge at the weight level and grows after the learning-rate increase. Dividing it by the analogous non-alternating quantity removes almost the entire intervention response, and the resulting ratio predicts later matrix-by-matrix curvature change with the wrong sign. Field amplitude alone is insufficient; the polar derivative and the state of the gradient averages also matter.</p>
+  <h2>The realized update is far from its one-step loss boundary</h2>
 
-  <h2>The realized Muon update is far from its one-step loss boundary</h2>
-
-  <p>The augmented recurrence governs fast stability, while a different ratio tests whether the actual update direction is locally limited by curvature. Define the shape-scaled update \(U_t=s\,\operatorname{polar}(p_t)\). Its quadratic one-step loss change is</p>
+  <p>The combined recurrence governs local stability. A separate calculation tests whether the actual update direction is limited by curvature. Define \(U_t=s\,\operatorname{polar}(p_t)\). Its quadratic one-step loss change is</p>
 
   \[
     \Delta L_{\rm quad}
@@ -164,45 +198,28 @@
      +\frac{\eta^2}{2}\langle U_t,H_t[U_t]\rangle.
   \]
 
-  <p>The relevant ratio is</p>
+  <p>Define the curvature per unit of descent as</p>
 
   \[
-    \mu_{{\rm loss},t}
+    R_t
     =\frac{\langle U_t,H_t[U_t]\rangle}
            {\langle g_t,U_t\rangle}
   \]
 
-  <p>The quadratic one-step loss boundary occurs when \(\eta\mu_{\rm loss}=2\). Replays of the actual momentum-conditioned update place it far below that boundary.</p>
+  <p>The quadratic one-step loss boundary occurs when \(\eta R_t=2\). Replays of the update produced from the momentum averages place it far below that boundary.</p>
 
   <figure>
-    <img src="assets/mu_loss_boundary.png" alt="Log-scale plot showing eta times mu loss between 0.053 and 0.069 at three training states, far below the one-step loss boundary at 2.">
-    <figcaption><b>Muon's realized update has little curvature per unit descent.</b> Each point is the median across 72 matrices at one saved training state; vertical lines show interquartile ranges. No matrix lies in the interval from 1.5 to 2.5, fixed before scoring.</figcaption>
+    <img src="assets/update_ratio_boundary.png" alt="Log-scale plot showing eta times curvature per unit descent between 0.053 and 0.069 at three training states, far below the one-step loss boundary at 2.">
+    <figcaption><b>Figure 3. Muon's realized update has little curvature per unit descent.</b> Each point is the median across 72 matrices at one saved training state; vertical lines show interquartile ranges. No matrix lies in the interval from 1.5 to 2.5, fixed before scoring.</figcaption>
   </figure>
 
-  <p>The median ratio rises mildly with training age but stays in the same low range. Muon is therefore not operating at the edge along its realized update direction. The edge behavior resides in high-curvature components of the gradient field that the polar-of-momentum update largely avoids. The level and age trend of this low-ratio regime remain unexplained.</p>
-
-  <h2>Spectral-norm curvature tracks the learning-rate response more cleanly</h2>
-
-  <p>The polar map uses spectral-norm geometry, so the top Euclidean Hessian eigenvalue is not its natural curvature summary. The corresponding generalized curvature is</p>
-
-  \[
-    M(H)=\max_{\lVert Z\rVert_2\le1}\langle Z,H[Z]\rangle.
-  \]
-
-  <p>This maximum combines curvature from many Euclidean Hessian directions. Its median is 11–14 times \(\lambda_1\) across the measured checkpoints. Individual matrix ratios range from about 2 to 57.</p>
-
-  <figure>
-    <img src="assets/measured_curvature_summary.png" alt="Two panels showing generalized curvature has a smaller learning-rate residual than the top Hessian eigenvalue and rises more under short-average momentum.">
-    <figcaption><b>The spectral-norm curvature is the cleaner coordinate for the slow response.</b> Left: after subtracting drift measured in the fixed-learning-rate run, \(\eta M\) misses perfect adjustment by about 6%, versus 15% for \(\eta\lambda_1\); bars are medians and lines are interquartile ranges across 66 matrices. Right: one point is the median ratio between the short-average and two-average runs at the stated time.</figcaption>
-  </figure>
-
-  <p>The short-average run leaves \(M\) substantially higher at both measured times. The slow momentum average changes the bulk curvature relevant to Muon's geometry, and does so more uniformly across matrices than it changes \(\lambda_1\).</p>
+  <p>Figure 3 shows that the median ratio changes little across the measured training ages. Muon is therefore not operating at the edge along its realized update direction. High-curvature components of the gradient field create the edge behavior, while the update obtained from the momentum-weighted gradient largely avoids those components. The level and age trend of the low ratio remain unexplained.</p>
 
   <div class="result">
     <div class="label">Current answer</div>
-    <p>Momentum changes Muon's edge through the closed-loop state formed by its gradient averages and the polar map. The long gradient average sustains an alternating field; third-order geometry turns that field into a slow reduction of spectral-norm curvature. The realized update itself remains far inside its one-step loss boundary. Any useful low-dimensional theory must therefore include temporal coherence in the gradient history. A current-Hessian threshold is insufficient.</p>
+    <p>Spectral-ball sharpness is a better measure of Muon's learning-rate equilibrium than the largest Hessian eigenvalue. Momentum changes that equilibrium through the state stored in its gradient averages. The long average sustains an alternating gradient component, and third-order geometry can turn that component into a slow reduction of sharpness. A theory based only on the current Hessian or on the response to exact alternation is incomplete.</p>
   </div>
 
-  <p class="small">All learning-rate and momentum comparisons use one saved mid-training state and matched minibatches. The curvature and one-step-loss measurements were interpreted under rules fixed before their values were inspected.</p>
+  <p class="small">All learning-rate and momentum comparisons use one saved mid-training state and matched minibatches. The sharpness and one-step-loss measurements were interpreted under rules fixed before their values were inspected.</p>
 </main></body>
 </html>
