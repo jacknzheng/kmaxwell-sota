@@ -182,12 +182,21 @@
     \eta\mu_{\rm loss}\simeq\frac{2}{\kappa}.
   \]
 
-  <p>Curvature cancels from this approximation. A ratio near 2 can therefore mean that the oscillation nearly saturates the step budget. The replay analysis must compare the ratio with an independent measure of \(\kappa\) before treating it as evidence about sharpness.</p>
+  <p>Curvature cancels from this approximation. A ratio near 2 could therefore arise because the oscillation saturates the step budget. The replay measurement distinguishes that identity regime from an ordinary low-curvature descent direction.</p>
 
-  <div class="pending">
-    <div class="label">Measurement in progress</div>
-    <p>One-step replays record the actual momentum-conditioned update at saved optimizer states. Fixed-token Hessian products will measure \(\eta\mu_{\rm loss}\), the independently estimated oscillation saturation, and the corresponding ratio for the instantaneous-gradient polar direction.</p>
+  <figure>
+    <img src="assets/mu_loss_boundary.png" alt="Log-scale plot showing eta times mu loss near 0.067 at two states, far below the one-step loss boundary at 2.">
+    <figcaption><b>The realized Muon step is not at its one-step loss boundary.</b> Points show medians across 72 matrices; lines span the interquartile ranges. No matrix lies in the preregistered interval from 1.5 to 2.5. The two measured states differ greatly in training age, yet both give a median near 0.067.</figcaption>
+  </figure>
+
+  <div class="result">
+    <div class="label">Loss-boundary replay</div>
+    <p>The median \(\eta\mu_{\rm loss}\) is 0.065 at step 1,000 and 0.069 at step 2,250, with interquartile ranges [0.049, 0.092] and [0.056, 0.090]. Muon's realized update therefore has roughly thirty times less curvature per unit descent than a step at the quadratic loss boundary.</p>
   </div>
+
+  <p>Substituting these values into \(2/\kappa\) would require \(\kappa\approx29\)–31, although \(\kappa\) is a saturation fraction bounded by one. The saturated single-mode identity is excluded in this regime. The edge phenomena live in high-curvature modes of the gradient field that the realized polar-of-momentum update largely avoids.</p>
+
+  <p>The nearly equal ratio at two different training states is a new empirical regularity. We do not yet have a mechanism for the value 0.067.</p>
 
   <h2>Generalized curvature is a bulk quantity</h2>
   <p>The spectral-norm geometry combines many Hessian directions. The first completed checkpoints place the generalized spectral-ball curvature between roughly eleven and fourteen times the top Euclidean Hessian eigenvalue for the median matrix. Individual matrix ratios range from about two to fifty-seven.</p>
@@ -236,12 +245,8 @@
 
   <p>Muon uses normalized updates, so the raw value \(M(H)\) has no universal \(2/\eta\) prediction. Without momentum, the corresponding upper diagnostic is \(sM(H)/\lVert g\rVert_*\). Momentum replaces the nuclear-gradient denominator with the alignment between the raw gradient and the history-conditioned polar direction.</p>
 
-  <!-- FIGURE_SLOT_2: mu_loss vs independently measured kappa.
-       Preferred plot: eta*mu_loss against 2/kappa, identity line, raw-polar control.
-       Caption takeaway determined only after scorer lands. -->
-
-  <h2>What the next measurements decide</h2>
-  <p>The current evidence supports a memory-dependent curvature feedback and rejects a threshold correction based only on period-two gain. The remaining measurements decide whether this mechanism admits a useful low-dimensional state.</p>
+  <h2>What the measurements decide</h2>
+  <p>The completed measurements support a memory-dependent curvature feedback and reject both a threshold correction based only on period-two gain and a loss-boundary pin along the realized update.</p>
 
   <table>
     <thead>
@@ -249,28 +254,28 @@
     </thead>
     <tbody>
       <tr>
-        <td>\(\eta\mu_{\rm loss}\) is explained by independently measured \(2/\kappa\)</td>
-        <td>The one-step ratio is mainly an oscillation-saturation readout. Model the slow curvature flux using \(\kappa\) and kernel memory.</td>
+        <td>\(\eta\mu_{\rm loss}\approx0.067\), with no matrix near 2</td>
+        <td>Muon is not edge-limited along its realized update direction.</td>
       </tr>
       <tr>
-        <td>Residuals remain structured by kernel or matrix after the \(\kappa\) correction</td>
-        <td>Multiple modes, momentum-induced rotation, or changing polar mobility are essential state variables.</td>
+        <td>The implied single-mode \(\kappa\) is about 30</td>
+        <td>The saturated collinear identity \(2/\kappa\) does not describe this regime.</td>
       </tr>
       <tr>
         <td>The short-memory kernel leaves \(M\) 1.6–1.7 times higher</td>
         <td>The memory-dependent field changes bulk curvature itself; the missing state belongs in the temporal feedback law.</td>
       </tr>
       <tr>
-        <td>A memory-and-oscillation model transfers between the matched-period-two-gain kernels</td>
-        <td>Use it to replace training step with a measurable controller for momentum memory.</td>
+        <td>The ratio remains near 0.067 at two training ages</td>
+        <td>A stable state-conditioned ratio may exist, but its value currently lacks an explanation.</td>
       </tr>
     </tbody>
   </table>
 
   <div class="result">
     <div class="label">Current answer</div>
-    <p>Momentum is part of the optimizer's stability state. Its useful role here is to preserve a coherent gradient field long enough for third-order geometry to regulate curvature, while the polar map limits how that field enters each update. A principled momentum rule should therefore respond to measured temporal coherence and curvature feedback rather than follow a fixed schedule or a single Hessian threshold.</p>
+    <p>Momentum is part of the optimizer's stability state. Its useful role here is to preserve a coherent high-curvature gradient field long enough for third-order geometry to regulate bulk curvature. The polar map then spreads the realized update into directions with far less curvature per unit descent. A principled momentum rule should respond to measured temporal coherence and curvature feedback rather than follow a fixed schedule or a single Hessian threshold.</p>
   </div>
 
-  <p class="small">Working draft. The one-step loss-boundary replay is still running. Its interpretation was fixed before its values were inspected; the remaining figure slot will be filled from that output.</p>
+  <p class="small">Working draft. The generalized-curvature and loss-boundary results shown here were interpreted under rules fixed before their values were inspected. A third loss-boundary state is still scoring and will test the apparent stability of the 0.067 ratio.</p>
 </main></body></html>
