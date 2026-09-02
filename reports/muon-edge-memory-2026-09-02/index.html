@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Muon's edge remembers the gradient history</title>
+  <script>
+    window.MathJax = {tex: {inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['\\[','\\]']]}};
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <style>
+    :root {
+      --ink:#17212b; --muted:#596574; --line:#d9e0e7; --paper:#fff;
+      --page:#eef2f5; --wash:#f5f7f9; --blue:#1769aa; --green:#13795b;
+      --amber:#9a6700; --red:#a23b32;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--page); color:var(--ink); font:17px/1.55 Georgia,"Times New Roman",serif; }
+    main { max-width:940px; margin:32px auto; padding:54px 66px 70px; background:var(--paper); box-shadow:0 2px 20px #23303d18; }
+    h1,h2 { font-family:Inter,ui-sans-serif,system-ui,sans-serif; line-height:1.17; letter-spacing:-.02em; }
+    h1 { margin:0 0 12px; font-size:42px; }
+    h2 { margin:48px 0 14px; padding-top:10px; border-top:1px solid var(--line); font-size:27px; }
+    p { margin:10px 0 15px; }
+    .dek { max-width:790px; color:var(--muted); font:20px/1.45 Inter,ui-sans-serif,system-ui,sans-serif; }
+    .question,.result,.pending { margin:25px 0; padding:18px 22px; border-left:5px solid var(--blue); background:#eef6fc; }
+    .result { border-color:var(--green); background:#edf8f4; }
+    .pending { border-color:var(--amber); background:#fff8e8; }
+    .def { margin:22px 0; padding:14px 18px; border:1px solid var(--line); border-left:5px solid var(--amber); background:var(--wash); }
+    .label { color:var(--muted); font:700 12px/1.2 Inter,ui-sans-serif,system-ui,sans-serif; letter-spacing:.08em; text-transform:uppercase; }
+    table { width:100%; margin:20px 0 30px; border-collapse:collapse; font:14px/1.42 Inter,ui-sans-serif,system-ui,sans-serif; }
+    th { text-align:left; vertical-align:bottom; color:#34404c; background:var(--wash); }
+    th,td { padding:11px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+    td:first-child { font-weight:700; }
+    .good { color:var(--green); font-weight:700; }
+    .bad { color:var(--red); font-weight:700; }
+    .small { color:var(--muted); font-size:14px; }
+    .flow { display:grid; grid-template-columns:1fr 38px 1fr 38px 1fr; align-items:center; gap:7px; margin:25px 0; font:14px/1.4 Inter,ui-sans-serif,system-ui,sans-serif; }
+    .flow div:nth-child(odd) { min-height:96px; padding:14px; border:1px solid var(--line); border-radius:6px; background:var(--wash); }
+    .arrow { color:var(--blue); text-align:center; font-size:25px; }
+    @media (max-width:720px) {
+      main{margin:0;padding:34px 22px} h1{font-size:34px}
+      .flow{grid-template-columns:1fr}.arrow{transform:rotate(90deg)}
+    }
+  </style>
+</head>
+<body><main>
+  <h1>Muon's edge remembers the gradient history</h1>
+  <p class="dek">A long-memory momentum kernel lets curvature fall after the learning rate rises. A short-memory kernel with nearly the same period-two attenuation does not. Muon's edge of stability is therefore a property of the momentum–polar recurrence, not a scalar correction to Hessian sharpness.</p>
+
+  <div class="question">
+    <div class="label">Question</div>
+    <p>What quantity does momentum regulate when a normalized matrix-sign optimizer operates at the edge of stability?</p>
+  </div>
+
+  <h2>The causal result</h2>
+  <p>Kernel memory determines whether Muon compensates for a larger learning rate. Both comparisons start from the same saved model and optimizer state, use the same minibatches, and raise the learning rate by the same factor. The deployed kernel mixes gradient averages with average lags of roughly 6 and 49 steps. The short-memory comparison uses only the 6-step average.</p>
+
+  <p>The kernels attenuate a perfectly alternating gradient by almost the same amount. Their long-run responses are qualitatively different.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Steps after the learning-rate increase</th>
+        <th>Change in top Hessian eigenvalue, deployed long-memory kernel</th>
+        <th>Change in top Hessian eigenvalue, short-memory kernel</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>150</td><td>−18%</td><td>−10%</td></tr>
+      <tr><td>400</td><td>−23%</td><td>−4%</td></tr>
+      <tr><td>1,200</td><td class="good">−32%</td><td class="bad">+6%</td></tr>
+    </tbody>
+  </table>
+
+  <p>The short-memory run also loses the coherent period-two gradient field and ends with substantially worse validation loss. The long-memory component is carrying the feedback that flattens curvature. Matching the kernel's response at period two does not match that feedback.</p>
+
+  <div class="result">
+    <div class="label">Consequence</div>
+    <p>A theory based only on the kernel's period-two gain cannot explain the intervention. The state must include how the momentum buffers preserve the gradient field across time.</p>
+  </div>
+
+  <h2>The recurrence supplies the stability object</h2>
+  <p>Muon maintains several exponential averages of each gradient matrix. Their weighted sum is mixed with the current gradient, mapped to its polar factor, and used as a fixed-size update:</p>
+
+  \[
+    m_{j,t}=\beta_jm_{j,t-1}+(1-\beta_j)g_t,\qquad
+    p_t=(1-\alpha)g_t+\alpha\sum_j a_jm_{j,t},
+  \]
+  \[
+    X_{t+1}=(1-\eta d)X_t-\eta s\,\operatorname{polar}(p_t).
+  \]
+
+  <p>Here \(m_{j,t}\) are the momentum buffers; \(\beta_j\) and \(a_j\) set their time constants and mixture weights; \(\alpha\) sets the total momentum mixture; \(d\) is weight decay; and \(s\) is Muon's rectangular-matrix scale.</p>
+
+  <p>A perturbation changes the weights, every momentum buffer, and the point at which the polar map is differentiated. Linearizing one matrix block gives</p>
+
+  \[
+  \begin{aligned}
+    \delta m_{j,t}
+      &=\beta_j\delta m_{j,t-1}+(1-\beta_j)H_t[\delta X_t],\\
+    \delta p_t
+      &=(1-\alpha)H_t[\delta X_t]+\alpha\sum_j a_j\delta m_{j,t},\\
+    \delta X_{t+1}
+      &=(1-\eta d)\delta X_t-\eta s\,
+        D\operatorname{polar}_{p_t}[\delta p_t].
+  \end{aligned}
+  \]
+
+  <div class="def"><b>Fast criticality.</b> The local stability boundary is reached when the leading multiplier of this augmented recurrence has magnitude one. It depends on the Hessian, the momentum-buffer contents, the temporal kernel, and the realized pre-polar matrix \(p_t\). A scalar computed from the current Hessian omits three of those inputs.</div>
+
+  <p>This conclusion is also forced by scale invariance. Multiplying the loss by a positive constant multiplies every gradient and momentum buffer by that constant, while the exact polar direction stays unchanged. Any Hessian quantity that scales with the loss cannot be the complete critical invariant.</p>
+
+  <h2>The alternating field changes curvature slowly</h2>
+  <p>Fast oscillations still create a simple slow effect. Write the weights as a slowly moving center plus an alternating displacement:</p>
+
+  \[
+    X_t=\bar X+(-1)^taZ.
+  \]
+
+  <p>A third-order expansion of the gradient contains an even term:</p>
+
+  \[
+    g_t=\bar g+(-1)^taH[Z]+\frac{a^2}{2}D^3L[Z,Z,\cdot]+O(a^3).
+  \]
+
+  <p>When \(Z\) locally maximizes the Hessian quadratic form over the spectral-norm unit ball, Danskin's theorem identifies this third-order contraction with the gradient of the corresponding generalized curvature,</p>
+
+  \[
+    M(\bar X)=\max_{\lVert Y\rVert_2\le1}\langle Y,H(\bar X)[Y]\rangle,
+    \qquad
+    \nabla M=D^3L[Z,Z,\cdot].
+  \]
+
+  <p>Let \(q\) be the alternating component of the matrix presented to the polar map. Averaging the two polar updates sends the even term through the derivative of that map:</p>
+
+  \[
+    \Delta_{\rm cubic}\bar X
+    \simeq
+    -\eta s\frac{a^2}{2}
+    D\operatorname{polar}_{q}[\nabla M].
+  \]
+
+  <p>The polar factor is the gradient of the nuclear norm. Its derivative is therefore the Hessian of a convex function and is positive semidefinite wherever the polar factor is differentiable. This term reduces \(M\) along the directions visible to that derivative. Ordinary training may sharpen or flatten \(M\); the observed level is where that drift balances the oscillation-induced flattening.</p>
+
+  <div class="flow" aria-label="Mechanism from momentum memory to curvature compensation">
+    <div><b>Kernel memory</b><br>preserves a coherent alternating gradient field</div>
+    <span class="arrow">→</span>
+    <div><b>Third-order response</b><br>turns its squared amplitude into a curvature gradient</div>
+    <span class="arrow">→</span>
+    <div><b>Polar mobility</b><br>converts that gradient into slow flattening</div>
+  </div>
+
+  <p>The derivation holds for a frozen active direction. Rotation of that direction contributes another term whose sign is not fixed. The calculation supplies a flattening mechanism, not a proof that one scalar stays constant.</p>
+
+  <h2>The constant 2 has a narrow meaning</h2>
+  <p>For the actual shape-scaled update \(U_t=s\,\operatorname{polar}(p_t)\), the quadratic one-step loss change is</p>
+
+  \[
+    \Delta L_{\rm quad}
+    =-\eta\langle g_t,U_t\rangle
+     +\frac{\eta^2}{2}\langle U_t,H_t[U_t]\rangle.
+  \]
+
+  <p>Define the state-conditioned ratio</p>
+
+  \[
+    \mu_{{\rm loss},t}
+    =\frac{\langle U_t,H_t[U_t]\rangle}
+           {\langle g_t,U_t\rangle}.
+  \]
+
+  <p>The quadratic loss change is zero when \(\eta\mu_{\rm loss}=2\). This equality defines a local loss boundary. It does not show that training selects the boundary.</p>
+
+  <p>A single-mode oscillation makes the ambiguity precise. If its displacement uses a fraction \(\kappa\) of the maximum allowed by the normalized step, then</p>
+
+  \[
+    \eta\mu_{\rm loss}\simeq\frac{2}{\kappa}.
+  \]
+
+  <p>Curvature cancels from this approximation. A ratio near 2 can therefore mean that the oscillation nearly saturates the step budget. The replay analysis must compare the ratio with an independent measure of \(\kappa\) before treating it as evidence about sharpness.</p>
+
+  <div class="pending">
+    <div class="label">Measurement in progress</div>
+    <p>One-step replays record the actual momentum-conditioned update at saved optimizer states. Fixed-token Hessian products will measure \(\eta\mu_{\rm loss}\), the independently estimated oscillation saturation, and the corresponding ratio for the instantaneous-gradient polar direction.</p>
+  </div>
+
+  <h2>Generalized curvature is a bulk quantity</h2>
+  <p>The spectral-norm geometry combines many Hessian directions. The first completed checkpoints place the generalized spectral-ball curvature between roughly eleven and fourteen times the top Euclidean Hessian eigenvalue for the median matrix. Individual matrix ratios range from about two to fifty-seven.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Measured quantity</th>
+        <th>Current result</th>
+        <th>Interpretation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>\(M(H)/\lambda_1(H)\)</td>
+        <td>Median 11–14; matrices span approximately 2–57</td>
+        <td>The spectral-ball maximum measures bulk curvature, not a renamed top eigenvalue.</td>
+      </tr>
+      <tr>
+        <td>Optimization restart gap for \(M(H)\)</td>
+        <td>Approximately 3% at completed checkpoints</td>
+        <td>The numerical maximization is sufficiently resolved for trajectory-scale comparisons.</td>
+      </tr>
+      <tr>
+        <td>Gradient-norm compensation across learning rates</td>
+        <td>Per-matrix variation falls by 41%</td>
+        <td>The nuclear gradient norm captures part of the learning-rate response.</td>
+      </tr>
+      <tr>
+        <td>Gradient-norm compensation across matrices</td>
+        <td>No reduction in spread</td>
+        <td>Matrix-specific geometry remains necessary.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Muon uses normalized updates, so the raw value \(M(H)\) has no universal \(2/\eta\) prediction. Without momentum, the corresponding upper diagnostic is \(sM(H)/\lVert g\rVert_*\). Momentum replaces the nuclear-gradient denominator with the alignment between the raw gradient and the history-conditioned polar direction.</p>
+
+  <!-- FIGURE_SLOT_1: generalized-curvature conversion field across checkpoints.
+       Preferred plot: per-matrix M(H)/lambda_1 points, checkpoint color, log y.
+       Caption takeaway: conversion is large, heterogeneous, and stable enough to measure. -->
+
+  <!-- FIGURE_SLOT_2: mu_loss vs independently measured kappa.
+       Preferred plot: eta*mu_loss against 2/kappa, identity line, raw-polar control.
+       Caption takeaway determined only after scorer lands. -->
+
+  <h2>What the next measurements decide</h2>
+  <p>The current evidence supports a memory-dependent curvature feedback and rejects a threshold correction based only on period-two gain. The remaining measurements decide whether this mechanism admits a useful low-dimensional state.</p>
+
+  <table>
+    <thead>
+      <tr><th>Observation</th><th>Scientific consequence</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>\(\eta\mu_{\rm loss}\) is explained by independently measured \(2/\kappa\)</td>
+        <td>The one-step ratio is mainly an oscillation-saturation readout. Model the slow curvature flux using \(\kappa\) and kernel memory.</td>
+      </tr>
+      <tr>
+        <td>Residuals remain structured by kernel or matrix after the \(\kappa\) correction</td>
+        <td>Multiple modes, momentum-induced rotation, or changing polar mobility are essential state variables.</td>
+      </tr>
+      <tr>
+        <td>Generalized curvature changes similarly while compensation differs between kernels</td>
+        <td>Instantaneous curvature capacity is insufficient; temporal coherence carries the missing state.</td>
+      </tr>
+      <tr>
+        <td>A memory-and-oscillation model transfers between the matched-period-two-gain kernels</td>
+        <td>Use it to replace training step with a measurable controller for momentum memory.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="result">
+    <div class="label">Current answer</div>
+    <p>Momentum is part of the optimizer's stability state. Its useful role here is to preserve a coherent gradient field long enough for third-order geometry to regulate curvature, while the polar map limits how that field enters each update. A principled momentum rule should therefore respond to measured temporal coherence and curvature feedback rather than follow a fixed schedule or a single Hessian threshold.</p>
+  </div>
+
+  <p class="small">Working draft. The generalized-curvature sweep and one-step loss-boundary replay are still running. Their interpretation was fixed before their values were inspected; the two pending figure slots will be filled from those outputs.</p>
+</main></body></html>
