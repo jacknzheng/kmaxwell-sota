@@ -1,0 +1,38 @@
+2026-09-02 06:09:41,454 INFO sdpo: run tau2-gold-20260902-060933 | run.py generator.hint.prompt=gold data.domains=[retail,airline] generator.engine.max_model_len=32768 trainer.total_steps=200 data.user_llm=openrouter/deepseek/deepseek-v4-flash logging.run_name=tau2-gold-20260902-060933 logging.log_dir=/log logging.wandb_project=sdpo-tau2
+2026-09-02 06:09:41,454 INFO sdpo: file logs: /log/tau2-gold-20260902-060933
+2026-09-02 06:09:41.863 | INFO     | tau2.utils.utils:<module>:23 - Using data directory from environment: /root/scaling-sdpo/.deps/tau2-bench/data
+2026-09-02 06:09:43.735 | INFO     | tau2.utils.llm_utils:<module>:102 - LiteLLM: Cache is disabled
+2026-09-02 06:09:43.803 | DEBUG    | tau2.registry:<module>:281 - Registering default components...
+2026-09-02 06:09:43.805 | DEBUG    | tau2.registry:<module>:292 - Voice dependencies not installed, skipping voice user registration
+2026-09-02 06:09:43.806 | DEBUG    | tau2.registry:<module>:350 - Default components registered successfully. Registry info: {
+  "domains": [
+    "mock",
+    "airline",
+    "retail",
+    "telecom",
+    "telecom-workflow",
+    "banking_knowledge"
+  ],
+  "agents": [
+    "llm_agent",
+    "llm_agent_gt",
+    "llm_agent_solo",
+    "discrete_time_audio_native_agent"
+  ],
+  "users": [
+    "user_simulator",
+    "dummy_user"
+  ],
+  "task_sets": [
+    "mock",
+    "airline",
+    "retail",
+    "telecom_full",
+    "telecom_small",
+    "telecom",
+    "telecom-workflow",
+    "banking_knowledge"
+  ]
+}
+2026-09-02 06:09:45,410 INFO sdpo: trainer process group ready: rank 3 / 4
+2026-09-02 06:09:45,634 WARNING huggingface_hub.utils._http: Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.

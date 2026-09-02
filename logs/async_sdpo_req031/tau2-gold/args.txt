@@ -1,0 +1,8 @@
+run_name: tau2-gold-20260902-060933
+cli: run.py generator.hint.prompt=gold data.domains=[retail,airline] generator.engine.max_model_len=32768 trainer.total_steps=200 data.user_llm=openrouter/deepseek/deepseek-v4-flash logging.run_name=tau2-gold-20260902-060933 logging.log_dir=/log logging.wandb_project=sdpo-tau2
+rank: 0
+cwd: /root/scaling-sdpo
+dataset: tau2
+hint: gold
+model: Qwen/Qwen3-8B
+gpus: 4 rollout + 4 trainer

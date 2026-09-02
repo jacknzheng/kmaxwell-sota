@@ -1,0 +1,24 @@
+# REQ-031 tau2 GOLD (retail+airline) — COMPLETE. scaling-sdpo @ ac07c90 (fix/hint-output-budget), node qv16djq (8xH100), torch 2.11.0+cu128, vLLM 0.26.0.
+# CLI: bash scripts/run_taubench.sh gold trainer.total_steps=200 data.user_llm=openrouter/deepseek/deepseek-v4-flash
+# GPUs visible: 8 (cuda:0-3 policy vLLM TP=4; cuda:4-7 FSDP2 trainer x4). CUDA_VISIBLE_DEVICES=0-7, torchrun --nproc-per-node=4. No bwrap / no --privileged.
+# Model: Qwen/Qwen3-8B. user-sim: openrouter/deepseek/deepseek-v4-flash (temperature 0, reasoning off). judge.model (nemotron:free) NOT called by gold.
+# Completed steps: 200/200. GOLD_EXIT=0 (clean). Wall time: ~13.8 h (2026-09-02 06:09Z -> ~19:55Z). Held-out test = tau2 official loader('test'), n=60 (retail 40 + airline 20).
+# Failure counters: user-sim 429 (rate-limit) = 2231, ALL retried (retry-hardened _retry_transient) -> api_failures = 0; eval_rollout_errors = 0 at every boundary.
+# W&B: https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-tau2/runs/8xt6ktgo (graph eval/pass1, eval/pass1_retail, eval/pass1_airline on default _step).
+#
+# pass^1 by phase/step (n=60 each; retail n=40, airline n=20):
+phase	step	pass1	pass1_retail	pass1_airline	rollout_errors
+baseline	0	0.2833	0.400	0.050	0
+interval	25	0.4333	0.600	0.100	0
+interval	50	0.3333	0.400	0.200	0
+interval	75	0.2500	0.350	0.050	0
+interval	100	0.3333	0.425	0.150	0
+interval	125	0.3333	0.375	0.250	0
+interval	150	0.3333	0.400	0.200	0
+interval	175	0.2833	0.350	0.150	0
+final	200	0.3000	0.375	0.150	0
+#
+# READOUT (no interpretation asked, shape is the deliverable): the 8B policy peaks at step 25 (0.433) then oscillates around baseline, ending at 0.300 @200
+#   -> no sustained gain over the 0.283 baseline across 200 steps (airline up 0.05->0.15, retail flat/down 0.40->0.375). This mirrors REQ-024's flat-8B observation
+#   and is the motivation for REQ-032's larger-model (27B) test. Every eval is clean (n=60, 0 rollout errors); the DeepSeek user-sim + retry-hardening carried the
+#   full run through 2231 rate-limits with zero api_failures, where REQ-024's Nemotron user-sim could not complete even the baseline eval.
