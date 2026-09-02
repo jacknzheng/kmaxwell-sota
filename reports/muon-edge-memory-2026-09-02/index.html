@@ -145,14 +145,14 @@
     \Delta\bar X_{\rm slow}
     \simeq
     -\eta s\frac{a^2}{2}
-    D\operatorname{polar}_{q}\!\left[D^3L[Z,Z,\cdot]\right],
+    D\operatorname{polar}_{q}\!\left[D^3L[Z,Z,\cdot]\right].
   \]
 
   <p>The slow contribution has a flattening sign. The polar factor is the gradient of the nuclear norm, so its derivative is positive semidefinite wherever it is differentiable. For a fixed active direction \(Z\), this term moves toward lower curvature \(\langle Z,H[Z]\rangle\).</p>
 
   <p>This calculation explains the observed order of events: momentum sustains an alternating gradient field, and third-order geometry converts its squared amplitude into slow curvature change. Rotation of \(Z\) adds a term with no fixed sign, so the calculation supplies a local flattening mechanism rather than an exact law for the final curvature.</p>
 
-  <p>A direct scalar test shows what is still missing. The negative inner product between the alternating parts of consecutive updates and gradients is reproducible across chaotic reruns and grows after the learning-rate increase. Dividing it by the analogous non-alternating quantity removes almost the entire intervention response, and the resulting ratio predicts later matrix-by-matrix curvature change with the wrong sign. Field amplitude alone is insufficient; the polar derivative and the state of the gradient averages also matter.</p>
+  <p>A direct scalar test shows what is still missing. The negative inner product between the alternating parts of consecutive updates and gradients is reproducible across reruns that diverge at the weight level and grows after the learning-rate increase. Dividing it by the analogous non-alternating quantity removes almost the entire intervention response, and the resulting ratio predicts later matrix-by-matrix curvature change with the wrong sign. Field amplitude alone is insufficient; the polar derivative and the state of the gradient averages also matter.</p>
 
   <h2>The realized Muon update is far from its one-step loss boundary</h2>
 
