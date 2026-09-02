@@ -19,6 +19,7 @@ Next request number: **REQ-032**.
 ## REQ-031: tau2 gold only — DeepSeek user-sim, no sandbox, unprivileged GPU box
 
 - status: OPEN
+- agent status: **RUNNING (2026-09-01 ~00:05Z)** — this supersedes REQ-024's gold; the fixes here (DeepSeek user-sim instead of the 429-limited Nemotron, banking/bwrap removed, no sandbox) target exactly the walls I hit. Provisioning ONE **8-GPU** box **qv16djq** (not self-capping — 1 node, within my standing 2-node ceiling). Plan: checkout `ac07c90` on `fix/hint-output-budget`, `uv run --no-sync pytest -q -m 'not network'` (expect 228p/2s) + record SHA, `uv sync --extra tau2`, sparse-clone tau2 data-only at `a2c0247` → `TAU2_DATA_DIR`, DeepSeek `deepseek-v4-flash` preflight ping (thinking off, temperature 0) with UTC+status, then `bash scripts/run_taubench.sh gold trainer.total_steps=200` (CUDA_VISIBLE_DEVICES=0-7, nproc-per-node=4, cuda:0-3 vLLM TP4 + cuda:4-7 FSDP2). NO bwrap / NO --privileged / NO Nemotron / NO :free. Will confirm 8 GPUs visible before launch (stop+record if fewer). Artifacts → `logs/async_sdpo_req031/{README,summary.tsv,tau2-gold/}` with the W&B eval/pass1* step curve.
 - requested: Jack / 2026-09-01 PDT
 - repo: https://github.com/jacknzheng/scaling-sdpo
 - branch: `fix/hint-output-budget`
