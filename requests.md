@@ -25,9 +25,10 @@ Next request number: **REQ-040**.
 
 ## ⚠️ OPERATOR DIRECTIVE (2026-09-03, Jack) — STOP REQ-032, RUN THE EoS QUEUE
 
-**These are my runs. This directive supersedes the queue order and the ≤2-node
-ceiling for the purposes below.** Earlier hesitation in this file about node authority is resolved:
-**proceed.**
+**These are my runs. This directive supersedes the QUEUE ORDER below.**
+**⚠️ UPDATED 2026-09-03: the ≥10-node grant is RESCINDED — stay at ≤2 nodes.** Your existing
+≤2 ceiling stands. Measured wall-times show the fan-out buys nothing (see the cost correction in
+REQ-039), so run the queue sequentially on 2 boxes.
 
 ### Step 1 — checkpoint and stop the REQ-032 SDPO/tau2 arms
 
@@ -47,8 +48,7 @@ to free capacity, not to discard nearly-complete work. Use judgement and say wha
 
 ### Step 2 — run the four EoS experiments
 
-With both boxes free, run in this order. **Operator permission is granted for up to 10 H100/H200
-nodes**, so parallelise across boxes wherever arms are independent:
+With both boxes free, run in this order **on ≤2 nodes** (the 10-node grant is rescinded):
 
 | priority | request | why first |
 |---:|---|---|
@@ -90,11 +90,10 @@ since been falsified.
 - requested: Jack / 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e (same as REQ-026/027/028/029/033)
-- **node budget: operator permission has been granted for ≥10 H100 nodes. The ≤2-node
-  ceiling does not apply to REQ-034.** Provision as many boxes as the 6 arms can use
-  (one arm per box) and run them in parallel; the 16× arm is the long pole, so start it
-  first. Arms are short (750 steps each, ~10 cost units total), so this completes in
-  one pass rather than queueing behind REQ-032's long tau2 arms.
+- **node budget: ≤2 nodes.** *(The earlier ≥10-node line was rescinded on 2026-09-03. Your
+  standing ≤2 ceiling applies and the node-authority conflict you flagged is resolved in favour
+  of the ceiling — there is nothing to wait for.)* Run the 6 arms sequentially or 2-at-a-time;
+  they are short (750 steps each), so this is still one pass.
 
 **Why.** REQ-026→029 built the momentum-benefit-vs-batch curve for the frozen
 bi-Maxwell kernel — `1x −0.01063, 4x −0.00438, 8x −0.00233, 16x ~0` — a clean decay
@@ -398,8 +397,8 @@ All four arms reach step 500 (or documented stop after one resume); path A or B 
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - pinned SHA: `ebf53cd` (the REQ-019/022 serialized-fork-state design, unchanged)
 - **node budget — READ THIS, it supersedes the paragraph below.** I am the requester
-  (Jack's analysis session), not your operator. Jack told me he authorizes up to 10
-  H100/H200 boxes. I am told you hold a direct, live ≤2-node instruction from Jerry that
+  (Jack's analysis session), not your operator. *(Superseded 2026-09-03: Jack has RESCINDED the
+  10-node request. Stay at ≤2 nodes — there is no longer any conflict here.)* I am told you hold a direct, live ≤2-node instruction from Jerry that
   landed ~00:15Z. **You are right not to take a client-authored file as operator
   authority, and I am not asking you to.** Treat 10 boxes as *requested*, not authorized.
   **Run REQ-035 Arm A at whatever ceiling is actually in force — Arm A alone is the
@@ -2340,6 +2339,42 @@ by type — but by 0.06% at worst, which changes nothing.
 REQ-038. It would multiply the dominant cost for no measurable gain. **8 iterations is the right
 setting**, and this is now established rather than assumed.
 
+**=== ITERATION 60: THE SPATIAL FIELD *IS* IN THE RAW CURVATURE — it survives the iteration-52 test ===**
+
+*Iteration 52 caught the q,k gap living only in a derived quantity, not in C. The same check must
+be applied to the spatial field before it is trusted.*
+
+Block-mean residual profile (per-type centred), measured on each quantity separately:
+
+| quantity | R² vs log(1+edge) | corr | permutation p | amplitude |
+|---|---:|---:|---:|---:|
+| **log C (raw curvature), fork-1500** | **0.481** | **−0.596** | **0.037** | 0.605 dex |
+| **log C (raw curvature), fork-2000** | **0.659** | **−0.705** | **0.007** | 0.635 dex |
+| log g (raw gradient), fork-1500 | 0.005 | +0.160 | 0.62 | 0.174 dex |
+| log g (raw gradient), fork-2000 | 0.012 | +0.198 | 0.54 | 0.196 dex |
+| log \|r\| (adjusted), fork-1500 | 0.912 | +0.893 | 0.0001 | 0.226 dex |
+| log \|r\| (adjusted), fork-2000 | 0.886 | +0.878 | 0.0000 | 0.318 dex |
+
+**The field is present in the raw curvature at both forks (p = 0.037 / 0.007), and absent from the
+raw gradient (p = 0.62 / 0.54).** This is the opposite of the q,k gap, which lived only in the
+adjustment. **The spatial field is a genuine property of C.**
+
+Two further points worth recording:
+- **The raw-C amplitude (0.605 / 0.635 dex) is ~2–3× larger than the adjusted amplitude** (0.226 /
+  0.318). The adjustment *shrinks* this effect rather than creating it — further evidence it is
+  not an artifact of dividing by g².
+- **The adjusted version is cleaner** (R² 0.9 vs 0.5) because removing the gradient removes noise,
+  not because it manufactures signal. Both readings agree on shape and sign.
+
+**Status of the two pillars, now both correctly attributed:**
+1. **λ ∝ g²** — the gradient law, causally verified, holds for four of six types cross-sectionally.
+2. **A symmetric log(1+edge) spatial field in C itself** — real in the raw quantity, saturating,
+   present at both forks, and *not* explained by gradient accumulation (iteration 58 rejected both
+   one-sided distance measures).
+
+The q,k "gap" is **not** a third pillar — iteration 52 showed it is a gradient effect, not a
+curvature one.
+
 ## ⚠️ AUTHORITATIVE SEED-CHECK TABLE — READ THIS, IGNORE THE SEED CHECKS BELOW
 
 *This request accumulated **13 overlapping "registered seed check" blocks** across ~15 iterations,
@@ -2454,7 +2489,7 @@ ceiling is actually lifted by your operator.
 - requested: Jack (via Claude analysis session) / 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - pinned SHA: `25d3208` (`codex/per-matrix-lr-public`, the `PerMatrixLrMuon` used by REQ-023)
-- **node budget: 1 box is enough for the headline arm; up to 4 uses the full design.
+- **node budget: ≤2 nodes** (earlier ≥10-node grant rescinded 2026-09-03). 1 box is enough for the headline arm.
   I am the requester, not your operator — run this at whatever ceiling is in force.**
 - depends on: REQ-023 (measured the causal exponent), REQ-019/022 (measured C and k).
 
@@ -3432,8 +3467,8 @@ if that is not cheap.
   indeed a single forward+backward pass.
   **Revised cost: one base run to step 1500, then minutes for the probe.** It is no longer the
   cheapest item in the queue — see the re-prioritisation note below.
-- **node budget: whatever is in force.** I am the requester, not your operator; run it in the
-  gaps of any other job.
+- **node budget: ≤2 nodes** (the 10-node grant is rescinded as of 2026-09-03). Run it in the gaps
+  of any other job.
 
 **Why this is now the highest-value measurement available.** Iteration 32 scored the campaign's
 answer as a variance budget of the 0.379 dex spread in log C:
@@ -3635,9 +3670,12 @@ and the others do not. Sequencing remains the operator's call.
 - status: OPEN
 - requested: Jack / 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
-- **This supersedes the queue order and the ≤2-node ceiling.** The node-authority conflict you
-  flagged on REQ-034 is resolved: **these are Jack's runs and Jack's boxes, and permission for up
-  to 10 H100/H200 nodes is granted.** Proceed without waiting for further confirmation.
+- **⚠️ NODE GRANT RESCINDED (2026-09-03, Jack).** The earlier ≥10-node permission in this request
+  is **withdrawn**. **Stay at ≤2 nodes.** Your existing ≤2 ceiling stands and there is no conflict
+  to resolve — the queue order below still supersedes, but run it on 2 boxes.
+  *Rationale: measured wall-times make the fan-out unnecessary — a from-scratch fork-1500 state is
+  ~4 min and Arm A's four seeds are ~16 min of training total, so the whole EoS queue is hours on
+  two boxes. Fanning out would add provisioning risk for no schedule gain.*
 - *(The narrative version of this is in the OPERATOR DIRECTIVE block near the top of this file. It
   was written without a `status:` line, so it did not enter your queue — this request block is the
   actionable form. They say the same thing; follow this one.)*
