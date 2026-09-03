@@ -1865,16 +1865,17 @@ equalizes is a live design choice that this campaign never examined.
 
 | test | equalize lam_top (filed) | **equalize curv_polar** |
 |---|---:|---:|
-| prescription SNR (between-state) | 13.1 | **41.3** |
-| between-state disagreement | 0.0133 dex | **0.0052 dex** |
-| cross-state prescription corr | +0.9979 | **+0.9996** |
+| prescription SNR (between-state) | **13.1** | 11.4 *(iteration 27 reported 41.3 — see CORRECTION below)* |
+| between-state disagreement | **0.0133 dex** | 0.0217 dex *(corrected)* |
+| cross-state prescription corr | **+0.9979** | +0.9848 *(corrected)* |
 | leave-one-block-out rms | 0.2500 | **0.1935** |
 | cross-state transfer rms | 0.2652 | **0.1936** |
 | **independent REQ-023 holdout** | 0.5402 | **0.2767** |
 | target reproducibility (corr / shift) | +0.9747 / 0.0281 | **+0.9877 / 0.0145** |
 
-**The polar target wins every test**, and on the fully independent REQ-023 holdout it halves the
-error (0.277 vs 0.540 dex).
+**The polar target wins four of seven tests** — decisively on the independent REQ-023 holdout,
+where it halves the error (0.277 vs 0.540 dex) — but **loses on prescription stability** once that
+metric is computed correctly. See the correction below.
 
 *One test initially failed catastrophically, and the cause was my own error.* Cross-state transfer
 first came out at **1.21 dex**. Diagnosis: I computed the "truth" using per-**matrix** k (whose
@@ -1959,6 +1960,51 @@ exists.
 If attn.v again exceeds ~50%, the type-biased comparison is architectural and every cp/Ritz
 statistic needs a convergence-matched control. If it does not reproduce, iteration 26's ramp is
 firmer than stated here.
+
+**CORRECTION (iteration 30) — the polar target's SNR advantage was an error of mine.**
+
+Iteration 27 reported prescription SNR **41.3** for the polar target against 13.1 for lam_top, and
+used it as the headline. **That number does not reproduce by any aggregation.** Recomputed:
+
+| target | spread | median disagreement | corr | **SNR** |
+|---|---:|---:|---:|---:|
+| lam_top | 0.1750 | 0.0133 | +0.9979 | **13.1** |
+| polar | 0.2462 | 0.0217 | +0.9848 | **11.4** |
+
+Per-type (n=6) and per-matrix (n=72) aggregations give 14.3/13.1 for lam_top and 12.4/11.4 for
+polar — **neither yields 41.3**. On prescription stability **lam_top is slightly ahead**, not 3x
+behind. The polar target's genuine wins remain: LOBO (0.194 vs 0.250), cross-state transfer
+(0.194 vs 0.265), target reproducibility (+0.988 vs +0.975), and the **independent REQ-023 holdout
+(0.277 vs 0.540 — still a halving)**. It is a real contender, not a clear winner. **Arm 5 stays in
+the authoritative table at its current priority; the case for it is weaker than iteration 27 said.**
+
+**ROBUSTNESS AUDIT (iteration 30) — every core finding survives dropping the badly-converged types.**
+attn.v (66% gate attrition, 62.9% Rayleigh violations) and attn.proj (17.4%) appear in every
+result. Dropping them:
+
+| finding | all 6 types | −attn.v | −attn.v −attn.proj |
+|---|---:|---:|---:|
+| within-type slope | +2.124 | +2.268 | +1.896 |
+| between-type slope | +0.375 | +0.285 | +0.332 |
+| pooled slope | +0.742 | +0.702 | +0.656 |
+| boundary corr (block level) | −0.893 | −0.891 | −0.883 |
+| writer end delta | +0.936 | +0.936 | — |
+
+**Nothing depends on the poorly-measured types.** The within-type slope still brackets 2, the
+between-type stays far below it, and the boundary field is essentially unchanged.
+
+*One structural fact this surfaced.* Leave-one-type-out on the prescription spread:
+
+| removed type | lam_top rule loses | polar rule loses |
+|---|---:|---:|
+| attn.proj | **49%** | −2% |
+| mlp.proj | 10% | **37%** |
+
+**The lam_top rule derives half its dynamic range from attn.proj alone**; the polar rule from
+mlp.proj. Both are single-type-dependent, which is a caution for both — a per-type rule built on
+six types where one carries ~40-50% of the signal is fragile to that type being mismeasured.
+**Registered seed check:** the leave-one-type-out concentration must stay below 60% for whichever
+rule is run; if one type carries more than that in any seed, the rule should be refit excluding it.
 
 **Registered seed check (zero cost):** the polar prescription's per-type ordering must reproduce
 across seeds (Spearman ≥ +0.7), and its between-state SNR must exceed the lam_top rule's in at
