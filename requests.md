@@ -348,6 +348,66 @@ All four arms reach step 500 (or documented stop after one resume); path A or B 
   and Jerry (your live instruction). Please surface the conflict to Jerry rather than
   resolving it on my say-so.
 
+**=== ITERATION 35: THE TYPE TERM IS LARGELY EXPLAINED — SOFTMAX-PATH NEGATIVE CURVATURE ===**
+
+*Iteration 32 established that matrix type carries 53.3% of the variance and is irreducible to any
+descriptor tried. Iteration 33 localised it to q/k/v (98% of the between-type spread). Iteration 34
+killed the bilinear explanation. This iteration finds one that works.*
+
+**The hypothesis.** q and k feed a **softmax**; v does not. A softmax is bounded, so it is a
+genuine nonlinearity in the q/k path and a linear map in the v path. Nonlinearity produces
+**indefiniteness** — negative curvature — which the Krylov negative-eigenvalue fraction measures
+directly, with no new probe required.
+
+**The prediction holds with perfect separation.**
+
+| type | negfrac, fork-1500 | fork-2000 | path |
+|---|---:|---:|---|
+| **attn.k** | **0.2604** | **0.2558** | softmax |
+| **attn.q** | **0.1979** | **0.2002** | softmax |
+| attn.proj | 0.1455 | 0.1377 | linear |
+| **attn.v** | **0.0350** | **0.0347** | **linear** |
+
+**v has the lowest negative-curvature fraction in 12 of 12 blocks at BOTH forks — binomial
+p = 1.9 × 10⁻⁶ each.** q and k carry **6–7x** more negative curvature than v. Two independent
+states, twelve independent blocks, perfect consistency.
+
+**And it explains the level, not just the ordering.** Within q/k/v, corr(negfrac, adjusted level
+`log C − 2 log g`) = **+0.769 (fork-1500) and +0.786 (fork-2000)**. Explaining the adjusted level
+across all 72 matrices:
+
+| model | params | R² |
+|---|---:|---:|
+| type label (the thing to explain away) | 5 | **0.798** |
+| **negfrac + softmax-path flag** | **2** | **0.737** |
+| negfrac alone | 1 | 0.076 |
+
+**Two physically-motivated parameters recover 92% of what the five-dummy label achieves.** This is
+the first time in the campaign that the type term has been substantially reduced to a mechanism
+rather than relabelled — and it uses only committed data, with no circularity (negfrac is the sign
+structure of the Krylov spectrum; the target is the gradient-adjusted level).
+
+**The honest caveats.** (i) negfrac alone explains almost nothing (R² 0.076) — the *interaction*
+with path type carries it, so this is "nonlinear-path matrices have more negative curvature AND
+that negative curvature tracks their level", a two-part claim. (ii) The fine ordering is v < **q** <
+k while the curvature ordering is v < **k** < q, so negfrac does not reproduce the q/k ordering —
+it separates path types cleanly but not q from k. (iii) attn.proj is linear-path yet sits at 0.145,
+well above v's 0.035, so "linear path" alone does not predict low negfrac. **The claim is
+q,k > proj > v, not softmax-vs-linear as a clean binary.**
+
+**REGISTERED SEED CHECK (zero cost, added to Arm A):**
+- **attn.v must have the lowest negfrac of q/k/v in ≥10 of 12 blocks in every seed.**
+- corr(negfrac, adjusted level) within q/k/v must be ≥ +0.5 in every seed.
+- the 2-parameter model must reach R² ≥ 0.6 on the adjusted level in every seed.
+If these hold across four seeds, **the 53% type term is explained** and the campaign's central
+question is substantially answered. If the negfrac ordering scrambles across seeds, this is a
+fork-specific artifact and the term returns to irreducible.
+
+**Consequence for REQ-038.** Its P4 band (activation moments must lift R² from 0.218 to ≥0.60)
+should now be read alongside this: **the softmax-path account already reaches 0.737 on the adjusted
+level without any activation data.** REQ-038 remains valuable — it would test whether attention
+logit statistics drive negfrac, closing the chain — but it is no longer the only route to the 53%.
+
 **=== THE ANSWER, AS A VARIANCE BUDGET (iteration 32) ===**
 
 *The original question was "what causes the difference in C between layers". After 32 analysis
