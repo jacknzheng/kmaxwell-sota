@@ -2175,6 +2175,54 @@ campaign has produced. It is not evidence and adds no measurement. **What makes 
 is that it converts an unexplained residual into a falsifiable prediction about a quantity REQ-038
 already measures** — and that prediction is specific enough to be wrong.
 
+**=== ITERATIONS 54–55: TWO FINDINGS UNIFY INTO ONE SPATIAL EFFECT ===**
+
+**A failed prediction first.** If the softmax attenuates the backward signal for q,k, the
+attenuation should deepen with depth (attention sharpens with depth, and a sharper softmax has a
+smaller Jacobian). Tested: corr(depth, residual deficit) = **−0.184 / −0.210, permutation
+p = 0.56 / 0.51.** Essentially flat. **The softmax-sharpening story gains nothing beyond its
+sign** — it predicts the direction of the q,k deficit but not its depth structure.
+
+**But the deficit profile is not flat randomly — it is the boundary shape.** The q,k residual
+deficit is *smallest* at blocks 0 and 11 and largest mid-network:
+
+| | edge blocks (0, 11) | interior | difference |
+|---|---:|---:|---:|
+| fork-1500 | −0.239 | −0.440 | **+0.201 dex** |
+| fork-2000 | −0.265 | −0.453 | **+0.188 dex** |
+
+**The strict test — no shared numbers.** The boundary field (iterations 7–25) was built from the
+adjusted level, which is −2·log|r|, so correlating it against the q,k deficit shares construction
+and inflates. Rebuilding the boundary field from the **non-q,k types only**, so the two quantities
+share no underlying numbers:
+
+| | corr(q,k deficit, boundary field) | permutation p |
+|---|---:|---:|
+| fork-1500 | **+0.876** | **0.0003** |
+| fork-2000 | **+0.710** | **0.0067** |
+
+**These are one spatial effect, not two.** The "boundary field" (~8% of the variance budget) and
+the q,k residual deficit are the same pattern measured on different subsets of matrices. **The
+campaign has been tracking them as independent findings since iteration 7; they are not.**
+
+**What this changes.** The count of independent phenomena drops. The corrected picture is:
+
+1. **λ ∝ g²** — the gradient law, causally verified, holds for four of six types cross-sectionally;
+2. **a single spatial field** — matrices near the residual-stream boundary see a *larger* effective
+   residual, and q,k see a *smaller* one everywhere, with the two effects being the same field
+   viewed through different matrix subsets;
+3. everything else is noise or unresolved.
+
+**Registered seed check (zero cost, replaces the separate boundary and deficit checks):** the q,k
+residual deficit and the non-q,k boundary field must correlate at **≥ +0.6 across blocks in every
+seed**. If they decouple, this unification was driven by the two-state sample and they should be
+tracked separately again.
+
+**Note on interpretation.** This is a unification of *descriptions*, not a mechanism — it says two
+things we could not explain are one thing we cannot explain. That is still progress: it halves the
+number of separate anomalies REQ-038 and Arm A need to account for, and it means the softmax
+reading must explain a *spatial* pattern, not just a q,k offset.
+
 ## ⚠️ AUTHORITATIVE SEED-CHECK TABLE — READ THIS, IGNORE THE SEED CHECKS BELOW
 
 *This request accumulated **13 overlapping "registered seed check" blocks** across ~15 iterations,
