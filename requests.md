@@ -1497,6 +1497,63 @@ better rule is derivable from this data, since the ceiling is 0.020 dex away. A 
 indicate that curvature equalisation does not translate into loss improvement, **not** that the
 prescription was poorly constructed.
 
+**MECHANISM (iteration 22) — the end-block effect tracks RESIDUAL-WRITING, and two rival
+explanations are falsified.**
+
+*Rival 1: tied embeddings — FALSIFIED by its own prediction.* The trainer ties embed and lm_head,
+a real structural asymmetry at both network ends. If that drove the effect, end-block projections
+should sit *closer* to the Adam-trained embed/lm_head in log C. They sit **further**:
+
+| group | mean log C | distance to embed/lm_head mean (2.687) |
+|---|---:|---:|
+| end proj (blocks 0, 11) | 4.821 | **2.135** |
+| interior proj | 3.885 | 1.198 |
+| end non-proj | 4.257 | 1.570 |
+| interior non-proj | 4.126 | 1.439 |
+
+The end-block projections are the *least* embed-like matrices in the network. The tie is not the
+mechanism. *(Caveat: read from the branch-head trainer; `ebf53cd` is absent from the clone, so the
+tie's presence in the measured architecture is unconfirmed — but the falsification does not depend
+on it, since it uses only measured curvature.)*
+
+*Rival 2: matrix shape / fan-in — FALSIFIED by a clean natural contrast.* `mlp.proj` is both a
+residual writer *and* the only wide-fan-in matrix (768×3072), confounding the two. But `attn.proj`
+is a writer with **narrow** fan-in (768×768). Their end-block elevations are nearly identical:
+
+| type | fan-in | end-block delta, fork-1500 | fork-2000 |
+|---|---:|---:|---:|
+| **attn.proj** | 768 | **+0.895** | **+1.048** |
+| **mlp.proj** | 3072 | **+0.977** | **+0.968** |
+| mlp.fc | 768 (out 3072) | +0.494 | +0.641 |
+| attn.k | 768 | +0.091 | +0.165 |
+| attn.v | 768 | +0.025 | +0.131 |
+| attn.q | 768 | −0.087 | +0.041 |
+
+**A 4x fan-in difference produces no difference in the effect.** Shape is ruled out.
+
+*What survives.* The two matrices that **write into the residual stream** (attn.proj, mlp.proj)
+carry ~1.0 dex of excess curvature at the first and last block; the four that **read from it**
+carry 0.03–0.25 dex. `mlp.fc` sits in between (+0.49/+0.64) and is the one partial exception —
+it is a reader, but the widest matrix, so a small shape contribution cannot be excluded entirely.
+
+**Reading:** curvature at the residual-stream boundary is elevated specifically for the matrices
+that write into it. That is consistent with the residual stream having different variance
+structure at the first and last block — the first block writes into a stream carrying only
+embeddings, the last writes into one immediately consumed by the output head — but **this
+campaign has never measured activations, so the mechanism is inferred, not demonstrated.**
+
+**REGISTERED SEED CHECK — addition to Arm A, zero cost:** the writer/reader split of the
+end-block effect must reproduce. Band: end-block delta ≥ +0.6 dex for attn.proj and mlp.proj, and
+≤ +0.3 dex for attn.q, attn.k, attn.v, in every seed. If writers and readers do not separate, the
+"residual-writing" reading falls and the effect reverts to an unexplained per-type interaction.
+
+**The decisive experiment is not a seed check.** It is measuring **residual-stream activation
+variance per block** — one forward pass on an existing checkpoint, no training. If the activation
+variance at blocks 0 and 11 differs from the interior in proportion to the curvature elevation,
+the mechanism is demonstrated rather than inferred. **This is cheap enough to attach to any
+already-queued run rather than justify a separate request; noting it rather than filing it, since
+the queue is 4 deep.**
+
 **Registered addition:** the per-type × is_end interaction must reproduce in every seed
 (interaction t > 2, same sign) in REQ-035 Arm A. If it does not, revert to the uniform is_end
 term; if the uniform term also fails to reproduce, revert to per-type only.
