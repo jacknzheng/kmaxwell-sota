@@ -264,7 +264,7 @@ measured value so a seed result can be compared directly.
 | **13** | **the PER-MATRIX causal exponent is exactly 2** — ⚠️ **RE-SCOPED** (iter. 79) | 2.000 inside the 95% CI **under per-matrix LR randomisation only** (REQ-023 design) | REQ-023 +2.076/+2.079 CI contains 2. **Arm A's GLOBAL LR ladder gives +2.64 to +3.07, CI excludes 2 — a different estimand, not a refutation** |
 | **14** | **q,k carry a large C excess in λ/g²** — ✅ **CONFIRMED n=4** | gap ≥ +0.6 dex and both q,k above all four others in ≥10/12 blocks | **+0.888 / +0.774 / +0.833 / +0.834 dex** (mean +0.832, sd 0.041), p < 10⁻⁵, **12/12 blocks in every seed** |
 | **15** | **the q,k excess is QK-norm scale invariance** (iter. 80) | **d log C / d log‖W‖ = 0 within CI for attn.q and attn.k**, and **|slope| at least 2× smaller than the other four types**, in ≥3 of 4 seeds. Needs weight norms alongside curvature — **not yet measurable on Arm A** | q,k +0.049 CI [−0.261, +0.381] and −0.062 CI [−0.329, +0.226]; others −0.398 / −0.228 |
-| **16** | **C is a per-matrix invariant the network restores** (iter. 82) — ✅ **CONFIRMED n=4** | **matrix identity explains > 85% of log C's variance and the LR < 10%**, across the s = 0.6→1.7 ladder; **corr(C at s=0.6, C at s=1.7) > 0.80** | identity 93.7 / 94.8 / 93.7 / 93.2 %; LR 2.2 / 3.8 / 3.2 / 1.2 %; corr +0.93 / +0.97 / +0.92 / +0.87 |
+| **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
 exponent differs systematically by type — **~3.8 for the two projection matrices, ~0.9–1.4 for the
@@ -273,6 +273,59 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 83: RESTORATION IS ACTIVE, NOT INSENSITIVITY — the sharp test using REQ-036's own arms ===**
+
+*Band 16 showed C's pattern survives a **global** LR change. That is weaker than it sounds: uniform
+scaling may simply never perturb the per-type pattern in the first place. **"Restored" and "never
+disturbed" are different claims and band 16 could not separate them.** REQ-036 committed per-matrix
+curvature JSONs for all five arms — and REQ-036 applied **different multipliers per matrix type**,
+deliberately designed to flatten the spread. That is exactly the targeted perturbation needed.*
+
+**The result: the intervention moves λ as designed, and C absorbs all of it.**
+
+| arm | slope of **Δ log λ** on log₁₀(multiplier) | slope of **Δ log C** on log₁₀(multiplier) |
+|---|---:|---:|
+| a2_pertype | −0.520 | **+0.124** |
+| **a5_polar** | **−1.153** *(EoS with k≈1.3 predicts ≈−1.3)* | **−0.054** |
+
+**In a5_polar the intervention drove curvature essentially as theory predicts — and C did not
+follow.** A fully-moved C would give a slope near −1.3; a fully-restored C gives 0. **Observed:
+−0.054.** The per-type LR push landed entirely on λ and was absorbed by the gradient, leaving C
+untouched.
+
+**The spreads say the same thing across all five arms:**
+
+| arm | spread of log λ | spread of **log C** | corr(C vs control) |
+|---|---:|---:|---:|
+| a1_control | 0.2281 | 0.4738 | 1.000 |
+| a2_pertype | 0.1511 | **0.4665** | 0.920 |
+| a3_endcap | 0.1376 | **0.4719** | 0.935 |
+| a4_antirule | 0.4448 | **0.4225** | 0.945 |
+| a5_polar | 0.2504 | **0.4807** | 0.949 |
+
+**λ's spread ranges over 3× (0.138 → 0.445) while C's stays flat at 0.42–0.48**, and C correlates
++0.92 to +0.95 with control in every arm — including the anti-rule arm that pushed the opposite way.
+
+> **C is not merely insensitive to uniform scaling. It is actively restored against a perturbation
+> built specifically to change it.**
+
+**This closes the mechanism for REQ-036's null.** The per-type LR rule did change equilibrium
+curvature — Jerry measured that directly — but it could not change **C**, because C is what the
+network holds. The loss cost is the price of the fight, and it scales with how hard the rule pushes:
+a5 pushed hardest (λ-slope −1.153) and lost most (+0.024 val). **The dose-response REQ-036 found now
+has a mechanism, measured on the same arms that produced it.**
+
+**Band 16 upgraded** from "a per-matrix invariant" to "**an actively restored invariant**", with the
+targeted-perturbation slope added to its check. This is a stronger claim resting on a stronger test,
+and it was available at zero compute cost from data already committed.
+
+**Standing recommendation, now on firmer ground.** Any per-matrix step-size design intended to
+reshape equilibrium curvature will be resisted — this is no longer inferred from one null but
+measured directly as a restoration slope of ≈0. **The remaining open question is what C is restored
+*to*** — bands 14 and 15 say the q,k component is set by QK-norm scale invariance, and REQ-041's
+weight norms plus REQ-038's `|a|`/`|d|` fields are the two measurements that would complete that
+account.
 
 **=== ITERATION 82: WHY EQUALIZING HURTS — C IS A HOMEOSTATIC INVARIANT, CONFIRMED n=4 ===**
 
