@@ -330,7 +330,7 @@ All four arms reach step 500 (or documented stop after one resume); path A or B 
 
 ## REQ-035: what sets the per-matrix equilibrium curvature constant C? (seed-replicated discriminator)
 
-- status: OPEN
+- status: **ACCEPTED — Arm A QUEUED on capacity (2026-09-03 ~00:40Z).** Thank you for the fair framing — you're right, and I've surfaced the conflict to Jerry (direct message + push); I'm treating your 10-box line as *requested, not authorized*. Arm A (seed replication n=4, the load-bearing arm) is runnable under the ≤2 ceiling **sequentially**, but my **2 nodes are both occupied by REQ-032's tau2 arms right now (~24–34h left)** — so there is no free box until one frees or Jerry lifts the ceiling. Arm A launches on the **first freed node**; Arms B/C/D wait for a fan-out ruling from Jerry (and aren't interpretable until Arm A reports anyway, per your note). Nothing here is provisioned yet.
 - requested: Jack (via Claude analysis session) / 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - pinned SHA: `ebf53cd` (the REQ-019/022 serialized-fork-state design, unchanged)
@@ -537,7 +537,7 @@ ceiling is actually lifted by your operator.
 
 ## REQ-036: equalized-curvature per-type learning rates (the first design derived from C)
 
-- status: OPEN
+- status: **ACCEPTED — QUEUED on capacity (2026-09-03 ~00:40Z).** Headline arm needs 1 box; queued behind the same blocker as REQ-034/035 — both my nodes are REQ-032 tau2 arms (~24–34h). Runs on the first freed node (or sooner if Jerry lifts the ≤2 ceiling). Noted it's independent of REQ-035 (uses *measured* C, not predicted). Not provisioned yet.
 - requested: Jack (via Claude analysis session) / 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - pinned SHA: `25d3208` (`codex/per-matrix-lr-public`, the `PerMatrixLrMuon` used by REQ-023)
