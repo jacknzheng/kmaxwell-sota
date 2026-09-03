@@ -635,6 +635,71 @@ predicted from architecture, which is exactly REQ-036's design. If (4) fails whi
 the within-type law is universal but the type offsets are a learned per-network property. If
 (1) fails, the Gauss-Newton reading is wrong and this account falls.
 
+**THE ACCOUNT CLOSES (same session) — the irreducible core is a per-matrix quantity, and
+only Arm A can classify it.**
+
+*Fourth rename-trap, recorded.* Fixing the slope at the causal value 2 and defining the
+offset `b_m = log C − 2 log g` looked like progress. It is not: **b ≡ −2 log R exactly**
+(corr +0.9985, sd of b + 2logR = 0.025). That is the fourth time this program produced a
+relabelling disguised as a discovery (anisotropy → C_grad → spectral scale → offset b).
+**Strengthened rule: before claiming a new explanatory quantity, check its correlation with
+every previously-defined derived quantity; |corr| > 0.99 means it is a rename.**
+
+*The physically-motivated model, tested honestly.* `log C = 2 log g + b_type`, slope FIXED at
+the causally-measured 2 (not fitted), 6 free type offsets:
+
+| model (out-of-sample, fork-1500 → fork-2000) | rms |
+|---|---:|
+| architecture (type + depth) | 0.338 dex |
+| gradient norm g alone | 0.354 dex |
+| g × type interaction, slope fitted (7 params) | 0.247 dex |
+| **2 log g + b_type, slope FIXED at 2 (6 params)** | **0.246 dex** |
+| just re-measure C | **0.090 dex** |
+
+Imposing the correct causal exponent buys essentially nothing (0.246 vs 0.247), and the model
+remains ~2.7x worse than re-measurement. **Negative result.**
+
+*Why it fails — and this is the resolution.* The type offsets are almost perfectly stable
+(corr **+0.9991** across states, shift 0.027 dex), so the model captures between-type
+structure essentially exactly. The error is entirely **within-type scatter of b: 0.194 dex**,
+which propagates straight into C and accounts for the observed 0.246 dex almost exactly.
+
+*And that within-type scatter is real, not noise:*
+
+| quantity | corr across fork states | spread | median shift |
+|---|---:|---:|---:|
+| log C | +0.9747 | 0.379 | 0.028 |
+| log g | +0.9984 | 0.238 | 0.010 |
+| offset b | +0.9812 | 0.449 | 0.036 |
+| **within-type residual of b** | **+0.931** | **0.202** | **0.041** |
+
+**THE IRREDUCIBLE CORE.** After removing the causal law (exponent 2) and the full between-type
+structure, what remains is a **real, highly reproducible, per-matrix quantity of spread ~0.20
+dex with no known architectural determinant**. It is not measurement noise (it reproduces at
+corr +0.931 across independent states). It is not type, depth, weight norm, matrix size, or
+update geometry — all tested and all null. Every matrix carries its own value of it.
+
+**This is the complete answer available from committed data.** The between-layer difference in
+C decomposes into exactly three parts:
+1. a causally-verified within-matrix law, lam ∝ g² (Gauss-Newton, exponent 2.00 [1.90, 2.11]);
+2. a between-type offset, perfectly stable and captured by a 6-value lookup;
+3. a **within-type per-matrix residual of ~0.20 dex that nothing architectural explains.**
+
+Part 3 is what makes C unpredictable, and it is exactly what **Arm A decides**: if the
+per-matrix residual reproduces across independent seeds, it is architecture (and the search
+for its determinant is worth continuing); if it does not, it is a learned property of the
+individual network and **C is unpredictable in principle** — which would settle the original
+question definitively and permanently justify REQ-036's measure-don't-predict design.
+
+**REGISTERED n=4 SEED CHECK — final form, supersedes all earlier versions. Zero extra cost.**
+1. within-matrix causal exponent d log lam/d log g = **2.00 ± 0.15** in every seed *(falsifier: if this fails the whole account falls)*.
+2. mean within-type cross-sectional slope = **2.0 ± 0.5**; pooled cross-type slope **< 1.5** (Simpson attenuation reproduces).
+3. per-type offsets b_type: cross-seed Spearman **≥ +0.7**.
+4. **THE DECIDER — within-type residual of b, cross-seed correlation:**
+   - **≥ +0.7** → the residual is architectural. C is in principle predictable; the missing covariate is real and worth hunting.
+   - **≤ +0.2** → the residual is a learned per-network property. **C is unpredictable in principle**, the campaign's central question is answered, and measurement (REQ-036) is the only correct design.
+   - between → report the reproducible fraction as the hard ceiling on any future covariate model.
+
 **So the question sharpens to: what sets S_m?** lam_top is not special — it is S_m times a
 fixed per-matrix shape constant. The between-layer difference in C *is* the between-layer
 difference in overall Hessian scale. Arm A is unchanged and remains the right next step;
