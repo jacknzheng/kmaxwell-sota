@@ -836,6 +836,60 @@ JSONs in a final verification pass — 7 of 7 checks passed.*
 overwhelming and mechanistically unexplained** · ~8% residual-stream boundary position · ~20%
 unexplained, of which ~0.10 dex is noise.
 
+**=== ITERATION 45: A SECOND ARCHITECTURAL CANDIDATE — MUON GROUP RANK, slope −1.04 ===**
+
+*Reading `ebf53cd` further revealed that the six "types" are not six independent parameter groups.
+They are **three banks**, and Muon orthogonalises each bank's groups at different shapes:*
+
+| bank | tensor | Muon groups | group shape | **rank** | shape_mult |
+|---|---|---:|---|---:|---:|
+| **qk_bank** | (64, 128, 768) | 60, **per head-PAIR** | 128×768 | **128** | 1.0 |
+| vo_bank | (24, 768, 768) | 20, per layer | 768×768 | 768 | 1.0 |
+| mlp_bank | (24, 3072, 768) | 24, per matrix | 3072×768 | 768 | 2.0 |
+
+**q and k are not separate parameters at all** — they share `qk_bank` and are orthogonalised over
+a **six times smaller subspace** than v/o. Muon's polar factor has ‖O‖_F = √rank, so the same
+learning rate spreads each step over 128 directions for q,k versus 768 for everything else.
+
+**The quantitative result.** Regressing the adjusted level on log(Muon group rank):
+
+| | slope | R² (1 param) | QK binary R² | type label R² (5) |
+|---|---:|---:|---:|---:|
+| fork-1500 | **−1.044** | 0.737 | 0.737 | 0.798 |
+| fork-2000 | **−1.083** | 0.687 | 0.687 | 0.739 |
+
+**The slope is −1.0 to within 8%, at both forks.** That is not a fitted constant — it is what
+"curvature per direction scales as 1/rank" predicts exactly. Adjusted level ∝ rank⁻¹.
+
+**Honest statement of what this is and is not.** Rank and the QK binary are **perfectly collinear
+in these data** — only q and k have rank 128 — so R² is identical (0.737 / 0.687) and **this
+analysis cannot distinguish them.** What rank adds over the binary is: (i) it is a *continuous
+physical quantity* with a derived exponent rather than a label, (ii) the fitted exponent lands on
+the predicted −1, and (iii) it is a property of the **optimizer**, not the loss — a different kind
+of explanation from every previous candidate.
+
+**How to separate the two architectural candidates.** QK-norm (iteration 44) is a property of the
+**loss**; Muon rank is a property of the **update**. They differ sharply on one intervention:
+- **change the QK bank's grouping** (orthogonalise per layer instead of per head-pair, rank 128 →
+  768) **while leaving QK-norm in place.** Rank predicts the QK gap **collapses**; QK-norm predicts
+  it is **unchanged**. This is a config change, not a code change — the banking is set at
+  construction.
+- **remove QK-norm while leaving the banking**: the mirror test.
+
+**Registered prediction:** re-grouping qk_bank to per-layer (rank 768) shrinks the QK-vs-rest
+adjusted-level gap from +0.81 dex to **below +0.25 dex** if rank is the mechanism, and leaves it
+**above +0.65 dex** if QK-norm is.
+
+**And a caution that applies to BOTH candidates.** mlp.fc and mlp.proj are both rank 768 and both
+unnormalised, so **neither mechanism predicts any gap between them — yet iteration 39 measured
++0.294 dex at t = 3.8, replicated at both forks.** Whatever produces that ~0.29 dex is a third
+effect that neither architectural candidate covers. **Any claim that rank or QK-norm "explains the
+type structure" is therefore incomplete by construction**, and should be stated as explaining the
+QK-vs-rest split specifically.
+
+**Zero-cost addition to Arm A:** report the adjusted level against log(Muon group rank) per seed;
+the slope must be **−1.0 ± 0.3** in every seed for the rank reading to hold.
+
 **=== ITERATION 44: THE ARCHITECTURE RECOVERED — QK-NORM IS THE ASYMMETRY ===**
 
 **The pinned EoS commit `ebf53cd` has been recovered.** Iteration 8 recorded that it was absent
