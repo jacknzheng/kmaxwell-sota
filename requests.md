@@ -895,6 +895,67 @@ criterion, replacing earlier versions of 2:**
 **Nothing in this iteration changes REQ-036**, which uses measured per-type C and k and is
 independent of why the between-type slope is what it is.
 
+**ITERATION 11 — IV audit. The exponent survives, but the word "causal" does not.**
+
+*Language correction.* The Wald ratio identifies a causal effect of g on lam only under the
+**exclusion restriction**: that the learning rate moves lam *exclusively through* g. That is
+almost certainly false — raising a matrix's LR moves it to a different point in weight space,
+where curvature differs for reasons beyond gradient norm. **Calling +1.98 "the causal exponent"
+overstates what the design supports.** What the ratio measures without assumption is a
+**response ratio**: how much lam moves per unit of g movement when both are driven by the LR.
+All earlier iterations should be read with "causal" replaced by "response".
+
+*The estimate itself is robust.* Two independent estimators and four instrument-strength cuts:
+
+| estimator / cut | estimate |
+|---|---:|
+| median-of-ratios (144 matrix-forks) | +1.981 |
+| pooled 2SLS, fork-1500 | +2.069 |
+| pooled 2SLS, fork-2000 | +2.095 |
+| 2SLS, first-stage F ≥ 10 (n=104) | +2.050 |
+| 2SLS, F ≥ 25 (n=69) | +2.128 |
+| 2SLS, F ≥ 50 (n=51) | +2.225 |
+
+28% of individual first stages are weak (F < 10, unavoidable with 3 points per matrix), but
+**dropping them does not move the estimate** — it drifts only from 2.05 to 2.23. Weakness is
+not driving the result.
+
+*Placebo that supports the Gauss-Newton reading.* Running the same ratio on
+`curvature_along_polar` — a **different** functional of the same Hessian — gives **+1.805 and
++1.799**. Close to lam_top's 2.0 but not identical, which is what whole-Hessian rescaling
+predicts and what a lam_top-specific artifact would not.
+
+*Sensitivity bound on the exclusion violation.* With a first stage of −0.613 and a total effect
+of d log lam/d log s = −1.27:
+
+| if the true exponent were | required direct LR→lam channel | as % of the total effect |
+|---:|---:|---:|
+| 1.0 | −0.662 | **52%** |
+| 1.5 | −0.356 | 28% |
+| 2.0 | −0.049 | 4% |
+| 3.0 | +0.564 | 44% |
+
+**For the true exponent to be 1 rather than 2, half of the learning rate's effect on curvature
+would have to bypass the gradient entirely.** Possible, but itself a strong claim.
+
+**NEW GAP IDENTIFIED — and n=4 seeds CANNOT close it.** Seeds re-randomise initialisation, not
+the instrument; every seed inherits the same exclusion restriction. Testing it requires a design
+that **moves g without moving the learning rate**. Two clean options, both cheap:
+- **(a) batch-size fork.** Hold the LR fixed and change the gradient batch size at the fork.
+  This changes gradient noise scale, hence measured g, with the LR untouched. The infrastructure
+  exists — REQ-026/028/029/033/034 are all batch-ladder forks on this exact trainer.
+- **(b) gradient-clipping fork.** Hold LR and batch fixed, clip per-matrix gradients at two
+  thresholds. Moves g directly with everything else fixed.
+Registered prediction for either: **d log lam / d log g = 2.0 ± 0.3 under a non-LR instrument.**
+If it comes out near 2 under an instrument with a *completely different* exclusion structure,
+the exponent is established as physics. If it differs sharply, the LR-based +1.98 was carrying
+exclusion-violation bias and the Gauss-Newton reading falls.
+
+**This is worth filing as REQ-037** and is a better use of a box than additional seeds, because
+it tests the one assumption every other result now rests on. Not filed yet — flagging it for
+the operator first, since REQ-034/035/036 are already queued on a 2-node ceiling and I do not
+want to add queue pressure without a decision.
+
 **So the question sharpens to: what sets S_m?** lam_top is not special — it is S_m times a
 fixed per-matrix shape constant. The between-layer difference in C *is* the between-layer
 difference in overall Hessian scale. Arm A is unchanged and remains the right next step;
