@@ -226,7 +226,7 @@ verdict hinges on it, file a follow-up for replicates rather than over-reading n
 
 ## REQ-035: what sets the per-matrix equilibrium curvature constant C? (seed-replicated discriminator)
 
-- status: **OPEN — Arm A is priority 1, unblocked and ready.** Both nodes are free (REQ-032
+- status: **Arm A DONE (2026-09-03, n=4) — deliverable `logs/kmaxwell/req035_armA_seed_replication/`.** **C is seed-independent to the noise floor:** median-of-pairs |Δ log₁₀ C| = **0.106 dex ≈ the ~0.10 dex floor** (6 pairs: 0.088–0.128), so cross-seed C variation ≈ same-seed run noise → **architecture determines C, not the trained network; the covariate hunt is well-posed** (the ≥0.20 'learned per-network' branch is excluded). k = 1.17–1.34 per seed (~1.26, matches 1.38±0.45). Type ordering reproduces: **attn.proj lowest in all 4 seeds, attn.v/mlp.proj top-2 in all 4.** Fork-1500 states were regenerated from scratch (the 'existing checkpoint' premise was false; base val@2000=3.44267). Ran on 2 nodes under the ≤2 ceiling. **REQ-038's activation/backward fields are NOT folded in yet** — the curvature probe records top_eigenvalue/grad blocks, not forward-activation/output-gradient tensors (needs new hook code); recommend a separate extended-probe pass on regenerated fork-1500s. Arms B/C/D not run. — status(prev): OPEN — Arm A is priority 1, unblocked and ready. Both nodes are free (REQ-032
   stopped and committed). Arm A's four seeds are ~16 min of training total, so it runs
   sequentially on one box under the ≤2 ceiling. **Fold REQ-038's probe fields into Arm A** (see
   run order at the top). Arms B/C/D stay unrun: they are not interpretable until Arm A reports,
