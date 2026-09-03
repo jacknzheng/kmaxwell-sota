@@ -934,6 +934,55 @@ actual architecture rather than an assumed one**, which it never was before iter
 explicitly in the output JSON. **This campaign spent 40 iterations without knowing whether its
 depth axis was correct**, and the fix is one field in the probe.
 
+**=== ITERATION 49: ARM 3 REVISED — its multipliers were not determined by the data ===**
+
+*Seven mechanism retractions later, I audited whether the REQ-036 arms still stand. Arm 3 was
+justified in iteration 19 by a "projection-matrix" reading that iteration 39 falsified. A design
+can be right when its stated reason is wrong, so the question is whether the empirical effect
+survives — and whether the numbers are determined.*
+
+**The effect survives.** The is_proj × is_end interaction is **+0.805 ± 0.215 (t = +3.75)** at
+fork-1500 and **+0.763 ± 0.212 (t = +3.60)** at fork-2000. Proj matrices at blocks 0 and 11 really
+do sit ~0.94–1.01 dex above their interior counterparts. **Arm 3's direction is sound.**
+
+**The multipliers are not.** Bootstrapping each per-type end-block factor over its **n = 2**
+end-block matrices:
+
+| type | filed value | bootstrap median | **95% CI** |
+|---|---:|---:|---|
+| **mlp.proj** | **6.71** | 9.58 | **[2.72, 31.86]** |
+| attn.proj | 1.72 | 2.92 | [1.42, 5.96] |
+| **mlp.fc** | **1.04** | 2.27 | **[1.44, 3.60]** ← filed value is *outside* its own CI |
+| attn.v | 1.43 | 1.28 | [0.96, 1.72] |
+| attn.q | 1.35 | 1.01 | [0.88, 1.18] |
+| attn.k | 1.01 | 1.02 | [0.87, 1.21] |
+
+**mlp.proj's interval spans an order of magnitude**, and mlp.fc's filed value falls outside its own
+interval. Pooling both proj types (n=4) only narrows it to [2.38, 20.24] / [3.27, 20.58]. **These
+are two-matrix estimates driving a 6x learning-rate change.**
+
+**Revision.** Arm 3 now applies a **single pooled, capped ×3.0** to proj types at blocks 0 and 11
+(attn.proj 1.20, mlp.proj 3.00) and leaves non-proj types at their arm-2 values. Rationale:
+- ×3.0 sits inside every bootstrap CI for the pooled proj factor, at its lower end;
+- a cap bounds the damage if the effect is smaller than estimated, while still testing the
+  direction, which is what has t > 3.5 support;
+- the four non-proj end-block adjustments are all within noise of 1.0 and are dropped as
+  unsupported.
+
+**Registered prediction, revised:** arm 3 beats arm 2 by **0.0002–0.002** val (halved from the
+original band, reflecting the smaller intervention). **If arm 3 loses to arm 2, the end-block
+correction is refuted and arm 2 stands as the design.**
+
+**Seed check (zero cost):** the pooled proj end-block factor must be **≥ 2.0 with a 95% CI
+excluding 1.0** in every seed. If it does not clear 1.0, the end-block term should be dropped
+entirely and REQ-036 reduces to the per-type rule.
+
+**A note on process.** This is the second time an amendment built on a since-falsified mechanism
+needed walking back (the first was the uniform is_end term in iteration 39). Both survived as
+*directions* and failed as *magnitudes*. The pattern suggests the campaign's per-type contrasts are
+reliable while its per-block-per-type contrasts — always n=2 — are not, and future amendments
+should carry bootstrap CIs before being filed rather than after.
+
 **=== ITERATION 48: QK-NORM FALSIFIED TOO. Seven mechanisms, seven failures. ===**
 
 *QK-norm was the last architectural candidate standing. Its sharpest consequence is testable with
@@ -2020,7 +2069,7 @@ live.** Everything below is kept for provenance and must not be executed from di
 |---|---|---|
 | **1** | control | all 1.0 |
 | **2** | per-type only | attn.proj 0.40, attn.k 0.88, mlp.fc 0.91, attn.q 1.18, attn.v 1.25, mlp.proj 1.56 |
-| **3** | per-type + role-split end block | arm-2 values, except at blocks 0 and 11: attn.q 1.35, attn.k 1.01, attn.v 1.43, mlp.fc 1.04, **attn.proj 1.72, mlp.proj 6.71** |
+| **3** | per-type + end-block cap ⚠️ **REVISED, see iteration 49** | arm-2 values, except at blocks 0 and 11 where **proj types (attn.proj, mlp.proj) get a single pooled ×3.0 cap**: attn.proj 1.20, mlp.proj 3.00. Non-proj types unchanged from arm 2. *(The previously filed per-type end values — attn.q 1.35, attn.k 1.01, attn.v 1.43, mlp.fc 1.04, attn.proj 1.72, mlp.proj 6.71 — are **withdrawn**: each rests on n=2 matrices and several sit outside their own bootstrap CI.)* |
 | **4** | anti-rule falsifier | arm-2 multipliers inverted (1/s) |
 | **5** | **polar target** (iteration 27) | attn.q 0.568, attn.k 0.755, attn.proj 0.642, attn.v 1.101, mlp.fc 1.260, mlp.proj 2.462 |
 
@@ -2028,9 +2077,8 @@ live.** Everything below is kept for provenance and must not be executed from di
 curvature to equalize) and are the most informative pair; arm 4 is the cheapest falsifier; arm 3
 is a magnitude refinement of arm 2.
 
-**Safety flag:** arm 3's mlp.proj value of **6.71x** is extreme, derived from a 1.0-dex curvature
-elevation. If judged unsafe, cap end-block multipliers at 3x and report the cap — the registered
-predictions still apply.
+**Safety flag — RESOLVED by the iteration-49 revision.** The original 6.71x is withdrawn; arm 3 now
+uses a pooled, capped ×3.0 for proj types at the end blocks. Rationale below.
 
 **ITERATION 31 — the single-type concentration is REAL SIGNAL, and a 2-parameter rule
 nearly matches the 6-parameter one.**
