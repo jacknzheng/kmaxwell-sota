@@ -258,9 +258,9 @@ measured value so a seed result can be compared directly.
 | **7** | **the split is residual-stream position, not shape** (iteration 65) | **slope(attn.proj + mlp.proj) − slope(other four) ≥ +1.5** in ≥3 of 4 seeds, each proj type individually ≥ +2.0 vs internal | +2.173 / +2.183, p < 0.0001 |
 | **8** | **the cross-sectional split is bias, not physics** (iter. 67) | **Wald-ratio gap (residual − internal) ≤ +1.0** and **< half the cross-sectional slope gap** in ≥3 of 4 seeds; both first-stage F > 100 | gap +0.374 / +0.688 vs cross-sectional +2.17 / +2.18 |
 | **9** | **only attn.proj's offset is resolved** (iter. 68–69, corrected) | **attn.proj lowest** of the six offsets in ≥3 of 4 seeds and **≥0.25 dex below the other five**; **|residual-writer − internal| offset gap < 0.20 dex**; the other four adjacent gaps need NOT resolve | gap −0.454 / −0.430, p ≤ 0.0003 |
-| **10** | **C is lifted at layer 0** (iter. 69–72, corrected twice) | **layer-0 indicator coefficient positive, t > 4** over type+gradient; **layer 0 lift ≥ +0.20 dex** above the interior; **layer 12 NOT lifted** (< +0.15 dex) — in ≥3 of 4 seeds | t = 7.3–8.8; layer 0 +0.26/+0.44, layer 11 +0.24/+0.22, layer 12 +0.12/+0.12 dex |
+| **10** | **layer-0 lift — HOLDS on fitted-intercept C, FAILS on λ/g²** (iter. 69–78) | **on the fitted intercept**: layer-0 coefficient t > 4. **On λ/g² it does not clear its permutation null** (p = 0.113 / 0.032) — do not treat as established until a seed resolves it | fitted-C t = 7.3–8.8; λ/g² lift +0.309 / +0.431 dex, p = 0.113 / 0.032 |
 | **11** | **the assembled model generalises** (iter. 72) | **leave-one-layer-out rmse ≤ 0.20 dex** and **cross-fork rmse ≤ 0.20 dex** for `type + two-slope gradient + layer-0 term`, versus ~0.38 dex for C's own spread | LOLO 0.138 / 0.164; cross-fork 0.165 / 0.140 dex |
-| **12** | **the six type offsets reduce to two binaries + weight norm** (iter. 73–75) | **LOLO rmse within 0.02 dex of the 6-free-offset model with 7 params**; **residual-writer ≈ −0.47 dex**, **mlp.proj ≈ −0.65 dex** — same signs in every seed. **Weight norm is a cross-sectional correlate only — no causal weight-norm term** | LOLO 0.168 vs 0.162 / 0.209 vs 0.217; horse-race t = 0.3 / 1.2 |
+| **12** | **the type offsets reduce to three binaries** (iter. 73–78) | **on λ/g²: `q,k + residual-writer + mlp.proj` (5 params) within 0.01 dex of six free offsets (7 params)**; **weight norm adds nothing on λ/g²** | LOLO 0.229 vs 0.226 / 0.265 vs 0.263 |
 | **13** | **the causal exponent is exactly 2** (iter. 76) | **2.000 inside the 95% CI** by both OLS-with-matrix-fixed-effects and the IV Wald ratio, in every seed; **per-type exponent spread must NOT clear its permutation null** (p > 0.05) | OLS +2.094 CI [1.843, 2.310], IV +2.076 CI [1.900, 2.251]; per-type p = 0.104 / 0.003 |
 | **14** | **q,k carry a large C excess in λ/g²** (iter. 77) | **mean log(λ/g²) for attn.q + attn.k exceeds the other four by ≥ +0.6 dex**, and **both q and k exceed all four others in ≥10 of 12 blocks**, in every seed | gap +0.808 / +0.842 dex, p < 10⁻⁵, 12/12 blocks, noise floor 0.06–0.09 dex |
 
@@ -271,6 +271,68 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 78: RE-DERIVING BANDS 6, 9, 10 AND 12 ON λ/g² — one fails, one simplifies, one was never independent ===**
+
+*Iteration 77 flagged that bands 6, 9, 10 and 12 are all defined on the fitted-intercept C and must be
+re-derived on the derivation-fixed C = λ/g². Done here, at zero compute cost.*
+
+**BAND 6 — not independent evidence, and I nearly recorded it as such.** On λ/g² the residual/internal
+slope difference is +2.202 / +2.166 with p < 0.0001, which looks like strong confirmation. **It is
+arithmetic.** Regressing `C2 = log λ − 2 log g` on `log g` returns *exactly* the raw slope minus 2:
+
+| group | slope(log λ on log g) | slope(C2 on log g) | raw − 2 |
+|---|---:|---:|---:|
+| residual writers | 2.600 | 0.600 | 0.600 |
+| internal | 0.397 | **−1.603** | −1.603 |
+
+Identical to three decimals, as it must be. **Band 6 on λ/g² is the same statement as band 6 on the
+fitted intercept, not a second confirmation** — and the eye-catching "negative internal slope" is
+purely the mechanical consequence of internal matrices having a raw slope below 2, which band 6
+already recorded. No change to band 6; no new support for it either.
+
+**BAND 10 — FAILS on λ/g². This is the significant outcome.** The layer-0 lift, which on the fitted
+intercept reached t = 7.3–8.8 and was called the campaign's largest effect:
+
+| fork | layer-0 lift on λ/g² | permutation null | **p** |
+|---|---:|---:|---:|
+| 1500 | +0.309 dex | −0.000 ± 0.196 | **0.113** |
+| 2000 | +0.431 dex | −0.001 ± 0.204 | 0.032 |
+
+**Fork-1500 does not clear its null.** The lift is real on the fitted-intercept C and does not survive
+on the derivation-fixed C — meaning it was substantially carried by the per-matrix fitted slope rather
+than by C itself. **Band 10 is amended to record that it holds on one definition of C and fails on
+the other**, and must not be treated as established until a seed resolves it. *(This also retires the
+per-type × boundary follow-up arm proposed in iteration 71 — there is no longer a boundary effect
+solid enough to justify it.)*
+
+**BAND 12 — simplifies, and weight norm drops out entirely.** On λ/g², leave-one-layer-out:
+
+| model | params | LOLO f1500 | LOLO f2000 |
+|---|---:|---:|---:|
+| 6 free type offsets | 7 | 0.226 | 0.263 |
+| **q,k + residual-writer + mlp.proj** | **5** | **0.229** | **0.265** |
+| + weight norm | 6 | 0.231 | 0.265 |
+| q,k binary alone | 3 | 0.248 | 0.283 |
+
+**Three structural binaries match six free offsets with two fewer parameters**, and **weight norm now
+adds nothing at all** — consistent with iteration 75, which showed it has no causal effect once the
+gradient is accounted for. On the derivation-fixed C it is not even a useful correlate. Band 12
+amended.
+
+**BAND 9 — superseded by band 14.** The type ordering on λ/g² is `mlp.proj < attn.proj < attn.v ≈
+mlp.fc < attn.k < attn.q`, which is band 14's ordering. Band 9's claim ("only attn.proj's offset is
+resolved") was a property of the fitted-intercept C; on λ/g² the resolved feature is the q,k gap.
+
+**Net effect on the account.** The structure of C is now simpler and better founded than before this
+iteration:
+
+> **λ_eq = C · g²** with the exponent fixed by Gauss-Newton (band 13), and
+> **log C = (q,k excess ≈ +0.82 dex) + (residual-writer term) + (mlp.proj term) + noise ~0.06–0.09 dex.**
+
+**Three binaries and a derived exponent.** No fitted slope, no weight-norm term, and no boundary term
+that survives on this object. **The single largest structural fact is the q,k excess**, and REQ-038's
+`|a|`/`|d|` fields remain the direct test of it, with a target of ~0.82 dex.
 
 **=== ITERATION 77: WITH THE EXPONENT FIXED AT 2, THE q,k GAP REAPPEARS — IN C ===**
 
