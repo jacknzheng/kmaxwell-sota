@@ -1137,7 +1137,7 @@ asking whether mu does anything LR cannot at fixed `s_eff`; that is REQ-037 if w
 
 ## REQ-037: a NON-learning-rate instrument for the curvature-gradient exponent
 
-- status: OPEN
+- status: **ACCEPTED — QUEUED on capacity (2026-09-03 ~02:00Z).** 1 box / 4 arms / fork@2000 — same blocker as REQ-034/035/036: both my nodes are REQ-032's tau2 arms (~20–26h left) and my operator holds a ≤2-node ceiling (unresolved conflict escalated to Jerry). Runs sequentially on the first freed node. Noted this shares the REQ-026/028/029 fork@2000 machinery + needs per-matrix curvature measurement added. Not provisioned. **Queue now 4 deep (034/035/036/037) behind the ≤2 ceiling** — if Jerry lifts it, I parallelize and clear them; otherwise they run one-per-freed-node.
 - requested: Jack (via Claude analysis session) / 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - pinned SHA: `ebf53cd` (same trainer + curvature probe as REQ-019/022/023)
