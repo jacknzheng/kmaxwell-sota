@@ -1910,6 +1910,56 @@ hypothesis rather than a magnitude. **Registered prediction:** polar-target arm 
 lam_top-target arm by 0.0005–0.003 val. If lam_top wins, the top eigenvalue is the right
 stability quantity despite Muon not moving along it — itself a substantive result.
 
+**ITERATION 29 — AUDIT of `curvature_along_polar`, the field the new design target rests on.
+It clears the circularity trap, with one qualification.**
+
+`curvature_along_gradient` turned out to be exactly alpha_1 (iteration 6), which invalidated a
+headline result. The polar target had not been given the same scrutiny, so:
+
+*It is not a disguised tridiagonal element.* |cp/alpha_1 − 1| median = **0.980**, |cp/alpha_last − 1|
+= 0.985, |cp/w_min − 1| = 1.024 — it matches nothing in the Lanczos tridiagonal (whereas
+|cg/alpha_1 − 1| = **0.00000000**, confirming that trap exactly). It correlates only **+0.583**
+with log lam_top, so it carries independent information.
+
+*It is a valid Rayleigh quotient.* 99.3% positive, and **cp ≤ lam_top in 100% of 2376 rows** — the
+upper Rayleigh bound is never violated, which it would be if cp were a quadratic form of a
+different operator than the one Lanczos ran on.
+
+*It is an AVERAGE-curvature probe, not a lam_top proxy.* Muon's polar factor has
+‖O‖²_F = rank, so O'HO/‖O‖² is the mean curvature over the row space — it should track the
+spectrum's *mean*, not its top. Measured: corr(log|cp|, log|Krylov mean |eig||) = **+0.612**
+versus **+0.583** for lam_top. And cp·rank/lam varies **6x across types** (1.12 for attn.q to 6.89
+for mlp.proj), so cp is **not** a shape-normalised lam_top. **Iteration 27's design argument
+survives: the two targets are genuinely different physical quantities.**
+
+*The qualification — and it matters.* 14.8% of rows have cp < w_min. That is *expected* (w_min is
+the smallest **Ritz** value from an 8-step Krylov space, not the true minimum, and a vector outside
+that space may legitimately fall below it), and the violations concentrate in poorly-converged
+rows (median residual_tail **0.0491 vs 0.0194**). **But they are severely type-structured:**
+
+| type | % of rows with cp < w_min |
+|---|---:|
+| **attn.v** | **62.9** |
+| **attn.proj** | **17.4** |
+| mlp.proj | 8.3 |
+| attn.k / attn.q / mlp.fc | 0.0 |
+
+attn.v and attn.proj are precisely the types with the worst Lanczos convergence (iteration 5:
+attn.v 66% gate attrition). **cp itself is fine — it is measured directly, not from the Krylov
+space — but its comparison against Ritz-derived quantities is type-biased.** Any statistic mixing
+cp with tridiagonal quantities (including iteration 26's cg/cp ramp) inherits that bias for attn.v
+and attn.proj specifically.
+
+**Consequence for the polar prescription:** the arm-5 multipliers are built from cp alone, not from
+cp/Ritz ratios, so they are **unaffected**. The depth ramp of iteration 26 **is** affected and
+should be treated as provisional for attn.v and attn.proj until higher-iteration Lanczos data
+exists.
+
+**Added registered seed check (zero cost):** report the fraction of rows with cp < w_min per type.
+If attn.v again exceeds ~50%, the type-biased comparison is architectural and every cp/Ritz
+statistic needs a convergence-matched control. If it does not reproduce, iteration 26's ramp is
+firmer than stated here.
+
 **Registered seed check (zero cost):** the polar prescription's per-type ordering must reproduce
 across seeds (Spearman ≥ +0.7), and its between-state SNR must exceed the lam_top rule's in at
 least 3 of 4 seeds.
