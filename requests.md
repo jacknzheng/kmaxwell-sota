@@ -1807,6 +1807,68 @@ half-strength arm (arm 3) instead.
 by 0.0005–0.003 val. If the original beats the revised, the block-level boundary field does not
 translate into training benefit and the amendment should be reverted.
 
+**ITERATION 27 — A BETTER DESIGN TARGET. Equalize curvature along MUON'S STEP DIRECTION,
+not the top eigenvalue. This is a proposed arm, not a replacement of the filed table.**
+
+*Correcting iteration 26.* I recorded the step-geometry depth ramp as having "no design
+implication". **That was an assertion, not a test, and it was wrong.** Muon moves along its
+orthogonalised (polar) direction, not along the top eigendirection — so which curvature the rule
+equalizes is a live design choice that this campaign never examined.
+
+*The comparison.* Same construction, different target: equalize `curvature_along_polar` instead of
+`top_eigenvalue`.
+
+| test | equalize lam_top (filed) | **equalize curv_polar** |
+|---|---:|---:|
+| prescription SNR (between-state) | 13.1 | **41.3** |
+| between-state disagreement | 0.0133 dex | **0.0052 dex** |
+| cross-state prescription corr | +0.9979 | **+0.9996** |
+| leave-one-block-out rms | 0.2500 | **0.1935** |
+| cross-state transfer rms | 0.2652 | **0.1936** |
+| **independent REQ-023 holdout** | 0.5402 | **0.2767** |
+| target reproducibility (corr / shift) | +0.9747 / 0.0281 | **+0.9877 / 0.0145** |
+
+**The polar target wins every test**, and on the fully independent REQ-023 holdout it halves the
+error (0.277 vs 0.540 dex).
+
+*One test initially failed catastrophically, and the cause was my own error.* Cross-state transfer
+first came out at **1.21 dex**. Diagnosis: I computed the "truth" using per-**matrix** k (whose
+individual values reach −1.614 and cross zero) while predicting with per-**type** k. Since k is the
+denominator, near-zero per-matrix values explode the reference, not the prediction. Recomputed
+consistently the value is **0.1936 dex**, and it is insensitive to the fix (pooled k gives 0.1843,
+flooring |k| at 0.5 gives 0.1936). **The failure was in my test, not in the target.**
+
+*The prescriptions genuinely differ* — they correlate only **+0.597**:
+
+| type | equalize lam_top | **equalize curv_polar** |
+|---|---:|---:|
+| attn.q | 1.169 | **0.568** |
+| attn.k | 0.879 | 0.755 |
+| attn.proj | 0.433 | 0.642 |
+| attn.v | 1.214 | 1.101 |
+| mlp.fc | 0.932 | 1.260 |
+| mlp.proj | 1.542 | **2.462** |
+
+attn.q moves by a factor of 2 and mlp.proj by 1.6x. **This is not a refinement of the filed rule;
+it is a different rule.**
+
+*Why it is better motivated physically.* lam_top is the curvature along a direction Muon never
+moves in — iteration 3 measured lam_top/lam_polar ≈ 300x, so the optimiser travels through a
+nearly flat groove while the "edge of stability" cliff sits off to the side. Equalizing the
+curvature the optimiser **actually experiences** is the more defensible target, and the
+step-geometry depth ramp (iteration 26) is the field that makes the two targets diverge.
+
+**PROPOSED — do not change the filed arms without operator agreement.** Add a **sixth arm** using
+the polar prescription above. If capacity forces a choice, I would rank it **above** the
+half-strength arm and above the original per-type-only arm, because it tests a different
+hypothesis rather than a magnitude. **Registered prediction:** polar-target arm beats the
+lam_top-target arm by 0.0005–0.003 val. If lam_top wins, the top eigenvalue is the right
+stability quantity despite Muon not moving along it — itself a substantive result.
+
+**Registered seed check (zero cost):** the polar prescription's per-type ordering must reproduce
+across seeds (Spearman ≥ +0.7), and its between-state SNR must exceed the lam_top rule's in at
+least 3 of 4 seeds.
+
 ### Arms — 750-step continuations from the shared step-2000 state, val@2750
 
 | # | arm | multipliers |
