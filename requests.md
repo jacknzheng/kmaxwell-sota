@@ -2227,6 +2227,64 @@ things we could not explain are one thing we cannot explain. That is still progr
 number of separate anomalies REQ-038 and Arm A need to account for, and it means the softmax
 reading must explain a *spatial* pattern, not just a q,k offset.
 
+**=== ITERATION 58: THE SPATIAL FIELD HAS A FUNCTIONAL FORM — log(1 + edge), and it is SYMMETRIC ===**
+
+*Iteration 55 unified the boundary field and the q,k residual deficit into one spatial effect. This
+iteration characterises its shape and rules out the obvious mechanism.*
+
+**The form.** Fitting the block-mean residual profile (per-type centred, so type offsets are
+removed) on the true-layer axis:
+
+| model | params | R² f1500 | R² f2000 |
+|---|---:|---:|---:|
+| linear in depth | 2 | 0.004 | 0.071 |
+| **log(1 + edge distance)** | **2** | **0.912** | **0.886** |
+| distance to edge, linear | 2 | 0.797 | 0.771 |
+| is_end binary | 2 | 0.754 | 0.680 |
+| quadratic in depth | 3 | 0.896 | 0.948 |
+
+**log(1 + edge) is the best two-parameter description**, beating the linear-edge and binary forms
+and matching a quadratic that costs an extra parameter. The effect **saturates** with distance from
+the boundary rather than growing linearly.
+
+**And it is genuinely symmetric.** Block 0 and block 11 differ by only **0.019 dex** (fork-1500) and
+0.084 (fork-2000), against an interior-vs-edge gap of ~0.15 dex.
+
+**The obvious mechanism is ruled out.** A natural reading of "residual scale grows with distance
+from the boundary" is *accumulation*: the error signal picks up contributions from the layers
+between a matrix and the loss, saturating logarithmically as the residual stream mixes. **That
+predicts a ONE-SIDED gradient** — block 0 is 12 layers from the loss, block 11 is 1, so they should
+differ sharply. Tested:
+
+| distance measure (2 params) | R² f1500 | R² f2000 |
+|---|---:|---:|
+| **symmetric edge distance** | **0.912** | **0.886** |
+| distance to output | 0.054 | 0.000 |
+| distance from input | 0.113 | 0.291 |
+
+**Both one-sided measures fail badly.** The accumulation story is rejected: whatever produces this
+field treats the two ends of the network *the same way*.
+
+*(A 3-parameter model using both directions reaches 0.929 / 0.976, but that is 3 parameters on 12
+points with the R² jumping 0.05 between forks — not read as real.)*
+
+**What is symmetric about both ends.** Block 0 reads the embedding directly; block 11 writes to the
+output head. Interior blocks read and write only other blocks. **Adjacency to a non-block
+operation** is the one property genuinely shared by both ends, and it is architectural rather than
+learned. **This is a description of where the field is, not why the residual scale differs there** —
+it names the symmetry without explaining it.
+
+**Registered seed check (zero cost, replaces the raw boundary-correlation check):**
+- **log(1 + edge) must reach R² ≥ 0.7 on the block-mean residual profile in every seed**, and must
+  beat both one-sided distance measures by ≥ 0.4 R² in at least 3 of 4 seeds.
+- **|block 0 − block 11| ≤ 0.10 dex** in every seed (the symmetry that rules out accumulation).
+- **Registered negative:** if a one-sided measure wins in ≥2 seeds, the accumulation reading
+  revives and this iteration's rejection was driven by the two-state sample.
+
+**This sharpens what REQ-038 must explain.** The activation probe now has a specific target: the
+input/backward statistics must show a **symmetric, saturating** dependence on distance to the
+network boundary, not a monotone one. That is a harder and more falsifiable bar than "q,k differ".
+
 ## ⚠️ AUTHORITATIVE SEED-CHECK TABLE — READ THIS, IGNORE THE SEED CHECKS BELOW
 
 *This request accumulated **13 overlapping "registered seed check" blocks** across ~15 iterations,
