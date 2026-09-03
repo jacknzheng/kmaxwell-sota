@@ -257,6 +257,7 @@ measured value so a seed result can be compared directly.
 | **6** | **two-valued gradient slope** (iter. 63–66) | **Q(5) > 10** across the six raw slopes; **F(6 slopes vs 2 slopes, both with 6 free intercepts) < 2.5**; **residual-writer slope ≥ 2.5**, **internal slope ≤ 1.8** | Q = 66.7 / 68.3; F = 0.18 / 0.10 |
 | **7** | **the split is residual-stream position, not shape** (iteration 65) | **slope(attn.proj + mlp.proj) − slope(other four) ≥ +1.5** in ≥3 of 4 seeds, each proj type individually ≥ +2.0 vs internal | +2.173 / +2.183, p < 0.0001 |
 | **8** | **the cross-sectional split is bias, not physics** (iter. 67) | **Wald-ratio gap (residual − internal) ≤ +1.0** and **< half the cross-sectional slope gap** in ≥3 of 4 seeds; both first-stage F > 100 | gap +0.374 / +0.688 vs cross-sectional +2.17 / +2.18 |
+| **9** | **C's level ordering is not the residual-writer split** (iter. 68) | **attn.proj lowest and mlp.proj highest** of the six type offsets in ≥3 of 4 seeds; **|residual-writer − internal| offset gap < 0.20 dex**; type-offset spread > 0.40 dex | gap −0.107 / −0.099 dex; spread 0.614 / 0.584 dex |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
 exponent differs systematically by type — **~3.8 for the two projection matrices, ~0.9–1.4 for the
@@ -265,6 +266,69 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 68: C'S LEVEL AND C'S SLOPE ARE SET BY DIFFERENT THINGS ===**
+
+*Band 8 said the productive target is C at fixed g. This iteration goes there, and finds the
+band-7 grouping does NOT carry over from the slope to the level.*
+
+**Retraction, immediately.** I first removed the gradient's effect by subtracting `2.07 · log g`
+(the causal ratio) and got a **negative** variance share — "the gradient explains −47.9% of C's
+variance." I briefly read that as a sign flip. **It is not.** Every relationship in the data is
+positive: pooled corr +0.467/+0.408, every within-type slope +0.36 to +3.94, and the six type means
+correlate +0.404. The negative share is arithmetic — all fitted slopes are *below* 2.07, so
+subtracting 2.07·log g overshoots and inflates variance. **That script's 38%/81% decomposition was
+computed on an over-subtracted residual and is discarded.** There is no Simpson reversal here.
+
+**The correct decomposition.** Comparing nested models on C directly:
+
+| | R² (f1500) | R² (f2000) |
+|---|---:|---:|
+| gradient alone | 0.218 | 0.166 |
+| **matrix type alone** | **0.287** | **0.248** |
+| type + gradient | 0.751 | 0.607 |
+
+**Type identity alone outpredicts the gradient** (28.7% vs 21.8%; 24.8% vs 16.6%). C's structure is
+not mostly a gradient effect.
+
+**The finding: C's six type offsets do NOT group by residual-writer status.**
+
+| rank | type (f1500) | offset (dex) | |
+|---:|---|---:|---|
+| 1 | **attn.proj** | **3.734** | ← residual writer, *lowest* |
+| 2 | attn.k | 4.032 | |
+| 3 | mlp.fc | 4.074 | |
+| 4 | attn.q | 4.202 | |
+| 5 | attn.v | 4.283 | |
+| 6 | **mlp.proj** | **4.348** | ← residual writer, *highest* |
+
+**The two residual writers sit at opposite extremes.** Their group gap is **−0.107 / −0.099 dex**,
+at the ~0.10 dex noise floor — while the full type spread is **0.614 / 0.584 dex**, six times larger.
+Ordering is identical across both forks.
+
+> **The property that governs C's SLOPE (residual-stream position, band 7, p < 0.0001) is not the
+> property that governs C's LEVEL. Whatever orders attn.proj below attn.k below mlp.fc … below
+> mlp.proj is a different mechanism, and it is the larger effect.**
+
+This is a genuine constraint: any single-mechanism account of C is now excluded by data.
+
+**A hypothesis of mine, tested and rejected in the same iteration.** The within-type common slope
+(+2.76 / +2.35) is far closer to the causal 2.07 than the pooled slope (+0.74), and its 95% CI
+**contains 2.07** in both forks — suggesting the tidy model `logC = type offset + 2.4·log g`, which
+would have retired band 6. **It fails decisively:**
+
+| model | RSS (f1500) | AIC | |
+|---|---:|---:|---|
+| 6 offsets + 1 common slope | 2.5339 | −226.98 | |
+| **6 offsets + 2 slopes (band 6)** | **1.4665** | **−264.35** | ← best |
+| 6 offsets + 6 slopes | 1.4490 | −257.22 | |
+
+**F(1,64) = 46.58 and 38.47** against one common slope. **Band 6's two-slope structure survives a
+direct attempt to refute it** and is now the best model by both AIC and F in both forks.
+
+**Registered as band 9.** Note it is deliberately a *negative* prediction — the residual-writer gap
+must stay **below** 0.20 dex. If seeds show a large offset gap, band 9 is wrong and the level and
+slope share a mechanism after all.
 
 **=== ITERATION 67: THE CROSS-SECTIONAL SPLIT IS ~75% OMITTED-VARIABLE BIAS — and the omitted variable is C ===**
 
