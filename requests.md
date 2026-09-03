@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-042**.
+Next request number: **REQ-043**.
 
 ---
 
@@ -1638,6 +1638,103 @@ any experiment's protocol.
 Do not start REQ-035 Arms B/C/D or a standalone REQ-038 unless their existing request blocks say
 their prerequisite or fallback condition has been met. Mark each affected request `RUNNING` when
 work begins and preserve the prescribed artifact paths and reporting gates.
+
+## REQ-042: matched K-Maxwell vs bi-Maxwell high-batch ladder — 32× and 64×
+
+- status: **OPEN — run after the currently higher-priority REQ-036/037 work; do not delay an
+  already-running request.**
+- requested: Jack / 2026-09-03 PDT
+- repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
+- pinned SHA: `365c392d695f95dc9a4fb89095e85a6a7b5d551e` (the REQ-026/029/033/034 batch-ladder code path)
+- node budget: **≤2 nodes fleet-wide.** Run sequentially or two-at-a-time only if no other request
+  is using a node.
+
+### Goal
+
+Extend the batch-size experiment beyond the existing 16× endpoint and make the comparison fully
+matched: at each larger batch, compare **annealed K-Maxwell**, **bi-Maxwell**, and the **no-extra-
+momentum control** from the same forked model state, with the same data position and training
+window. The earlier chart is useful context, but its K-Maxwell and bi-Maxwell series used different
+forks/horizons and therefore must not be joined. This request supplies directly comparable points
+at **32× and 64×**.
+
+The question is simple: once ordinary momentum's benefit is already near zero at 16×, does either
+two-timescale kernel retain a measurable validation-loss advantage at still larger batches? And if
+so, does K-Maxwell remain better than bi-Maxwell on the same protocol?
+
+### Design — six matched arms, n=1 per cell
+
+Base batch is 524,288 tokens per optimizer step. Use seed 0 and a fresh shared plain-Muon base run
+to **fork step 1984**, then run the following six 750-step continuations from that exact serialized
+state:
+
+| batch | `batch_tokens` | `microbatch_sequences` | `skip_batches` | kernels |
+|---|---:|---:|---:|---|
+| 32× | 16,777,216 | 64 | 62 | `muon{mu:0.0}`, `bimaxwell_muon`, `annealed_weights_muon` |
+| 64× | 33,554,432 | 64 | 31 | `muon{mu:0.0}`, `bimaxwell_muon`, `annealed_weights_muon` |
+
+`1984 × 524,288` is exactly divisible by both larger batch sizes. Therefore the continuations all
+start at the same approximately 1.040B-token data position; do not substitute the old step-2000
+fork, where those skips would be fractional. Run `start_step: 1984`, `stop_after_step: 2734`, and
+keep `train_steps: 3250`, `lr: 0.025`, `weight_decay: 0.05`, `cool_down_learning_rate
+cooldown_frac: 0.7`, and the existing validation cadence. Keep microbatch sequences at 64, using
+gradient accumulation for the larger batches; do not use an eager fallback.
+
+Use the exact existing optimizer definitions:
+
+- **control:** `muon` with `mu: 0.0`;
+- **bi-Maxwell:** the REQ-026/029 `bimaxwell_muon` record (`mu: 0.95`, `fast_decay: 0.85`,
+  `slow_decay: 0.98`, `fast_weight: 0.4385`, `switch_step: 1000`);
+- **K-Maxwell:** the shipped `annealed_weights_muon` schedule from REQ-034, with the listed decays
+  and start/end weights, `switch_step: 1984`, and `anneal_steps: 750`.
+
+The new fork means the absolute losses are not a replacement for the old fork-2000 values. The
+primary estimands are the two same-batch differences: `final_val(K-Maxwell) − final_val(control)`
+and `final_val(bi-Maxwell) − final_val(control)`, plus `K-Maxwell − bi-Maxwell`.
+
+### FineWeb data — expand without reuse
+
+A 64× continuation consumes about 25.17B tokens after the fork (about 26.21B including the shared
+base position), exceeding the existing FineWeb10B subset. Pull additional, non-overlapping FineWeb
+training shards sufficient for the largest arm, with a safety margin for discarded shard tails.
+Do **not** wrap, cycle, or silently reuse training data.
+
+Before launching, make a machine-readable data manifest recording the dataset/revision, shard list,
+per-shard usable-batch count, total usable batches, and total usable tokens. Budget with
+`Σ floor(shard_tokens / batch_tokens)`, not nominal bytes or raw token totals. Each 32× arm needs
+at least `62 + 750 = 812` usable batches; each 64× arm needs at least `31 + 750 = 781`.
+Use the same ordered data manifest and identical skip count for all three kernels at a given batch.
+
+### Gates
+
+1. Tests green at the pinned SHA.
+2. Build the shared base and verify its validation loss at step 1984 is finite; record it.
+3. Assert the usable-batch budget before training every arm, then run a 20-step finite-loss smoke
+   test for every config.
+4. Verify the three arms within each batch load the same serialized base state and data position.
+5. If data provisioning, a budget check, or a smoke test fails, mark the request `NEEDS-INFO` with
+   the exact failed gate; do not replace missing data by cycling the existing 10B subset.
+
+### Artifacts and readout
+
+Commit only code, configs, data manifest, logs, and derived results—never checkpoints or tensors:
+
+`logs/kmaxwell/req042_high_batch_kernel_ladder/{README.md,summary.tsv,readout.tsv,manifest.tsv,
+data_manifest.tsv,make_req042_configs.py,configs/,logs/}`.
+
+`summary.tsv` must contain base validation, checkpoints through step 2734, and final validation for
+all six arms. `readout.tsv` must contain:
+
+```text
+batch  control_final  bimax_final  kmax_final  bimax_minus_control  kmax_minus_control  kmax_minus_bimax
+32x
+64x
+```
+
+Interpret absolute differences below roughly `±2e-4` as the established single-seed noise floor.
+Plot these as a **new matched high-batch series**; do not draw one continuous line through the old
+fork-2000 bi-Maxwell points or fork-1000 K-Maxwell points. Report whether each kernel remains
+beneficial, is indistinguishable from control, or is worse at 32× and 64×.
 
 ## Template
 
