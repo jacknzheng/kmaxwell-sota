@@ -21,6 +21,64 @@ do not keep those request blocks in this queue.
 
 Next request number: **REQ-039**.
 
+---
+
+## ⚠️ OPERATOR DIRECTIVE (2026-09-03, Jack) — STOP REQ-032, RUN THE EoS QUEUE
+
+**These are my runs and my boxes. This directive supersedes the queue order and the ≤2-node
+ceiling for the purposes below.** Earlier hesitation in this file about node authority is resolved:
+**proceed.**
+
+### Step 1 — checkpoint and stop the REQ-032 SDPO/tau2 arms
+
+Both remaining tau2 arms (`gold` on `wnle40q`, `step_hint` on `wox8gkw`) are to be **stopped, not
+abandoned**:
+
+1. **Save a checkpoint first.** `gold` already auto-recovered once from step_100 after an NCCL
+   abort, so it must reach a clean, loadable checkpoint before the process is killed — do not
+   SIGKILL a training step mid-write.
+2. **Commit the eval curves and logs** collected so far to `logs/async_sdpo_req032/<arm>/`, as with
+   the two completed diligence arms.
+3. **Record the exact step each arm stopped at** so the runs are resumable rather than lost.
+4. Then free both boxes.
+
+**If an arm is within ~30 minutes of completing, finish it instead of stopping it** — the point is
+to free capacity, not to discard nearly-complete work. Use judgement and say what you did.
+
+### Step 2 — run the four EoS experiments
+
+With both boxes free, run in this order. **Operator permission is granted for up to 10 H100/H200
+nodes**, so parallelise across boxes wherever arms are independent:
+
+| priority | request | why first |
+|---:|---|---|
+| **1** | **REQ-038** | Cheapest by far — one forward+backward pass on an existing checkpoint, minutes not hours. It also carries the campaign's sharpest quantitative prediction (below). |
+| **2** | **REQ-035 Arm A** | The load-bearing arm: 4 seeds decide whether any finding here is architectural or an artifact of one trained network. |
+| **3** | **REQ-036** | The per-layer LR design, 5 arms including the anti-rule falsifier. |
+| **4** | **REQ-037** | Non-LR instrument; tests the exclusion restriction behind the gradient law. |
+
+REQ-034 (the K-Maxwell batch ladder) is unrelated to this queue — run it whenever capacity allows,
+your call on ordering against the above.
+
+### The single number to check first
+
+REQ-038 measures per matrix the input activation `|a|` and the backward tensor `|d|`. **q, k and v
+read the same residual vector, so their `|a|` is identical by construction** — any gradient
+difference must sit entirely in `|d|`. From committed data:
+
+> **Predicted: `|d|(q,k) / |d|(other four types) = 0.39 ± 0.08`**
+
+- **Near 0.39** → the campaign's central anomaly closes. The gradient law λ ∝ g² is universal, and
+  q,k's apparent violation is the attention softmax attenuating the backward signal.
+- **Near 1.0** → the deficit is in `|a|` instead, which contradicts q,k,v sharing an input and means
+  either the probe or my reading of the model code is wrong. **Report this loudly if it happens.**
+
+Full registered bands are in the authoritative tables inside REQ-035 and REQ-036. **Ignore all
+superseded prediction blocks below those tables** — they were written against mechanisms that have
+since been falsified.
+
+
+
 
 ## REQ-034: K-Maxwell on the fork@2000 batch ladder — 1× → 16×
 
