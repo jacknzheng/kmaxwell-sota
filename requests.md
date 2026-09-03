@@ -1401,6 +1401,57 @@ proj at fork-1500.)* **mlp.proj at blocks 0 and 11 is an extreme value (6.7x) �
 that is judged too aggressive to run safely, cap end-block multipliers at 3x and report the cap;
 the registered prediction below still applies.
 
+**OVERFITTING AUDIT (iteration 20) — the refinements are real, but the rule is weaker than
+the within-experiment numbers suggest. Both halves matter.**
+
+I refined this prescription four times on the same 72 matrices (per-type → 6-level edge
+[rejected] → uniform is_end → is_end × is_proj). Each step was validated by leave-one-block-out,
+but **LOBO holds out blocks, not the decision to add the term** — the model selection itself was
+never held out. Two honest tests:
+
+*(a) True holdout within REQ-019* — every parameter fit on fork-1500, scored on fork-2000:
+
+| model | fit@1500 (LOBO) | scored@2000 | gap |
+|---|---:|---:|---:|
+| per-type | 0.2500 | 0.2661 | +0.0162 |
+| + uniform is_end | 0.2099 | 0.2073 | −0.0026 |
+| + is_end × is_proj | 0.1978 | **0.1720** | **−0.0258** |
+
+**The gap goes *negative* as complexity rises.** Overfitting produces the opposite signature, so
+the refinements are not fitting fork-1500 noise.
+
+*(b) Fully independent holdout* — fit on REQ-019 (global s-ladder), scored on **REQ-023**
+(per-matrix LR randomisation, a different design that was never used to build any version of
+this rule):
+
+| model | rms on REQ-023 |
+|---|---:|
+| per-type | 0.5423 |
+| + uniform is_end | 0.5157 |
+| **+ is_end × is_proj** | **0.4784** |
+
+**The ranking is preserved across experimental designs.** The refinements are real.
+
+**But the absolute performance is much worse out of design.** Against a target spread of
+**0.5705 dex**, the best rule achieves 0.4784 — capturing only **~30% of the variance**, versus
+~80% within REQ-019 (0.198 against a 0.44 spread). **The per-type + end-block rule transfers in
+*ordering* but loses most of its accuracy when the experimental design changes.**
+
+*Why this matters for REQ-036, stated plainly.* The prescription is derived under one design
+(global s-ladder, fork-1500/2000) and will be *applied* under another (constant per-matrix
+multipliers during training). The REQ-023 holdout is the closest available analogue of that
+shift, and it says to expect **substantially less benefit than the within-design numbers imply**.
+The registered prediction (revised beats original by 0.0005–0.003 val) should be read as
+optimistic; **a null result would not falsify the curvature findings, only the assumption that
+they transfer to a different intervention design.**
+
+*Parameter budget, for the record.* With ICC = +0.378 the 72 matrices are ~25 effective
+independent units: per-type uses 12 parameters (2.1 units/param), +is_end 13 (1.9),
++is_end×is_proj 15 (1.7). All three are at or below the ~2 units-per-parameter guideline, so
+**no further refinement should be attempted on this dataset** — the next term, however good it
+looks in LOBO, would not be trustworthy. Any further model development needs REQ-035's seeds
+for additional independent units.
+
 **Registered addition:** the per-type × is_end interaction must reproduce in every seed
 (interaction t > 2, same sign) in REQ-035 Arm A. If it does not, revert to the uniform is_end
 term; if the uniform term also fails to reproduce, revert to per-type only.
