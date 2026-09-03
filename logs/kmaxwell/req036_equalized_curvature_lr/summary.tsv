@@ -1,0 +1,17 @@
+# REQ-036 equalized-curvature per-type LR. SHA 25d3208 (PerMatrixLrMuon), 2 nodes (q89y4d3+qekd95q, 8xH100), venv019 torch2.10cu128.
+# 5 arms, 750-step continuations from a regenerated shared step-2000 state (base val@2000=3.44448/3.44435 ~ expected 3.44367), val@2750. n=1/arm.
+# per-type multipliers: a2 {attn.proj 0.40, attn.k 0.88, mlp.fc 0.91, attn.q 1.18, attn.v 1.25, mlp.proj 1.56}; a5 polar {attn.q 0.568, attn.k 0.755, attn.proj 0.642, attn.v 1.101, mlp.fc 1.260, mlp.proj 2.462}; a4=1/a2; a3=a2 but blocks 0,11 proj capped (attn.proj 1.20, mlp.proj 3.00).
+# Config verified: a1 all-1.0; a5 per-matrix = type's polar mult (all 72 matrices), built via official sorted_matrix_names()+common() (REQ-023's proven order).
+arm	rule	val@2750	benefit_vs_control(lower=better)
+a1_control	all 1.0	3.51052	0.00000
+a2_pertype	per-type rule	3.51295	+0.00243
+a4_antirule	1/arm2	3.51515	+0.00463
+a3_endcap	per-type + end-block cap	3.51996	+0.00944
+a5_polar	polar target	3.53460	+0.02408
+#
+# READOUT: uniform control (a1) is the BEST; every per-type LR intervention is WORSE at this fork/horizon.
+# - The predicted-best arm (a5 polar) is the WORST (+0.024). The per-type rule (a2) does NOT beat control (+0.0024), contradicting the expected "a2 beats a1 by 0.001-0.006".
+# - Rule-direction signal exists but is net-harmful: a2 (rule, 3.51295) < a4 (anti-rule, 3.51515) by 0.0022, so equalizing curvature helps vs anti-equalizing -- but BOTH are worse than doing nothing (uniform LR).
+# - Mechanism-death test ("if a4 also beats control"): a4 does NOT beat control (it is worse), so that specific condition is not met; but neither does a2, so the design provides no net gain over uniform LR here.
+# n=1/arm; the >=0.002 gaps are ~10x the ~2e-4 val seed-noise floor (REQ-027), so control-beats-all is robust; a2-vs-a4 (0.0022) is real but small.
+# NOTE checkpoint cadence: arms dumped at step 2250 (checkpoint every=750 fired at 2250, not 2750 -- a config-cadence miss); curvature spread is measured at 2250 (equilibrium is stable by then under fixed LR). val@2750 (above) is from the run logs and is exact.
