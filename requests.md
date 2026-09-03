@@ -390,6 +390,45 @@ the REQ-019/022 per-matrix JSONs (72 Muon matrices, 11-point s ladder, forks 150
    ranking above. Gate attrition is strongly type-dependent (attn.q 10%, attn.v 66%) and is
    explained by the spectral gap (corr(log gap, log tail) = -0.81 across types).
 
+**CORRECTION (2026-09-03, same analysis session) — three results retracted as circular.**
+Further work on the committed data invalidated the C_grad headline above. Recording this
+so the trap is not re-entered:
+
+- **Lanczos is started FROM THE GRADIENT.** `curvature_along_gradient` is exactly the
+  first Krylov coefficient alpha_1 (verified: median |alpha1/cg - 1| = 0.000000). It is
+  therefore not an independent probe of gradient geometry, and the "C_grad captures 77%"
+  result in point 3 above measured the instrument's start vector. **Retracted.**
+- Likewise `lam_2` (LOO 0.097), Krylov trace (0.064) and rms Ritz value (0.043) all
+  "beat the noise floor" purely because they are built from the same 8 Ritz values that
+  contain lam_top. The bound is arithmetic: rms/lam_top is confined to
+  [1/sqrt(8), 1], so sd(log10(rms/lam_top)) = 0.090 dex **by construction**. **Retracted.**
+- The anisotropy identity (point 6) was already flagged as tautological. Same family.
+
+**HARD RULE for this program: any candidate predictor of C built from the same Lanczos
+tridiagonal as lam_top is circular and must be rejected.** S_m has to be predicted from
+something measured OUTSIDE the curvature probe — weights, activations, gradients, or
+architecture. Of those, only gradient block norm has been tested (16% of explainable
+signal), and architecture caps out at 12%.
+
+**WHAT SURVIVES, and it is a real and non-circular result.**
+The Hessian block factorizes as **H_m(s) = S_m(s) · Q_m**: a scalar scale times an
+s-independent shape.
+- The normalized spectrum w_i/w_0 is constant across the whole ladder — coefficient of
+  variation 1.5%, 1.9%, 2.1%, 3.1% for w1..w4 over a 2.8x range in s. This is a claim
+  about how shape responds to an *intervention* and could have come out false; it did not.
+- Per-matrix slopes k for lam_top and for the Krylov trace agree at corr **+0.962**
+  (k = +1.39 +/- 0.45 vs +1.36 +/- 0.43). The block rescales rigidly.
+- Q_m is a genuine per-type fingerprint: w1/w0 = 0.684 (attn.q, mlp.fc) up to 0.843
+  (attn.v); between-matrix spread is 1.6x the within-matrix spread across s. This also
+  *explains the gate attrition* — attn.v is the most spectrally degenerate type, hence
+  its 66% Lanczos failure rate.
+
+**So the question sharpens to: what sets S_m?** lam_top is not special — it is S_m times a
+fixed per-matrix shape constant. The between-layer difference in C *is* the between-layer
+difference in overall Hessian scale. Arm A is unchanged and remains the right next step;
+Arms B/C/D should additionally report S_m (Krylov trace) and Q_m (w_i/w_0) per matrix, and
+must predict S_m only from non-curvature quantities.
+
 **The open question.** C_grad captures 77% of the explainable signal alone; no architectural
 covariate exceeds 16%. But C_grad is itself a measured curvature, so this relocates the
 question rather than answering it. Nothing reaches the 0.100 dex floor. Three hypotheses
