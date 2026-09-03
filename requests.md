@@ -263,7 +263,7 @@ measured value so a seed result can be compared directly.
 | **12** | **type offsets reduce to three binaries** — ✅ **CONFIRMED n=4** | `q,k + residual-writer + mlp.proj` (5p) within 0.02 dex of six free offsets (7p) | gaps 0.004 / 0.004 / 0.005 / 0.002 dex in the 4 seeds |
 | **13** | **the PER-MATRIX causal exponent is exactly 2** — ⚠️ **RE-SCOPED** (iter. 79) | 2.000 inside the 95% CI **under per-matrix LR randomisation only** (REQ-023 design) | REQ-023 +2.076/+2.079 CI contains 2. **Arm A's GLOBAL LR ladder gives +2.64 to +3.07, CI excludes 2 — a different estimand, not a refutation** |
 | **14** | **q,k carry a large C excess in λ/g²** — ✅ **CONFIRMED n=4** | gap ≥ +0.6 dex and both q,k above all four others in ≥10/12 blocks | **+0.888 / +0.774 / +0.833 / +0.834 dex** (mean +0.832, sd 0.041), p < 10⁻⁵, **12/12 blocks in every seed** |
-| **15** | **the q,k excess is QK-norm scale invariance** (iter. 80) | **d log C / d log‖W‖ = 0 within CI for attn.q and attn.k**, and **|slope| at least 2× smaller than the other four types**, in ≥3 of 4 seeds. Needs weight norms alongside curvature — **not yet measurable on Arm A** | q,k +0.049 CI [−0.261, +0.381] and −0.062 CI [−0.329, +0.226]; others −0.398 / −0.228 |
+| **15** | **the q,k excess is QK-norm scale invariance** (iter. 80, 87) — ⚠️ **CONFOUND BROKEN n=4; invariance test still blocked** | **(a) attn.v discriminator — CONFIRMED n=4:** v sits with the non-qk types, |v−others| ≤ 0.15 dex and v below both q and k in ≥10/12 blocks per seed. **(b) invariance test — needs REQ-041:** d log C/d log‖W‖ = 0 for q,k only | (a) v−others +0.103 dex vs v−qk −0.755 dex (7.3×), **48/48 blocks**; (b) q,k +0.049 CI [−0.261, +0.381] on REQ-023 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
@@ -273,6 +273,57 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 87: THE q,k CONFOUND IS BROKEN — attn.v decides it, n=4 ===**
+
+*Band 14's q,k excess (+0.832 dex) has carried an undecidable confound since it was filed: q and k
+share **two** properties — they are QK-normed, and they feed the attention logits. Every mechanism
+tested so far failed to separate them, and I recorded the confound as needing REQ-038. **It does
+not.** Arm A already contains the discriminator.*
+
+**The discriminator is attn.v.** It reads the **same residual stream** as q and k, sits in the
+**same attention sub-block**, and is the **same kind of input projection** — but it is **not
+QK-normed** and does **not** enter the logits. So:
+
+- if the excess tracks **QK-norm** → v should sit with the **non-qk** types;
+- if it tracks **"being an attention input projection"** → v should sit **with q,k**.
+
+**Result, all four seeds:**
+
+| seed | q,k | **attn.v** | non-attn-input types | v − qk | v − others |
+|---|---:|---:|---:|---:|---:|
+| 0 | −2.864 | **−3.680** | −3.777 | **−0.816** | +0.097 |
+| 1 | −2.973 | **−3.660** | −3.775 | **−0.687** | +0.116 |
+| 2 | −2.871 | **−3.643** | −3.725 | **−0.772** | +0.082 |
+| 3 | −2.919 | **−3.664** | −3.783 | **−0.745** | +0.119 |
+
+**v sits with the non-qk types: 0.103 dex from them, 0.755 dex below q,k — a 7.3× separation.** And
+**v is below both q and k in 48 of 48 block-seed cells.**
+
+> **The "attention input projection" reading is eliminated. Whatever produces the q,k excess is a
+> property of q and k that v does not share — and QK-norm is exactly that property.**
+
+**What this does and does not settle.** It **breaks the confound** that has stood since band 14 was
+filed: the excess is not about reading the residual, not about being an attention projection, and not
+about feeding into the attention sub-block. It is **specific to the two QK-normed matrices**.
+Combined with band 15's numerical test — `d log C/d log‖W‖ = 0` for q,k (+0.049 and −0.062, zero
+inside both CIs) and clearly non-zero for the others — **two independent lines now point at QK-norm
+scale invariance**, one eliminating the alternative and one confirming the prediction.
+
+**It does not close the case.** v differs from q,k in one further respect beyond QK-norm: q and k
+enter a **bilinear product** with each other, while v does not. That reading survives this test.
+Distinguishing "QK-norm" from "bilinear pairing" needs the invariance test at n=4 — **REQ-041** —
+because scale invariance is a consequence of the norm, not of the pairing, and only the norm predicts
+`d log C/d log‖W‖ = 0`.
+
+**Band 15 split into two registered checks:** (a) the v-discriminator, **confirmed at n=4 here**, and
+(b) the invariance test, **still blocked on REQ-041**. Recording them separately so the confirmed
+half is not held hostage to the blocked half.
+
+**Note on the wider queue** (not this campaign): Jerry reports **REQ-034 DONE** — K-Maxwell holds its
+gain at 16× where bi-Maxwell decayed to zero — and **REQ-042 BLOCKED**, since 32×/64× over 750 steps
+needs 812/781 usable batches against a FineWeb10B maximum of 500/200. That is a corpus-size decision
+for the humans: bigger corpus, fewer steps, or an explicit looping policy.
 
 ### CONSOLIDATED FINDINGS (iterations 63–86, 2026-09-03)
 
