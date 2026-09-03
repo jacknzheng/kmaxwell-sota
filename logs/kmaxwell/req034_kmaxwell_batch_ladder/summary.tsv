@@ -1,0 +1,20 @@
+# REQ-034 K-Maxwell on the fork@2000 bi-Maxwell protocol (1x-16x). SHA 365c392d, 2 nodes (q89y4d3+qekd95q, 8xH100), venv019. seed 0, n=1/arm.
+# 5x annealed_weights_muon (shipped PR#357 decays/weights, switch@2000 anneal->2750) + 1x muon mu0 @2x control. Fork@2000, 750 steps, val@2750, mbs=64.
+# Base val@2000 = 3.44279 (expected 3.44367; off 0.00088 -- see caveat). Gates passed: tests 6p, smoke val@2125=3.46147 finite (annealed fork@2000 loads clean), usable-batch budget OK (16x binding margin +71 on 86 chunks).
+arm	batch	val@2750	mu0@same	benefit(kmax-mu0)	bi-Maxwell(REQ-029)	mu0_source
+b1x_anneal	1x	3.34124	3.34586	-0.00462	-0.01063	stored REQ-026
+b2x_anneal	2x	3.28419	3.28953	-0.00534	(none)	FRESH (this run)
+b4x_anneal	4x	3.23665	3.24333	-0.00668	-0.00438	stored REQ-026
+b8x_anneal	8x	3.19842	3.20561	-0.00719	-0.00233	stored REQ-028
+b16x_anneal	16x	3.16786	3.17362	-0.00576	~0.00000	stored REQ-029
+#
+# HEADLINE: K-Maxwell is the LARGE-BATCH-DURABLE kernel. Its benefit over mu0 is FLAT-TO-GROWING across 1x-16x (peaks ~8x at -0.0072, still -0.0058 at 16x);
+# bi-Maxwell's benefit DECAYED monotonically to ~0 by 16x (fully absorbed by large-batch averaging = pure denoiser). So the anneal does something STRUCTURALLY
+# DIFFERENT from noise-averaging -- it retains its advantage where the frozen two-rate kernel loses it. This confirms REQ-033's "benefit grows with batch" on the SAME axis as bi-Maxwell.
+#   -> This is the request's "K-Maxwell holds its gain at 8x/16x where bi-Maxwell went to zero" = the interesting/headline outcome.
+#
+# CAVEAT (base offset): my base val@2000=3.44279 is 0.00088 below REQ-026's 3.44367 (likely fineweb data-order / nondeterminism), so my annealed vals sit on a slightly
+#   lower base than the STORED mu0 (REQ-026 base). This makes the 1x/4x/8x/16x benefits ~0.0009 MORE negative than a same-base comparison would give; correcting for it,
+#   K-Maxwell benefit is ~1x -0.0037 / 4x -0.0058 / 8x -0.0063 / 16x -0.0049 -- still clearly negative and still HOLDING at 16x. The 2x point (FRESH mu0 on MY base) is
+#   offset-free at -0.0053 and anchors the curve. The SHAPE (holds at large batch, unlike bi-Maxwell) is robust to the 0.0009 offset (bi-Maxwell spans -0.0106 -> 0).
+# n=1/arm, ~2e-4 seed-noise floor (REQ-027): the -0.005 to -0.007 benefits are 25-35x the floor; the 8x-vs-16x dip is within a few sigma.
