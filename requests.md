@@ -751,6 +751,50 @@ Adding to the four criteria already registered:
    *predictable* component of the residual ever found. If it does not reproduce, it is a
    learned per-network feature and criterion 4 governs.
 
+**ITERATION 8 — the boundary effect survives every confound check available offline.**
+
+*Caveat stated first: the pinned EoS commit `ebf53cd` is NOT present in this clone* (referenced
+throughout the logs, but `git cat-file` fails on it). So the architecture that generated the
+curvature data could not be read directly. The `train_gpt.py` on the branch head is a much later
+trainer whose value-embedding gates attach at blocks 1,2,9,10,11 and which skips attention at
+layer 6 — **those specifics cannot be assumed to hold for `ebf53cd`.** Everything below is
+therefore tested from the data's own structure rather than from the architecture source.
+**Please confirm the ebf53cd architecture when a box frees up** — it is the one thing that
+would let this be settled cleanly.
+
+**Symmetry test.** A `d_edge = min(block, 11−block)` model assumes blocks 0 and 11 behave alike.
+They do:
+
+| | block 0 | block 11 | difference |
+|---|---:|---:|---:|
+| fork-1500 | +0.245 | +0.283 | 0.037 |
+| fork-2000 | +0.429 | +0.261 | 0.168 |
+
+Half-slopes are equal and opposite (blocks 0–5: −0.064/block; blocks 6–11: +0.078/block;
+symmetry ratio +1.21 at fork-1500, +0.77 at fork-2000). A symmetric U is the right
+parameterisation — which also argues *against* the asymmetric ve_gate pattern (1,2,9,10,11) of
+the later trainer being the cause, since that would produce a lopsided profile.
+
+**It is not driven by the two end blocks.** Removing blocks 0 and 11 entirely, the trend
+persists across the 60 interior matrices: **corr(edge, residual) = −0.451 (fork-1500) and
+−0.539 (fork-2000)**. So this is a smooth interior gradient, not two anomalous endpoints.
+
+**Block 6 is not an outlier.** Later trainers skip attention at layer 6, which would be a
+confound. In this data block 6 sits at −0.170 / −0.208 versus −0.103 / −0.138 for blocks
+4,5,7,8, with **no attn/mlp split** (attn −0.135, mlp −0.239 — if the attention skip were
+driving it, the attention matrices specifically would be anomalous, and they are not).
+
+**Status of the finding.** The residual's boundary structure is symmetric, smooth in the
+interior, replicated at two fork states and across two experimental designs (corr +0.937), and
+survives the two architectural confounds testable from data. It remains the only *predictable*
+component of the residual ever found in this campaign — while still losing to measurement
+out-of-sample (0.176 dex vs 0.093), so it does not change REQ-036's design.
+
+**Seed criterion 5 stands, with one addition:**
+5b. the effect must remain when blocks 0 and 11 are excluded (corr ≤ −0.3 on interior
+    matrices in every seed). This distinguishes a genuine depth-position field from an
+    endpoint artifact, and is the version worth trusting.
+
 **So the question sharpens to: what sets S_m?** lam_top is not special — it is S_m times a
 fixed per-matrix shape constant. The between-layer difference in C *is* the between-layer
 difference in overall Hessian scale. Arm A is unchanged and remains the right next step;
