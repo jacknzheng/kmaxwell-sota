@@ -2302,6 +2302,54 @@ downstream*: q and k enter a bilinear inner product (so their Hessians carry eac
 while v passes through a linear mixing weighted by attention probabilities. **No committed
 measurement captures that**, which is exactly why 53% of the variance is unexplained.
 
+**ITERATION 34 — the bilinear mechanism FAILS replication. REQ-038 is now more necessary, not
+less.**
+
+REQ-038's rationale proposed that q and k differ from v because they enter a bilinear product.
+That is testable in committed data: within a block, q and k curvatures should co-vary more tightly
+with each other than with v, since all four attention matrices see identical input at identical s.
+
+*First pass looked supportive but was confounded.* Raw trajectory correlations gave q~k 0.978 vs
+0.908 for the v-pairs — but every pair exceeded 0.90 because all matrices share the same
+s-response (k ≈ 1.4). The common response swamped the test.
+
+*Removing each matrix's own power law and correlating the residuals:*
+
+| pair | fork-1500 | **fork-2000** | **REQ-023 (independent design)** |
+|---|---:|---:|---:|
+| **attn.q ~ attn.k** | **0.567** | 0.667 | **+0.061** |
+| attn.q ~ attn.v | 0.154 | 0.833 | **+0.450** |
+| attn.k ~ attn.v | 0.278 | 0.833 | −0.057 |
+| q~k largest in | 7/12 (p=0.066) | **0/12** | **4/12 (p=0.61)** |
+
+**Only fork-1500 supports it.** Fork-2000 ranks q~k *lowest* (paired t = **−1.48**, wrong sign),
+and REQ-023 — a different experimental design — also ranks q~k lowest, with q~v seven times
+larger. **The bilinear coupling hypothesis is not supported.** *(Caveat: fork-2000's residual
+correlations are largely degenerate — 3 multipliers minus a 2-parameter fit leaves 1 d.o.f., so
+most come out at exactly 1.000. REQ-023 with 3 assignments is the more trustworthy of the two
+disconfirmations, and it disconfirms clearly.)*
+
+**What this changes.** The q/k/v ordering itself is untouched — it remains v < k < q in 11/12 and
+12/12 blocks at p ≈ 10⁻⁸ and 10⁻¹⁰ (iteration 33). What falls is my *proposed explanation* for it.
+So the situation is now:
+
+- the effect is among the most statistically secure findings in the campaign;
+- it accounts for ~98% of the between-type spread and hence most of the dominant 53% term;
+- **and every mechanism proposed for it has now failed** — shape, input, position (iteration 33,
+  by construction), and bilinear coupling (this iteration).
+
+**REQ-038's priority increases.** Its registered prediction **P2** ("q and k have near-identical
+|a| but differ in |d| by ≥ 15%") was motivated by the bilinear story and should now be read as a
+genuinely open question rather than a likely confirmation — if q and k differ in |d| the backward
+pass carries the effect; if they do not, the effect lives somewhere no current hypothesis reaches.
+**P4's negative band (activation moments fail to lift R² from 0.218 to ≥ 0.60) is correspondingly
+more likely than when filed, and would establish the type term as irreducible in this
+architecture** — which remains a real and publishable outcome.
+
+**Registered seed check (zero cost, added to Arm A):** the q~k residual correlation must not
+systematically exceed the q~v and k~v correlations across seeds. If it does in ≥3 of 4 seeds, the
+bilinear story revives and this disconfirmation was driven by the two low-multiplier datasets.
+
 ### What to measure — one forward+backward pass, per Muon matrix
 
 At a single existing checkpoint (any of REQ-019's fork-1500 arms; s=1.00 preferred), record per
