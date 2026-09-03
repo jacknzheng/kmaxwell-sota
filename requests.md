@@ -2485,6 +2485,71 @@ separately** (not pooled) in every seed. If the effect is present in one proj ty
 the other, even the descriptive grouping fails and the finding reduces to a single-matrix-type
 effect.
 
+**=== ITERATION 64: RETRACTION — the +0.96 range/slope correlation was measured against the wrong null ===**
+
+*Iteration 63 (below) cited corr(gradient range, fitted slope) = +0.960 / +0.947 as a striking
+pattern needing explanation, and ruled out attenuation as its cause. That framing was wrong, and
+this iteration retracts it. The substantive finding survives on a different statistic.*
+
+**The error.** I reported +0.96 as if the null were zero. It is not. Grouping matrices and fitting a
+slope within each group MECHANICALLY produces this correlation: a group spanning more x-range gets a
+better-determined, generally steeper slope. Permuting the 72 matrices into six fake types of the
+same sizes, 20,000 times, gives:
+
+| | observed r | permutation null | |r| ≥ observed |
+|---|---:|---:|---:|
+| fork-1500 | +0.960 | **+0.739 ± 0.224** | **5.0%** |
+| fork-2000 | +0.947 | **+0.703 ± 0.226** | **5.1%** |
+
+**The observed correlation sits barely one standard deviation above the mechanical null.** It is
+marginal, not striking. This is the same class of error as the `corr(log g, log R) = +0.66 against a
++0.782 null` retraction earlier in this campaign — citing a raw correlation without computing what
+the grouping produces on its own.
+
+**Second confirmation that it is not a real relationship.** Drop the two proj types and it does not
+merely weaken, it does not survive at all:
+
+| | all 6 types | drop both proj (n=4) |
+|---|---:|---:|
+| fork-1500 | +0.960 | **−0.717** |
+| fork-2000 | +0.947 | **+0.164** |
+
+Among the four non-proj types the correlation **flips sign between forks**. There is no range/slope
+relationship in the data — only two proj types sitting high on both axes.
+
+**Withdrawn:** the claim that gradient range and fitted slope are related, and the framing of that
+relationship as an open puzzle needing a third variable. Nothing needs to explain it.
+
+**What survives, and it is the stronger statistic.** Iteration 63's real result never depended on the
+correlation. Two tests carry it:
+
+- **Heterogeneity Q(5) = 66.7 and 68.3** against df = 5 — the six per-type slopes differ far beyond
+  their standard errors.
+- **New this iteration:** fitting six free per-type slopes versus a single proj/non-proj binary gives
+  **F(8,60) = 8.27 and 4.31**. The six-way type structure is not reducible to "proj vs everything
+  else" — the types carry real individual structure.
+
+The attenuation rejection also stands unchanged (reliability 0.962–0.993), and is now the answer to a
+narrower question: measurement error does not explain the *slope differences*, which is what matters.
+
+**The claim, restated for the third and final time:**
+
+> **The cross-sectional gradient exponent differs systematically across all six matrix types — ~3.8
+> for the two projection matrices, ~0.9–1.4 for the other four — against a within-matrix causal
+> exponent of 2.07. The six-way split is not reducible to a proj/non-proj binary (F = 8.27/4.31),
+> and is not attributable to measurement error (reliability 0.96–0.99).**
+
+**Amended seed check** (supersedes the range/slope band registered in iteration 63, which is
+withdrawn — do not check it):
+- **Q across the six per-type slopes > 10** in every seed;
+- **F(6 free slopes vs proj-binary) > 2.5** in ≥3 of 4 seeds;
+- **mlp.proj and attn.proj ≥ 2.5; attn.k, attn.q, attn.v, mlp.fc ≤ 1.8**, in ≥3 of 4 seeds;
+- **do NOT register corr(range, slope)** — its null is +0.72, not 0, so it is uninformative.
+
+**Standing rule this adds, alongside the |corr| > 0.99 rename rule:** *before citing any correlation
+computed across groups, permute the group labels and report the null. A correlation between two
+group-level summaries is guilty until the permutation clears it.*
+
 **=== ITERATION 63: THE WITHIN-TYPE SLOPES GENUINELY DIFFER — and it is not measurement error ===**
 
 *Plotting the data (see `figures/fig4`) showed every matrix type has a positive gradient slope, but
