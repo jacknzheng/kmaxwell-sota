@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Spectral-ball sharpness tracks Muon's learning-rate equilibrium better than the largest Hessian eigenvalue</title>
+  <title>Two curvature measures track Muon's learning-rate response at different precision</title>
   <script>
     window.MathJax = {tex: {inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['\\[','\\]']]}};
   </script>
@@ -39,8 +39,8 @@
   </style>
 </head>
 <body><main>
-  <h1>Spectral-ball sharpness tracks Muon's learning-rate equilibrium better than the largest Hessian eigenvalue</h1>
-  <p class="dek">After the learning rate changes, its product with spectral-ball sharpness returns closer to its previous value than its product with the largest Hessian eigenvalue. The typical miss is 6% instead of 15%, and the new measure is better in 65 of 66 matrices.</p>
+  <h1>Two curvature measures track Muon's learning-rate response at different precision</h1>
+  <p class="dek">After the learning rate changes, spectral-ball sharpness and the largest Hessian eigenvalue both return toward inverse-learning-rate scaling within ordinary run-to-run variation. Spectral-ball sharpness fluctuates about half as much, which makes its measured return look tighter.</p>
 
   <p>We studied a 12-layer, width-768 transformer trained with Muon on FineWeb at NanoGPT speedrun scale. For each of its 72 hidden weight matrices, we compared two definitions of sharpness.</p>
 
@@ -55,7 +55,7 @@
     <p>\(B(H)\) is the largest Hessian quadratic form among matrix directions \(Z\) whose spectral norm is at most one. It combines curvature from many Euclidean Hessian directions because a matrix can have several singular values equal to one.</p>
   </div>
 
-  <h2>The product \(\eta B\) returns closer to the same equilibrium value</h2>
+  <h2>Spectral-ball sharpness gives the quieter measurement</h2>
 
   <p>At training step 2,250, we copied one model and optimizer state into three runs that saw the same minibatches. One run kept the learning rate unchanged. The other runs multiplied it by 1.30 or 0.77. Training remained stable in all three runs.</p>
 
@@ -69,12 +69,12 @@
 
   <figure>
     <img src="assets/sharpness_equilibrium_comparison.png" alt="Bar chart comparing the learning-rate equilibrium miss for the largest Hessian eigenvalue and spectral-ball sharpness.">
-    <figcaption><b>Figure 1. Spectral-ball sharpness returns closer to the expected value.</b> Each bar is the median \(E_S\) over 66 matrices with converged measurements at every required checkpoint; vertical lines show the interquartile range. The comparison pools the two learning-rate changes and their later checkpoints.</figcaption>
+    <figcaption><b>Figure 1. Spectral-ball sharpness has the smaller measured miss and the smaller reproducibility floor.</b> Each bar is the median \(E_S\) over 66 matrices with converged measurements at every required checkpoint; vertical lines show the interquartile range. The comparison pools the two learning-rate changes and their later checkpoints.</figcaption>
   </figure>
 
-  <p>Figure 1 shows that spectral-ball sharpness gives the smaller miss in 65 of 66 matrices. This is the main result: \(B(H)\) is a better description of Muon's learning-rate equilibrium than \(\lambda_1(H)\) in this experiment.</p>
+  <p>Spectral-ball sharpness gives the smaller miss in 65 of 66 matrices. Its typical miss is 6%, compared with 15% for \(\lambda_1\). Those values are comparable to the matched-run reproducibility floors of 7–10% and 11–15%, respectively. Both measures therefore resolve the same return toward inverse-learning-rate scaling; \(B(H)\) measures it with about twice the precision.</p>
 
-  <p>The improvement concerns learning-rate changes from one saved training state. It does not imply a universal value of \(\eta B(H)\). Along the base training trajectory, \(B(H)\) grows by about 2.4 times between the measured early and late states.</p>
+  <p>Neither scalar supplies a governing stability law for Muon. Along the base training trajectory, \(B(H)\) grows by about 2.4 times between the measured early and late states. A dense equal-compute comparison is testing whether its lower measurement noise persists across training.</p>
 
   <h2>The network changes curvature over hundreds of training steps</h2>
 
@@ -98,11 +98,13 @@
 
   <p>A larger learning rate is followed by lower curvature, while a smaller learning rate is followed by higher curvature. The change takes hundreds of training steps. It is movement of the trained network through parameter space, rather than a modification of the learning rate inside Muon's polar map.</p>
 
-  <h2>Matching the response to exact alternation does not predict momentum's effect</h2>
+  <h2>Removing the long average removes the curvature response</h2>
 
-  <p>Momentum hyperparameters obviously affect the training trajectory. The useful question is whether a simple property of those hyperparameters predicts how curvature changes.</p>
+  <p>This comparison asks whether the different curvature responses can be attributed specifically to the longer gradient history.</p>
 
-  <p>We tested a natural candidate: how much momentum reduces a gradient component that flips sign every training step. Two momentum settings differed by less than 10% on this quantity. The two-average setting mixed exponential gradient averages with average lags of about 6 and 49 steps. The short-average setting used only the 6-step average.</p>
+  <p>We compared a two-average momentum rule, which mixes exponential gradient averages with average lags of about 6 and 49 steps, with a rule that uses only the 6-step average. The implemented Nesterov mixture combines 95% momentum-weighted gradient with 5% current raw gradient. Under that convention, the two rules' gains on a gradient component that flips sign every step are 0.0892 and 0.1270. The comparison therefore changes both retained history and the gain on exact alternation.</p>
+
+  <p class="small"><b>Correction, 3 September 2026.</b> An earlier version said these gains differed by less than 10%. That calculation included the raw-gradient part of Nesterov momentum for the two-average rule but omitted it for the short-average rule. With the convention applied consistently, the gains differ by about 43%.</p>
 
   <p>We increased the learning rate by the same factor from the same saved state, using the same minibatches. The curvature responses were qualitatively different.</p>
 
@@ -123,14 +125,14 @@
 
   <figure>
     <img src="assets/momentum_average_curvature_comparison.png" alt="Line plot comparing curvature under two-average and short-average momentum.">
-    <figcaption><b>Figure 2. Removing the 49-step gradient average leaves both sharpness measures higher.</b> One point is the median ratio between the short-average and two-average runs at the stated training step. Both runs start from the same model and optimizer state, use the same minibatches, and use the larger learning rate.</figcaption>
+    <figcaption><b>Figure 2. The run using only the 6-step average leaves both sharpness measures higher.</b> One point is the median ratio between the short-average and two-average runs at the stated training step. Both runs start from the same model and optimizer state, use the same minibatches, and use the larger learning rate.</figcaption>
   </figure>
 
-  <p>Figure 2 shows the effect of removing the 49-step average. The short-average run finishes about 0.09 nats worse in validation loss. In this comparison, simplifying momentum to one exponential average removes the curvature adjustment and harms training. The nearly matched response to exact alternation therefore misses the property of momentum that matters here.</p>
+  <p>Figure 2 shows the combined effect of removing the 49-step average and increasing the gain on exact alternation. The short-average run finishes about 0.09 nats worse in validation loss. This establishes that the curvature adjustment and training outcome depend on the momentum kernel, but it does not determine which of those two kernel changes caused the difference.</p>
 
   <div class="result">
     <div class="label">What the momentum comparison adds</div>
-    <p>The result goes beyond the fact that momentum changes the trajectory. A number that records only how momentum scales exact alternation cannot predict the curvature response. The information retained over tens of training steps matters independently.</p>
+    <p>The run using the two-average kernel shows the curvature adjustment; the run using the short-average kernel does not. A matched-gain comparison or an intervention that redistributes the existing buffer state while preserving the first update is required to separate long-memory coherence from ordinary frequency response.</p>
   </div>
 
   <h2>The stability calculation must include the gradient averages</h2>
@@ -217,7 +219,7 @@
 
   <div class="result">
     <div class="label">Current answer</div>
-    <p>Spectral-ball sharpness is a better measure of Muon's learning-rate equilibrium than the largest Hessian eigenvalue. Momentum changes that equilibrium through the state stored in its gradient averages. The long average sustains an alternating gradient component, and third-order geometry can turn that component into a slow reduction of sharpness. A theory based only on the current Hessian or on the response to exact alternation is incomplete.</p>
+    <p>Both curvature measures resolve the network's response to a changed learning rate; spectral-ball sharpness is about twice as precise in the measurements available so far. Momentum kernel choice controls the later curvature response. The present comparison leaves its decisive property unresolved because it changes both the retained gradient history and the gain on exact alternation.</p>
   </div>
 
   <p class="small">All learning-rate and momentum comparisons use one saved mid-training state and matched minibatches. The sharpness and one-step-loss measurements were interpreted under rules fixed before their values were inspected.</p>
