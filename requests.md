@@ -1679,6 +1679,64 @@ asymmetry:
 within-block, common-factor-free, permutation-tested position field — the most robust
 non-circular result the campaign has produced.
 
+**ITERATION 26 — a SECOND, INDEPENDENT field found: a monotone depth ramp in step geometry.
+Not a boundary effect, and it must not be merged with one.**
+
+*Where this started.* Trying to separate the two surviving channels (writer input vs writer
+output-gradient), I looked at **scale-invariant ratios** — quantities that cancel any uniform
+rescaling of the Hessian, so neither an activation-scale nor an output-gradient story can move
+them. The ratio `curvature_along_gradient / curvature_along_polar` shifts by **+0.437 / +0.412
+dex** at the boundary for writers.
+
+*I initially read that as decisive. It is not, and the correction matters.* Pooled across all
+72 matrices the field is **not significant**: corr(d_edge, ratio) = −0.138 / −0.146,
+**permutation p = 0.68**. Restricted to writers it is corr −0.493 / −0.455 with **p = 0.098 /
+0.135**, and the writer × is_end interaction is **t = +1.87 / +1.51** — suggestive, not
+established. **The boundary reading of this ratio is not supported.**
+
+*What IS strongly supported is a different geometry entirely.* The ratio is a **monotone ramp in
+depth**, not a U in distance-to-edge:
+
+| block | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| log(cg/cp), fork-1500 | 1.32 | 1.41 | 1.82 | 1.82 | 1.70 | 1.68 | 1.65 | 1.74 | 1.80 | 1.85 | 1.95 | **2.33** |
+
+**corr(DEPTH, ratio) = +0.800 (fork-1500) and +0.799 (fork-2000), permutation p = 0.0005 /
+0.0006.** Block 0 is the *minimum* (1.32) and block 11 the *maximum* (2.33) — an asymmetric ramp,
+which is why the symmetric d_edge parameterisation failed on it. Two independent forks agree to
+three decimals.
+
+*What the ratio means, and why it matters for Muon specifically.* `curvature_along_gradient` is
+curvature along the gradient; `curvature_along_polar` is curvature along **Muon's orthogonalised
+step direction** — the direction the optimiser actually moves. Their ratio measures **how much
+flatter the step direction is than the gradient direction**. It rises monotonically with depth:
+in deep blocks, Muon's step geometry diverges further from the local loss geometry than in
+shallow ones. Writers run consistently *lower* than readers (+1.595 vs +1.836), i.e. for
+residual-writing matrices the step direction is relatively better aligned with the sharp
+directions.
+
+*Non-circularity.* `curvature_along_polar` is a separate quadratic form on Muon's polar direction —
+**not** part of the Lanczos tridiagonal (unlike `curvature_along_gradient`, which is exactly
+alpha_1). The ratio correlates only **+0.491** with log lam_top, so it carries genuinely
+independent information and does not violate the hard rule.
+
+**REGISTERED SEED CHECK — new, zero cost, independent of every other check:**
+- **corr(depth, log(cg/cp)) ≥ +0.6 in every seed**, with block 11 the maximum and block 0 the
+  minimum in at least 3 of 4 seeds.
+- **registered negative:** corr(d_edge, log(cg/cp)) pooled must remain **non-significant**
+  (|corr| < 0.4). If a seed shows a strong *edge* correlation here, this iteration's separation of
+  the two fields was wrong and they are one phenomenon.
+
+**Two distinct position fields now stand, and they should not be conflated:**
+1. **Curvature boundary field** — U-shaped in d_edge, writer-specific, permutation p < 0.0001 at
+   block level (iterations 16–25).
+2. **Step-geometry depth ramp** — monotone in depth, all matrix types, permutation p = 0.0005
+   (this iteration).
+
+They have different shapes, different scopes, and different significance profiles. The first
+drives REQ-036's `is_end` term; the second is new and currently has **no** design implication —
+recording it as a finding, not a prescription change.
+
 **REGISTERED SEED CHECK — replaces the residual-scale checks, zero cost:**
 - writer/reader gradient ratio: **corr(d_edge, ratio) ≤ −0.6 in every seed**, with block 11 the
   maximum in at least 3 of 4 seeds.
