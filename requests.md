@@ -260,7 +260,7 @@ measured value so a seed result can be compared directly.
 | **9** | **only attn.proj's offset is resolved** (iter. 68–69, corrected) | **attn.proj lowest** of the six offsets in ≥3 of 4 seeds and **≥0.25 dex below the other five**; **|residual-writer − internal| offset gap < 0.20 dex**; the other four adjacent gaps need NOT resolve | gap −0.454 / −0.430, p ≤ 0.0003 |
 | **10** | **C is lifted at layer 0** (iter. 69–72, corrected twice) | **layer-0 indicator coefficient positive, t > 4** over type+gradient; **layer 0 lift ≥ +0.20 dex** above the interior; **layer 12 NOT lifted** (< +0.15 dex) — in ≥3 of 4 seeds | t = 7.3–8.8; layer 0 +0.26/+0.44, layer 11 +0.24/+0.22, layer 12 +0.12/+0.12 dex |
 | **11** | **the assembled model generalises** (iter. 72) | **leave-one-layer-out rmse ≤ 0.20 dex** and **cross-fork rmse ≤ 0.20 dex** for `type + two-slope gradient + layer-0 term`, versus ~0.38 dex for C's own spread | LOLO 0.138 / 0.164; cross-fork 0.165 / 0.140 dex |
-| **12** | **three physical quantities replace the six type offsets** (iter. 73) | **LOLO rmse of `log‖W‖ + log fan-in + residual-binary` within 0.02 dex of the 6-free-offset model** (2 fewer parameters); **all coefficients same sign in every seed**: log‖W‖ < 0, log fan-in < 0, residual-binary < 0 at centred gradient | 0.168 vs 0.162 / 0.209 vs 0.217 |
+| **12** | **the six type offsets reduce to two binaries + weight norm** (iter. 73–74, corrected) | **LOLO rmse within 0.02 dex of the 6-free-offset model with 7 params**; **log‖W‖ coefficient negative**, **residual-writer ≈ −0.47 dex**, **mlp.proj ≈ −0.65 dex** — same signs in every seed. **Not a fan-in power law** | LOLO 0.168 vs 0.162 / 0.209 vs 0.217 |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
 exponent differs systematically by type — **~3.8 for the two projection matrices, ~0.9–1.4 for the
@@ -269,6 +269,69 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 74: BAND 12'S FAN-IN READING IS WITHDRAWN — the model stands, the mechanism claim does not ===**
+
+*Band 12 was filed with a self-declared caveat that fan-in takes only two values. Testing that caveat
+properly shows it is worse than stated, and the interpretation has to go.*
+
+**First, an error in band 12's own text.** I wrote that the fan-in coefficient is identified by
+"mlp.fc against everything else." **That is backwards.** `mlp.fc` is (3072, 768) — fan-in **768**,
+the same as the four attention matrices. `mlp.proj` is (768, 3072) — fan-in **3072**, and it is the
+*only* matrix with wide fan-in.
+
+| type | fan-in | wide fan-in | residual writer |
+|---|---:|---:|---:|
+| attn.k / attn.q / attn.v / mlp.fc | 768 | 0 | 0 |
+| attn.proj | 768 | 0 | **1** |
+| **mlp.proj** | **3072** | **1** | **1** |
+
+**The good news — the two properties ARE separable,** because attn.proj is a residual writer *without*
+wide fan-in. Both terms are needed and both are strong:
+
+| model | rmse (f1500) | LOLO | coefficients |
+|---|---:|---:|---|
+| residual-writer only | 0.181 | 0.205 | res −0.606 (t −10.1) |
+| wide-fan-in only | 0.216 | 0.235 | wide −1.034 (t −7.2) |
+| **both** | **0.144** | **0.168** | **res −0.475 (t −9.1), wide −0.650 (t −6.2)** |
+
+Coefficients reproduce almost exactly on fork-2000 (−0.468, −0.644). **The reduction itself is real
+and band 12's model stands.**
+
+**The bad news — "fan-in" is not what the column measures.** With wide fan-in true for exactly one
+matrix type, the column is an **indicator for mlp.proj**. Every property unique to mlp.proj produces
+an identical column and an identical fit:
+
+- fan-in 3072 *(the fan-in reading)*;
+- writes to the residual **and** is an MLP matrix *(interaction reading)*;
+- consumes the ReLU² output *(nonlinearity reading)*.
+
+**The data cannot distinguish them.** A single point cannot identify a slope in log fan-in, so the
+predicted −0.650 dex "law" is just this one type's offset — and note the fitted value (−0.650)
+happens to match the extrapolated prediction only because both are estimated from the same one
+contrast. **The claim "C falls with fan-in" is withdrawn.**
+
+*(The caveat I filed with band 12 said a third fan-in value would be needed to call it an exponent.
+That was right in kind but understated: with only one wide matrix, it is not a two-point line — it is
+a one-point label.)*
+
+**Band 12 restated as what the data supports:**
+
+> **log C = a·log‖W‖_F + b·(residual writer) + c·(mlp.proj) + (gradient term, two slopes) +
+> (layer-0 lift) + noise**
+>
+> with **a < 0**, **b ≈ −0.47 dex**, **c ≈ −0.65 dex**, all reproducing across both forks.
+
+Seven parameters, still beating six free offsets out-of-sample — **two structural binaries and one
+genuine continuous slope (weight norm), not three continuous physical quantities.** Weight norm
+remains the only term in the account that is continuous, per-matrix, and independently measured.
+
+**Band 12's seed check amended** to test the two binaries' signs and magnitudes rather than a fan-in
+law. **This is the third finding in this campaign killed by the same failure mode** — a predictor
+that varies over too few distinct values to identify the slope being fitted (after the Muon rank
+slope and the six-way slope split). Adding to the standing rules: *before fitting a continuous
+coefficient, count the distinct values the predictor actually takes; if it is one or two, it is a
+label, not a law.*
 
 **=== ITERATION 73: THE SIX TYPE OFFSETS REDUCE TO THREE MEASURED QUANTITIES ===**
 
