@@ -19,7 +19,7 @@ four are active. Run independent arms in parallel within that cap. Completed
 REQ logs live under `logs/async_sdpo_req024/` and `logs/async_sdpo_req031/` —
 do not keep those request blocks in this queue.
 
-Next request number: **REQ-036**.
+Next request number: **REQ-037**.
 
 
 ## REQ-034: K-Maxwell on the fork@2000 batch ladder — 1× → 16×
@@ -534,6 +534,104 @@ ceiling is actually lifted by your operator.
 ### Artifacts
 
 `logs/kmaxwell/req035_C_mechanism/<arm>/`
+
+## REQ-036: equalized-curvature per-type learning rates (the first design derived from C)
+
+- status: OPEN
+- requested: Jack (via Claude analysis session) / 2026-09-03 PDT
+- repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
+- pinned SHA: `25d3208` (`codex/per-matrix-lr-public`, the `PerMatrixLrMuon` used by REQ-023)
+- **node budget: 1 box is enough for the headline arm; up to 4 uses the full design.
+  I am the requester, not your operator — run this at whatever ceiling is in force.**
+- depends on: REQ-023 (measured the causal exponent), REQ-019/022 (measured C and k).
+  Does NOT depend on REQ-035 — this uses *measured* C, not predicted C, so it is
+  unaffected by REQ-035's negative result on predicting C from covariates.
+
+**The idea.** REQ-019/022 give every matrix its own law `log10 lam_eq = logC_m - k_m*log10(s)`.
+REQ-023 showed the own-LR → own-curvature control is real, local (no cross-talk), and
+state-independent (beta = -1.29 at fork-1500, -1.38 at fork-2000). Together these let us
+*solve* for the per-matrix LR that puts every matrix at the same equilibrium curvature:
+
+```
+log10(s_m) = ( logC_m - log10(lam*) ) / k_m
+```
+
+with `lam*` anchored at the cross-matrix geometric mean so the total step budget is
+approximately unchanged (geometric mean of s_m = 0.936, i.e. a ~6% net reduction).
+
+**Why this is safe to try even though REQ-035 failed.** REQ-035's negative result was that C
+cannot be *predicted* from architecture (best out-of-sample model 0.247 dex vs 0.090 dex for
+re-measurement). This request never predicts C — it reads C off the measured ladder. The
+distinction matters and is the reason this arm is well-posed.
+
+**Stability of the prescription (the reason to believe it).** Deriving the rule independently
+at fork-1500 and fork-2000 on the matched 3-point ladder {0.60, 1.00, 1.70}:
+
+- per-matrix rule: corr **+0.877**, median disagreement **0.026 dex**, prescription spread
+  0.323 dex → **SNR 12.4**.
+- per-type rule (6 numbers): corr **+0.998**, median disagreement **0.016 dex**.
+- decomposed, `logC` is the stable ingredient (corr +0.969, shift 0.030 dex = 8% of its
+  spread) and `k` the noisy one (corr +0.832, shift 0.115 dex = 22% of its spread). Since
+  k sits in the denominator, the **per-type rule is preferred** — it averages k over 12
+  matrices and is 1.6x more reproducible than the per-matrix rule.
+
+**The prescription (per-type, derived at fork-1500, confirmed at fork-2000).**
+
+| type | LR multiplier | fork-2000 check | mean logC | mean k |
+|---|---:|---:|---:|---:|
+| attn.proj | **0.40** | 0.46 | 3.734 | 1.040 |
+| attn.k | 0.88 | 0.91 | 4.032 | 1.431 |
+| mlp.fc | 0.91 | 0.89 | 4.074 | 1.242 |
+| attn.q | 1.18 | 1.18 | 4.202 | 1.323 |
+| attn.v | 1.25 | 1.20 | 4.283 | 2.025 |
+| mlp.proj | **1.56** | 1.51 | 4.348 | 1.253 |
+
+Note `mlp.proj` already carries a hard-coded 2.0x LR in the current trainer
+(`per_matrix_lr_mul`, the "2x LR on odd indices" rule for `mlp_bank`). Our derivation
+independently recovers a >1 multiplier for exactly that matrix type from curvature alone —
+an unplanned consistency check on both the method and the existing hand-tuned constant.
+**Arms must apply these multipliers on top of a build with that hard-coded 2x removed, or
+explicitly account for it; state which was done.**
+
+### Arms — 750-step continuations from the shared step-2000 state, val@2750
+
+| # | arm | multipliers |
+|---|---|---|
+| 1 | control | all 1.0 (baseline) |
+| 2 | **equalized-curvature (headline)** | the 6 per-type values above |
+| 3 | half-strength | each multiplier moved halfway to 1.0 in log space |
+| 4 | anti-rule (falsifier) | multipliers inverted (1/s_m) |
+
+Arm 4 is the discriminator that separates "curvature equalization helps" from "any per-type
+LR perturbation helps." **If arm 4 also beats control, the mechanism claim is dead** even if
+arm 2 wins, and the result is merely that this trainer is off its LR optimum.
+
+**Registered prediction (magnitudes, not directions, per the REQ-019 lesson).**
+- arm 2 val@2750 improves on control by **0.001 to 0.006** (the scale of REQ-026's kernel
+  effects); arm 3 lands between control and arm 2, monotonically.
+- arm 4 is **worse** than control by a comparable margin.
+- If arm 2 is within +/-0.0005 of control (noise, per REQ-033's ~5e-4), the honest verdict
+  is that equalizing curvature does not matter for loss — a clean negative worth having.
+
+### Success criteria
+- 4 arms complete; val@2750 for each against the stored control.
+- Per-matrix curvature at the final checkpoint for arms 1 and 2, so we can verify the
+  intervention actually equalized curvature (spread of logC should fall from 0.379 dex
+  toward ~0.1); **this is the mechanistic check and matters more than the loss number.**
+- `summary.tsv` with per-arm val and the realized per-type curvature spread.
+- Commit raw Ritz values + `residual_tail`; do not apply the tail correction silently.
+
+### Artifacts
+`logs/kmaxwell/req036_equalized_curvature_lr/`
+
+### On per-layer MOMENTUM (deliberately excluded, with reason)
+A per-layer momentum rule is **not** derivable from C today. To first order momentum only
+rescales the effective step, `s_eff = s/(1-mu)`, so per-layer mu is redundant with per-layer
+LR unless mu affects something LR cannot — a noise/curvature interaction this campaign has
+never measured. Muon here also carries momentum internally (`m_fast`/`m_slow`), so mu is not
+a free per-layer knob without changing the kernel. Filing a momentum rule now would be
+inventing a mapping rather than deriving one. The prerequisite is a registered experiment
+asking whether mu does anything LR cannot at fixed `s_eff`; that is REQ-037 if wanted.
 
 ## Template
 
