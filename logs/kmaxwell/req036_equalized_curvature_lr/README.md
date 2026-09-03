@@ -44,3 +44,23 @@ also beats control") is not triggered (a4 is worse than control), but neither do
 - `curvature_2250/` — per-arm per-matrix curvature at step 2250 (mechanism check), when available.
 
 No secrets/weights/tensor checkpoints committed. Ran under the ≤2 ceiling.
+
+## Curvature-spread mechanism check (appended) — the intervention works, the premise is falsified
+
+Per-type curvature spread @2250 (std of log₁₀ top_eigenvalue across the 6 types; smaller = more equalized) — `curvature_2250/spread.tsv`:
+
+| arm | across-type curvature spread | val@2750 |
+|:----|-----------------------------:|---------:|
+| a1 control | 0.2457 | 3.51052 (best) |
+| a2 per-type | 0.1941 | 3.51295 |
+| a3 end-cap | 0.1630 | 3.51996 |
+| **a5 polar** | **0.1281 (most equalized)** | **3.53460 (worst)** |
+| a4 anti-rule | 0.4441 (anti-equalized) | 3.51515 |
+
+**The interventions do exactly what they target:** a5 polar equalizes per-type equilibrium curvature the *most* (0.128 vs
+control's 0.246), and the anti-rule a4 *anti*-equalizes it (0.444) — the per-type LR knob controls curvature spread as
+designed. **But equalization is inversely related to val:** the arm that equalized curvature most (a5) has the *worst*
+loss; control (least equalized) has the *best*. So the mechanism is real, but **the design's premise — that equal
+per-type equilibrium curvature improves training — is falsified: equalizing it HURTS.** REQ-036 is therefore a clean
+directed-negative, not merely a null: the LR rule achieves its stated target and the target turns out to be the wrong
+objective.
