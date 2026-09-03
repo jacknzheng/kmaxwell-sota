@@ -584,6 +584,57 @@ property. If (4) fails, the Gauss-Newton reading is wrong and this whole account
 than predicted, the equalized-curvature LR rule — which reads C off the measured ladder — is
 the *correct* form for a design, and no amount of further covariate search would improve it.
 
+**STRESS TEST + PARTIAL CORRECTION (same session).** The cancellation account above was
+argued partly from corr(log g, log R) = +0.66. That argument is **withdrawn**: R = g/sqrt(lam)
+contains g, so the correlation is mechanically positive. Its exact null (lam shuffled across
+matrices) is **+0.782 [+0.725, +0.837]** — the observed +0.66 is *below* its own artifact
+null, so it is not evidence for the cancellation. Any argument resting on corr(log g, log R)
+should be disregarded.
+
+**What replaces it is stronger and uses no derived quantity — only lam and g.**
+
+| fact | value |
+|---|---|
+| 1. within-matrix **causal** slope d log lam / d log g (REQ-023 LR randomisation, IV) | **+1.98**, CI [1.90, 2.11] |
+| 2. cross-sectional slope of log C on log g, pooled over all 72 matrices | **+0.742** (fork-1500), **+0.654** (fork-2000) |
+| 3. bootstrap CI on the pooled cross-sectional slope | [+0.277, +1.141] — **excludes 1.98** |
+| 4. mean **within-type** cross-sectional slope | **+2.124** |
+
+Per-type cross-sectional slopes: attn.k +0.872, attn.q +1.342, attn.v +1.408, mlp.fc +1.434,
+attn.proj +3.756, mlp.proj +3.935.
+
+**This is Simpson's paradox, and it is the mechanism.** Within a matrix type, gradient scale
+buys curvature at the Gauss-Newton rate of ~2 — matching the causal estimate. The slope
+collapses to ~0.7 **only when pooling across types**. So the between-type structure of g runs
+*against* the within-type relationship: types with systematically larger gradients sit on
+systematically lower curvature-per-gradient offsets, and pooling averages the two effects
+into a badly attenuated slope.
+
+**Corrected statement of the answer to "what causes the difference in C between layers":**
+- The *within-type* law is clean and causally verified: lam ∝ g², Gauss-Newton.
+- The *between-type* differences in C are NOT explained by g — the type offsets move opposite
+  to the within-type slope and largely cancel it.
+- Therefore C is not predictable from g plus a type label, and every pooled covariate
+  regression in this campaign was estimating an attenuated, confounded slope. That is why
+  they failed out-of-sample (0.247 dex vs 0.090 for re-measurement).
+
+**Also corrected:** eta²(log C) = 0.287 was compared against the wrong null. Against a
+no-type-structure null of 0.070 [0.013, 0.171], the observed 0.287 is genuinely above it, so
+C does carry real (if modest) type structure — the cancellation is **partial, not total**.
+
+**REGISTERED n=4 SEED CHECK (revised, supersedes both earlier versions; still zero extra
+cost on Arm A — every quantity is already recorded).** Bands fixed in advance:
+1. within-matrix causal exponent d log lam / d log g = **2.00 ± 0.15** in every seed.
+2. mean **within-type** cross-sectional slope = **2.0 ± 0.5** in every seed.
+3. pooled cross-type slope **< 1.5** in every seed (the attenuation reproduces).
+4. the *ordering* of per-type offsets reproduces across seeds (Spearman ≥ +0.7 between seeds).
+
+Interpretation fixed now: if 1–3 hold, Simpson's-paradox attenuation is a reproducible law of
+this architecture and the C question is **answered** — C must be measured per matrix, never
+predicted from architecture, which is exactly REQ-036's design. If (4) fails while 1–3 hold,
+the within-type law is universal but the type offsets are a learned per-network property. If
+(1) fails, the Gauss-Newton reading is wrong and this account falls.
+
 **So the question sharpens to: what sets S_m?** lam_top is not special — it is S_m times a
 fixed per-matrix shape constant. The between-layer difference in C *is* the between-layer
 difference in overall Hessian scale. Arm A is unchanged and remains the right next step;
