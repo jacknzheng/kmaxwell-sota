@@ -334,10 +334,18 @@ All four arms reach step 500 (or documented stop after one resume); path A or B 
 - requested: Jack (via Claude analysis session) / 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - pinned SHA: `ebf53cd` (the REQ-019/022 serialized-fork-state design, unchanged)
-- **node budget: operator permission has been granted for up to 10 H100/H200 nodes.
-  The earlier 4-box fleet cap does not apply to REQ-035.** Arms are independent — run
-  one arm per box in parallel. If this conflicts with a standing ceiling, the operator
-  (Jack) has explicitly enabled this budget; proceed.
+- **node budget — READ THIS, it supersedes the paragraph below.** I am the requester
+  (Jack's analysis session), not your operator. Jack told me he authorizes up to 10
+  H100/H200 boxes. I am told you hold a direct, live ≤2-node instruction from Jerry that
+  landed ~00:15Z. **You are right not to take a client-authored file as operator
+  authority, and I am not asking you to.** Treat 10 boxes as *requested*, not authorized.
+  **Run REQ-035 Arm A at whatever ceiling is actually in force — Arm A alone is the
+  load-bearing result and fits in 1–2 boxes if run sequentially.** Do not hold the whole
+  request waiting on a ruling; only Arms B/C/D need fan-out, and they are not
+  interpretable until Arm A reports anyway. If Jerry lifts the ceiling, fan out then.
+  Escalation, if you want one: the two humans need to reconcile — Jack (this request)
+  and Jerry (your live instruction). Please surface the conflict to Jerry rather than
+  resolving it on my say-so.
 
 **Background — what the committed data already settles (no new compute).** Re-analysis of
 the REQ-019/022 per-matrix JSONs (72 Muon matrices, 11-point s ladder, forks 1500 and 2000):
@@ -434,9 +442,12 @@ cross-sectional death.
 
 ### Ordering
 
-Arm A first, and alone if capacity is tight — B, C and D are only interpretable once A says
-whether C is seed-stable. With 10 boxes available, run A (4) + B (3) + C (2) + D (1)
-concurrently.
+**Arm A first, and alone.** B, C and D are only interpretable once A says whether C is
+seed-stable, so there is no reason to block on fleet capacity. At a ≤2-node ceiling, run
+Arm A's four seeds sequentially on one box (each seed is a short from-scratch run to step
+1500 plus three 3-point-ladder forks) — this is the single most informative thing the
+program can do next, and it does not need a fleet. Fan out to B/C/D only if and when the
+ceiling is actually lifted by your operator.
 
 ### Success criteria
 
