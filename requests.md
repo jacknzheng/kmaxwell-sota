@@ -2375,6 +2375,58 @@ Two further points worth recording:
 The q,k "gap" is **not** a third pillar — iteration 52 showed it is a gradient effect, not a
 curvature one.
 
+**=== ITERATION 61: THE SPATIAL FIELD IS NOT NETWORK-WIDE — it is a PROJECTION-MATRIX effect ===**
+
+*The position effect has only ever been measured as a block-MEAN over all six types. If it is a
+genuine spatial field, each type should show it independently. Tested — and it does not.*
+
+**Per-type correlation of log C with log(1 + distance to edge):**
+
+| type | fork-1500 | fork-2000 |
+|---|---:|---:|
+| **attn.proj** | **−0.880** | **−0.925** |
+| **mlp.proj** | **−0.569** | **−0.561** |
+| mlp.fc | −0.399 | −0.605 |
+| attn.k | (neg) | −0.462 |
+| **attn.q** | **+0.562** | **+0.157** |
+| **attn.v** | **+0.293** | **+0.021** |
+
+**Only 4 of 6 types have the expected sign, sign test p = 0.34.** attn.q and attn.v go the *wrong
+way* at both forks.
+
+**Where it actually lives.** Fitting the spatial slope with type fixed effects, on subsets:
+
+| subset | fork-1500 | fork-2000 |
+|---|---:|---:|
+| **proj types only (attn.proj, mlp.proj)** | **−0.587 (t = −4.21)** | **−0.641 (t = −4.65)** |
+| **the other four types** | **+0.006 (t = +0.14)** | **−0.081 (t = −1.78)** |
+| all six pooled | −0.186 (t = −2.94) | −0.262 (t = −4.16) |
+
+**The effect is entirely in the two projection matrices. In the other four it is absent** — a slope
+of +0.006 at one fork is as close to zero as this data can measure.
+
+**Corrected statement.** The pooled result (t = −2.9 / −4.2) is real but was *mis-described as a
+network-wide spatial field*. What exists is:
+
+> **Projection matrices — the two that write back into the residual stream — settle at higher
+> sharpness near the first and last block. No other matrix type shows a position dependence.**
+
+**This is narrower and more mechanistically suggestive than the field reading.** It reconnects to
+the writer/reader distinction from iterations 22–25: only the matrices that *write* to the residual
+stream care about their position in it. Matrices that read from it do not.
+
+**Two campaign statements need adjusting:**
+1. Iteration 58's "symmetric log(1+edge) field" holds, but **only for proj types**. The functional
+   form and symmetry were fitted on the block-mean, which is dominated by the proj contribution.
+2. The variance-budget row "position near the first/last block ~8%" should be read as **a
+   proj-specific effect**, not a property of all 72 matrices.
+
+**Registered seed check (zero cost, replaces the block-mean version):**
+- **proj types: spatial slope ≤ −0.35 with t ≤ −2.5 in every seed**;
+- **non-proj types: |slope| ≤ 0.15** — the effect must remain absent there;
+- **falsifier:** if the non-proj slope is also strongly negative in ≥3 seeds, the network-wide
+  reading revives and this narrowing was wrong.
+
 ## ⚠️ AUTHORITATIVE SEED-CHECK TABLE — READ THIS, IGNORE THE SEED CHECKS BELOW
 
 *This request accumulated **13 overlapping "registered seed check" blocks** across ~15 iterations,
