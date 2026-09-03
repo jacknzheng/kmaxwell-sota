@@ -257,7 +257,8 @@ measured value so a seed result can be compared directly.
 | **6** | **two-valued gradient slope** (iter. 63–66) | **Q(5) > 10** across the six raw slopes; **F(6 slopes vs 2 slopes, both with 6 free intercepts) < 2.5**; **residual-writer slope ≥ 2.5**, **internal slope ≤ 1.8** | Q = 66.7 / 68.3; F = 0.18 / 0.10 |
 | **7** | **the split is residual-stream position, not shape** (iteration 65) | **slope(attn.proj + mlp.proj) − slope(other four) ≥ +1.5** in ≥3 of 4 seeds, each proj type individually ≥ +2.0 vs internal | +2.173 / +2.183, p < 0.0001 |
 | **8** | **the cross-sectional split is bias, not physics** (iter. 67) | **Wald-ratio gap (residual − internal) ≤ +1.0** and **< half the cross-sectional slope gap** in ≥3 of 4 seeds; both first-stage F > 100 | gap +0.374 / +0.688 vs cross-sectional +2.17 / +2.18 |
-| **9** | **C's level ordering is not the residual-writer split** (iter. 68) | **attn.proj lowest and mlp.proj highest** of the six type offsets in ≥3 of 4 seeds; **|residual-writer − internal| offset gap < 0.20 dex**; type-offset spread > 0.40 dex | gap −0.107 / −0.099 dex; spread 0.614 / 0.584 dex |
+| **9** | **only attn.proj's offset is resolved** (iter. 68–69, corrected) | **attn.proj lowest** of the six offsets in ≥3 of 4 seeds and **≥0.25 dex below the other five**; **|residual-writer − internal| offset gap < 0.20 dex**; the other four adjacent gaps need NOT resolve | gap −0.454 / −0.430, p ≤ 0.0003 |
+| **10** | **C has a U-shape in depth** (iter. 69) | **F(2,63) > 10** for adding a common quadratic-in-depth term to type+gradient; **attn.proj quadratic coefficient positive with t > 3** — in ≥3 of 4 seeds | F = 28.98 / 41.51; attn.proj t = 5.70 / 6.61 |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
 exponent differs systematically by type — **~3.8 for the two projection matrices, ~0.9–1.4 for the
@@ -266,6 +267,85 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 69: THE OFFSETS ARE MOSTLY NOT RESOLVED — and what is really there is a U-SHAPE IN DEPTH ===**
+
+*Iteration 68 reported a six-way ordering of C's type offsets. This iteration tested it properly and
+it does not hold up; what replaces it is stronger than what it replaces.*
+
+**Correction to iteration 68.** I presented `attn.proj < attn.k < mlp.fc < attn.q < attn.v <
+mlp.proj` as an ordering to be explained. **Only one of its five adjacent gaps is statistically
+resolved:**
+
+| adjacent pair | gap (f1500) | t | |
+|---|---:|---:|---|
+| attn.proj → attn.k | +0.298 | **2.45** | **resolved** |
+| attn.k → mlp.fc | +0.042 | 0.56 | not resolved |
+| mlp.fc → attn.q | +0.128 | 1.66 | not resolved |
+| attn.q → attn.v | +0.081 | 1.30 | not resolved |
+| attn.v → mlp.proj | +0.065 | 0.35 | not resolved |
+
+Drop attn.proj and the whole spread halves, 0.614 → **0.316 dex**. The supportable statement is
+**"attn.proj is low; the other five are barely distinguishable,"** not a six-way ordering. Band 9 is
+corrected accordingly — in particular its "mlp.proj highest" clause rested on a t = 0.35 gap and is
+withdrawn.
+
+**An exhaustive search for a structural explanation, which failed.** With only six offsets, an
+invented binary can fit by luck, so I tested **all 62 non-trivial binary partitions** and scored nine
+named structural hypotheses against that full space:
+
+| named hypothesis | R² (f1500) | R² (f2000) |
+|---|---:|---:|
+| is an MLP matrix / has a 3072 dim | 0.121 | 0.087 |
+| writes to residual / second in sub-block | 0.062 | 0.059 |
+| q or k (QK-normed) | 0.000 | 0.005 |
+| v or proj (value path) | 0.002 | 0.002 |
+
+**The best named hypothesis scores 0.104, and 34 of 62 arbitrary partitions (55%) do as well or
+better.** The best partition overall is simply `{attn.proj}` (R² 0.699) — naming the outlier, not a
+mechanism. **No binary structural property orders C's offsets.** Registered as a negative.
+
+**What is actually there.** attn.proj's per-layer C values are not uniformly low — they are a **U**:
+
+```
+layer:  0     1     2     3     4     5     6     7     8     9    10    11
+logC: 4.23  3.84  3.49  3.47  3.47  3.62  3.54  3.35  3.39  3.79  3.90  4.73
+      ^^^^ high                    low in the middle                  ^^^^ high
+```
+
+**attn.proj's "low mean" is a middle-layers effect, not a type property.** Fitting a quadratic in
+depth per type:
+
+| type | quadratic coef | t | R² (quad) |
+|---|---:|---:|---:|
+| **attn.proj** | **+0.0274** | **5.70** | **0.793** |
+| mlp.proj | +0.0327 | 2.16 | 0.349 |
+| mlp.fc | +0.0115 | 2.29 | 0.477 |
+| attn.q | −0.0063 | −2.27 | 0.378 |
+| attn.k / attn.v | ~0 | 0.65 / −1.61 | 0.045 / 0.616 |
+
+Adding **one common quadratic-in-depth term** to the type+gradient model:
+
+| | RSS before | RSS after | **F(2,63)** |
+|---|---:|---:|---:|
+| fork-1500 | 2.5339 | 1.3198 | **28.98** |
+| fork-2000 | 4.2195 | 1.8206 | **41.51** |
+
+**This is the largest effect found in the campaign** — far above the F ≈ 4–8 of every structural
+binary tested. It is also consistent with the proj-specific boundary/spatial field noted much earlier,
+now visible directly in raw C rather than in a derived quantity, and strongest in exactly the type
+(attn.proj, R² 0.83) whose offset was the one resolved result of iteration 68.
+
+**The corrected picture:**
+
+> **C is set by (i) the gradient, at a within-matrix response ratio near 2, (ii) a modest matrix-type
+> offset of which only attn.proj's is individually resolved, and (iii) a strong U-shaped dependence
+> on depth — high at the first and last layers, low in the middle — which is the dominant structural
+> term and is strongest for attn.proj.**
+
+**Registered as band 10.** *Caveat carried forward:* the depth axis here is the corrected layer index
+(attention is skipped at layer 6, so probe slot ≥ 6 maps to layer slot+1) — the same mislabelling
+that cost 40 iterations earlier in this campaign.
 
 **=== ITERATION 68: C'S LEVEL AND C'S SLOPE ARE SET BY DIFFERENT THINGS ===**
 
