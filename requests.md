@@ -2786,6 +2786,52 @@ Fields 1–3 are generic; field 4 is the discriminating one.
   should be reported as irreducible in this architecture — a negative result worth having and one
   that would close the campaign's central question rather than leave it open.
 
+**AMENDED PREDICTIONS (iteration 42) — P2 and P3 as filed target the wrong contrast. Use these.**
+
+REQ-038 was written at iteration 33, when the structure looked like a q > k > v ordering.
+Iteration 41 established it is **{q, k} versus the other four types**, and the amendment matters
+because the filed P2/P3 aim at the wrong comparison:
+
+| contrast | fork-1500 | fork-2000 | status |
+|---|---:|---:|---|
+| **q,k mean − other four** | **+0.812** | **+0.842** | **THE effect** |
+| k − v | +0.640 | +0.656 | part of the same effect |
+| q − k | +0.171 | +0.167 | real but ~20% the size |
+
+*(q − k is genuinely significant — paired t = +4.62 / +4.58, q > k in 11/12 and 12/12 blocks — but
+it is a second-order feature within the high group, not the main effect. P3 as filed attributes
+the 0.81 dex figure to v alone; that number is the q,k-versus-rest contrast.)*
+
+**The sharp quantitative prediction the probe should carry.** Measured from committed data:
+
+> **q and k carry 0.40× the gradient norm of the other four types (log gap −0.403 / −0.407 dex,
+> both forks) while sitting +0.81 dex HIGHER in gradient-adjusted curvature.**
+
+Since `|grad| ≈ |d| · |a|` and q, k, v all read the **same residual tensor**, their |a| is identical
+by construction — so **the entire q,k-vs-v gradient deficit must appear in |d|**. That is directly
+falsifiable against the probe:
+
+- **P2′ (replaces P2).** `|a|` for q, k and v must agree within **5%** (they read the same tensor —
+  a probe correctness check as much as a physics one). **`|d|` for q,k must be 0.35–0.45× that of
+  v**, matching the −0.40 dex gradient gap. If |d| does not carry the deficit, either the probe is
+  wrong or |a| differs where it cannot.
+- **P3′ (replaces P3).** The q,k-vs-other-four contrast in `|d|` must be **≥ 2x**, and the same
+  contrast in `|a|` must be **< 1.2x** across the four types that read the residual stream.
+- **P5 (new, the decisive one).** **q and k receive far less gradient yet carry far more curvature
+  per unit gradient. If |d| alone explains the +0.81 dex adjusted-curvature gap, then adding |d|
+  to the model must reduce the q,k binary's coefficient by ≥ 50%.** If the binary survives with
+  its coefficient intact after conditioning on |a| and |d|, **the effect is not in the first-order
+  backward statistics at all** — and given that four mechanisms have already been falsified
+  (bilinear coupling, nonlinearity exposure, softmax saturation, consumption order), that would
+  establish the QK gap as irreducible to anything measurable in a single forward+backward pass.
+
+**P1 and P4 stand as filed.** P4's ≥0.60 band should now be read against the QK binary's own R² of
+0.737 — activation moments must beat *that*, not the 0.218 gradient-only baseline, to count as an
+explanation rather than a correlate.
+
+**Why this amendment rather than a new request:** the measurement list (fields 1–5) is unchanged —
+only the registered bands move. No extra compute, no queue impact.
+
 ### Success criteria
 - One JSON per matrix with fields 1–5 plus the existing `gradient_block_norm` for the P1 check.
 - `summary.tsv` with the per-type means of every recorded quantity.
