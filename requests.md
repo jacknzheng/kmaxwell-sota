@@ -934,6 +934,59 @@ actual architecture rather than an assumed one**, which it never was before iter
 explicitly in the output JSON. **This campaign spent 40 iterations without knowing whether its
 depth axis was correct**, and the fix is one field in the probe.
 
+**=== ITERATION 48: QK-NORM FALSIFIED TOO. Seven mechanisms, seven failures. ===**
+
+*QK-norm was the last architectural candidate standing. Its sharpest consequence is testable with
+only λ and g, and it fails.*
+
+**The prediction.** For an exactly scale-invariant matrix, `g(cW) = g(W)/c` and `λ(cW) = λ(W)/c²`,
+so **`λ/g²` is exactly gauge-invariant** — it cannot change under any rescaling of W. The adjusted
+level *is* log(λ/g²). Under QK-norm, q and k's adjusted level therefore has a whole degree of
+freedom removed that the other four types retain, and should be **more stable**: flatter in s, less
+scattered, more reproducible.
+
+**All three tests are null, and two point the wrong way:**
+
+| test | q,k | others | t |
+|---|---:|---:|---:|
+| \|d adj / d log s\| (fork-1500) | 0.452 | 0.438 | +0.20 |
+| \|d adj / d log s\| (fork-2000) | 0.396 | 0.437 | −0.56 |
+| sd over the s ladder (fork-1500) | 0.1228 | 0.0968 | **+1.80 (wrong direction)** |
+| sd over the s ladder (fork-2000) | 0.0973 | 0.1102 | −0.85 |
+| median cross-state \|shift\| | 0.0341 | 0.0361 | — |
+
+q,k are if anything *more* scattered, and every sign flips between forks.
+
+**The null is informative, not underpowered — checked explicitly.** Minimum detectable difference
+at 80% power is **0.0405**; the observed difference is **0.0260**, i.e. 0.64× MDE and in the wrong
+direction. More importantly the **gauge degree of freedom is wide open**: weight norms move
+**0.188 dex (54%) within a run** over the measured steps, so a genuine scale-invariance would have
+had ample room to show. It does not.
+
+**QK-norm is falsified as an explanation of the +0.81 dex gap.** It remains a true architectural
+fact — q and k *are* RMS-normed and *are* scale-invariant in their own output — but that invariance
+**does not produce the curvature gap**.
+
+**SEVEN MECHANISMS, SEVEN FAILURES:** bilinear coupling · softmax saturation · nonlinearity
+exposure · consumption order · curvature concentration · Muon group rank · QK-norm scale-invariance.
+
+**This changes what should be concluded.** After seven falsifications on the same 72 matrices, the
+honest position is not "the mechanism is still out there" but:
+
+> **The q,k-versus-rest gap of +0.81 dex is the most statistically robust fact in this campaign
+> (12/12 blocks, both forks, Cohen's d ≈ 3.3) and is not explained by any property of the loss
+> geometry, the optimizer geometry, the architecture, or the spectrum that is measurable in the
+> committed data.**
+
+**No eighth mechanism should be proposed offline.** Seven hypotheses against one fixed dataset is
+well past the point where a new one would be discovery rather than overfitting. The gap now needs
+either (a) REQ-038's forward/backward probe, or (b) the two registered interventions — the W_q/W_k
+rescale and the qk_bank re-grouping — both of which are binary tests rather than correlational fits.
+
+**Registered addition to Arm A (zero cost):** report the sd of the adjusted level over the s ladder
+per type. If q,k come out *less* scattered than the other four in ≥3 of 4 seeds, this iteration's
+disconfirmation was driven by the two-state sample and QK-norm is rehabilitated.
+
 **=== ITERATION 46: THE RANK ANALYSIS IS WITHDRAWN — IT TESTED THE WRONG OBJECT ===**
 
 *Iteration 45 proposed Muon group rank as a mechanism, with a slope of −1.044/−1.083 on
