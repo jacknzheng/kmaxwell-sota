@@ -1542,6 +1542,63 @@ structure at the first and last block — the first block writes into a stream c
 embeddings, the last writes into one immediately consumed by the output head — but **this
 campaign has never measured activations, so the mechanism is inferred, not demonstrated.**
 
+**ITERATION 23 — the residual-writing prediction is confirmed, and the residue is a smooth
+position field with a SPECTRAL-SHAPE signature.**
+
+*Prediction test.* If the boundary changes the residual stream, writers' **gradients** should show
+it too — not only their curvature. End-block delta by role:
+
+| quantity | writer | reader | writer − reader |
+|---|---:|---:|---:|
+| log C | +0.936 | +0.131 | +0.805 |
+| **log g** | **+0.180** | **−0.028** | **+0.209** |
+| log curv-along-gradient | +0.822 | −0.047 | +0.868 |
+| log curv-along-polar | +0.386 | +0.050 | +0.336 |
+
+(fork-1500; fork-2000 reproduces every row within 0.02–0.15.) **Writers show a gradient asymmetry
+at the boundary; readers show none.** The boundary affects writers' whole gradient/curvature
+system, which is what the residual-stream reading requires and a curvature-only artifact would not
+produce.
+
+*But the g² law explains less than half of it.* Decomposing the elevation:
+
+| | delta log C | 2 × delta log g | **unexplained** |
+|---|---:|---:|---:|
+| writer, fork-1500 | +0.936 | +0.361 | **+0.575** |
+| writer, fork-2000 | +1.008 | +0.363 | **+0.645** |
+| reader, fork-1500 | +0.131 | −0.056 | +0.187 |
+| reader, fork-2000 | +0.245 | −0.055 | +0.299 |
+
+**~0.6 dex of writer curvature at the boundary is not accounted for by the campaign's most solid
+law.** That residue is the genuinely new content.
+
+*The residue is a smooth position field, not a two-block anomaly.* Writer residue by block runs
+−3.51 (b0), −3.85, −3.82, −3.83, −4.01, −3.97, −4.12, −4.16 (b7), −4.12, −3.98, −3.81, −3.27
+(b11): **corr(d_edge, writer residue) = −0.712 / −0.727**. It rises smoothly from the interior
+toward both ends. This means the `is_end` binary in REQ-036 is a *coarse approximation* of a
+continuous field — adequate for the prescription (validated in iterations 18/20/21) but not the
+true functional form.
+
+*A spectral-shape signature — and a qualification of an earlier finding.* The spectral gap
+(w0/|w1|) **widens at the boundary for both roles**: reader +0.511, writer +0.555 at fork-1500
+(+0.405 / +0.502 at fork-2000). So at the ends the top eigenvalue **separates from the bulk** —
+the Hessian changes *shape*, not just scale. **This qualifies iteration 6's finding that the
+normalized spectrum is s-invariant** (CV 1.5–3% across the s ladder): that was invariance under
+*learning-rate* change, and it holds. Spectral shape is *not* invariant across **depth position**.
+Both statements are true; the earlier one should not be read as "shape never varies".
+
+**REGISTERED SEED CHECKS — additions to Arm A, all zero cost:**
+- writer gradient asymmetry: end-block delta log g ≥ +0.10 for writers and ≤ +0.05 for readers.
+- unexplained residue: delta log C − 2·delta log g ≥ +0.4 dex for writers, in every seed.
+- corr(d_edge, writer residue) ≤ −0.5 in every seed (the smooth field, not just the endpoints).
+- spectral gap widens at the boundary: delta(w0/|w1|) ≥ +0.25 for both roles.
+
+If the residue reproduces across seeds it is architectural, and the remaining question is
+narrow and well-posed: **what makes the Hessian of a residual-writing matrix ~4x sharper than
+its gradient predicts, specifically at the first and last block.** That is a far sharper question
+than the one this campaign started with, and the activation-variance measurement noted in
+iteration 22 is the direct test.
+
 **REGISTERED SEED CHECK — addition to Arm A, zero cost:** the writer/reader split of the
 end-block effect must reproduce. Band: end-block delta ≥ +0.6 dex for attn.proj and mlp.proj, and
 ≤ +0.3 dex for attn.q, attn.k, attn.v, in every seed. If writers and readers do not separate, the
