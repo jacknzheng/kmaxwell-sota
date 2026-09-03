@@ -478,6 +478,50 @@ already reports realized curvature per arm — which will expose concavity direc
 and its t-statistic, so the concavity can be checked for seed-reproducibility alongside
 everything else (band: mean t negative in every seed, |mean t| between 0.5 and 1.5).
 
+**CLUSTERING AUDIT (iteration 16) — the core claim STRENGTHENS under stricter inference.**
+
+Every p-value and CI in this campaign treated the 72 matrices as independent. They are not:
+matrices in the same block share activations, gradients and data path. Measured directly, the
+**intraclass correlation of the residual clustered by block is +0.378**, giving a design effect
+of 2.89 — **effective n ≈ 25, not 72**, and standard errors understated by ~1.70x.
+
+*Re-testing the three slopes with a block-clustered bootstrap* (resampling whole blocks):
+
+| slope | estimate | block-clustered 95% CI |
+|---|---:|---|
+| **within-type** | +2.124 | **[+1.543, +2.768]** — contains 2.0 |
+| **between-type** | +0.375 | **[+0.033, +0.773]** — excludes 2.0 |
+| pooled | +0.742 | [+0.244, +1.115] |
+
+**The two CIs do not overlap.** So the Simpson-style gap between the within-type and
+between-type relationships **survives honest clustered inference** — it is not an artifact of
+treating correlated matrices as independent.
+
+*This also corrects an earlier CI.* Iteration 10 reported a between-type CI of [−0.94, +1.90]
+from bootstrapping only the 6 type means. That resampled the wrong unit and was far too wide;
+the block-clustered interval [+0.03, +0.77] is both tighter and more defensible, and it is what
+should be quoted. The iteration-10 conclusion ("suggestive, not established") was **too
+pessimistic** — under correct clustering the gap is established at fork-1500.
+
+*The boundary effect gets stronger too.* Its natural unit is the block, not the matrix:
+
+| unit | corr(d_edge, residual) | inference |
+|---|---:|---|
+| matrix (n=72, assumes independence) | −0.606 | inflated |
+| **block (n=12, honest unit)** | **−0.893** | permutation **p < 0.0001** |
+| block, fork-2000 | **−0.878** | permutation **p < 0.0001** |
+
+Aggregating to blocks averages out matrix-level noise, so the position field is *cleaner* than
+the matrix-level correlation suggested, and it survives a permutation test with only 12 units.
+
+**Net effect of this audit: two claims strengthen, one earlier CI is corrected as too wide, and
+nothing is retracted.** The load-bearing uncertainty remains what it was — the untested
+exclusion restriction (REQ-037) and whether any of this reproduces across seeds (REQ-035 Arm A).
+
+**Zero-cost addition to Arm A's readout:** report the block-level ICC of the residual per seed.
+If ICC is stable near +0.4 across seeds, block-clustered inference is the correct default for
+all future analysis on this trainer; if it varies widely, per-seed clustering is required.
+
 **Queue note (2026-09-03 ~02:40Z):** four requests are open (034/035/036/037) behind a ≤2-node
 ceiling with ~20–26h before the first node frees. **No further requests will be filed from
 analysis** — offline work has been exhausted (verified: the exclusion restriction cannot be
