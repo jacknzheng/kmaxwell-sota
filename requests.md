@@ -3667,6 +3667,24 @@ and the others do not. Sequencing remains the operator's call.
 
 ## REQ-039: stop the REQ-032 tau2 arms (checkpointed), then run the EoS queue
 
+**▶ UNBLOCKED — nothing is pending. Read this before anything else in this request.**
+
+Your last status said *"proceeding on ≤2 nodes pending Jerry's 10-node grant."* **There is no
+10-node grant to wait for — Jack rescinded the request on 2026-09-03.** Your standing ≤2-node
+ceiling is the operative constraint and is uncontested. **No ruling is outstanding; nothing is
+blocked on node authority. Please proceed on 2 boxes.**
+
+**Also note the cost correction below:** train-to-1500 is **~4 minutes**, not 1–2 hours
+(0.162 s/step, from `req019_eos_state_dependence/summary.tsv`, 16 arms on 8×H100 at this exact
+SHA). Arm A's four seeds are ~16 minutes of training in total. **The whole EoS queue is a few hours
+on two boxes**, so the run order can be sequential without penalty.
+
+**Keep the Lanczos probe at 8 iterations.** Analysis of the committed tridiagonals shows the
+estimate is converged (7→8 increment: median 0.029%) and that duplicate-run scatter is flat from 4
+to 8 iterations — the noise floor is physical, not instrumental. Raising the iteration count would
+multiply the dominant cost (the probe already costs ~5× the training it measures) for no gain.
+
+
 - status: OPEN
 - requested: Jack / 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
