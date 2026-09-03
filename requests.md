@@ -1994,6 +1994,68 @@ trained network. REQ-038 is the cheapest at one forward+backward pass.
 A plain-language write-up of the findings, aimed at a reader who has not followed the campaign, is
 at `~/ML/layerwise-momentum/C_FINDINGS.md`.
 
+**=== ITERATION 52: MAJOR CORRECTION — THE q/k GAP IS NOT IN C ===**
+
+*The campaign's headline finding has been mis-stated since iteration 33. Checked directly:*
+
+| quantity | q,k | other four | gap | blocks |
+|---|---:|---:|---:|---:|
+| **log C — the actual target** | +4.117 | +4.110 | **+0.007 dex** | **6/12** |
+| log g | +3.529 | +3.931 | **−0.403 dex** | **0/12** |
+| adjusted (log C − 2 log g) | −2.940 | −3.753 | +0.812 dex | 12/12 |
+
+**In C itself the q,k gap is +0.007 / +0.029 dex — indistinguishable from zero, and the
+direction splits 6/12 and 7/12 blocks.** The QK binary explains **R² = 0.000** of the variance in
+log C. The +0.81 dex figure quoted throughout exists *only* in the gradient-adjusted quantity.
+
+**What is actually anomalous is the GRADIENT.** q and k receive **0.40 dex (~2.5×) less gradient**
+than the other four types, with perfect separation (0/12 blocks — every block, both forks).
+
+**The corrected statement of the anomaly.** Under the verified λ ∝ g² law, a matrix with 2.5× less
+gradient should sit ~6× flatter. q and k receive far less gradient **yet settle at the same
+sharpness as everything else.** So the finding is not "C has unexplained structure" — it is:
+
+> **The λ ∝ g² law, which holds causally within a matrix and cross-sectionally for the other four
+> types, FAILS for q and k.**
+
+Cross-sectional slope of log C on log g, by group:
+
+| group | fork-1500 | fork-2000 |
+|---|---:|---:|
+| **other four types** | **+2.238** | **+2.083** |
+| **q, k** | **+1.083** | **+0.508** |
+
+The other four sit right on the causal exponent of 2.0. **q and k are at half that or less.**
+
+**What this invalidates.** Roughly 20 iterations framed the target as "a +0.81 dex gap in C with no
+mechanism," and seven mechanisms were proposed and falsified against that framing. **Those seven
+falsifications stand as tests of that quantity** — but the quantity was the wrong one. The gap they
+were trying to explain is a property of the *adjustment*, not of C.
+
+**What survives unchanged:**
+- the λ ∝ g² law itself (within-matrix causal exponent +2.07/+2.10) — **strengthened**, since it
+  now cleanly explains four of six types cross-sectionally too;
+- the variance budget's other rows: gradient ~22%, boundary position ~8%;
+- REQ-036's LR design, which is built from measured C and k and never used the adjusted quantity.
+
+**What changes.** The "unexplained ~50%" is not an unexplained property of C. It is the **failure
+of the g² law for q and k specifically** — a sharper and more tractable question, and one that
+points directly at what q,k *do* with their gradient rather than at their curvature.
+
+**REVISED BAND 1 (replaces the version in the table below).** The registered check must target the
+real effect:
+- **q,k gradient deficit: −0.40 ± 0.12 dex, with q,k below the other four in ≥10 of 12 blocks.**
+- **cross-sectional slope of log C on log g: ≥ +1.8 for the other four types, ≤ +1.4 for q,k**, in
+  every seed.
+- **q,k gap in log C itself must stay below 0.15 dex.** If it opens up in the seeds, this
+  correction was wrong and the original framing returns.
+
+**Process note.** This was caught by asking whether the headline was even about the right variable
+— a check that should have run at iteration 33, not 52. Every derived quantity in this campaign
+now carries a documented failure of this kind (α₁, the tail correction, the depth axis, the Muon
+rank object, and now the adjusted level). **The lesson is to state findings in the units of the
+question before building on them.**
+
 ## ⚠️ AUTHORITATIVE SEED-CHECK TABLE — READ THIS, IGNORE THE SEED CHECKS BELOW
 
 *This request accumulated **13 overlapping "registered seed check" blocks** across ~15 iterations,
