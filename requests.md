@@ -78,7 +78,7 @@ from this queue; their provenance is in this file's git history.
 
 ## REQ-034: K-Maxwell on the fork@2000 batch ladder — 1× → 16×
 
-- status: **OPEN — unblocked, ready to launch.** Machinery is ready (reuses the REQ-026/029
+- status: **DONE (2026-09-03) — `logs/kmaxwell/req034_kmaxwell_batch_ladder/`.** HEADLINE POSITIVE: **K-Maxwell is the large-batch-durable kernel.** benefit(kmax−μ0)@2750 = 1x −0.0046 / 2x −0.0053(fresh μ0) / 4x −0.0067 / 8x −0.0072 / 16x −0.0058 — flat-to-growing across 1x–16x, while bi-Maxwell (REQ-029) DECAYED to ~0 by 16x. The anneal does something structurally different from noise-averaging; it holds its gain where the frozen two-rate kernel loses it (REQ-033's 'grows with batch' now on the same axis). Gates passed (tests, smoke val@2125 finite=annealed fork@2000 clean, budget 16x margin +71). Caveat: my base val@2000=3.44279 vs stored 3.44367 (−0.0009 offset on the stored-μ0 points; 2x fresh-μ0 anchor offset-free; shape robust). n=1/arm.
   fork@2000 template driven for REQ-033; mbs stays 64 so no eager fallback). The earlier
   node-authority hold is resolved: the ≥10-node line was rescinded, the ≤2 ceiling is
   uncontested, and REQ-032 has freed both boxes. Run the 6 arms sequentially or 2-at-a-time —
