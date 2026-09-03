@@ -19,7 +19,7 @@ four are active. Run independent arms in parallel within that cap. Completed
 REQ logs live under `logs/async_sdpo_req024/` and `logs/async_sdpo_req031/` —
 do not keep those request blocks in this queue.
 
-Next request number: **REQ-037**.
+Next request number: **REQ-038**.
 
 
 ## REQ-034: K-Maxwell on the fork@2000 batch ladder — 1× → 16×
@@ -1134,6 +1134,84 @@ never measured. Muon here also carries momentum internally (`m_fast`/`m_slow`), 
 a free per-layer knob without changing the kernel. Filing a momentum rule now would be
 inventing a mapping rather than deriving one. The prerequisite is a registered experiment
 asking whether mu does anything LR cannot at fixed `s_eff`; that is REQ-037 if wanted.
+
+## REQ-037: a NON-learning-rate instrument for the curvature-gradient exponent
+
+- status: OPEN
+- requested: Jack (via Claude analysis session) / 2026-09-03 PDT
+- repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
+- pinned SHA: `ebf53cd` (same trainer + curvature probe as REQ-019/022/023)
+- **node budget: ONE box, ~4 arms of 750 steps. I am the requester, not your operator —
+  run under whatever ceiling is in force.** No fan-out needed.
+- **priority note for the operator:** this tests the single assumption that REQ-035's
+  entire account now rests on. If forced to choose, **this is more informative than
+  additional REQ-035 seeds**, because seeds cannot test it (see below). Sequencing is
+  the operator's call, not mine.
+
+**Why.** REQ-035 established a response ratio `d log lam / d log g = +1.98` (pooled 2SLS
++2.07/+2.10; robust to dropping weak first stages, +2.05 at F≥10 through +2.23 at F≥50), using
+REQ-023's per-matrix learning-rate randomisation as the instrument. A placebo on
+`curvature_along_polar` — a different functional of the same Hessian — gives +1.80, consistent
+with whole-Hessian (Gauss-Newton) rescaling.
+
+**The assumption.** That estimate is causal only under the **exclusion restriction**: the LR
+must move lam *exclusively through* g. This is almost certainly false — changing a matrix's LR
+moves it to a different point in weight space, where curvature differs for other reasons.
+Sensitivity analysis (first stage −0.613, total effect −1.27): for the true exponent to be 1.0
+rather than 2.0, **52% of the LR's effect on curvature would have to bypass the gradient
+entirely.** Plausible or not, it is untested.
+
+**Why n=4 seeds cannot test it.** Seeds re-randomise initialisation, not the instrument. Every
+seed inherits the identical exclusion structure, so all four would be biased the same way.
+
+**Why committed data cannot test it either — three routes checked and all closed.**
+1. *Untreated matrices within a fork.* REQ-023 gives each matrix each multiplier exactly once,
+   so **no matrix is ever untreated twice at the same fork — 0 usable pairs.** The balanced
+   design that makes the LR instrument clean is exactly what destroys the non-LR one.
+2. *Untreated at both forks.* All 72 matrices keep the **same** assignment across forks
+   (verified: fraction identical = 1.00), so the surrounding perturbation is identical and the
+   only difference is 500 steps of network aging — confounded.
+3. *Existing batch ladders (REQ-026/028/029/033/034).* **No per-matrix curvature was ever
+   measured** in any of them; they recorded val_loss only. Verified by file search — no
+   curvature JSON exists anywhere outside `req019_*` and `req023_*`.
+
+So this needs one new run. That is a hard negative, not an analysis gap.
+
+### Design — 4 arms, 750-step continuations from the shared step-2000 state
+
+The instrument must move g while holding each matrix's own learning rate **fixed**.
+
+| # | arm | instrument |
+|---|---|---|
+| 1 | control | baseline batch, no clipping |
+| 2 | batch 0.5x | halved gradient batch — changes gradient noise scale, LR untouched |
+| 3 | batch 2x | doubled batch, same |
+| 4 | per-matrix gradient clip | clip every Muon matrix's gradient at a fixed percentile, LR untouched |
+
+Arms 2–3 use the existing batch-ladder machinery (REQ-026/028/029 templates) — the only change
+is that **per-matrix curvature must be measured**, which those runs omitted. Arm 4 is the
+cleanest instrument (moves g directly, nothing else) but needs a small clipping hook; drop it
+if that is not cheap.
+
+**Registered prediction, magnitudes fixed in advance:**
+- **d log lam / d log g = 2.0 ± 0.3** under the batch instrument.
+- If it lands in band: the exponent survives an instrument with a completely different
+  exclusion structure, and the Gauss-Newton reading is **established** rather than assumed.
+- If it lands near 1.0 or below: the LR-based +1.98 was carrying exclusion-violation bias,
+  the Gauss-Newton reading **falls**, and REQ-035's account must be rewritten.
+- If the batch instrument moves g by less than 0.05 dex, the test is underpowered — report
+  that as inconclusive rather than as a result.
+
+### Success criteria
+- `per_matrix_curvature.json` per arm with the **existing field set** — `top_eigenvalue`,
+  `gradient_block_norm`, `curvature_along_gradient`, `curvature_along_polar`, raw Lanczos
+  `alphas`/`offdiags`, `residual_tail`. The gradient block norm is the load-bearing field.
+- `summary.tsv` with the fitted exponent per arm and its bootstrap CI.
+- Commit raw Ritz values; do **not** apply the geometric-tail correction silently.
+- Report the realized first-stage strength (how far the instrument actually moved g).
+
+### Artifacts
+`logs/kmaxwell/req037_nonlr_instrument/`
 
 ## Template
 
