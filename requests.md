@@ -260,6 +260,7 @@ measured value so a seed result can be compared directly.
 | **9** | **only attn.proj's offset is resolved** (iter. 68–69, corrected) | **attn.proj lowest** of the six offsets in ≥3 of 4 seeds and **≥0.25 dex below the other five**; **|residual-writer − internal| offset gap < 0.20 dex**; the other four adjacent gaps need NOT resolve | gap −0.454 / −0.430, p ≤ 0.0003 |
 | **10** | **C is lifted at layer 0** (iter. 69–72, corrected twice) | **layer-0 indicator coefficient positive, t > 4** over type+gradient; **layer 0 lift ≥ +0.20 dex** above the interior; **layer 12 NOT lifted** (< +0.15 dex) — in ≥3 of 4 seeds | t = 7.3–8.8; layer 0 +0.26/+0.44, layer 11 +0.24/+0.22, layer 12 +0.12/+0.12 dex |
 | **11** | **the assembled model generalises** (iter. 72) | **leave-one-layer-out rmse ≤ 0.20 dex** and **cross-fork rmse ≤ 0.20 dex** for `type + two-slope gradient + layer-0 term`, versus ~0.38 dex for C's own spread | LOLO 0.138 / 0.164; cross-fork 0.165 / 0.140 dex |
+| **12** | **three physical quantities replace the six type offsets** (iter. 73) | **LOLO rmse of `log‖W‖ + log fan-in + residual-binary` within 0.02 dex of the 6-free-offset model** (2 fewer parameters); **all coefficients same sign in every seed**: log‖W‖ < 0, log fan-in < 0, residual-binary < 0 at centred gradient | 0.168 vs 0.162 / 0.209 vs 0.217 |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
 exponent differs systematically by type — **~3.8 for the two projection matrices, ~0.9–1.4 for the
@@ -268,6 +269,66 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 73: THE SIX TYPE OFFSETS REDUCE TO THREE MEASURED QUANTITIES ===**
+
+*Band 11's model works but its type term is six free constants — curve-fitting with no mechanism.
+The campaign's goal is an account of **why** C differs, so this iteration tries to replace them.*
+
+**Constraint:** only quantities measured independently of the Lanczos tridiagonal are admissible.
+That allows `log₁₀‖W‖_F` (from `weight_norms.tsv`) and matrix shape (fan-in, fan-out, parameter
+count), and excludes everything derived from the probe. Scored by leave-one-layer-out, the same
+honest test as band 11.
+
+| offset replacement | params | LOLO f1500 | LOLO f2000 |
+|---|---:|---:|---:|
+| 6 free type offsets *(band 11)* | 9 | **0.162** | 0.217 |
+| **log‖W‖ + log fan-in + residual-binary** | **7** | **0.168** | **0.209** |
+| log‖W‖ + residual-binary | 6 | 0.205 | 0.241 |
+| residual-binary only | 5 | 0.219 | 0.256 |
+| log‖W‖ only | 5 | 0.298 | 0.326 |
+| log fan-in / fan-out / param count | 5–6 | 0.301–0.318 | 0.331–0.348 |
+
+**Three measured quantities match six fitted constants with two fewer parameters** — within 0.006 dex
+on fork-1500 and *better* on fork-2000. Cross-fork transfer is comparable (0.170/0.158 vs
+0.167/0.146). **The type offsets are not irreducible.**
+
+**A coefficient that looked alarming and is not.** The residual-writer binary fits at **−12.95
+(t = −12.3)**, which is not a physical dex offset. It is an extrapolation artefact: the binary is an
+intercept shift for a group that also carries its own gradient slope, and with `log g ≈ 3.8` a slope
+difference of 3.28 forces an intercept of about −3.28 × 3.8 ≈ −12.5. **Centring log g collapses it
+to −0.47 dex in both forks**, which is the interpretable quantity — the level difference at the mean
+gradient. The −12.9 was an extrapolation to a gradient of 1.0, far outside the observed 3.5–4.1
+range, and means nothing. *(Reporting an uncentred interaction intercept as a physical effect is the
+same class of error as citing a correlation without its null — recorded so it is not repeated.)*
+
+**The reduced account, with every coefficient stable across both forks:**
+
+| term | f1500 | f2000 | t (f1500 / f2000) |
+|---|---:|---:|---:|
+| log₁₀‖W‖_F | **−0.60** | **−0.67** | −3.9 / −3.9 |
+| log₁₀ fan-in | **−1.08** | **−1.07** | −6.2 / −5.7 |
+| residual-writer (at mean g) | **−0.47** | **−0.47** | −9.1 / −8.1 |
+| gradient, residual writers | +3.87 | +3.71 | +15.3 / +13.8 |
+| gradient, internal | +0.58 | +0.50 | +5.0 / +3.9 |
+| layer-0 lift | +0.20 | +0.40 | +3.1 / +5.7 |
+
+**Both structural coefficients are negative and remarkably stable** — fan-in at −1.08/−1.07 is nearly
+identical across forks, and the residual-writer level offset is −0.47 in both. **Larger matrices and
+wider fan-in carry lower C**, which is a physically meaningful statement rather than a fitted label.
+
+> **log C ≈ −0.6·log‖W‖_F − 1.1·log(fan-in) − 0.47·(residual writer) + (gradient term: ≈3.8 for
+> residual writers, ≈0.5 for internal) + 0.2–0.4·(layer 0) + noise**
+
+**Caveat, stated plainly:** fan-in takes only two values here (768 and 3072), so its −1.08 coefficient
+is identified by a single contrast — mlp.fc against everything else — and should be read as "the
+3072-fan-in matrix sits lower," not as a fitted power law. A third fan-in value would be needed to
+call it an exponent. This is the same trap as the withdrawn Muon rank slope, avoided this time by
+declaring it.
+
+**Registered as band 12.** The seed check is deliberately about *signs and parity*, not magnitudes:
+the reduction must stay within 0.02 dex of the six-offset model, and all three structural
+coefficients must keep their sign in every seed.
 
 **=== ITERATION 72: THE ASSEMBLED MODEL, VALIDATED OUT-OF-SAMPLE — and the edge definition corrected ===**
 
