@@ -19,197 +19,145 @@ four are active. Run independent arms in parallel within that cap. Completed
 REQ logs live under `logs/async_sdpo_req024/` and `logs/async_sdpo_req031/` —
 do not keep those request blocks in this queue.
 
-Next request number: **REQ-034**.
+Next request number: **REQ-035**.
 
 
-## REQ-033: does the ANNEALED K-Maxwell kernel survive a change of batch size?
+## REQ-034: K-Maxwell on the fork@2000 batch ladder — 1× → 16×
 
-- status: **DONE (2026-09-03)** — 12/12 arms finite, deliverable at `logs/kmaxwell/req033_annealed_batch_curve/`. Within-batch benefit (kernel−A) @3250: **B bimaxwell** decays like REQ-029 (−0.0049/−0.0038/−0.0008 across 0.25×/0.5×/2×); **C annealed-shipped** does the *opposite* (≈0 at 0.25×, −0.0037 @0.5×, −0.0051 @2× — benefit grows with batch, does NOT reproduce bi-Maxwell's decay within 0.25×–2×); **D annealed-rescaled** backfires at small batch (**+0.1055** @0.25×, +0.0100 @0.5×, −0.0021 @2×) — age-rescaling is refuted as a repair. Base val@1000=3.65169. Caveat: first pass NaN'd all arms — root-caused to a **torch.compile mbs<64 defect** (isolated w/ 6 controls; eager fixes it), so 0.25×/0.5× ran eager and 2× compiled (same math; within-batch readout unaffected). n=1/cell (0.5× C/B just above ~5e-4 noise; D & 2×-C robust). Full evidence + gates + limitations in the README.
-- status(prev): OPEN
-- agent status: **RUNNING (2026-09-02 ~21:35Z)** — accepted; runs on a 2nd node in parallel with REQ-032's scaling-sdpo box (within my 2-node ceiling: REQ-032=qrvdr53, this=1 more; REQ-032's arm is API-bound so the kmaxwell node doesn't contend). Provisioning an 8×H100 kmaxwell box, bootstrapping @ `365c392d` (venv019 torch2.10cu128 + **30 fineweb chunks** [2x binding case=29]). Plan: regenerate `eos_shared_base` with the dump at **step 1000** (= transition_step_to_kmaxwell), record base val@1000; generate 12 configs (batch{0.25x,0.5x,2x}×kernel{A muon μ0.95, B bimaxwell record, C annealed_weights_muon shipped decays, D annealed_weights_muon batch-rescaled decays}) from the exact keys you gave (batch_tokens/microbatch_sequences/token-aligned skip 4000/2000/500; start 1000→stop 3250; C/D switch_step 1000 anneal_steps 2250; checkpoint 3250 only; dense val [3000,3250]/10). Hard gates first: **usable-batch budget assert** (REQ-029 metric) + **20-step finite-loss smoke** per config before any full arm. 1x row omitted as specified (out-of-band n=8 context only, never differenced). Deliverable → `logs/kmaxwell/req033_annealed_batch/`.
-- agent status update: **ROOT-CAUSE FOUND + WORKAROUND APPLIED, marathon re-running (2026-09-02 ~23:25Z).** Base ran clean: **val@1000 = 3.65169**, step-1000 state dumped (model + 8/8 ranks), and **all 4 gates GREEN** — tests pass at the pin, usable-batch budget OK (2x tightest at +100, = your 29-of-30 binding case), mbs-divisibility OK, and all 13 configs resolve at launch. **But the first 12-arm pass came back ALL-NaN**: every arm — including plain-muon control A — diverged to NaN within **10 steps** of the fork. I isolated it with 6 controls: it is **NOT** the base/fork (1x *and* 2x fork@1000 both descend cleanly to ~3.54–3.61), **NOT** the LR (0.25× LR still NaN), **NOT** the optimizer step or data (frozen LR≈0 *still* NaN → the **gradient** itself is NaN). **Root cause: a `torch.compile` shape bug at `microbatch_sequences < 64`.** mbs=64 (1x, 2x) is stable; mbs=16 and mbs=32 NaN *regardless of batch_tokens* (verified: 1x batch with mbs=16/32 also NaN). **Eager (`TORCHDYNAMO_DISABLE=1`) fixes it** — 0.25x runs finite (val ~3.82). Since 0.25x/0.5x *require* mbs ≤ 16/32 (the per-GPU-seq cap you flagged), I run those **8 small-batch arms eager** (identical math, ~25× slower) and the **4 2x arms compiled** (mbs=64, fast). Your readout is a **within-batch** contrast, so the eager/compiled split does not affect it. Re-running now on the one node: b0.25x_A eager full at step ~1660/3250; ETA ~6–7h for all 12. The README will document the compile-NaN bug and the eager/compiled split. **If you'd prefer I stop and instead patch the compile path, or descope to 2x-only, say the word — otherwise I proceed to the full curve.**
+- status: OPEN
+- requested: Jack / 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
-- pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e (same as REQ-026/027/028/029)
-- priority: arms are 2250 steps each (3x the REQ-026/029 forks), 12 of them.
-  **At most 4 concurrent 8×GPU nodes fleet-wide** (see operator directive).
-  Use remaining capacity after other OPEN work (e.g. REQ-032); never exceed 4
-  total active boxes. Split by batch size when sharing a node — arms in a row
-  must share a node so the within-batch contrast is same-hardware.
+- pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e (same as REQ-026/027/028/029/033)
+- priority: ONE node is enough; arms are sequential and short (750 steps each).
 
-**Question.** REQ-026→029 established the benefit-vs-batch curve for the **frozen
-two-rate bi-Maxwell** kernel: `1x -0.01063, 4x -0.00438, 8x -0.00233, 16x ~0.00000`
-— halving per doubling, no plateau, fully absorbed by large-batch averaging.
+**Why.** REQ-026→029 built the momentum-benefit-vs-batch curve for the frozen
+bi-Maxwell kernel — `1x −0.01063, 4x −0.00438, 8x −0.00233, 16x ~0` — a clean decay
+to zero. REQ-033 measured the **annealed K-Maxwell** kernel, but on a *different
+protocol* (fork@1000, 2250 steps, @3250) and a *different range* (0.25×–2×), so its
+numbers cannot be laid on the same axis as that curve. Plotting them together
+produces a false zigzag; they are not the same measurement.
 
-That curve was never measured for the **annealed K=8 K-Maxwell** kernel of
-[PR #357](https://github.com/KellerJordan/modded-nanogpt/pull/357) (verified: no
-mention of the annealed kernel anywhere in req026/028/029). That kernel is a
-different object — its mean age *changes over training* (58 -> 26 steps), and that
-extra degree of freedom is exactly what could have absorbed batch-specific noise
-structure. It is also the kernel in the open PR, so its batch-robustness is
-load-bearing for the claim.
+This request puts K-Maxwell on the **exact bi-Maxwell protocol** — same shared
+step-2000 state, same 750-step window, same @2750 readout, same batch ladder — so
+the two kernels finally sit on one axis over 1×–16×.
 
-**Every timescale in the recipe is in STEPS**, but momentum reduces gradient
-variance and noise scales as 1/batch. The tokens each buffer averages over is
-`age x batch_tokens`. So the tuned ages are only meaningful at the batch size they
-were tuned at. Arm D tests the obvious repair: scale the ages with the batch ratio.
+The open question it answers: REQ-033 found K-Maxwell's benefit **grows** with batch
+across 0.25×–2× while bi-Maxwell's shrinks. Does K-Maxwell keep its gain at 4×, 8×,
+16×, where bi-Maxwell's went to exactly zero — or does it also get absorbed once the
+batch is large enough?
 
-### Expected work — 12 arms, 2250-step continuations from a shared step-1000 state
+### Expected work — 6 arms, 750-step continuations from the shared step-2000 state
 
-Same `eos_shared_base` machinery as REQ-026/029, but **dump the shared state at
-step 1000, not 2000** — 1000 is `transition_step_to_kmaxwell`, the step at which
-PR #357's kernel first engages. Forking there means arms C/D run the **full,
-uncompressed 58 -> 26 anneal over the PR's own 2250 steps, ending at the real step
-3250**. Record the base val@1000 as REQ-026 recorded val@2000 = 3.44367.
-Grid = batch {0.25x, 0.5x, 2x} x kernel {A, B, C, D} = 12. **The 1x row is
-deliberately omitted**: 1x full-run baselines already exist at n=8
-(`logs/kmaxwell/{bimaxwell339_n8,ablation_anneal_n8}`), and re-running 1x here as a
-step-1000 fork would not be comparable to them anyway (fork-vs-full-run). The
-consequence is stated plainly in the readout: **the curve has no cell at the batch
-size the recipe was tuned at**, so it is read as a trend across 0.25x / 0.5x / 2x,
-with the existing n=8 1x runs as out-of-band context only — never differenced
-against these arms.
+Same `eos_shared_base` machinery as REQ-026/028/029 (base val@2000 = 3.44367).
 
-| kernel | optimizer | meaning |
-|---|---|---|
-| **A** | `muon{mu:0.95}` | single-EMA control |
-| **B** | `bimaxwell_muon` record settings | the already-curved reference |
-| **C** | `annealed_weights_muon`, ages AS SHIPPED | PR #357 kernel, unmodified |
-| **D** | `annealed_weights_muon`, ages x (1x/batch) | ages rescaled to the batch |
+| # | batch | kernel | note |
+|---|---|---|---|
+| 1 | 1× | `annealed_weights_muon` | |
+| 2 | 2× | `annealed_weights_muon` | |
+| 3 | 4× | `annealed_weights_muon` | |
+| 4 | 8× | `annealed_weights_muon` | |
+| 5 | 16× | `annealed_weights_muon` | |
+| 6 | 2× | `muon{mu:0.0}` | **the one missing control** |
 
-**The 12 arms explicitly:**
-
-| # | batch | kernel | # | batch | kernel |
-|---|---|---|---|---|---|
-| 1 | 0.25x | A single-EMA | 7 | 0.5x | C shipped |
-| 2 | 0.25x | B bimaxwell | 8 | 0.5x | D rescaled |
-| 3 | 0.25x | C shipped | 9 | 2x | A single-EMA |
-| 4 | 0.25x | D rescaled | 10 | 2x | B bimaxwell |
-| 5 | 0.5x | A single-EMA | 11 | 2x | C shipped |
-| 6 | 0.5x | B bimaxwell | 12 | 2x | D rescaled |
-
-Arm B is included **so the annealed curve can be laid directly against the
-bi-Maxwell curve on the same axes, same fork, same node** — REQ-026/029 measured
-bi-Maxwell against `mu:0.0`, not against single-EMA, so a fresh B arm is what makes
-the two curves comparable.
+**Only 2× needs a fresh control.** μ=0 already exists at 1× (3.34586, REQ-026),
+4× (3.24333, REQ-026), 8× (3.20561, REQ-028) and 16× (3.17362, REQ-029) — all at
+this exact fork and horizon. Difference the new K-Maxwell arms against those stored
+values; do **not** re-run them.
 
 ### Exact config keys
 
-Batch axis (`microbatch_sequences` must shrink at small batch — per-GPU sequences
-IS the microbatch bound there; 64 is illegal at 0.25x):
+Copy the REQ-026 fork-continuation template (`make_req026_configs.py`) and change
+only the blocks-group optimizer and the batch keys:
 
-| batch | `batch_tokens` | `microbatch_sequences` | `skip_batches` (token-aligned) | fineweb chunks |
+| batch | `batch_tokens` | `microbatch_sequences` | `skip_batches` | fineweb chunks |
 |---|---|---|---|---|
-| 0.25x | 131072 | 16 | 4000 | 9 |
-| 0.5x | 262144 | 32 | 2000 | 12 |
-| 2x | 1048576 | 64 | 500 | 29 |
+| 1× | 524288 | 64 | 2000 | 15 |
+| 2× | 1048576 | 64 | 1000 | 19 |
+| 4× | 2097152 | 64 | 500 | 27 |
+| 8× | 4194304 | 64 | 250 | 44 |
+| 16× | 8388608 | 64 | 125 | **80** |
 
-All three skips are exact integers -> every arm resumes at the same ~0.524B-token
-data position. Budget in **usable batches** (`sum floor(shard_tokens/batch_tokens)`),
-the REQ-029 metric, not raw tokens; chunk counts above already use it. **Bootstrap 30
-chunks** — 2x is the binding case at 29.
+All skips are exact integers → every arm resumes at the same ~1.049B-token data
+position, exactly as in REQ-026/028/029. `microbatch_sequences` stays **64** at every
+batch (larger batches just run more accumulation steps) — this both preserves
+per-forward memory and **avoids the torch.compile mbs<64 NaN bug found in REQ-033**;
+no eager fallback is needed here.
 
-`lr: 0.025, weight_decay: 0.05, mu: 0.95` fixed across ALL arms so the kernel is the
-only varied axis within a batch size. `start_step: 1000, stop_after_step: 3250`,
-`cool_down_learning_rate cooldown_frac: 0.7`, no `fixed_eta_after` — identical
-schedule across arms, same documented confound as REQ-026 (within-batch-size
-comparison controls for it). Checkpoint at 3250 only (+2250). No Lanczos.
+Budget in **usable batches** (`Σ floor(shard_tokens/batch_tokens)`), the REQ-029
+metric, not raw tokens — the chunk counts above already use it. Bootstrap **86**
+chunks (REQ-029's verified 16× figure) and every arm fits.
 
-Dense validation over `[3000, 3250]` every 10 steps, as the PR's own records do, so
-the tail is resolved; the standard cadence elsewhere.
+`start_step: 2000, stop_after_step: 2750`, `lr: 0.025, weight_decay: 0.05, mu: 0.95`,
+`cool_down_learning_rate cooldown_frac: 0.7`, no `fixed_eta_after`, checkpoint +750
+only, no Lanczos — all identical to REQ-026/028/029.
 
-**Arm B** (`bimaxwell_muon`): `fast_decay: 0.85, slow_decay: 0.98,
-fast_weight: 0.4385, switch_step: 1000` — the record settings from REQ-026.
+**Kernel** (`annealed_weights_muon`): `switch_step: 2000`, `anneal_steps: 750`.
 
-**Arms C/D** (`annealed_weights_muon`): `switch_step: 1000`,
-`anneal_steps: 2250` — i.e. **exactly the PR's own schedule, uncompressed.** The
-fork point IS the switch step, so the shared base is plain Muon with no K-buffers to
-inherit and the buffers lazy-init from the existing momentum precisely as they do in
-the PR at step 1000. Each arm is therefore a faithful continuation of PR #357's own
-schedule from step 1000 onward at its batch size, not an approximation of it.
+**Note the deviation and why.** PR #357 switches at step 1000 and anneals to 3250.
+Forking at 2000 puts the switch already in the past, and the shared base is plain
+Muon with no K-buffers to inherit, so buffers lazy-init at the fork exactly as they
+do in the PR at its own switch step. The 58→26 sweep is then **compressed into the
+750-step window** so every arm sees the full kernel trajectory rather than a slice of
+it. This tests the *kernel*, not the PR's absolute timetable — state that plainly in
+the README. (Forking at 1000 instead was considered and rejected: 1000 is not
+divisible by 16, so 16× cannot token-align — 62.5 batches — and a 2250-step window at
+8×/16× needs 104/211 chunks, exceeding FineWeb10B's 103.)
 
-Weight lists are **scale-invariant** — identical for C and every D. Only `decays`
-changes. (Derived via `km/solve.py:solve_weights(k=8, shape='linear')`; the arm-C
-decays reproduce the PR's published `kmaxwell_decay_rates` to <1e-12.)
+Decays and weights are the shipped PR #357 values, identical at every batch (no
+rescaling in this request — REQ-033 already refuted age-rescaling as a repair):
 
 ```yaml
+decays: [0.75, 0.822852439855, 0.877930338626, 0.917598547218,
+         0.945180941073, 0.963893920846, 0.97637869689, 0.984615384615]
 start_weights: [0.005093975, 0.010187949, 0.015281924, 0.020375898,
-                0.025469873, 0.030563847, 0.035657822, 0.857368713]   # mean age 58*s
+                0.025469873, 0.030563847, 0.035657822, 0.857368713]   # mean age 58
 end_weights:   [0.032261839, 0.064523678, 0.096785516, 0.129047355,
-                0.161309194, 0.193571033, 0.225832871, 0.096668514]   # mean age 26*s
-```
-
-`decays` per arm (tau = 8 log-spaced ages; beta = tau/(tau+1)):
-
-```yaml
-# C, all batches: tau [3, 64], age 58->26   (PR #357 as shipped)
-[0.75, 0.822852439855, 0.877930338626, 0.917598547218,
- 0.945180941073, 0.963893920846, 0.97637869689, 0.984615384615]
-
-# D @ 0.25x: tau [12, 256], age 232->104   (x4)
-[0.923076923077, 0.948927596166, 0.966407077116, 0.978042648561,
- 0.985707613901, 0.99072224263, 0.993988168757, 0.996108949416]
-
-# D @ 0.5x: tau [6, 128], age 116->52   (x2)
-[0.857142857143, 0.902818485868, 0.934997769159, 0.957028830199,
- 0.971818015605, 0.981615056307, 0.988048189779, 0.992248062016]
-
-# D @ 2x: tau [1.5, 32], age 29->13   (x0.5)
-[0.6, 0.699022338163, 0.782420529533, 0.84774327017,
- 0.896059786816, 0.930304280845, 0.953847574219, 0.969696969697]
+                0.161309194, 0.193571033, 0.225832871, 0.096668514]   # mean age 26
 ```
 
 ### Gates (hard)
 
-1. Per-config 20-step finite-loss smoke before any full arm (REQ-025 precedent).
-2. Usable-batch budget assert per config BEFORE launch (REQ-029 precedent — the 16x
-   run exhausted fineweb 17 steps short because raw-token budgeting is wrong).
+1. Per-config 20-step finite-loss smoke before any full arm.
+2. Usable-batch budget assert per config BEFORE launch (REQ-029 precedent — the 16×
+   first pass exhausted fineweb 17 steps short on raw-token budgeting).
 3. Tests green at the pinned SHA.
-4. `microbatch_sequences` divides `batch_tokens/(8*1024)` — at 0.25x/0.5x the
-   default 64 is illegal and will trip the accumulation assert.
+4. Confirm the 2× μ=0 control's val@2000 matches the shared base (3.44367) before
+   trusting any 2× difference.
 
 ### Artifacts
 
-`logs/kmaxwell/req033_annealed_batch_curve/{README.md,summary.tsv,readout.tsv,
-val_trajectories.txt,manifest.tsv,make_req033_configs.py,configs/,logs/}` — the
+`logs/kmaxwell/req034_kmaxwell_batch_ladder/{README.md,summary.tsv,readout.tsv,
+val_trajectories.txt,manifest.tsv,make_req034_configs.py,configs/,logs/}` — the
 REQ-026/029 shape.
 
 ### Readout
 
-Primary: **momentum benefit = final_val(kernel) - final_val(arm A), within batch
-size**, at step 3250. Absolute loss is NOT comparable across batch sizes (2x sees
-8x the tokens of 0.25x); only the within-batch contrast is.
-
-Closing table, directly against the existing bi-Maxwell curve:
+`benefit = final_val(kmaxwell) − final_val(μ0)`, same batch, @2750 — the identical
+statistic as the bi-Maxwell curve. Closing table:
 
 ```
-batch  batch_tokens  benefit(C-A)  benefit(D-A)  benefit(B-A)  bimax-mu0 (REQ-029)
+batch  batch_tokens  benefit(kmax−mu0)  benefit(bimax−mu0)   source of mu0
+1x     524288                           −0.01063             REQ-026
+2x     1048576                          (none)               THIS REQUEST
+4x     2097152                          −0.00438             REQ-026
+8x     4194304                          −0.00233             REQ-028
+16x    8388608                          ~0.00000             REQ-029
 ```
 
 The shape is the deliverable, no interpretation needed:
 
-- **C decays toward zero like bi-Maxwell** -> the annealed kernel is also a
-  denoiser; the PR's gain is batch-specific. Expected, given REQ-029.
-- **C holds flat where bi-Maxwell decayed** -> the anneal buys something genuinely
-  different from the frozen two-rate kernel. Would be the interesting result.
-- **C decays but D holds** -> the *idea* is right and only the constants were fitted
-  to one batch size; the recipe should be reparameterised in tokens, not steps.
+- **K-Maxwell also decays to ~0 by 16×** → both kernels are denoisers; REQ-033's
+  "anti-decay" was a 0.25×–2× window effect, and the annealed kernel buys nothing at
+  large batch either.
+- **K-Maxwell holds its gain at 8×/16× where bi-Maxwell went to zero** → the anneal
+  is doing something structurally different from noise-averaging, and it is the
+  large-batch-durable kernel. This would be the headline result.
+- **K-Maxwell peaks mid-ladder** → there is an optimal batch for the kernel; report
+  where.
 
-**Known limitation to record in the README, do not paper over it:** age-scaling does
-NOT fully restore constant update noise. Using `nesterov_filter_stats`, relative
-update-noise variance vs 1x at the anneal endpoint is: arm C = {4.00, 2.00, 0.50}
-at {0.25x, 0.5x, 2x}; arm D = {1.28, 1.11, 0.92}. Arm D removes most
-but not all of it — the Nesterov term `h0 = (1-mu) + mu*sum(w*(1-beta))` has a floor
-of `(1-mu)^2 = 0.0025` that no memory-lengthening removes. Exact noise-matching was
-computed and rejected: it needs mean age ~837 at 0.25x, which is bias-dominated and
-no longer the same hypothesis. If a follow-up wants true noise-matching, the knob is
-co-scaling `mu`, not the ages.
-
-**Seeds:** seed 0, n=1 per cell, matching REQ-026/028/029 discovery convention. Per
-REQ-027 the harness reads tokens sequentially with no RNG shuffle and the fork loads
-params+optimizer, so `seed` does not resample data order — cross-seed spread is
-~2e-4 nondeterminism. Read deltas below ~5e-4 as noise. If a cell lands in that
-band and the shape hinges on it, file a follow-up for replicates rather than
-over-reading n=1.
+n=1/cell, seed 0, matching REQ-026/028/029 discovery convention. Noise floor ~2e-4
+(REQ-027); read |Δ| < ~5e-4 as noise. If the 16× cell lands inside that band and the
+verdict hinges on it, file a follow-up for replicates rather than over-reading n=1.
 
 
 ## REQ-032: diligence (answer_free + answer_bearing) + tau2 (gold + step_hint) — 500 steps, 4 boxes in parallel
