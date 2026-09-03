@@ -260,7 +260,7 @@ measured value so a seed result can be compared directly.
 | **9** | **only attn.proj's offset is resolved** (iter. 68–69, corrected) | **attn.proj lowest** of the six offsets in ≥3 of 4 seeds and **≥0.25 dex below the other five**; **|residual-writer − internal| offset gap < 0.20 dex**; the other four adjacent gaps need NOT resolve | gap −0.454 / −0.430, p ≤ 0.0003 |
 | **10** | **C is lifted at layer 0** (iter. 69–72, corrected twice) | **layer-0 indicator coefficient positive, t > 4** over type+gradient; **layer 0 lift ≥ +0.20 dex** above the interior; **layer 12 NOT lifted** (< +0.15 dex) — in ≥3 of 4 seeds | t = 7.3–8.8; layer 0 +0.26/+0.44, layer 11 +0.24/+0.22, layer 12 +0.12/+0.12 dex |
 | **11** | **the assembled model generalises** (iter. 72) | **leave-one-layer-out rmse ≤ 0.20 dex** and **cross-fork rmse ≤ 0.20 dex** for `type + two-slope gradient + layer-0 term`, versus ~0.38 dex for C's own spread | LOLO 0.138 / 0.164; cross-fork 0.165 / 0.140 dex |
-| **12** | **the six type offsets reduce to two binaries + weight norm** (iter. 73–74, corrected) | **LOLO rmse within 0.02 dex of the 6-free-offset model with 7 params**; **log‖W‖ coefficient negative**, **residual-writer ≈ −0.47 dex**, **mlp.proj ≈ −0.65 dex** — same signs in every seed. **Not a fan-in power law** | LOLO 0.168 vs 0.162 / 0.209 vs 0.217 |
+| **12** | **the six type offsets reduce to two binaries + weight norm** (iter. 73–75) | **LOLO rmse within 0.02 dex of the 6-free-offset model with 7 params**; **residual-writer ≈ −0.47 dex**, **mlp.proj ≈ −0.65 dex** — same signs in every seed. **Weight norm is a cross-sectional correlate only — no causal weight-norm term** | LOLO 0.168 vs 0.162 / 0.209 vs 0.217; horse-race t = 0.3 / 1.2 |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
 exponent differs systematically by type — **~3.8 for the two projection matrices, ~0.9–1.4 for the
@@ -269,6 +269,59 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 75: WEIGHT NORM IS NOT A CAUSAL DRIVER OF C — it is the gradient wearing a label ===**
+
+*Iteration 74 left weight norm as the only continuous, independently-measured term in the account.
+Unlike every structural binary it varies **within** a matrix across LR arms and steps, so for the
+first time a causal test of an offset term was possible. It fails.*
+
+**The setup.** Merging `weight_norms.tsv` with the REQ-023 curvature JSONs gives **1,296 matched
+rows — 72 matrices × 18 step/arm observations each.** Enough for matrix fixed effects.
+
+**A dramatic sign reversal, which turned out to be a trap:**
+
+| | fork-1500 | fork-2000 |
+|---|---:|---:|
+| **cross-sectional** slope `d log λ / d log‖W‖` | +0.124 | +0.014 |
+| **within-matrix** slope (matrix fixed effects) | **−3.572** | **−3.416** |
+
+The LR instrument is overwhelmingly strong here (**first-stage F ≈ 9,100 and 11,600**), which made
+the −3.5 look like a major causal finding: raise a matrix's weight norm and its curvature falls hard.
+
+**The horse race kills it.** Within a matrix, weight norm and gradient are almost perfectly
+anti-correlated — **corr = −0.861 / −0.878** — because the LR moves them in opposite directions
+(‖W‖ up, g down):
+
+| model (matrix fixed effects) | log‖W‖ | log g |
+|---|---:|---:|
+| λ ~ ‖W‖ alone | **−3.572** (t −28.4) | — |
+| λ ~ g alone | — | **+2.094** (t +44.6) |
+| **λ ~ ‖W‖ + g** | **+0.059 (t +0.3)** | **+2.120 (t +22.9)** |
+
+**With the gradient in the model, weight norm collapses to nothing** (t = 0.3 and 1.2) while the
+gradient sits at **+2.12 / +2.23 — the causal exponent**. The −3.5 was the gradient effect with a
+flipped sign, inherited through a −0.87 correlation. Approximately −3.5 ≈ −2.1 / 0.6 is exactly what
+that anti-correlation predicts.
+
+**A limit of the design, stated rather than worked around.** REQ-023 provides **one** instrument (the
+LR multiplier) and there are **two** endogenous regressors (weight norm and gradient). One instrument
+cannot identify two, so the horse-race coefficients above are OLS with fixed effects, not causal
+estimates — they establish that weight norm adds nothing *given* the gradient, which is what was
+asked, but they cannot prove weight norm has no independent effect. **REQ-037's non-LR instrument is
+exactly what would settle this**, and this is now a concrete reason to run it.
+
+**Consequence for band 12.** The reduction still stands on out-of-sample error — `log‖W‖` genuinely
+helps predict C *across* matrices. But it must be read as a **cross-sectional correlate, not a
+mechanism**: within a matrix, changing the weight norm does not change C once the gradient is
+accounted for. Band 12's seed check is amended to say so.
+
+**Where this leaves the account.** Every non-gradient term in the model is now either a structural
+binary (residual writer, mlp.proj, layer 0) or a cross-sectional correlate (weight norm). **The
+gradient is the only term with a demonstrated within-matrix causal effect, and its exponent is ~2.1
+in every test that has been run** — pooled (+2.069/+2.095), per-group (+1.91 to +2.48), and now the
+weight-norm horse race (+2.12/+2.23). That consistency across three independent framings is the most
+robust quantitative fact this campaign has produced.
 
 **=== ITERATION 74: BAND 12'S FAN-IN READING IS WITHDRAWN — the model stands, the mechanism claim does not ===**
 
