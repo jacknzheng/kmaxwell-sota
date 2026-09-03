@@ -454,6 +454,61 @@ raises the stakes on Arm A: if C is also seed-dependent, then C is a learned per
 property and no static covariate model can ever reach the floor — which would make the
 "C = f(norm, depth, type, geometry)" framing wrong as posed, not merely unsolved.
 
+**BREAKTHROUGH (same session) — the instrumental-variable result: lam ∝ g², Gauss-Newton.**
+REQ-023 is a natural instrument: each of the 72 matrices receives every multiplier in
+{0.6, 1.0, 1.7} exactly once, at two fork states. That permits a *within-matrix* causal
+estimate of d log lam / d log g, using the LR assignment as the instrument (Wald ratio) —
+free of every cross-matrix confound.
+
+| quantity | fork-1500 | fork-2000 |
+|---|---:|---:|
+| d log lam / d log s | −1.232 ± 0.873 | −1.321 ± 0.927 |
+| d log g / d log s | −0.596 ± 0.259 | −0.631 ± 0.259 |
+| **implied d log lam / d log g** | **+1.992** | **+1.979** |
+
+- **Bootstrap (n=144 matrix-forks): median +1.981, 95% CI [1.900, 2.111]. The value 2 is
+  inside the interval; 1 is excluded.** Consistent across all six types (1.72–2.33).
+- **The cross-matrix regression slope is +0.742.** The within-matrix causal slope is +1.98.
+  **These disagree by ~2.7x, so the cross-sectional g→C association is CONFOUNDED.** This
+  retracts the interpretation of the earlier "g + type captures 73%" model — that model was
+  fitting a spurious association, which is exactly why it failed out-of-sample (0.247 dex).
+
+**Interpretation — curvature is Gauss-Newton dominated.** For a loss with Jacobian J and
+residual r: g = J'r and H ≈ J'J. If the residual scale is roughly fixed, |g| ~ |J||r| and
+lam_top ~ |J|², giving **d log lam / d log g = 2 exactly**. An exponent of 2 is the
+signature of Gauss-Newton-dominated curvature, and it implies **the between-layer
+difference in C is a difference in per-matrix JACOBIAN SCALE |J|** — not in weight norm,
+not in depth, not in update geometry.
+
+**The derived invariant.** If lam = g²/R², then R_m = g/sqrt(lam) is a per-matrix
+"effective residual scale". Testing it as an intervention response:
+
+| quantity | median &#124;d log X / d log s&#124; (11-point ladder) |
+|---|---:|
+| lam_top | 1.310 |
+| g | 0.480 |
+| **R = g/sqrt(lam)** | **0.207** |
+
+R is ~6x more LR-stable than lam_top, varies 0.220 dex across matrices (so it is not a
+universal constant), and is stable across states (corr +0.978, median shift 0.019 dex).
+
+**Limits, stated honestly.** (i) On REQ-023's 3-point ladder R's slope is 0.091, but on the
+full 11-point ladder it is 0.207 — R is *approximately*, not exactly, LR-invariant, and the
+3-point figure overstates it. (ii) `log C = 2 log g − 2 log R` predicts C at fork-2000 to
+0.129 dex, still worse than simply re-measuring C (0.090 dex), and it is near-tautological
+since R contains lam. **The non-tautological content is the intervention result alone: the
+within-matrix causal exponent is 2.00, and the cross-matrix association is confounded.**
+
+**REGISTERED SEED CHECK (n=4) — add to REQ-035 Arm A.** The Gauss-Newton claim makes a sharp
+prediction that Arm A can test at no extra cost, since it already varies s per seed:
+- **the within-matrix causal exponent d log lam / d log g must be 2.00 ± 0.15 in every seed.**
+  If it holds across 4 independent seeds, lam ∝ g² is established as a law of this trainer
+  and the C question reduces to "what sets the per-matrix Jacobian scale".
+- If it scatters (say 1.5–2.8 across seeds), the exponent is a property of this particular
+  network and the Gauss-Newton reading is wrong.
+This is the highest-value single number Arm A can return, and it requires only that each
+seed's arms record `gradient_block_norm` alongside `top_eigenvalue` — which they already do.
+
 **So the question sharpens to: what sets S_m?** lam_top is not special — it is S_m times a
 fixed per-matrix shape constant. The between-layer difference in C *is* the between-layer
 difference in overall Hessian scale. Arm A is unchanged and remains the right next step;
