@@ -274,6 +274,59 @@ correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
 
+**=== ITERATION 86: BAND 15 CANNOT BE UNBLOCKED BY A PROXY — the LR ladder is not a ‖W‖ change ===**
+
+*Band 15 (QK-norm scale invariance) is the campaign's only mechanism that made a numerical
+prediction and passed, and it is blocked on REQ-041's weight norms. I tried to unblock it using
+Arm A's LR ladder instead. **The attempt fails, and the reason it fails is worth more than the
+attempt.***
+
+**The argument I tried.** Under Muon the update is orthogonalised, so the step has a fixed spectral
+scale set by the LR. Raising the LR by *c* should therefore grow every matrix's weight by a
+comparable relative amount. For a scale-invariant matrix that growth is a **pure gauge move** — the
+function is unchanged, so λ and g must adjust to hold `C = λ/g²` fixed. **Prediction: q,k's C should
+move less under the LR ladder than the other four types.** Testable on Arm A at n=4, no new data.
+
+**Result: 2 of 4 seeds — a coin flip.**
+
+| | seed 0 | seed 1 | seed 2 | seed 3 | mean |
+|---|---:|---:|---:|---:|---:|
+| q,k `d log C/d log s` | −0.439 | −0.376 | −0.463 | −0.184 | **−0.365** |
+| others | −0.359 | −0.514 | −0.444 | −0.329 | **−0.411** |
+| |q,k| smaller? | no | yes | no | yes | **2/4** |
+
+Difference **+0.046 ± 0.057, t = +0.81** — nothing.
+
+**But the 2/4 is not evidence against band 15, because the test is broken in three separate ways —
+and I should have checked this before running it:**
+
+1. **The premise is wrong about Muon.** The step is `s·lr` in **spectral norm**; how much ‖W‖_F
+   actually grows depends on how updates **accumulate** — the alignment of successive steps, which
+   differs per matrix. **The LR ladder is not a clean proxy for a ‖W‖ change**, so
+   `d log C/d log s` is simply not `d log C/d log‖W‖`. The two quantities band 15 needs and this test
+   provides are different objects.
+2. **Only 3 LR levels**, so each per-matrix slope has 1 degree of freedom.
+3. **Band 16 makes this test self-defeating.** C barely moves under the LR ladder for *any* type
+   (matrix identity explains ~94% of its variance). With almost no signal in s to begin with, there
+   is nothing left to compare between groups.
+
+**The power analysis confirms it quantitatively:** noise sd on a per-matrix slope is 0.160 against a
+between-matrix sd of 0.319 (SNR 2.0), and the test cannot resolve group differences below **~0.11**
+in slope. **The 2/4 outcome carries no information in either direction.**
+
+**Registered as a methodological negative.** Band 15 is **unchanged and still blocked** — not
+weakened. Its status is "passes on REQ-023's two forks, awaiting REQ-041 for a seed check," and this
+iteration does not move it. **Recording this explicitly matters**: a 2/4 result sitting in the record
+without its power analysis would read as a failed replication of the campaign's best mechanism, which
+it is not.
+
+**The general lesson, which applies beyond band 15.** The three surviving mechanisms in this campaign
+each need a *specific* measurement, and substituting a convenient proxy for the quantity a theory
+actually names produces uninformative results at best and false negatives at worst. **REQ-041 (weight
+norms) and REQ-038 (`|a|`/`|d|`) are not conveniences — they are the only measurements that can
+settle their respective questions**, and this iteration is the demonstration that no amount of
+further analysis on the committed observables substitutes for them.
+
 **=== ITERATION 85: AUDITING THE NOISE FLOOR ITSELF — the foundation holds, with one design gap recorded ===**
 
 *Every band in this campaign quotes its significance against a "~0.10 dex noise floor" that came from
