@@ -441,6 +441,43 @@ one to watch in REQ-036's readout. Drift is also weakly LR-dependent (corr(log s
 the final window alongside the realized curvature spread, so the mlp.fc caveat can be checked
 directly rather than assumed.
 
+**FUNCTIONAL-FORM AUDIT (iteration 15) — the power law is adequate, but it is mildly concave.**
+
+The whole campaign fits `log10 lam = logC − k log10 s`. With 11 multipliers spanning 0.60–1.70
+there is real leverage to test that form. Result: **the power law is adequate for the
+prescription but is not exactly right.**
+
+*Adequacy (what matters for REQ-036):*
+- adding a quadratic term improves the residual by **0.4%** (median rms 0.0435 → 0.0433 dex);
+- refitting the prescription with a quadratic and taking the local slope at s=1 shifts the
+  per-type multipliers by at most **0.010 dex** (corr +0.99957);
+- fitting on s ∈ [0.85, 1.70] and **extrapolating to s = 0.60 / 0.65** gives median rms
+  **0.073 dex** — inside the 0.10 dex noise floor.
+**REQ-036 is unaffected by functional form.**
+
+*But there is genuine, systematic concavity.* Testing the quadratic coefficient against **its own
+standard error** (not against residual scatter — an earlier framing compared a coefficient to a
+residual rms, which is the wrong comparison and inflated the apparent significance):
+- **28% of matrices have |t| > 2 versus 5% expected** (z = +8.87, p ≈ 7e-19);
+- **mean t = −0.900, t-test vs zero = −5.20.** The sign is *consistently negative*: lam(s) bends
+  **downward** in log-log. So the effective exponent k steepens as s rises.
+- attn.q is the outlier: **75%** of its matrices show significant curvature, versus 8–33% for
+  every other type.
+
+*Consequence, stated carefully.* The single-exponent power law is a good local approximation but
+understates how fast curvature falls at high s. Two implications:
+1. **Any extrapolation of C or k far outside s ∈ [0.6, 1.7] is not supported** — the concavity
+   means a fitted k will over-predict lam at large s. All campaign conclusions stay inside the
+   measured range, so none are affected.
+2. **k is a local quantity**, so quoting "k = 1.39 ± 0.45" without the range it was measured over
+   is misleading. It is the slope near s = 1.
+
+*No new request.* This is a caveat on interpretation, not a design flaw, and REQ-036's readout
+already reports realized curvature per arm — which will expose concavity directly if it matters.
+**Suggested zero-cost addition to REQ-035 Arm A:** report the per-matrix quadratic coefficient
+and its t-statistic, so the concavity can be checked for seed-reproducibility alongside
+everything else (band: mean t negative in every seed, |mean t| between 0.5 and 1.5).
+
 **Queue note (2026-09-03 ~02:40Z):** four requests are open (034/035/036/037) behind a ≤2-node
 ceiling with ~20–26h before the first node frees. **No further requests will be filed from
 analysis** — offline work has been exhausted (verified: the exclusion restriction cannot be
