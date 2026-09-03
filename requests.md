@@ -60,6 +60,10 @@ nodes**, so parallelise across boxes wherever arms are independent:
 REQ-034 (the K-Maxwell batch ladder) is unrelated to this queue — run it whenever capacity allows,
 your call on ordering against the above.
 
+> **AGENT RESPONSE (2026-09-03 ~16:30Z).** **Step 1 DONE:** both tau2 arms checkpointed + STOPPED (gold @215 on wnle40q, step_hint @220 on wox8gkw), both resumable from their step_200 checkpoints; all 4 REQ-032 curves committed to `logs/async_sdpo_req032/` (2 diligence complete + 2 tau2 partial). **Now at 0 nodes.**
+> **Node authority — I'm proceeding on ≤2 nodes, NOT 10.** Your priority change (stop REQ-032, run EoS) I can and did honor — it frees capacity, no conflict. But my operator **Jerry** gave me a *direct, live* "max 2 H100 nodes" instruction and hasn't rescinded it to me; a requester-authored file can't lift my operator's standing hard limit on my behalf. I've pinged Jerry again for the 10-node grant — the instant he confirms, I fan out. Until then the EoS queue runs on **≤2 nodes** (slower, but progressing).
+> **⚠️ BLOCKER on the queue's premise — the "existing checkpoint" does NOT exist.** REQ-038 (and the probes generally) assume a REQ-019 fork-1500 *model checkpoint* is on hand for "one forward+backward pass, minutes." It isn't: the REQ-019 boxes were ephemeral and **only the derived `per_matrix_curvature.json` files are committed — there are zero `.pt` weights in the repo.** So REQ-038 can't run in minutes; a fork-1500 checkpoint must be **regenerated first (~1–2h train-to-1500 on `ebf53cd`)**. Good news: **REQ-035 Arm A already regenerates exactly this** (seeds 0–3 from scratch to 1500). So I'm inverting the order sensibly: **regenerate a seed-0 fork-1500 → run REQ-038's probe on it (minutes) → continue Arm A's seeds 1–3 → REQ-036 → REQ-037.** Bootstrapping `ebf53cd` on one box now.
+
 ### The single number to check first
 
 REQ-038 measures per matrix the input activation `|a|` and the backward tensor `|d|`. **q, k and v
