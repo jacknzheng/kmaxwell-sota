@@ -636,6 +636,72 @@ nonlinearity exposure per se**.
 - **Registered negative:** if the gap varies by more than ±0.3 dex across seeds, it is a
   per-network property and the type term returns to partially irreducible.
 
+**=== ITERATION 40: THE BEST SINGLE VARIABLE — WITHIN-BLOCK CONSUMPTION ORDER ===**
+
+*Iteration 39 showed the nonlinearity binary fails because attn.v and mlp.fc do not separate. This
+iteration stops proposing groupings and characterises the ordering itself — which turns out to have
+a one-parameter structural explanation that predicts exactly that tie.*
+
+**The ordering is near-deterministic.** Ranking the six types by gradient-adjusted level within each
+block:
+
+| type | mean rank f1500 | sd | mean rank f2000 | sd |
+|---|---:|---:|---:|---:|
+| attn.q | 1.08 | 0.29 | **1.00** | **0.00** |
+| attn.k | 1.92 | 0.29 | **2.00** | **0.00** |
+| mlp.fc | 3.67 | 0.78 | 3.92 | 0.79 |
+| attn.v | 3.92 | 1.00 | 3.67 | 0.98 |
+| attn.proj | 5.00 | 0.60 | 5.00 | 0.60 |
+| mlp.proj | 5.42 | 1.08 | 5.42 | 1.08 |
+
+**Kendall's W = 0.827 / 0.836** across 12 blocks (χ² = 49.6 / 50.1, df 5). At fork-2000 attn.q and
+attn.k occupy ranks 1 and 2 in **all 12 blocks with sd = 0.00**. Cross-fork Spearman on the mean
+ranks is **+0.943**, the only difference being an mlp.fc/attn.v swap in the middle — precisely the
+pair that showed zero separation in iteration 39.
+
+**The structural variable that explains it.** The consensus order is exactly the order in which a
+matrix's output is **consumed within the block**:
+
+| position | matrices | meaning |
+|---:|---|---|
+| **0** | attn.q, attn.k | output consumed immediately (forms the logits) |
+| **1** | attn.v, mlp.fc | output consumed one step later (after softmax / after activation) |
+| **2** | attn.proj, mlp.proj | output written back to the residual stream (last op) |
+
+| | pos 0 | pos 1 | pos 2 | corr | R² (1 param) | R² type label (5) |
+|---|---:|---:|---:|---:|---:|---:|
+| fork-1500 | −2.940 | −3.636 | −3.870 | **−0.851** | **0.724** | 0.798 |
+| fork-2000 | −2.904 | −3.631 | −3.861 | **−0.816** | **0.666** | 0.739 |
+
+**One ordinal parameter reaches 91% of what the five-parameter type label achieves**, and the
+strict monotone ordering pos0 > pos1 > pos2 holds in **11 of 12 blocks at both forks (binomial
+p = 2.8 × 10⁻⁸ each)**.
+
+**Why this supersedes the nonlinearity account.** It predicts the exact failure that killed the
+binary: attn.v and mlp.fc are **both position 1**, so they should not separate — and they do not
+(−0.062 / −0.024 dex, iteration 39). The nonlinearity binary put them in *different* groups and was
+contradicted. It also explains why the mlp.fc > mlp.proj contrast survives (position 1 vs 2) while
+attn.v vs mlp.fc does not.
+
+**Interpretation, offered carefully.** The further a matrix's output is from being written back to
+the residual stream, the more curvature it carries per unit gradient. Plausibly the residual stream
+acts as a variance sink: contributions written directly into it are one linear step from the loss,
+while contributions consumed earlier pass through more intervening computation. **This is a
+description with a suggestive reading, not a derived mechanism** — nothing here derives the ~0.47
+dex per position step.
+
+**Limits.** (i) The variable is ordinal with 3 levels and 6 types, so it is not far from a
+relabelling — its defence is that it is *architecturally determined before training*, predicts the
+attn.v/mlp.fc tie that falsified the previous account, and uses one parameter rather than five.
+(ii) It leaves the attn.q vs attn.k gap (~0.17 dex, both at position 0) unexplained. (iii) It is
+correlational; no intervention moves a matrix's consumption order.
+
+**REGISTERED SEED CHECK — replaces iteration 37/38/39's as primary, zero cost:**
+- **strict pos0 > pos1 > pos2 in ≥10 of 12 blocks in every seed**;
+- **the position variable must reach R² ≥ 0.55 on the adjusted level in every seed**;
+- **falsifier:** attn.v and mlp.fc must remain within 0.20 dex of each other. If they separate
+  sharply in the seeds, position is wrong and the nonlinearity account is rehabilitated.
+
 **=== THE ANSWER, AS A VARIANCE BUDGET (iteration 32) ===**
 
 *The original question was "what causes the difference in C between layers". After 32 analysis
