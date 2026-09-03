@@ -845,6 +845,56 @@ a genuinely real, replicated structural covariate to the LR rule *degrades* it.
     cancel in that seed, C would become boundary-predictable, and the general principle above
     would be falsified.
 
+**ITERATION 10 — CORRECTION: half of the "cancellation" evidence was mechanical.**
+
+A simulation settles what was assertion. Draw log C with type-structure eta²_C and log g with an
+*independent* type-structure eta²_g, then define b = 2 log g − log C:
+
+| eta²(C) set | eta²(g) set | → eta²(C) | eta²(g) | eta²(b) |
+|---:|---:|---:|---:|---:|
+| 0.29 | 0.85 | 0.276 | 0.791 | **0.672** |
+| 0.29 | 0.29 | 0.287 | 0.287 | 0.283 |
+| 0.10 | 0.85 | 0.142 | 0.796 | **0.639** |
+| 0.29 | 0.10 | 0.294 | 0.151 | 0.180 |
+
+**eta²(b) is high whenever eta²(g) is high, regardless of C.** b inherits g's structure by
+construction. So the observation "b is far more type-structured (0.798) than C (0.287)" —
+which iterations 6 and 9 leaned on — is **mechanically forced and is not evidence of a
+cancellation.** Withdrawn. The same applies to the boundary result's framing: b showing a
+stronger edge correlation than C is partly mechanical too, though the *sign* of log g's edge
+profile (+0.087/+0.110, opposing) is a separate empirical fact that stands.
+
+**What survives uses no derived quantity at all — only log C and log g, at three levels of
+aggregation:**
+
+| slope d log C / d log g | fork-1500 | fork-2000 |
+|---|---:|---:|
+| **within-type** (mean of 6) | **+2.124** | **+1.697** |
+| **between-type** (regression on the 6 type means) | **+0.375** | **+0.314** |
+| pooled (all 72) | +0.742 | +0.654 |
+| causal (IV, REQ-023) | +1.981 | +1.981 |
+| bootstrap CI on the between-type slope | [−0.94, +1.90] | [−0.99, +1.79] |
+
+The causal value 1.98 falls **outside** the between-type CI at both states, and both states
+independently show within-type ≫ between-type (gaps +1.750 and +1.384). **This is the entire
+claim, and it needs no b, no R, and no anisotropy.**
+
+**Honest status: SUGGESTIVE, not established.** The between-type slope rests on only 6 type
+means, so its CI is wide — it excludes 1.98, but it also spans most of the plausible range.
+Two independent fork states agreeing is real support; it is not proof.
+
+**This is exactly what n=4 seeds fixes, and it raises Arm A's value.** Four seeds take the
+type-mean sample from 6 to 24, shrinking the between-type CI by roughly 2x. **Revised
+criterion, replacing earlier versions of 2:**
+2. **within-type slope +2.0 ± 0.5 in every seed** (the causal law holds within type);
+2b. **between-type slope pooled over 24 type-means: CI must exclude 2.0** — if it does, the
+    Simpson-style opposition of type effects to the causal law is established; if the CI
+    *includes* 2.0, the whole "type effects oppose the causal law" account is **not supported**
+    and the correct conclusion becomes simply that C is measured with 6 noisy type means.
+
+**Nothing in this iteration changes REQ-036**, which uses measured per-type C and k and is
+independent of why the between-type slope is what it is.
+
 **So the question sharpens to: what sets S_m?** lam_top is not special — it is S_m times a
 fixed per-matrix shape constant. The between-layer difference in C *is* the between-layer
 difference in overall Hessian scale. Arm A is unchanged and remains the right next step;
