@@ -1,0 +1,13 @@
+# REQ-032 arm4 tau2 step_hint (retail+airline, DeepSeek user-sim, max_model_len 32768), H100/8B Qwen3-8B, wox8gkw. PARTIAL: STOPPED at step 220/500 per operator directive (2026-09-03).
+# Resumable from checkpoint step_200 (logs/async_sdpo_req032/tau2-step_hint/checkpoints/step_200).
+step	pass1
+0	0.3333
+25	0.3000
+50	0.2667
+75	0.3167
+100	0.3000
+125	0.3667
+150	0.2333
+175	0.2167
+200	0.2500
+# SHAPE (partial, to 200/500): oscillates ~0.28 (0.22-0.37), no sustained gain over the 0.333 baseline. Same flat pattern as gold + the diligence arms.

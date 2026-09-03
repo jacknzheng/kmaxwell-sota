@@ -1,0 +1,24 @@
+# REQ-032 arm2 diligence answer_bearing, H100/8B Qwen3-8B (path=B), woxvogw, 500 steps eval/25.
+step	judge_score
+0	0.11695
+25	0.12085
+50	0.12102
+75	0.10404
+100	0.10838
+125	0.10857
+150	0.11999
+175	0.10972
+200	0.09778
+225	0.09940
+250	0.09575
+275	0.09414
+300	0.10562
+325	0.09074
+350	0.09917
+375	0.09171
+400	0.08207
+425	0.11470
+450	0.09144
+475	0.10604
+500	0.08430
+# SHAPE: flat ~0.10 (baseline 0.117 -> ends 0.084, slight downward drift, no upward trend) over 500 steps -> confirms REQ-024's flat 8B diligence curve at 2.5x horizon. Matches answer_free.

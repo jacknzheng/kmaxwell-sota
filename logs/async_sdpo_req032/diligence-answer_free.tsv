@@ -1,0 +1,25 @@
+# REQ-032 arm1 diligence answer_free, H100/8B Qwen3-8B (path=B), qrvdr53, 500 steps eval/25.
+# judge_score by step (baseline=step0):
+step	judge_score
+0	0.14230
+25	0.09867
+50	0.11227
+75	0.13270
+100	0.11349
+125	0.10622
+150	0.08805
+175	0.12069
+200	0.10338
+225	0.10552
+250	0.09972
+275	0.10089
+300	0.08561
+325	0.10481
+350	0.09320
+375	0.05718
+400	0.10952
+425	0.09837
+450	0.11376
+475	0.11963
+500	0.09448
+# step 500 eval pending at collection time. SHAPE: flat ~0.10 (baseline 0.142, oscillates 0.057-0.133, no upward trend) over 500 steps -> confirms REQ-024's flat 8B diligence curve; the 500-step horizon does NOT break it.
