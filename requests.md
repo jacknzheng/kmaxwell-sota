@@ -1348,6 +1348,63 @@ reporting block 11's realized curvature separately in the arm-2 readout.
 the training run — the registered prediction (revised beats original by 0.0005–0.003 val, with
 the revert condition if not) stands unchanged.
 
+**REFINEMENT (iteration 19) — the end-block effect is a PROJECTION-MATRIX phenomenon.**
+
+Decomposing which matrices actually carry the end-block elevation:
+
+| | interior | end blocks | delta |
+|---|---:|---:|---:|
+| q / k / v / mlp.fc (fork-1500) | 4.126 | 4.257 | **+0.131** |
+| **proj (attn.proj, mlp.proj)** (fork-1500) | 3.885 | 4.821 | **+0.936** |
+| q / k / v / mlp.fc (fork-2000) | 4.128 | 4.372 | +0.245 |
+| **proj** (fork-2000) | 3.902 | 4.910 | **+1.008** |
+
+**Interaction (is_proj × is_end) = +0.805 ± 0.215 (t = +3.75) at fork-1500 and +0.763 ± 0.212
+(t = +3.60) at fork-2000** — replicated at both states. The "uniform boundary field" is mostly
+the *output projections* behaving differently at the first and last block; everything else moves
+only +0.13 to +0.25 dex.
+
+*Two checks that make this a physical effect rather than an artifact.*
+1. **It is not the gradient.** The verified lam ∝ g² law predicts only **+0.083 dex** of the
+   observed **+0.399** end-block elevation (2 × delta log g = 0.083). **+0.317 dex at fork-1500
+   and +0.414 at fork-2000 is unexplained by gradient scale** — genuine excess curvature.
+2. **It is not the instrument.** End blocks converge *better* than the interior: median
+   `residual_tail` **0.0018 vs 0.0297**, gate attrition **20% vs 40%**. If anything the effect is
+   measured more reliably than the baseline it stands against.
+
+*Does the refined term earn its extra parameters?* Leave-one-block-out rms:
+
+| model | fork-1500 | fork-2000 |
+|---|---:|---:|
+| per-type only | 0.2500 | 0.2901 |
+| + uniform is_end (filed) | 0.2099 | 0.2184 |
+| **+ is_end × is_proj** | **0.1978** | **0.1943** |
+
+The interaction version wins at **both** forks, and the gain at fork-2000 is substantial
+(0.218 → 0.194). Given it replicates across states and rests on a t > 3.5 interaction rather
+than a search, it is justified.
+
+**FURTHER REVISED PRESCRIPTION — use this for arm 2** (supersedes the table below; base per-type
+multipliers unchanged, end-block treatment now split by matrix role):
+
+| type | base | at blocks 0 / 11 |
+|---|---:|---:|
+| attn.q | 1.18 | 1.35 |
+| attn.k | 0.88 | 1.01 |
+| attn.v | 1.25 | 1.43 |
+| mlp.fc | 0.91 | 1.04 |
+| **attn.proj** | 0.40 | **1.72** |
+| **mlp.proj** | 1.56 | **6.71** |
+
+*(end multiplier = base × 10^(delta/k_type), using delta = +0.131 for non-proj and +0.936 for
+proj at fork-1500.)* **mlp.proj at blocks 0 and 11 is an extreme value (6.7x) — flag it.** If
+that is judged too aggressive to run safely, cap end-block multipliers at 3x and report the cap;
+the registered prediction below still applies.
+
+**Registered addition:** the per-type × is_end interaction must reproduce in every seed
+(interaction t > 2, same sign) in REQ-035 Arm A. If it does not, revert to the uniform is_end
+term; if the uniform term also fails to reproduce, revert to per-type only.
+
 **REVISED PRESCRIPTION for arm 2** (per-type multiplier × 1.94 if block ∈ {0, 11}):
 
 | type | base | at blocks 0 / 11 |
