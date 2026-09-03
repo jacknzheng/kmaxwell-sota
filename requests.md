@@ -2056,6 +2056,67 @@ now carries a documented failure of this kind (α₁, the tail correction, the d
 rank object, and now the adjusted level). **The lesson is to state findings in the units of the
 question before building on them.**
 
+**=== ITERATION 53: THE ANOMALY, CORRECTLY NAMED — it is the effective residual scale ===**
+
+*Iteration 52 established that the q,k anomaly is not in C but in the gradient. This iteration
+finds that the algebra already names what the anomaly is — and I am flagging it under the
+campaign's own rule as a **rename, not a new mechanism**.*
+
+**The algebra.** The Gauss-Newton structure gives `H ≈ JᵀJ` and `g = Jᵀr`, so `λ ~ |J|²` and
+`|g| ~ |J||r|`. Therefore:
+
+```
+λ / g²  =  1 / |r|²
+```
+
+**The "adjusted level" I have been calling unexplained for twenty iterations IS the effective
+residual scale**, up to a factor of −½. `log|r| = log g − ½ log λ`, and the correlation with the
+adjusted level is **−1.0000 exactly**, with `log|r| + ½·adjusted = 0.00e+00`. **By the campaign's
+hard rule (|corr| > 0.99 means a rename), this is a rename and must be declared as one.**
+
+**What it nonetheless buys — and why I am recording it rather than discarding it:**
+
+1. **It names the quantity correctly.** "C has unexplained structure" was simply wrong (iteration
+   52: the C gap is 0.007 dex, R² = 0.000). "q,k see a 2.5× smaller effective residual" is the same
+   number, correctly attributed to a named physical object.
+2. **It makes a directional prediction the old framing did not.** A bounded softmax Jacobian must
+   *shrink* the gradient reaching the attention logits, so |r| for q,k must be **smaller**.
+   Observed: **0.39× and 0.38×, in 12/12 blocks at both forks.**
+3. **It explains the seven failures.** Every mechanism was asked why C is *higher* for q,k. C is
+   not higher for q,k. The right question — why the residual is smaller — has an obvious candidate
+   (the softmax Jacobian) that was **never tested against it**, because iteration 36 tested softmax
+   saturation against *levels* and correctly rejected it there.
+
+| type | log₁₀ \|r\| (fork-1500) | (fork-2000) |
+|---|---:|---:|
+| **attn.q** | **1.427** | **1.410** |
+| **attn.k** | **1.513** | **1.493** |
+| mlp.fc | 1.802 | 1.809 |
+| attn.v | 1.833 | 1.822 |
+| attn.proj | 1.921 | 1.906 |
+| mlp.proj | 1.949 | 1.955 |
+
+**THE SHARP PREDICTION FOR REQ-038 — this is the payoff.** REQ-038 measures the input activation
+|a| and the backward tensor |d| per matrix. **q, k and v read the same residual vector, so their
+|a| is identical by construction** — any gradient difference must appear entirely in |d|. Under
+this reading:
+
+> **|d|(q,k) / |d|(other four) must come out at 0.39 ± 0.08.**
+
+That is a *quantitative* prediction from committed data to a direct measurement, not a
+correlational fit. **If |d| comes back near 0.39, the campaign's central anomaly is closed:** the
+gradient law holds universally, and q,k's apparent violation is the softmax Jacobian shrinking what
+reaches the logits. **If |d| is near 1.0, the deficit is in |a| instead — which would contradict
+q,k,v sharing an input and would mean the probe or my reading of the architecture is wrong.**
+
+**Registered addition to the seed table (zero cost):** the implied |r| ratio must be
+**0.39 ± 0.10 with q,k below the other four in ≥10 of 12 blocks** in every seed.
+
+**Status, stated plainly.** This is the eighth framing of the same number and the fifth rename this
+campaign has produced. It is not evidence and adds no measurement. **What makes it worth recording
+is that it converts an unexplained residual into a falsifiable prediction about a quantity REQ-038
+already measures** — and that prediction is specific enough to be wrong.
+
 ## ⚠️ AUTHORITATIVE SEED-CHECK TABLE — READ THIS, IGNORE THE SEED CHECKS BELOW
 
 *This request accumulated **13 overlapping "registered seed check" blocks** across ~15 iterations,
