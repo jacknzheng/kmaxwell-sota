@@ -813,6 +813,65 @@ percentage points per row in every seed. If the type share collapses across seed
 per-network artifact rather than an architectural constant — which would be a major result and
 would also invalidate the per-type LR rules.
 
+**=== FINAL STATE OF THE OFFLINE CAMPAIGN (2026-09-03, after 43 iterations) ===**
+
+*Read this block and the variance budget below it; everything further down is chronological
+provenance containing superseded claims. Every number here was re-derived from the raw committed
+JSONs in a final verification pass — 7 of 7 checks passed.*
+
+**ESTABLISHED — verified, replicated at two fork states, non-circular:**
+
+| # | claim | value | evidence |
+|---|---|---|---|
+| 1 | measurement noise floor | **0.101 dex** | duplicate arms, identical fork/s/age |
+| 2 | cross-matrix spread of log C | **0.379 dex** | 72 matrices |
+| 3 | **response ratio d log λ / d log g** | **+2.07 / +2.10** | pooled 2SLS on REQ-023's per-matrix LR randomisation; robust to weak-instrument cuts; placebo on polar curvature +1.80 |
+| 4 | **q,k versus the other four types** | **+0.812 / +0.842 dex** | 12/12 blocks at **both** forks, Cohen's d ≈ 3.3 |
+| 5 | position steps are unequal | +0.695 vs +0.234 dex | rejects the ordinal reading (t ≈ 9) |
+| 6 | REQ-036 per-type LR rule | **SNR 12.8** | cross-state prescription corr +0.998 |
+| 7 | instrument caveat | median tail 0.024 | the geometric-tail correction is **not** applied in committed data |
+
+**THE ANSWER, in variance terms:** ~22% gradient scale (the Gauss-Newton response ratio, the only
+*derived* law here) · **~50% a q,k-versus-rest binary of +0.81 dex that is statistically
+overwhelming and mechanistically unexplained** · ~8% residual-stream boundary position · ~20%
+unexplained, of which ~0.10 dex is noise.
+
+**FIVE MECHANISMS PROPOSED FOR THE QK GAP; ALL FIVE FALSIFIED.**
+
+| mechanism | iteration | how it died |
+|---|---:|---|
+| bilinear q·k coupling | 34 | residual correlation ranks q~k *lowest* at fork-2000 and on REQ-023 |
+| softmax saturation | 35→36 | negfrac separates paths perfectly but does not order the levels |
+| nonlinearity exposure | 37→39 | attn.v − mlp.fc is a cross-group pair with **zero** separation (−0.06 dex) |
+| within-block consumption order | 40→41 | steps unequal by 3x (t ≈ 9); reduces to the QK binary at 94% |
+| curvature concentration | 24 | explains only ~20% of the residue (sub-top mass rises almost as fast) |
+
+**The pattern is the finding.** Each mechanism looked strong at the population level and died on
+its own *extra* content, while the QK gap survived every test untouched. **No further offline
+mechanism search is warranted** — five hypotheses on one fixed 72-matrix dataset is already past
+the point where a sixth would be overfitting.
+
+**RETRACTED CLAIMS (kept so they are not rediscovered):** anisotropy λ_top/λ_grad, C_grad,
+spectral scale, and the offset b all "explained" C brilliantly and are all algebraically derived
+from λ_top (`b ≡ −2 log R` at corr 0.9985). `curvature_along_gradient` **is exactly α₁**, the
+Lanczos start vector. The corr(log g, log R) = +0.66 cancellation argument sits *below* its own
+mechanical null of +0.782. η²(b) ≫ η²(C) is forced by construction. The polar target's SNR of 41.3
+(iteration 27) was an aggregation error; the honest figure is 11.4 against λ_top's 13.1.
+
+**WHAT THE QUEUED RUNS DECIDE:**
+- **REQ-038** (1 forward+backward pass, cheapest in the queue) — amended P5: if conditioning on
+  |a| and |d| does not cut the QK binary's coefficient by ≥50%, the gap is irreducible to
+  first-order backward statistics, and given five falsifications that is close to a terminal
+  answer.
+- **REQ-035 Arm A** (n=4 seeds) — decides whether every finding above is architectural or a
+  property of this particular network. **Primary band: the QK gap must be +0.81 ± 0.20 dex with
+  q,k above in ≥10 of 12 blocks per seed.**
+- **REQ-036 / REQ-037** — the LR design and the exclusion-restriction test for claim 3.
+
+**Rule adopted mid-campaign and worth keeping:** any candidate predictor built from the same
+Lanczos tridiagonal as λ_top is circular; check |corr| against every previously-defined derived
+quantity before claiming novelty — >0.99 means it is a rename.
+
 **=== CONSOLIDATED STATE OF KNOWLEDGE (2026-09-03, after 13 analysis iterations) ===**
 
 *Read this section first; the iteration-by-iteration record below is kept for provenance but
