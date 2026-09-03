@@ -1494,7 +1494,7 @@ asking whether mu does anything LR cannot at fixed `s_eff`; that is REQ-037 if w
 
 ## REQ-037: a NON-learning-rate instrument for the curvature-gradient exponent
 
-- status: **OPEN — priority 3, unblocked.** 1 box / 4 arms / fork@2000; both nodes are free.
+- status: **arms 1-3 DONE (2026-09-03) — `logs/kmaxwell/req037_nonlr_instrument/`.** Batch instrument at fixed LR: curvature responds only WEAKLY to moving the gradient via batch — per-matrix elasticity dlog(curv)/dlog(batch) median 0.075 (mean 0.062, spread [-0.25,0.36]); geomean curvature non-monotonic. Suggests the gradient channel is NOT dominant for the LR->curvature effect (exclusion restriction questionable). **CAVEAT:** batch confounds g-noise with tokens-seen (val monotonic: 0.5x 3.626/1x 3.512/2x 3.421); the CLEAN instrument is **arm 4 (per-matrix grad clip), which is DEFERRED — no clip hook in ebf53cd, needs a new hook.** n=1/arm, noisy. arm2(0.5x) ran eager (mbs<64 compile bug). Read arms 1-3 as a confounded first look; arm 4 is the right test.
   Shares the REQ-026/028/029 fork@2000 machinery, plus per-matrix curvature measurement which
   those runs omitted.
 - requested: Jack (via Claude analysis session) / 2026-09-03 PDT
