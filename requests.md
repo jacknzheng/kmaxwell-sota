@@ -263,7 +263,7 @@ measured value so a seed result can be compared directly.
 | **12** | **type offsets reduce to three binaries** — ✅ **CONFIRMED n=4** | `q,k + residual-writer + mlp.proj` (5p) within 0.02 dex of six free offsets (7p) | gaps 0.004 / 0.004 / 0.005 / 0.002 dex in the 4 seeds |
 | **13** | **the PER-MATRIX causal exponent is exactly 2** — ⚠️ **RE-SCOPED** (iter. 79) | 2.000 inside the 95% CI **under per-matrix LR randomisation only** (REQ-023 design) | REQ-023 +2.076/+2.079 CI contains 2. **Arm A's GLOBAL LR ladder gives +2.64 to +3.07, CI excludes 2 — a different estimand, not a refutation** |
 | **14** | **q,k carry a large C excess in λ/g²** — ✅ **CONFIRMED n=4** | gap ≥ +0.6 dex and both q,k above all four others in ≥10/12 blocks | **+0.888 / +0.774 / +0.833 / +0.834 dex** (mean +0.832, sd 0.041), p < 10⁻⁵, **12/12 blocks in every seed** |
-| **15** | **the q,k excess is QK-norm scale invariance** (iter. 80, 87) — ⚠️ **CONFOUND BROKEN n=4; invariance test still blocked** | **(a) attn.v discriminator — CONFIRMED n=4:** v sits with the non-qk types, |v−others| ≤ 0.15 dex and v below both q and k in ≥10/12 blocks per seed. **(b) invariance test — needs REQ-041:** d log C/d log‖W‖ = 0 for q,k only | (a) v−others +0.103 dex vs v−qk −0.755 dex (7.3×), **48/48 blocks**; (b) q,k +0.049 CI [−0.261, +0.381] on REQ-023 |
+| **15** | **the q,k excess is QK-norm scale invariance** (iter. 80, 87, 88) — ⚠️ **BOTH ALTERNATIVES ELIMINATED n=4; invariance test still blocked** | **(a) v-discriminator — CONFIRMED n=4:** v with the non-qk types, below both q and k in ≥10/12 blocks/seed. **(b) bilinear pairing — REJECTED n=4:** corr(q,k) must exceed the within-block pair distribution AND sd(logC_q+logC_k) < independence. **(c) invariance test — needs REQ-041** | (a) v−others +0.103 vs v−qk −0.755 dex, **48/48**; (b) q-k rank **2 of 15**, +1.31 sd, trade-off ratio **1.20–1.38 (wrong sign)**; (c) +0.049 CI [−0.261, +0.381] |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
@@ -273,6 +273,62 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 88: BILINEAR PAIRING REJECTED — QK-norm is the last alternative standing ===**
+
+*Iteration 87 eliminated "attention input projection" using attn.v and left one survivor: q and k
+enter a bilinear product with each other, which v does not. I claimed only REQ-041 could separate
+that from QK-norm. **That claim was wrong** — the same iteration had just shown I give up on
+committed data too early, so I tested it.*
+
+**The bilinear reading makes predictions QK-norm does not.** If the logit scale is what matters, the
+controlled quantity is the **product** of q and k norms, so a block's q and k are two halves of one
+thing. That predicts (i) their C values **couple within a block** beyond ordinary block-sharing, and
+(ii) they **trade off** — the sum of their logs held steadier than independence allows.
+
+**Test 1 — coupling, against all 15 type pairs as the reference set:**
+
+| rank | pair | mean corr across 4 seeds |
+|---:|---|---:|
+| 1 | mlp.proj–mlp.fc | **+0.858** |
+| **2** | **attn.k–attn.q** *(the bilinear pair)* | **+0.741** |
+| 3 | attn.k–mlp.fc | +0.643 |
+| … | *(other 12 pairs)* | +0.084 to +0.639 |
+
+**q-k ranks 2 of 15 at +1.31 sd above the other pairs — it is not even the highest.** `mlp.proj–mlp.fc`,
+a pair with no bilinear relationship at all, correlates more strongly. q-k sits **inside** the
+ordinary distribution of within-block correlations, which is what two matrices sharing block-level
+conditions produce anyway.
+
+**Test 2 — the trade-off, and this one has the wrong sign:**
+
+| seed | sd(logC_q) | sd(logC_k) | sd(q+k) | independence predicts | ratio |
+|---|---:|---:|---:|---:|---:|
+| 0 | 0.262 | 0.276 | 0.525 | 0.381 | **1.38** |
+| 1 | 0.145 | 0.161 | 0.260 | 0.217 | **1.20** |
+| 2 | 0.143 | 0.206 | 0.339 | 0.251 | **1.35** |
+| 3 | 0.165 | 0.267 | 0.404 | 0.314 | **1.29** |
+
+**A mechanism controlling the product of q and k predicts ANTI-correlation — ratio below 1.** Every
+seed gives **above** 1 (1.20–1.38): q and k are *positively* correlated, moving together rather than
+trading off. **The bilinear-pairing reading is rejected, not merely unsupported.**
+
+**Where band 15 now stands.** Three readings of the q,k excess have been tested:
+
+| reading | status |
+|---|---|
+| attention input projection | **eliminated** (iter. 87 — v sits with the non-qk types, 48/48) |
+| bilinear pairing | **rejected** (this iteration — rank 2 of 15, and the trade-off has the wrong sign) |
+| **QK-norm scale invariance** | **the only survivor**, and the only one that made a numerical prediction (`d log C/d log‖W‖ = 0`) and passed |
+
+**This is as far as the committed data goes, and now for a stated reason rather than a guess.** The
+alternatives are gone by elimination; what remains is *confirming* QK-norm on its own terms at n=4,
+which requires the invariance test, which requires weight norms. **REQ-041 is the only remaining
+route** — and unlike iteration 86's failed proxy, that is now a conclusion from having exhausted the
+alternatives rather than an assumption.
+
+**Registered as check (b) inside band 15**, with the trade-off ratio as its falsifier: if a seed shows
+sd(q+k) *below* independence, the bilinear reading revives.
 
 **=== ITERATION 87: THE q,k CONFOUND IS BROKEN — attn.v decides it, n=4 ===**
 
