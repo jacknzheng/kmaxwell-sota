@@ -1,0 +1,18 @@
+# REQ-037 non-LR (gradient) instrument for the curvature-gradient exponent. SHA ebf53cd, 2 nodes (q89y4d3+qekd95q, 8xH100), venv019.
+# Arms 1-3 = the BATCH instrument (move gradient noise at fixed per-matrix LR), fork@2000, 750 steps, val@2750 + per-matrix curvature (top_eigenvalue) @2750, n=1/arm.
+# arm 2 (0.5x, mbs=32) ran EAGER (torch.compile mbs<64 NaN bug, found in REQ-033); arms 1,3 compiled. 74 matrices/arm.
+# ARM 4 (per-matrix gradient clip -- the CLEAN instrument) NOT run: no clip hook exists in ebf53cd; needs a new hook.
+arm	batch	val@2750	geomean_curvature@2750	engine
+a2_batch05x	0.5x	3.62601	12551.2	eager
+a1_control	1.0x	3.51229	11614.2	compiled
+a3_batch2x	2.0x	3.42097	13683.5	compiled
+#
+# READOUT -- curvature response to the gradient (batch) instrument at FIXED LR:
+# per-matrix elasticity dlog(curvature)/dlog(batch): median 0.075, mean 0.062, spread [p10 -0.25, p90 0.36].
+# => curvature responds only WEAKLY (near-zero, noisy) to moving the gradient via batch at fixed LR. geomean curvature is non-monotonic (U-shaped).
+# INTERPRETATION (suggestive, not definitive): a weak batch->curvature response is consistent with the gradient channel NOT being the dominant path for the
+#   LR->curvature effect -- i.e. the exclusion restriction behind the causal-exponent=2 estimate is questionable (a large share of the LR effect may bypass g).
+# CAVEAT (important): the BATCH instrument confounds gradient-noise with TOKENS-SEEN (0.5x trains on half the tokens over 750 steps, 2x on double), so the
+#   curvature difference mixes g-noise with training amount. The per-matrix gradient CLIP (arm 4) is the clean instrument (moves g magnitude at fixed tokens);
+#   it is the right test and is deferred pending a clip hook. Read arms 1-3 as a confounded first look, not the clean exclusion test.
+# n=1/arm, 3 batch points -> the elasticity is noisy; treat median 0.075 as "small, near zero" rather than a precise value.
