@@ -522,6 +522,51 @@ nonlinearity matters, not *how much of it* matters. (iii) This is correlational 
 an intervention that changes a matrix's downstream nonlinearity would be the causal test, and none
 exists in this campaign.
 
+**ITERATION 38 — the nonlinearity split survives a post-hoc audit, by cross-quantity validation.**
+
+The result's weakest point is that **I assigned the labels myself**. If the grouping were chosen
+after seeing the levels, +0.64 dex would be an artifact of searching 10 possible 3-vs-3 splits.
+
+*Exhaustive enumeration.* All 10 distinct 3-vs-3 splits of the six types, ranked by level gap:
+
+| rank | gap f1500 | gap f2000 | split |
+|---:|---:|---:|---|
+| **1** | **0.640** | **0.646** | **attn.k + attn.q + mlp.fc ← my split** |
+| 2 | 0.599 | 0.630 | attn.k + attn.q + attn.v |
+| 3 | 0.482 | 0.518 | attn.k + attn.proj + attn.q |
+| … | | | |
+| 10 | 0.018 | 0.015 | attn.k + attn.proj + mlp.fc |
+
+Mine ranks **1 of 10**. On its own that is exactly what a post-hoc search would produce, so it
+proves nothing by itself.
+
+*The decisive test — selection on a different quantity, scoring on a different state.* The split
+was not derived from levels. Iteration 36 derived it from **negfrac**, the Krylov negative-
+eigenvalue fraction. Taking the top-3 negfrac types at **fork-1500** as a purely data-driven
+grouping, with no physics input:
+
+- data-chosen top-3 by negfrac: **{attn.k, attn.q, mlp.fc}**
+- physics-chosen (output passes through a nonlinearity): **{attn.k, attn.q, mlp.fc}**
+- **IDENTICAL.**
+
+Applying that fork-1500-negfrac-derived split to **fork-2000 levels** gives a gap of **+0.646 dex**.
+**The grouping is selected on one quantity at one state and validated on a different quantity at a
+different state.** That is not a post-hoc search: an arbitrary grouping chosen to maximise a level
+gap would have no reason to coincide with the negfrac ranking, and a negfrac ranking has no reason
+to predict levels at an unseen state.
+
+*What still stands as a caveat.* Rank 2 (attn.k + attn.q + attn.v — i.e. "the QKV matrices") scores
+0.599/0.630, close behind. The two splits differ only in swapping attn.v for mlp.fc. So the data
+alone cannot fully separate "nonlinearity exposure" from "QKV-ness". **The discriminating evidence
+is mlp.fc**: it is not a QKV matrix, has no attention role, and sits firmly in the high group —
+which the QKV reading cannot accommodate but the nonlinearity reading predicts. **This is the
+single fact that distinguishes the two hypotheses, and it rests on one matrix type.**
+
+**Added to the registered seed check:** mlp.fc must remain in the high group in every seed. **If
+mlp.fc drops to the low group in ≥2 of 4 seeds, the correct reading is "QKV matrices are special"
+rather than "nonlinearity exposure", and this iteration's conclusion should be reversed.** That is
+the sharpest single discriminator available and it costs nothing to check.
+
 **REGISTERED SEED CHECK — the single most important one, zero cost:**
 - **the nonlinear-minus-linear gap in adjusted level must be +0.64 ± 0.20 dex in every seed**, and
   the nonlinear group must exceed the linear group in ≥10 of 12 blocks per seed.
