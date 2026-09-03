@@ -13,6 +13,12 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
+**Operator directive (2026-09-02, Jack):** Jerry is **not** capped at 2 GPU
+nodes. Use **all boxes the operator makes available** to run OPEN work **in
+parallel** wherever arms are independent. Completed REQ logs live under
+`logs/async_sdpo_req024/` and `logs/async_sdpo_req031/` — do not keep those
+request blocks in this queue.
+
 Next request number: **REQ-034**.
 
 
@@ -23,10 +29,10 @@ Next request number: **REQ-034**.
 - agent status update: **ROOT-CAUSE FOUND + WORKAROUND APPLIED, marathon re-running (2026-09-02 ~23:25Z).** Base ran clean: **val@1000 = 3.65169**, step-1000 state dumped (model + 8/8 ranks), and **all 4 gates GREEN** — tests pass at the pin, usable-batch budget OK (2x tightest at +100, = your 29-of-30 binding case), mbs-divisibility OK, and all 13 configs resolve at launch. **But the first 12-arm pass came back ALL-NaN**: every arm — including plain-muon control A — diverged to NaN within **10 steps** of the fork. I isolated it with 6 controls: it is **NOT** the base/fork (1x *and* 2x fork@1000 both descend cleanly to ~3.54–3.61), **NOT** the LR (0.25× LR still NaN), **NOT** the optimizer step or data (frozen LR≈0 *still* NaN → the **gradient** itself is NaN). **Root cause: a `torch.compile` shape bug at `microbatch_sequences < 64`.** mbs=64 (1x, 2x) is stable; mbs=16 and mbs=32 NaN *regardless of batch_tokens* (verified: 1x batch with mbs=16/32 also NaN). **Eager (`TORCHDYNAMO_DISABLE=1`) fixes it** — 0.25x runs finite (val ~3.82). Since 0.25x/0.5x *require* mbs ≤ 16/32 (the per-GPU-seq cap you flagged), I run those **8 small-batch arms eager** (identical math, ~25× slower) and the **4 2x arms compiled** (mbs=64, fast). Your readout is a **within-batch** contrast, so the eager/compiled split does not affect it. Re-running now on the one node: b0.25x_A eager full at step ~1660/3250; ETA ~6–7h for all 12. The README will document the compile-NaN bug and the eager/compiled split. **If you'd prefer I stop and instead patch the compile path, or descope to 2x-only, say the word — otherwise I proceed to the full curve.**
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e (same as REQ-026/027/028/029)
-- priority: arms are 2250 steps each (3x the REQ-026/029 forks), 12 of them. ONE
-  node works but will be slow; TWO nodes preferred if within your ceiling — split
-  by batch size, never by arm within a batch size (arms in a row must share a node
-  so the within-batch contrast is same-hardware).
+- priority: arms are 2250 steps each (3x the REQ-026/029 forks), 12 of them.
+  **Run in parallel across as many 8×GPU nodes as needed** (operator confirmed
+  no 2-node ceiling). Split by batch size when sharing a node — arms in a row
+  must share a node so the within-batch contrast is same-hardware.
 
 **Question.** REQ-026→029 established the benefit-vs-batch curve for the **frozen
 two-rate bi-Maxwell** kernel: `1x -0.01063, 4x -0.00438, 8x -0.00233, 16x ~0.00000`
@@ -204,241 +210,161 @@ band and the shape hinges on it, file a follow-up for replicates rather than
 over-reading n=1.
 
 
-## REQ-032: diligence (answer_free + answer_bearing) + tau2 (gold + step_hint) — 500 steps, H200/27B preferred
+## REQ-032: diligence (answer_free + answer_bearing) + tau2 (gold + step_hint) — 500 steps, 4 boxes in parallel
 
 - status: OPEN
-- agent status: **NEEDS-INFO — path decision (H200 blocked by my operator ceiling) (2026-09-02 ~17:55Z).** Accepted and ready to run (REQ-031 at step 175/200 on qv16djq, ~1.5h from done; I have room for a 2nd box within my ceiling). **One blocker before I provision:** your **preferred Path A = 8× H200 + Qwen3.8-27B**, and its whole scientific point is testing whether a *bigger* model breaks REQ-024's flat 8B judge curve. But my **standing hard operator constraint (Jerry) is "max 2 H100 nodes, nothing more"** — I'm **not authorized to provision H200** autonomously. Path B (H100/8B) *is* within my ceiling, but it re-tests the *same 8B* that was flat, so it won't answer the model-size question. **I don't want to silently default to the weaker path.** Please pick: **(A)** authorize H200 for this (i.e., lift my H100-only ceiling for REQ-032) → I run Path A (H200/27B, 500 steps, 4 arms); or **(B)** you're fine with H100/8B at the longer 500-step horizon → say so and I start Path B immediately (per your own fallback). Either way I'll run the 4 arms **sequentially on the 2nd box** (diligence answer_free/bearing first — those address the flat-curve question and don't share the tau2 user-sim DeepSeek load with REQ-031's gold; the two tau2 arms run last, by which point REQ-031 gold is finished, so no shared-key throttle overlap). Everything else is ready (same ac07c90 bootstrap + vllm/torchvision/audio patches + DeepSeek user-sim as REQ-031, which is working). Holding provisioning for your call.
-- agent status: **RUNNING — Path B (H100/8B), started after >1h with no answer (2026-09-02 ~20:00Z).** Your request says "if H200 is unavailable, **do not wait** — take 8× H100," and my operator ceiling makes H200 unavailable *to me* → per your own default I'm proceeding on **Path B: 8× H100 + `Qwen/Qwen3-8B`**, 500 steps, eval every 25. **The H200/27B option stays open** — if you authorize H200 (lift my H100 ceiling), I'll switch REQ-032 to Path A; the two tau2 arms run *last* in the sequence (~35h each), so you have a long window to redirect before any tau2 compute is spent. **Arm order (per your spec):** (1) diligence `answer_free`, (2) diligence `answer_bearing` FIRST — these directly test whether the longer 500-step horizon breaks REQ-024's flat ~0.10 diligence-judge curve (a valid *horizon* question even on 8B, orthogonal to model size); then (3) tau2 `gold`, (4) tau2 `step_hint`. Provisioning a fresh 8×H100 box now (0 nodes in use → within my 2-node ceiling). Same ac07c90 bootstrap as REQ-031. Deliverable → `logs/async_sdpo_req032/`.
+- agent status: **PIVOT (2026-09-02 ~17:28 PDT, operator update).** Prior sequential Path B on one box is superseded. **Operator confirmed: no 2-node ceiling — use all available boxes.** Provision **four 8-GPU nodes in parallel**, one arm each. **H200 + Qwen3.8-27B authorized** on all four when inventory allows; else H100 + Qwen3-8B (Path B). If an arm is already in-flight on the old sequential box, **keep it**; spin up the other three immediately. Do not restart a healthy in-flight arm. REQ-031 is **DONE** — see `logs/async_sdpo_req031/`.
 - requested: Jack / 2026-09-02 PDT
-- repo: https://github.com/jacknzheng/scaling-sdpo
+- repo (training code): https://github.com/jacknzheng/scaling-sdpo
+- repo (artifacts + checkpoints): https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - branch: `fix/hint-output-budget`
 - exact SHA: `ac07c90c1590823427a0a01f66bef6f69f0c3cf4`
-- prior diligence/gold diagnosis: https://github.com/jacknzheng/kmaxwell-sota/tree/jerry-agent/logs/async_sdpo_req024
-- do **not** preempt REQ-031 on qv16djq (8×H100, 8B gold). Provision a **separate** box. Within the standing 2-node ceiling, run in parallel with REQ-031 only if both boxes are authorized; otherwise queue behind REQ-031.
+- prior diagnosis: https://github.com/jacknzheng/kmaxwell-sota/tree/jerry-agent/logs/async_sdpo_req024
 
-Follow-up to [REQ-024](https://github.com/jacknzheng/kmaxwell-sota/tree/jerry-agent/logs/async_sdpo_req024): diligence judge curves were flat at ~0.10 over 200 steps on 8B despite a live `teacher_minus_student_logp` gap. This fleet re-runs four arms at **500 steps** with eval every **25**, preferring a larger model on H200.
+Follow-up to REQ-024: diligence judge curves were flat at ~0.10 over 200 steps on 8B despite a live `teacher_minus_student_logp` gap. Re-run four arms at **500 steps**, eval every **25**, preferring **27B on H200**.
 
-Four arms, **sequential on one 8-GPU node** unless Jack authorizes a second box for overlap:
+### Concurrency (required)
 
-1. diligence `answer_free`
-2. diligence `answer_bearing`
-3. tau2 `gold`
-4. tau2 `step_hint`
+**Four independent 8-GPU boxes, all at once:**
 
-### Hardware + model (pick one path; record which in README)
+| Box | Arm | Script |
+|-----|-----|--------|
+| 1 | diligence `answer_free` | `run_diligencebench.sh answer_free` |
+| 2 | diligence `answer_bearing` | `run_diligencebench.sh answer_bearing` |
+| 3 | tau2 `gold` | `run_taubench.sh gold` |
+| 4 | tau2 `step_hint` | `run_taubench.sh step_hint` |
 
-**Preferred — Path A (H200 + 27B)**
+Do **not** serialize arms on one node unless a hard provisioner failure leaves fewer than four boxes. Record box IDs in README.
 
-- Request **8× NVIDIA H200**.
-- `model.model=Qwen/Qwen3.8-27B`
-- Map: `cuda:0-3` policy vLLM TP=4; `cuda:4-7` FSDP2 trainer ×4.
-- `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` (scripts already export this). Keep default `generator.engine.disable_custom_all_reduce=True`.
+### Hardware + model (same path on all four boxes)
 
-**Fallback — Path B (H100 + current 8B), only if H200 is unavailable**
+**Path A (preferred):** 8× **H200** + `model.model=Qwen/Qwen3.8-27B`
 
-- If H200 cannot be provisioned, **do not wait** — take **8× H100** and use the same model as REQ-024 / current default:
-  - `model.model=Qwen/Qwen3-8B`
-- Same 4+4 map. State clearly in README + `summary.tsv`: `path=B`, GPU model, and that Path A was unavailable (include the provisioner error / empty H200 inventory if any).
-- Do **not** invent a different 9B / Qwen3.5 slug. Path B is exactly the REQ-024 stack at longer horizon.
+**Path B (fallback if H200 unavailable):** 8× **H100** + `model.model=Qwen/Qwen3-8B` — do not wait; record `path=B` and provisioner reason.
 
-Confirm **8 GPUs visible** before each arm; stop and record if fewer. `CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`. `torchrun --nproc-per-node=4`.
+Map on every box: `cuda:0-3` vLLM TP=4; `cuda:4-7` FSDP2 trainer ×4. `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`. Default `generator.engine.disable_custom_all_reduce=True`.
 
-### Schedule (both paths)
+### Schedule
 
 ```text
 trainer.total_steps=500
 judge.eval_interval=25
 logging.checkpoint_interval=50
 trainer.batch_size=16
-total_num_gpus=8
-generator.engine.n_rollout_gpus=4
-trainer.n_trainer_gpus=4
 ```
 
-Eval at steps **0 (baseline), 25, 50, …, 475, 500 (final)**. Do not use 200.
+Eval at **0, 25, 50, …, 475, 500**. Let `MODEL` be the chosen slug above.
 
-Let `MODEL` be `Qwen/Qwen3.8-27B` (Path A) or `Qwen/Qwen3-8B` (Path B).
+### Repo layout on each box
 
-### Frozen checkout
+Clone **both** repos on the box:
 
 ```bash
-git fetch origin fix/hint-output-budget
-git checkout ac07c90c1590823427a0a01f66bef6f69f0c3cf4
-uv run --no-sync pytest -q -m 'not network'
+git clone https://github.com/jacknzheng/scaling-sdpo.git && cd scaling-sdpo
+git fetch origin fix/hint-output-budget && git checkout ac07c90c1590823427a0a01f66bef6f69f0c3cf4
+
+git clone -b jerry-agent https://github.com/jacknzheng/kmaxwell-sota.git ../kmaxwell-sota
+cd ../kmaxwell-sota && git lfs install
 ```
 
-Record SHA. Expect 228 passed, 2 skipped. No sandbox / no bwrap / no `--privileged` (banking path removed at this SHA).
+Per-arm checkpoint root (under kmaxwell-sota):
 
-### Preflight (once per box)
+```text
+logs/async_sdpo_req032/<arm>/checkpoints/   # logging.output_dir
+logs/async_sdpo_req032/<arm>/logs/          # logging.log_dir via run_name (optional mirror)
+```
 
-1. `uv sync --extra tau2`.
-2. If vLLM missing: `uv pip install vllm==0.26.0`. If torchvision/torchaudio CUDA major checks abort import, apply the same no-op `_check_cuda_version()` patch as REQ-031.
-3. Tau2 data: sparse-clone **data only** at `a2c024725189473d2d7cea3a5cfdbcc67478e41f` → `TAU2_DATA_DIR` (retail + airline).
-4. DeepSeek `deepseek/deepseek-v4-flash` preflight (thinking off); record UTC + HTTP status.
-5. Diligence judge: if eval stalls >30 min with zero held-out completions, stop that arm and document — do not burn the box.
-6. Keys required: `PARALLEL_API_KEY`, `OPENROUTER_API_KEY`, `WANDB_API_KEY`. Never log secrets.
+Arm directory names: `diligence-answer_free`, `diligence-answer_bearing`, `tau2-gold`, `tau2-step_hint`.
 
-### Arm launches
+### Preflight (each box)
+
+1. `uv sync --extra tau2` in scaling-sdpo.
+2. vLLM 0.26.0 + torchvision/torchaudio CUDA patch if needed (same as REQ-031).
+3. Tau2 data @ `a2c0247` → `TAU2_DATA_DIR` (tau2 arms only; harmless on diligence boxes).
+4. DeepSeek preflight (thinking off).
+5. Keys: `PARALLEL_API_KEY`, `OPENROUTER_API_KEY`, `WANDB_API_KEY`. Never log secrets.
+
+### Arm launches (set checkpoint dir)
+
+From scaling-sdpo root, with `KMAX=/path/to/kmaxwell-sota` and `ARM=diligence-answer_free` (etc.):
 
 ```bash
-# 1 — diligence answer_free
+CKPT="$KMAX/logs/async_sdpo_req032/$ARM/checkpoints"
+
+# diligence example
 bash scripts/run_diligencebench.sh answer_free \
   model.model=$MODEL \
   trainer.total_steps=500 \
-  judge.eval_interval=25
+  judge.eval_interval=25 \
+  logging.output_dir="$CKPT"
 
-# 2 — diligence answer_bearing
-bash scripts/run_diligencebench.sh answer_bearing \
-  model.model=$MODEL \
-  trainer.total_steps=500 \
-  judge.eval_interval=25
-```
-
-W&B: `sdpo-diligence`. Graph judge metrics on default `_step` (not `eval/launched_at_step`). Watch bearing for weight-sync / EngineCore hangs (REQ-024); resume once with `logging.resume_from=latest`, then stop + evidence if it recrashes.
-
-```bash
-# 3 — tau2 gold
+# tau2 gold example
 bash scripts/run_taubench.sh gold \
   model.model=$MODEL \
   trainer.total_steps=500 \
-  judge.eval_interval=25
+  judge.eval_interval=25 \
+  logging.output_dir="$CKPT"
 
-# 4 — tau2 step_hint
+# tau2 step_hint (add domains + max_model_len)
 bash scripts/run_taubench.sh step_hint \
   model.model=$MODEL \
   trainer.total_steps=500 \
   judge.eval_interval=25 \
   "data.domains=[retail,airline]" \
-  generator.engine.max_model_len=32768
+  generator.engine.max_model_len=32768 \
+  logging.output_dir="$CKPT"
 ```
 
-`gold` / `run_taubench.sh` already pin retail+airline and `max_model_len=32768`. User-sim: DeepSeek V4 Flash, thinking off. W&B: `sdpo-tau2`. Ignore W&B `data.dataset_name=paperinstruments/diligence-bench` on tau2 runs — that field is unused when `data.dataset=tau2`; confirm domains + `eval/pass1*`.
+Checkpoints write to `$CKPT/step_{50,100,...,500}/state.pt` and `$CKPT/step_final/state.pt`.
 
-### Training diagnostics (required in summary)
+### Checkpoint commits (required — overrides generic "no tensors" rule for REQ-032)
 
-Per arm from `training.jsonl`: mean / p50 / p95 of `teacher_minus_student_logp`; count of steps with `|gap| < 1e-3`; loss @ step 10 vs final.
+After steps **250, 500, and `final`**, and on any crash/stop (push latest available):
 
-### Required artifacts
+```bash
+cd "$KMAX"
+git lfs track "logs/async_sdpo_req032/**/checkpoints/**/*.pt"
+git add -f logs/async_sdpo_req032/<arm>/checkpoints/
+```
+
+Write `logs/async_sdpo_req032/<arm>/CHECKPOINTS.md` with: arm, MODEL, GPU, SHA, step, `state.pt` path, resume CLI:
+
+```bash
+logging.resume_from=latest logging.output_dir=logs/async_sdpo_req032/<arm>/checkpoints
+```
+
+Commit and push to `jerry-agent`:
+
+```bash
+git commit -m "REQ-032 <arm>: checkpoint step N"
+git push origin jerry-agent
+```
+
+Soft-reset/rebase if push rejected; never force-push.
+
+### Log artifacts (same push cadence as checkpoints)
+
+Per arm under `logs/async_sdpo_req032/<arm>/`: gzip and `git add -f` the jsonl logs, `config.yaml`, `args.txt`, `console.log`, `train.log`, `rank*.log`. No secrets or `.env` dumps.
+
+### Training diagnostics
+
+From `training.jsonl`: mean / p50 / p95 of `teacher_minus_student_logp`; dead-gap count (`|gap| < 1e-3`); loss @ step 10 vs final.
+
+### Deliverable tree
 
 ```text
 logs/async_sdpo_req032/
-  README.md          # path A or B, GPU model, MODEL slug, link to req024
-  summary.tsv
-  diligence-answer_free/
-  diligence-answer_bearing/
-  tau2-gold/
-  tau2-step_hint/
-```
-
-Per arm: `args.txt`, `config.yaml`, `ARTIFACTS.txt`, `console.log`, `train.log`, `rank*.log`, `api_failures.jsonl`, `evaluations.jsonl`, `rollouts.jsonl`, `training.jsonl`, `vllm.jsonl`. Gzip large text. `git add -f` for ignored log patterns. No secrets, env dumps, weights, or checkpoint tensors.
-
-`summary.tsv`: path, GPU, MODEL, SHA, CLI, steps completed, wall hours, eval at 0 / 250 / 500, gap stats, failure counters, W&B URL.
-
-### Success
-
-All four arms reach step 500 (or documented stop after one resume attempt); Path A or B recorded; eval every 25 through 500; diligence 30/30 held-out (or documented provider failure); tau2 `eval/pass1*` on W&B default step axis; gap stats in summary.
-
-
-## REQ-031: tau2 gold only — DeepSeek user-sim, no sandbox, unprivileged GPU box
-
-- status: OPEN
-- agent status: **RUNNING (2026-09-01 ~00:05Z)** — this supersedes REQ-024's gold; the fixes here (DeepSeek user-sim instead of the 429-limited Nemotron, banking/bwrap removed, no sandbox) target exactly the walls I hit. Provisioning ONE **8-GPU** box **qv16djq** (not self-capping — 1 node, within my standing 2-node ceiling). Plan: checkout `ac07c90` on `fix/hint-output-budget`, `uv run --no-sync pytest -q -m 'not network'` (expect 228p/2s) + record SHA, `uv sync --extra tau2`, sparse-clone tau2 data-only at `a2c0247` → `TAU2_DATA_DIR`, DeepSeek `deepseek-v4-flash` preflight ping (thinking off, temperature 0) with UTC+status, then `bash scripts/run_taubench.sh gold trainer.total_steps=200` (CUDA_VISIBLE_DEVICES=0-7, nproc-per-node=4, cuda:0-3 vLLM TP4 + cuda:4-7 FSDP2). NO bwrap / NO --privileged / NO Nemotron / NO :free. Will confirm 8 GPUs visible before launch (stop+record if fewer). Artifacts → `logs/async_sdpo_req031/{README,summary.tsv,tau2-gold/}` with the W&B eval/pass1* step curve.
-- agent status: **PREFLIGHT PASS → gold RUNNING (2026-09-02 ~06:10Z).** Bootstrap on qv16djq: checkout **ac07c90** (clean), offline `pytest -m 'not network'` = **228 passed, 2 deselected** ✓, `uv sync --extra tau2` ✓, tau2 data sparse-clone @ a2c0247 (retail+airline tasks.json) → TAU2_DATA_DIR ✓. **8 GPUs visible** ✓. **DeepSeek preflight: status 200** (provider SiliconFlow, no 402) at UTC 2026-09-02T05:55:55Z ✓. Confirmed **ac07c90 already contains my REQ-024 tau2 patch** (solo_mode=False, env_kwargs strip, `_retry_transient` 429-hardening — the owner applied it). Generated `config.yaml` verified: user_llm=**openrouter/deepseek/deepseek-v4-flash**, user-sim `default_user_llm_args` = **temperature 0.0 + reasoning{enabled:false,effort:none}** ✓, domains retail+airline, max_model_len 32768, batch_size 16, total_steps 200, n_rollout_gpus 4, n_trainer_gpus 4, eval_interval 25, checkpoint_interval 50, total_num_gpus 8 (judge.model is still nemotron:free but gold never calls it ✓). **Venv fixes needed (not in the request, same class as REQ-024):** vllm isn't a declared dep → `uv pip install vllm==0.26.0`; and torch 2.11.0+cu128 has no matching cu128 torch**vision**/torch**audio** (vllm pulled cu13 builds), whose fatal CUDA-major checks abort a text-only run — patched both `_check_cuda_version()` to no-op (no vision/audio CUDA ops are used; verified Qwen3ForCausalLM + vllm import clean). Gold now past model-load: **Qwen3ForCausalLM resolved, V1 vLLM engine v0.26.0 initializing, weights loading**; no 429s. Baseline eval (full official test @ step 0) next.
-- agent status: **DONE (2026-09-02 ~19:55Z) — full 200-step gold run COMPLETE, GOLD_EXIT=0, node released.** Deliverable: `logs/async_sdpo_req031/{README.md,summary.tsv,tau2-gold/}` (config, args, ARTIFACTS, console.log.gz, train.log.gz, rank{1,2,3}.log, evaluations.jsonl.gz [source of truth], rollouts/training/vllm/api_failures.jsonl.gz). **W&B: https://wandb.ai/jacknzheng-united-states-department-of-state/sdpo-tau2/runs/8xt6ktgo** (eval/pass1, pass1_retail, pass1_airline on default `_step`). **Full pass^1 curve (n=60 each, 0 rollout errors everywhere):** baseline 0.283 → 25 **0.433** → 50 0.333 → 75 0.25 → 100 0.333 → 125 0.333 → 150 0.333 → 175 0.283 → final@200 **0.300** (retail 0.40→0.375, airline 0.05→0.15). Shape: the 8B policy peaks at step 25 then oscillates around baseline — **no sustained gain over 200 steps**, mirroring REQ-024's flat-8B finding (this is exactly REQ-032's motivation for 27B). **This completed where REQ-024's gold deadlocked:** DeepSeek user-sim (preflight 200 @05:55:55Z) + no sandbox + the retry-hardening absorbed **2231 rate-limits with api_failures=0**. Preflight recorded: pytest 228p/2s, `uv pip install vllm==0.26.0` (not a declared dep), torchvision/torchaudio `_check_cuda_version()` no-op patch (torch 2.11 has no cu128 build; safe for text-only), tau2 data @a2c0247, 8 GPUs, 4+4 map. **Node qv16djq released** (frees my 2-node budget for REQ-032 once you pick the path).
-- requested: Jack / 2026-09-01 PDT
-- repo: https://github.com/jacknzheng/scaling-sdpo
-- branch: `fix/hint-output-budget`
-- exact SHA: `ac07c90c1590823427a0a01f66bef6f69f0c3cf4`
-- supersedes gold on REQ-024 (`ecf6fd8`) and withdrawn REQ-030. Do **not** reopen those.
-- do not collide with kmaxwell REQ-021–029 (those numbers are already used)
-
-Tau2 **gold only**. Retail + airline. No diligence, no banking, no hint GPU, no Nemotron user-sim.
-
-Banking and the `srt`/`bwrap` host sandbox were **removed** at this SHA. Do not run `setup_tau2_sandbox.sh` (the file is gone). Do not install bubblewrap. Do not request `--privileged` or `seccomp=unconfined`. Those host-policy changes can break NCCL / the GPU driver. Retail and airline use in-process DB tools only.
-
-Request an **8-GPU** box. Jack has operator permission. If fewer than 8 devices are visible, record the listing, update this block, and stop. Do not self-cap at 2, do not use `NPROC=1`.
-
-### Hardware map (required)
-
-```text
-cuda:0-3  policy vLLM TP=4
-cuda:4-7  FSDP2 trainer x4
-```
-
-`CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`. `torchrun --nproc-per-node=4`. `gold` skips the hint LLM.
-
-### Frozen checkout
-
-```bash
-git fetch origin fix/hint-output-budget
-git checkout ac07c90c1590823427a0a01f66bef6f69f0c3cf4
-uv run --no-sync pytest -q -m 'not network'
-```
-
-Record that SHA. Offline suite on the authoring machine: 228 passed, 2 skipped.
-
-Resolved defaults that must appear in `config.yaml`:
-
-```text
-model.model=Qwen/Qwen3-8B
-total_num_gpus=8
-generator.engine.n_rollout_gpus=4
-trainer.n_trainer_gpus=4
-trainer.batch_size=16
-trainer.total_steps=200
-generator.engine.max_model_len=32768
-generator.hint.prompt=gold
-data.dataset=tau2
-data.domains=[retail,airline]
-data.user_llm=openrouter/deepseek/deepseek-v4-flash
-judge.eval_interval=25
-logging.checkpoint_interval=50
-```
-
-`gold` never calls `judge.model`. Do not point `data.user_llm` at Nemotron or any `:free` slug. User-sim payloads must include `temperature: 0` and `reasoning: {enabled: false, effort: "none"}`. Do not enable thinking.
-
-### Preflight (no sandbox)
-
-1. `uv sync --extra tau2` (not `--extra knowledge`; that extra is gone).
-2. If `.deps/tau2-bench/data` is missing, sparse-clone **data only** at pinned `a2c024725189473d2d7cea3a5cfdbcc67478e41f` (retail/airline `tasks.json`). Set `TAU2_DATA_DIR` to that `data/` dir. This is task JSON, not a sandbox.
-3. OpenRouter DeepSeek is funded. Send one real user-sim-shaped request to `deepseek/deepseek-v4-flash` (thinking off) and record status plus UTC timestamp, never keys. If the box returns 402, report which credential differs and stop.
-
-Do not eval the train split. Held-out is tau2's official `loader("test")`.
-
-### Single launch (baseline → train → final)
-
-```bash
-bash scripts/run_taubench.sh gold trainer.total_steps=200
-```
-
-The script already sets `data.domains=[retail,airline]` and `max_model_len=32768`. One process scores the full official test set at:
-
-1. **baseline** — `eval/phase=baseline`, wandb `step=0`, before rollout
-2. **interval** — 25, 50, …, 175 (`eval/phase=interval`)
-3. **final** — after step 200 (`eval/phase=final`, wandb `step=200`)
-
-W&B must graph `eval/pass1`, `eval/pass1_retail`, `eval/pass1_airline` on the **default `_step` x-axis**. Do not set panel x to `eval/launched_at_step`. File `evaluations.jsonl` remains the source of truth.
-
-Resume after recoverable crashes with `logging.resume_from=latest`. Skip the in-run baseline on resume.
-
-### Required artifacts
-
-```text
-logs/async_sdpo_req031/
   README.md
   summary.tsv
-  tau2-gold/
+  diligence-answer_free/{checkpoints/,CHECKPOINTS.md,logs...}
+  diligence-answer_bearing/{...}
+  tau2-gold/{...}
+  tau2-step_hint/{...}
 ```
-
-Include `args.txt`, `config.yaml`, `ARTIFACTS.txt`, `console.log`, `train.log`, every `rankN.log`, `api_failures.jsonl`, `evaluations.jsonl`, `rollouts.jsonl`, `training.jsonl`, `vllm.jsonl`. Use `git add -f` for ignored log patterns. Gzip large text losslessly. Never commit secrets, env dumps, weights, or checkpoint tensors.
-
-`summary.tsv`: exact SHA and CLI, visible GPU count, completed steps, wall time, overall and per-domain pass^1 at baseline / each interval / final, user-sim 429 count, every failure counter. README links raw dirs and the W&B URL.
 
 ### Success
 
-8 visible GPUs; **no privileged / no bwrap**; user-sim is DeepSeek V4 Flash with thinking off; full official retail+airline test scored at 0, 25, …, 175, 200; those `eval/pass1*` points visible on W&B default step charts; `evaluations.jsonl` complete.
-
-If a definitive external blocker stops the run, commit and push progress plus raw logs, update this block, and stop. Soft-reset / rebase if a push is rejected. Do not force-push.
+All four arms reach step 500 (or documented stop after one resume); path A or B recorded; checkpoints pushed at 250/500/final; eval every 25; diligence 30/30 held-out (or documented judge failure); tau2 `eval/pass1*` on W&B default step axis.
 
 
 ## Template
@@ -453,202 +379,4 @@ If a definitive external blocker stops the run, commit and push progress plus ra
 success criteria, artifact paths, and any ordering constraints. Do not include
 secrets; refer to already-provisioned environment variables.>
 ```
-
----
-
-## REQ-024: 8-GPU 4+4 OpenRouter DeepSeek SDPO fleet
-
-- status: **DONE for diligence; gold not delivered** — keep this block as the diagnosis record. Do **not** reopen gold on `ecf6fd8`. Gold follow-up is REQ-031 at `ac07c90` (no sandbox).
-- agent status: **DILIGENCE DELIVERED / gold STOPPED (deadlocked on provider) — node released (2026-08-31 ~13:35Z).** Update to the above: I let gold grind and it **deadlocked at the first eval boundary**, not just slowed — `evaluation_started=1` at 12:53Z with **0 held-out tasks completed 37+ min later** (443× upstream 429). At that throughput the first eval won't finish, let alone 200 steps, so continuing only burned the node at ~zero output. I **stopped the run and released wgmy26w** (both nodes now free). This is fully **resumable** and preserved (config in `tau2-gold-attempt/gold-config.yaml`, deadlock evidence in `tau2-gold-attempt/DEADLOCK-EVIDENCE.txt`): apply the patch, re-provision, relaunch `bash scripts/run_taubench.sh gold trainer.total_steps=200 "data.domains=[retail,airline]" generator.engine.max_model_len=32768` — but **gold needs a dedicated Nemotron provider key (BYOK)** or a less-contended user-sim/judge model to get through; I don't have one. **REQ-024 net: the core deliverable is done** — both diligence arms @200 + hint-gate PASS + the 3-fix tau2 patch, all in `logs/async_sdpo_req024/` (see `README.md`). Gold (Ablation A) is the only unshipped piece and it's blocked on external OpenRouter capacity, not on anything in the code. Ready to resume gold the moment a working provider key/model is available. **Owner 2026-09-01:** gold resume is REQ-031 at `ac07c90`; do not resume via withdrawn REQ-030 or `ecf6fd8`.
-- agent status: **DILIGENCE ARMS DELIVERED; tau2 gold BLOCKED-IN-PRACTICE on OpenRouter provider capacity — DECISION NEEDED (2026-08-31 ~12:15Z).** Two more blockers hit on gold after the ones above: (3) the tau2-bench **data dir was missing** → cloned at pinned a2c0247; (4) even the **paid** `nemotron-3-super-120b` user-sim/judge returns **upstream shared-pool 429s** ("temporarily rate-limited upstream / engine_overloaded", DeepInfra+DigitalOcean), and the harness re-raised on them → the run died at step 8. I added **retry-with-backoff hardening** to the user-sim path (3rd fix; the delivered patch now carries all three: solo_mode, env_kwargs, retry). Gold now **survives** (relaunched, run 112840) — but it is **provider-throttled to a crawl: step 13/200 after 45 min, 233 × 429 absorbed via backoff, ≈3.5 min/step ⇒ ~11h to 200** (first eval boundary ~40 min out). Nothing I can change server-side speeds up an external shared-pool rate limit. **Your call:** (a) let it grind (it should finish overnight if the pool doesn't worsen; the 25/50/… evals land as it goes), (b) accept a **partial gold** (e.g. stop at the first 1–2 eval boundaries for the retail+airline pass^1 readout), or (c) drop in a **dedicated Nemotron provider key** (BYOK, per OpenRouter's own remedy hint) to lift the limit — I don't have one. **The core REQ-024 deliverable (both diligence arms @200 + hint-gate validation) is done and collected**; gold is Ablation A on top. I'll keep it running and land whatever evals complete unless you say otherwise. Updated patch: `logs/async_sdpo_req024/tau2-solo_mode-fix.patch` (git am → push to `fix/hint-output-budget`).
-- requested: Jack / 2026-08-30 20:59 PDT
-- repo: https://github.com/jacknzheng/scaling-sdpo
-- branch: `fix/hint-output-budget`
-- exact SHA: `ecf6fd84e21281ff1460169da61006e879886e5e`
-- supersedes: REQ-018, REQ-020
-- prior evidence: `logs/async_sdpo_req011/`, `logs/async_sdpo_req015/`, `logs/async_sdpo_req018/`
-
-REQ-020 cannot run: Baseten workstations cap at 8 GPUs, so the 9-GPU local-hint
-map is not provisionable. REQ-018 validated the hint-length fix at `3bd7def`
-(0 drops / 0 `openrouter_length` over ~478 attempts/arm) and then died on
-free-Nemotron 429s. This request puts hints on OpenRouter
-`deepseek/deepseek-v4-flash`, restores the proven 4+4 split on 8 GPUs,
-and keeps thinking off for both hints and the diligence judge.
-
-REQ-018 and REQ-020 are removed from this queue. Their logs stay under
-`logs/async_sdpo_req018/`. Do not preempt REQ-022 or REQ-023; use a
-separate 8-GPU box.
-
-Request an **8-GPU** box. Jack has operator permission. The operator default
-of 2 GPUs is not enough. Do not self-cap at 2, do not start a local hint
-engine, do not use `NPROC=1`, and do not recreate the 4+3+1 or 9-GPU maps.
-If `nvidia-smi` / `torch.cuda.device_count()` shows fewer than 8 visible
-devices, record the listing, update this block, and stop.
-
-### Hardware map (required)
-
-```text
-cuda:0-3  policy vLLM TP=4
-cuda:4-7  FSDP2 trainer x4
-```
-
-`CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`. `torchrun --nproc-per-node=4`.
-Hints are remote OpenRouter calls, not a GPU process.
-
-### Frozen checkout
-
-Do **not** use SHA `14db9fb` / `e2ff718` (local hint GPU), `3bd7def`
-(free-Nemotron hints), or `b4d523d` (invalid `-latest` slug). Fetch this
-exact commit. Do not recreate this as an on-box patch.
-
-```bash
-git fetch origin fix/hint-output-budget
-git checkout ecf6fd84e21281ff1460169da61006e879886e5e
-uv run --no-sync pytest -q -m 'not network'
-```
-
-Record that SHA. Offline suite at this SHA: `229 passed, 2 skipped`.
-
-Resolved defaults that must appear in `config.yaml`:
-
-```text
-model.model=Qwen/Qwen3-8B
-total_num_gpus=8
-generator.engine.n_rollout_gpus=4
-trainer.n_trainer_gpus=4
-trainer.batch_size=16
-generator.hint.backend=openrouter
-generator.hint.model=deepseek/deepseek-v4-flash
-generator.hint.reasoning_enabled=false
-generator.hint.max_tokens=2048
-judge.model=nvidia/nemotron-3-super-120b-a12b:free
-judge.reasoning_enabled=false
-data.user_llm=openrouter/nvidia/nemotron-3-super-120b-a12b:free
-judge.eval_interval=25
-logging.checkpoint_interval=50
-```
-
-Every hint and judge OpenRouter payload must include
-`reasoning: {enabled: false, effort: "none"}`. Do not enable thinking.
-
-### Preflight
-
-OpenRouter (DeepSeek hints, Nemotron judge / user-sim) and Parallel Search
-are funded. Before renting or restarting a box, send one real request to
-each and record status plus UTC timestamp, never keys. The hint preflight
-must use `deepseek/deepseek-v4-flash` through `build_error_hint` /
-`generate_hint` (`backend=openrouter`). If the box still returns 402,
-report which credential differs and stop that dependent arm. Do not put
-credentials in this repository.
-
-### Diligence arms
-
-Preserved checkpoints on `qkpx8dw` / `wp2znpq` were lost in the operator
-reset. Restart both diligence arms from step 0 on `ecf6fd8`. That is
-intended: this SHA changes the hint model and the GPU split.
-
-### Hint validation gate
-
-After at least 100 post-switch hint attempts on each diligence arm,
-report:
-
-- attempts, successes, total drops, and `drops / attempts`
-- every `hint_drop_*` cause, especially `openrouter_length`, `openrouter_429`,
-  `timeout`, `empty`
-- confirm the hint model slug is `deepseek/deepseek-v4-flash`
-
-Gate passes when the total drop rate is below 5% while OpenRouter is
-healthy and there are zero `hint_drop_openrouter_length` failures. If the
-gate fails, preserve raw artifacts, diagnose, update this block, and stop.
-Do not raise concurrency, switch hint models, enable reasoning, start a
-local hint GPU, or train with an empty hint.
-
-### Tau2
-
-Do not delay diligence on tau2. Resolve the already-reported tau2-bench
-`a2c0247` `get_environment` API drift, add a test covering the pinned
-signature, commit that follow-up to `scaling-sdpo`, then launch tau2 `gold`
-on retail+airline only. `gold` skips the hint LLM. Do not use banking on
-Baseten.
-
-### Frozen experiment
-
-Finish all three arms at `trainer.total_steps=200`:
-
-1. diligence `answer_free`
-2. diligence `answer_bearing`
-3. tau2 `gold` on retail+airline
-
-Runtime per arm:
-
-- 4 vLLM rollout GPUs + 4 FSDP2 trainer ranks
-- `model.model=Qwen/Qwen3-8B`
-- `trainer.mini_batch_size=2`
-- `generator.engine.max_model_len=32768` for tau2
-- never fall back to 4B, `stealth/ox-alpha`, `NPROC=1`, 2 GPUs, or a
-  local hint engine
-
-Resume after recoverable crashes. A rollout without its required hint must
-be dropped. Keep search, hint, user-simulator, judge, sandbox, empty-episode,
-stale-rollout, and weight-sync failures as separate counters.
-
-W&B must receive a `samples` table each logged train step with prompt,
-output, `hint_free`, and `hint_bearing`. File artifacts remain the source
-of truth.
-
-### Evaluation contract
-
-Held-out eval runs synchronously at every 25-step boundary (25, 50, 75, 100,
-125, 150, 175, 200). Do not skip a boundary because a prior eval is still
-running.
-
-Write every eval to `evaluations.jsonl`. A W&B screenshot is not a
-substitute.
-
-- Diligence: per-task query, response, token counts, normalized/raw judge
-  scores, per-section earned/possible/fraction, judge error; plus aggregate
-  `judge_score`, `judge_n`, `judge_errors`, section scores, requested count,
-  and rollout-error count.
-- Tau2: per-task domain, query, full transcript, token counts, pass^1, and
-  rollout error; plus overall and per-domain pass^1, sample counts, requested
-  count, and rollout-error count.
-
-Every row and aggregate must include `launched_at_step` and `policy_version`.
-Commit `evaluation_started`, task-completed/task-failed, and
-`evaluation_completed`/`evaluation_failed` even when an API or sandbox
-failure occurs.
-
-### Required artifacts
-
-Commit and push to this `jerry-agent` branch:
-
-```text
-logs/async_sdpo_req024/
-  README.md
-  summary.tsv
-  hint-fix-validation.tsv
-  diligence-answer-free/
-  diligence-answer-bearing/
-  tau2-gold/
-```
-
-For every arm include `args.txt`, `config.yaml`, `ARTIFACTS.txt`,
-`console.log`, `train.log`, every `rankN.log`, `api_failures.jsonl`,
-`evaluations.jsonl`, `rollouts.jsonl`, `sandbox.jsonl`, `training.jsonl`,
-`vllm.jsonl`, sandbox setup logs, and a checkpoint/resume manifest. Use
-`git add -f` for ignored log patterns. Gzip large text artifacts losslessly
-and document decompression. Never commit secrets, environment dumps, model
-weights, or checkpoint tensor files.
-
-`summary.tsv` must include exact SHA and CLI, visible GPU count, completed
-steps, wall time, checkpoint history, teacher-minus-student gap, dead-gap
-fraction, clipping, staleness, every failure counter, and held-out metrics.
-The README must link each row to its raw directory.
-
-Success: 8 visible GPUs, hint gate passes, thinking stays off, and all three
-arms reach step 200. If a definitive external blocker stops the run, first
-commit and push all progress and raw failure logs, then update this block
-with exact evidence and stop rather than restarting from zero.
-
----
 
