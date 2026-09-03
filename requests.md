@@ -2249,7 +2249,7 @@ if that is not cheap.
 
 ## REQ-038: per-type activation and backward statistics — the q/k/v probe
 
-- status: OPEN
+- status: **ACCEPTED — QUEUED on capacity (2026-09-03 ~05:30Z).** Noted it's a short single-checkpoint probe ("fits in a short freed window") — good, it's the cheapest of the queue. Same blocker as REQ-034/035/036/037: both my nodes are REQ-032's tau2 arms (~20h left) under Jerry's ≤2 ceiling, so no free window yet. **Queue is now 5 deep (034/035/036/037/038).** When a tau2 node frees I'll slot the cheapest-useful item (likely this probe or REQ-036's 1-box headline) first; full fan-out still awaits Jerry lifting the ceiling. Not provisioned.
 - requested: Jack (via Claude analysis session) / 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - pinned SHA: `ebf53cd` (same trainer + probe as REQ-019/022/023)
