@@ -700,6 +700,57 @@ question definitively and permanently justify REQ-036's measure-don't-predict de
    - **≤ +0.2** → the residual is a learned per-network property. **C is unpredictable in principle**, the campaign's central question is answered, and measurement (REQ-036) is the only correct design.
    - between → report the reproducible fraction as the hard ceiling on any future covariate model.
 
+**ITERATION 7 — I was wrong that offline analysis was exhausted. Two new findings.**
+
+**(A) The per-matrix residual replicates ACROSS INDEPENDENT EXPERIMENTAL DESIGNS.**
+REQ-019 uses a global s-ladder (all matrices share one s); REQ-023 randomises s *per matrix*.
+Different designs, different runs, different interventions. The within-type residual of
+`b = log C − 2 log g` correlates across them at:
+
+| pair | corr |
+|---|---:|
+| REQ-019 fork-1500 vs fork-2000 (same design) | +0.931 |
+| REQ-023 fork-1500 vs fork-2000 (same design) | +0.960 |
+| **REQ-019 vs REQ-023 (across designs, mean of 4 pairs)** | **+0.937** |
+
+Cross-design agreement equals within-design agreement, and residual spread matches (0.202 vs
+0.215 dex). **The residual is therefore not an artifact of either design — it is a genuine
+per-matrix physical property of the trained network.**
+
+**(B) The residual is a BOUNDARY effect, not a depth effect.** Defining
+`d_edge = min(block, 11 − block)` (0 at the first and last block, 5 in the middle):
+
+| d_edge | mean residual, fork-1500 | fork-2000 | n |
+|---:|---:|---:|---:|
+| 0 | **+0.264** | **+0.345** | 12 |
+| 1 | +0.040 | +0.107 | 12 |
+| 2 | −0.003 | −0.050 | 12 |
+| 3 | −0.052 | −0.079 | 12 |
+| 4 | −0.122 | −0.158 | 12 |
+| 5 | −0.126 | −0.164 | 12 |
+
+Monotone in both states. **corr(edge, residual) = −0.606 / −0.673, versus −0.045 for linear
+depth.** This is why every linear-depth test in this campaign returned ~0: the effect is a
+U-shape in depth (high at both ends), which a linear term cannot see and which is exactly the
+"depth quadratic R² = 0.41" signal, now correctly identified as *distance to the network
+boundary*. Matrices at the first and last block carry systematically higher curvature per unit
+gradient than matrices in the interior.
+
+**(C) But it still does not beat measurement — stated plainly.** Out-of-sample (fit fork-1500,
+predict fork-2000): log(1+edge) 0.176 dex, edge-linear 0.186, depth-quadratic 0.174 — against
+**0.093 dex for simply reusing the fork-1500 residual**. So the boundary effect is a real
+structural discovery about *where* curvature anomalies live, and it explains the previously
+mysterious depth-quadratic signal, but it captures only ~40% of the residual variance and
+does not change the operational conclusion: **C must be measured, not predicted.**
+
+**REGISTERED n=4 SEED CHECK — updated with the boundary prediction. Still zero extra cost.**
+Adding to the four criteria already registered:
+5. **corr(d_edge, within-type residual) = −0.6 ± 0.2 in every seed**, with the residual at
+   d_edge = 0 positive in every seed. If the boundary effect reproduces across seeds it is
+   architectural (a property of being first/last in the residual stream) and is the first
+   *predictable* component of the residual ever found. If it does not reproduce, it is a
+   learned per-network feature and criterion 4 governs.
+
 **So the question sharpens to: what sets S_m?** lam_top is not special — it is S_m times a
 fixed per-matrix shape constant. The between-layer difference in C *is* the between-layer
 difference in overall Hessian scale. Arm A is unchanged and remains the right next step;
