@@ -254,7 +254,7 @@ measured value so a seed result can be compared directly.
 | **3** | boundary field, **true-layer axis** | corr(d_edge, block-mean residual) **≤ −0.5** | −0.912 / −0.891 |
 | **4** | negative-curvature separation | every nonlinear-path type above every linear-path type | 0.198 > 0.146 / 0.200 > 0.138 |
 | **5** | position spacing stays **unequal** | step(0→1) ≥ **2×** step(1→2) | 3.0× / 3.2× |
-| **6** | **per-type gradient-slope heterogeneity** (iteration 63/64) | **Q(5) > 10** in every seed; **mlp.proj, attn.proj ≥ 2.5** and **attn.k, attn.q, attn.v, mlp.fc ≤ 1.8** in ≥3 of 4 seeds; **F(6 free slopes vs proj-binary) > 2.5** in ≥3 of 4 seeds | Q = 66.7 / 68.3 |
+| **6** | **two-valued gradient slope** (iter. 63–66) | **Q(5) > 10** across the six raw slopes; **F(6 slopes vs 2 slopes, both with 6 free intercepts) < 2.5**; **residual-writer slope ≥ 2.5**, **internal slope ≤ 1.8** | Q = 66.7 / 68.3; F = 0.18 / 0.10 |
 | **7** | **the split is residual-stream position, not shape** (iteration 65) | **slope(attn.proj + mlp.proj) − slope(other four) ≥ +1.5** in ≥3 of 4 seeds, each proj type individually ≥ +2.0 vs internal | +2.173 / +2.183, p < 0.0001 |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
@@ -264,6 +264,69 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 66: THE SLOPE TAKES TWO VALUES, NOT SIX — band 6 partially withdrawn ===**
+
+**What is withdrawn.** Iteration 65 reported `F(8,60) = 8.27 / 4.31` for "six free slopes vs a
+proj/non-proj binary" and concluded the six-way slope structure is real. **That test was
+mis-specified.** It compared *six slopes and six intercepts* against *two slopes and **two**
+intercepts*, so a difference in intercepts alone would produce a large F. The intercepts do differ
+six ways — but that is C varying by matrix type, which is this campaign's premise, not a finding
+about slopes.
+
+**The correct test** holds intercepts free six ways in both models and asks only whether the slopes
+need six values:
+
+| model | RSS (f1500) | params | AIC |
+|---|---:|---:|---:|
+| pooled: 1 slope, 1 intercept | 7.9635 | 2 | −154.53 |
+| 2 groups: 2 slopes, 2 intercepts | 3.0471 | 4 | −219.70 |
+| **6 types: 2 slopes, 6 intercepts** | **1.4665** | **8** | **−264.35** ← best |
+| 6 types: 6 slopes, 6 intercepts | 1.4490 | 12 | −257.22 |
+
+**F(4,60) = 0.18 and 0.10.** Six slopes buy essentially nothing over two. AIC selects the
+2-slope/6-intercept model in both forks.
+
+**Confirmed independently by the within-group heterogeneity**, which is where this started:
+
+| group | slopes (f1500) | Q | verdict |
+|---|---|---:|---|
+| residual writers | attn.proj 3.76±0.65, mlp.proj 3.93±0.28 | **Q(1) = 0.1** | homogeneous |
+| internal four | q 1.34±0.34, k 0.87±0.35, v 1.41±0.51, fc 1.43±0.97 | **Q(3) = 1.3** | homogeneous |
+
+(fork-2000: Q(1) = 0.0, Q(3) = 0.5.) **The 0.87 → 1.43 spread among the internal four is entirely
+error bars.** Band 6's per-type thresholds were fitting noise across four types that agree.
+
+**The corrected claim — simpler than what it replaces:**
+
+> **The cross-sectional gradient exponent takes exactly two values: ≈3.8 for the two matrices that
+> write to the residual stream, ≈1.2 (f1500) / 0.7 (f2000) for the four that write internally.
+> Neither equals the within-matrix causal exponent of 2.07. C's intercept still varies all six ways;
+> only the slope collapses to two.**
+
+**Band 6 amended** to test the two-valued structure — including `F < 2.5` as a *requirement*, so a
+seed showing genuine six-way slope structure now falsifies this rather than confirming it. Band 7's
+group contrast is untouched and still holds at p < 0.0001.
+
+**=== ITERATION 66b: BAND 7'S MECHANISM IS UNDERDETERMINED (declared, not discovered later) ===**
+
+Band 7 attributes the split to **writing into the residual stream**. In this architecture that
+property is **perfectly collinear** with a second one:
+
+| type | writes to residual | second in sub-block (consumes a nonlinearity) |
+|---|---:|---:|
+| attn.q / attn.k / attn.v / mlp.fc | 0 | 0 |
+| attn.proj / mlp.proj | 1 | 1 |
+
+`attn.proj` consumes the softmax-weighted mixture; `mlp.proj` consumes ReLU². **No matrix in this
+network separates the two properties**, so the observational data cannot distinguish them, and
+band 7's *grouping* (p < 0.0001) is far better established than its *mechanism*.
+
+**This is a design question, not an analysis question.** REQ-038's `|a|` and `|d|` fields separate
+the readings: "mixed input" predicts residual writers have distinctly larger, slower-varying `|a|`;
+"gradient arrives without crossing a nonlinearity" predicts `|a|` is unremarkable and the signal is
+in `|d|`. A cleaner future test would need an architecture with a matrix that writes to the residual
+stream *without* sitting second in its sub-block — not available here.
 
 **Band 7 identifies what band 6 could not.** Iteration 65 asked what physically separates the two
 projection matrices from the other four, and **shape is decisively ruled out by the committed
