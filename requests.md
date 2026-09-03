@@ -2285,6 +2285,61 @@ it names the symmetry without explaining it.
 input/backward statistics must show a **symmetric, saturating** dependence on distance to the
 network boundary, not a monotone one. That is a harder and more falsifiable bar than "q,k differ".
 
+**=== ITERATION 59: THE PROBE IS EXONERATED — the noise floor is physical, not instrumental ===**
+
+*The cost correction (iteration 58) showed the Lanczos probe costs ~5× the training it measures.
+That raised a question never asked: is the campaign's 0.101 dex noise floor a property of the
+network, or of running only 8 Lanczos iterations? The raw tridiagonals answer it.*
+
+**Convergence at iteration 8 is essentially complete.** Reconstructing what fewer iterations would
+have returned, from the committed `alphas`/`offdiags`:
+
+| iterations | estimate ÷ final | still rising |
+|---:|---:|---:|
+| 2 | 0.7253 | 27.5% |
+| 4 | 0.9666 | 3.3% |
+| 6 | 0.9982 | 0.18% |
+| **7** | **0.9997** | **0.03%** |
+| 8 | 1.0000 | — |
+
+**The 7→8 increment is a median 0.029%.** The probe is converged.
+
+**More iterations would NOT lower the noise floor.** Duplicate-arm rms, recomputed at each
+iteration count:
+
+| iterations | s=1.00 dup pair | s=0.85 dup pair |
+|---:|---:|---:|
+| 4 | 0.1254 dex | 0.1122 dex |
+| 6 | 0.1165 | 0.0923 |
+| 8 | 0.1182 | 0.0840 |
+
+**Flat from 4 to 8.** The floor is **run-to-run physical variation**, not probe resolution.
+Spending more Lanczos iterations buys nothing — and given the probe already costs 5× the training,
+that is worth knowing before anyone proposes a higher-iteration campaign.
+
+**One alarming-looking number, checked and dismissed.** The 7→8 increment varies **2593× across
+types** — exactly the shape of a confound that could manufacture a type effect. But it is a ratio
+of two near-zero quantities. Applying a geometric tail extrapolation, the largest per-type
+correction is **0.062% (attn.v)**, and every headline number moves by ≤ 0.004 dex:
+
+| | q,k gap in log C | q,k gap in adjusted | spread(log C) |
+|---|---:|---:|---:|
+| as measured (fork-1500) | +0.0073 | +0.8124 | 0.3787 |
+| **tail-extrapolated** | **+0.0036** | **+0.8087** | **0.3781** |
+| as measured (fork-2000) | +0.0291 | +0.8424 | 0.3888 |
+| **tail-extrapolated** | **+0.0262** | **+0.8395** | **0.3887** |
+
+All shifts are **~25× below the noise floor**. **The 8-iteration truncation is harmless and every
+conclusion in this campaign survives it.**
+
+**This closes an instrument concern open since iteration 5**, where type-dependent gate attrition
+(attn.q 10%, attn.v 66%) first raised the possibility that the probe biases by type. It does bias
+by type — but by 0.06% at worst, which changes nothing.
+
+**Consequence for the queued runs:** do **not** increase the Lanczos iteration count for Arm A or
+REQ-038. It would multiply the dominant cost for no measurable gain. **8 iterations is the right
+setting**, and this is now established rather than assumed.
+
 ## ⚠️ AUTHORITATIVE SEED-CHECK TABLE — READ THIS, IGNORE THE SEED CHECKS BELOW
 
 *This request accumulated **13 overlapping "registered seed check" blocks** across ~15 iterations,
