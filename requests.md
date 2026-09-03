@@ -273,6 +273,71 @@ correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
 
+**=== ITERATION 81: REQ-036 IS A NULL — EQUALIZING CURVATURE HURTS. THE PREMISE IS FALSIFIED ===**
+
+**Jerry delivered REQ-036 (5 arms, n=1/arm, config verified). The per-type LR design does not work,
+and I recommended shipping it in iteration 71. Recording that plainly.**
+
+| arm | rule | val@2750 | vs control |
+|---|---|---:|---:|
+| **a1_control** | **all 1.0** | **3.51052** | **best** |
+| a2_pertype | the per-type rule | 3.51295 | +0.00243 |
+| a4_antirule | 1 / a2 | 3.51515 | +0.00463 |
+| a3_endcap | per-type + end-block cap | 3.51996 | +0.00944 |
+| a5_polar | polar target *(predicted best)* | **3.53460** | **+0.02408 (worst)** |
+
+**Uniform LR beats every intervention.** The arm predicted to win came last, by 120× the ~2×10⁻⁴
+val seed-noise floor.
+
+**The mechanism check is what makes this a real result rather than a failed experiment.** Jerry
+measured per-type curvature spread at step 2250:
+
+| arm | curvature spread | val@2750 |
+|---|---:|---:|
+| a5_polar | **0.1281** (most equalized) | 3.53460 |
+| a3_endcap | 0.1630 | 3.51996 |
+| a2_pertype | 0.1941 | 3.51295 |
+| a1_control | 0.2457 (least equalized) | **3.51052** |
+| a4_antirule | 0.4441 (anti-equalized) | 3.51515 |
+
+**The intervention does exactly what it was designed to do** — a5 equalizes curvature most (0.128 vs
+control's 0.246), a4 anti-equalizes (0.444). **The rule works; the premise behind it is wrong.**
+
+Across the four equalizing arms the relationship is **perfectly monotone in the wrong direction**:
+Spearman **−1.000**, Pearson −0.909, and a perfect inverse ordering arises in **1 of 24** orderings
+by chance — **exact p = 0.042**. More equalization, worse loss, every step of the way.
+
+> **Equalizing per-type equilibrium curvature is not neutral — it is actively harmful, monotonically
+> in the amount of equalization.**
+
+**The rule direction is real but net-harmful.** a2 (rule) beats a4 (anti-rule) by 0.0022, **11× the
+noise floor** — so the per-type ordering derived from C carries genuine signal. But **both lose to
+doing nothing.** The signal is real and the prescription built on it is wrong.
+
+**What I got wrong, and where the error was.** Iteration 71 concluded "ship the per-type design as
+filed," on the reasoning that the boundary correction was second-order next to the per-type
+multipliers. That analysis was correct about the *relative sizes* and irrelevant to the outcome:
+**I never questioned the premise that equal curvature is desirable.** Every band measured what C
+*is*; none tested whether equalizing it *helps*. The campaign characterised a quantity carefully and
+then assumed, without evidence, that flattening it was the goal.
+
+**This does not touch bands 6, 12, 14 or 15.** They describe C's structure, and Arm A confirmed that
+structure on four seeds. REQ-036 tested a *prescription* derived from that structure, and the
+prescription failed. **Description and prescription came apart** — the descriptive account is
+unaffected and the design recommendation is withdrawn.
+
+**Why equalizing might hurt — a hypothesis, explicitly not tested.** Under EoS, a matrix at higher
+equilibrium curvature is taking effectively larger steps relative to its local geometry. The spread
+in C may be the network *allocating* effective step size across matrices, in which case flattening it
+removes an adaptation rather than a defect. **Testing this needs a val-vs-spread sweep, not more
+curvature measurement**, and it is a different experiment from anything in this queue.
+
+**Recommendation to the queue:** **do not build the momentum-kernel or per-layer-LR design on
+curvature equalization.** The n=1/arm caveat is worth noting — but the ≥0.002 gaps are 10×+ the noise
+floor and the ordering is monotone, so a seed replication would sharpen the magnitude, not overturn
+the sign. **REQ-037 (non-LR instrument) remains the useful next run**, since it addresses
+identification in the descriptive account, which is the part that survived.
+
 **=== ITERATION 80: THE q,k EXCESS IS QK-NORM SCALE INVARIANCE — a theorem, tested and passed ===**
 
 *Band 14 (+0.832 ± 0.041 dex, 48/48 block-seed cells) is the campaign's firmest result but its
@@ -1364,7 +1429,7 @@ worth scheduling, and if it is not, the covariate programme they serve is moot.
 
 ## REQ-036: equalized-curvature per-type learning rates (the first design derived from C)
 
-- status: **OPEN — priority 2, unblocked.** Headline arm needs 1 box; both nodes are free.
+- status: **DONE (2026-09-03) — `logs/kmaxwell/req036_equalized_curvature_lr/`.** NULL/directed-negative: uniform control (a1) has the BEST val@2750 (3.51052); every per-type LR arm is worse — a2 +0.0024, a4 +0.0046, a3 +0.0094, **a5 polar +0.024 (the predicted-best is the WORST)**. Curvature check confirms the mechanism IS real: the rules equalize per-type equilibrium curvature exactly as designed (spread a5 0.128 < a3 0.163 < a2 0.194 < control 0.246; a4 anti-equalizes to 0.444) — but **equalization is INVERSELY related to val**, so the premise 'equal per-type curvature is better' is FALSIFIED: equalizing it hurts loss. Config verified correct (a1 all-1.0, a5 per-matrix=type polar mult, official order). n=1/arm (gaps 10x the 2e-4 noise floor). Checkpoint cadence miss (dumped @2250 not 2750) → curvature measured @2250 (equilibrium stable); val@2750 is exact.
   Independent of REQ-035 (uses *measured* C, not predicted), so it does not wait on Arm A.
 - requested: Jack (via Claude analysis session) / 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
@@ -1429,7 +1494,7 @@ asking whether mu does anything LR cannot at fixed `s_eff`; that is REQ-037 if w
 
 ## REQ-037: a NON-learning-rate instrument for the curvature-gradient exponent
 
-- status: **OPEN — priority 3, unblocked.** 1 box / 4 arms / fork@2000; both nodes are free.
+- status: **arms 1-3 DONE (2026-09-03) — `logs/kmaxwell/req037_nonlr_instrument/`.** Batch instrument at fixed LR: curvature responds only WEAKLY to moving the gradient via batch — per-matrix elasticity dlog(curv)/dlog(batch) median 0.075 (mean 0.062, spread [-0.25,0.36]); geomean curvature non-monotonic. Suggests the gradient channel is NOT dominant for the LR->curvature effect (exclusion restriction questionable). **CAVEAT:** batch confounds g-noise with tokens-seen (val monotonic: 0.5x 3.626/1x 3.512/2x 3.421); the CLEAN instrument is **arm 4 (per-matrix grad clip), which is DEFERRED — no clip hook in ebf53cd, needs a new hook.** n=1/arm, noisy. arm2(0.5x) ran eager (mbs<64 compile bug). Read arms 1-3 as a confounded first look; arm 4 is the right test.
   Shares the REQ-026/028/029 fork@2000 machinery, plus per-matrix curvature measurement which
   those runs omitted.
 - requested: Jack (via Claude analysis session) / 2026-09-03 PDT
