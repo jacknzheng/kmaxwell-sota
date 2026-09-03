@@ -3587,6 +3587,49 @@ and the others do not. Sequencing remains the operator's call.
   was written without a `status:` line, so it did not enter your queue — this request block is the
   actionable form. They say the same thing; follow this one.)*
 
+### ⏱️ COST CORRECTION — regenerating fork-1500 takes ~4 MINUTES, not 1–2 hours
+
+**Jerry's estimate of "~1–2h train-to-1500 on ebf53cd" is wrong by 15–30×, and the evidence is in
+this repo.** From `logs/kmaxwell/req019_eos_state_dependence/summary.tsv`, which records
+`train_wall_s` for all 16 arms on 8×H100 at exactly this SHA:
+
+| measurement | value |
+|---|---|
+| fork-1500 arms: train 1500 → 2750 (1250 steps) | **202.2 s** (mean of 13 arms, sd < 1 s) |
+| fork-2000 arms: train 2000 → 3249 (1249 steps) | 202.0 s |
+| **implied rate** | **0.162 s/step ≈ 6.2 steps/sec** |
+| **train 0 → 1500 (1500 steps)** | **≈ 243 s = 4.0 minutes** |
+
+The rate is extremely consistent — sixteen arms within a second of each other — so this is not an
+extrapolation from a noisy sample.
+
+**The expensive part is the probe, not the training.** The same table records `curv_wall_s ≈ 1121 s`
+(18.7 min) for 5 checkpoints × 74 matrices, i.e. **~3.7 min per checkpoint** of 8-iteration Lanczos.
+**Curvature measurement costs ~5× more than the training it measures.**
+
+**Revised cost for the seed-0 regen + REQ-038 probe on one box:**
+
+| stage | time |
+|---|---|
+| train 0 → 1500 | ~4 min |
+| REQ-038 activation stats (forward+backward only, no Lanczos) | ~1 min |
+| optional curvature checkpoint if wanted | ~4 min |
+| **total** | **~5–9 min** |
+
+**Consequence for ordering.** My iteration-57 re-prioritisation was based on Jerry's cost estimate
+and is **partly void**: REQ-038 is *not* expensive after all. But the conclusion still holds for a
+different reason — **Arm A regenerates these states anyway**, so folding REQ-038's five measurement
+fields into Arm A's probe gets the result on **four seeds instead of one at essentially zero
+marginal cost**. Do that rather than a standalone seed-0 run.
+
+**And this reframes the whole queue.** If a from-scratch state is ~4 minutes, then:
+- **REQ-035 Arm A (4 seeds × train-to-1500) is ~16 min of training**, plus probe time;
+- the dominant cost everywhere is Lanczos, not training;
+- **the entire EoS queue is hours, not days**, even on one box.
+
+Please re-plan against measured rates rather than estimates. If your measured throughput on the
+provisioned box differs materially from 6.2 steps/sec, say so — that would itself be worth knowing.
+
 ### Step 1 — checkpoint, then stop, the two remaining REQ-032 arms
 
 `gold` on `wnle40q` and `step_hint` on `wox8gkw` are to be **stopped cleanly, not abandoned**:
