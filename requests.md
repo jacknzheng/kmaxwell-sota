@@ -258,7 +258,7 @@ measured value so a seed result can be compared directly.
 | **7** | **the split is residual-stream position, not shape** (iteration 65) | **slope(attn.proj + mlp.proj) − slope(other four) ≥ +1.5** in ≥3 of 4 seeds, each proj type individually ≥ +2.0 vs internal | +2.173 / +2.183, p < 0.0001 |
 | **8** | **the cross-sectional split is bias, not physics** (iter. 67) | **Wald-ratio gap (residual − internal) ≤ +1.0** and **< half the cross-sectional slope gap** in ≥3 of 4 seeds; both first-stage F > 100 | gap +0.374 / +0.688 vs cross-sectional +2.17 / +2.18 |
 | **9** | **only attn.proj's offset is resolved** (iter. 68–69, corrected) | **attn.proj lowest** of the six offsets in ≥3 of 4 seeds and **≥0.25 dex below the other five**; **|residual-writer − internal| offset gap < 0.20 dex**; the other four adjacent gaps need NOT resolve | gap −0.454 / −0.430, p ≤ 0.0003 |
-| **10** | **C has a U-shape in depth** (iter. 69) | **F(2,63) > 10** for adding a common quadratic-in-depth term to type+gradient; **attn.proj quadratic coefficient positive with t > 3** — in ≥3 of 4 seeds | F = 28.98 / 41.51; attn.proj t = 5.70 / 6.61 |
+| **10** | **C is lifted at the boundary layers** (iter. 69–70, corrected) | **F(2,63) > 10** for a boundary term over type+gradient; **edge coefficient positive with t > 4**; **both first and last layers lifted** (each ≥ +0.10 dex over the interior); **interior minimum at the middle layers** — in ≥3 of 4 seeds | edge2 t = 7.28 / 8.78; layer 0 +0.26/+0.44, layer 11 +0.24/+0.22 dex |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
 exponent differs systematically by type — **~3.8 for the two projection matrices, ~0.9–1.4 for the
@@ -267,6 +267,68 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 70: BAND 10 ATTACKED — it survives, but it is a BOUNDARY effect, not a smooth U ===**
+
+*Band 10 was the largest effect in the campaign, so this iteration tried to break it. It survives two
+attacks, fails a third, and the failure changes its functional form.*
+
+**Attack 1 — is it the gradient in disguise? NO.** If log g were itself U-shaped in depth, the depth
+term would be re-expressing the gradient:
+
+| | depth-quadratic coefficient | t |
+|---|---:|---:|
+| **log g** | −0.00065 / −0.00088 | **−0.66 / −0.85** (nothing) |
+| **log C** | +0.00911 / +0.01260 | **+2.88 / +3.99** |
+
+**The gradient has no depth curvature; C has it strongly.** Not an artifact of the gradient.
+
+**Attack 2 — is it driven by single layers? NO.** Leave-one-layer-out gives F between 21.83 and
+29.74 (f1500) and 26.65 and 44.82 (f2000). Robust.
+
+**Attack 3 — is it smooth curvature? NO, and this is the correction.** Dropping two layers at each
+end collapses F from **28.98 → 4.65** and **41.51 → 3.38**. A genuine quadratic would survive
+trimming; this does not. **The effect lives at the boundary, and the interior is flat.**
+
+**The functional form is NOT identified by this data,** and I am recording that rather than picking a
+winner. On top of type + gradient:
+
+| term | AIC f1500 | AIC f2000 | t |
+|---|---:|---:|---:|
+| smooth quadratic | **−270.92** ← best | −239.90 | +7.56 / +8.19 |
+| log distance-from-edge | −270.10 | −243.52 | −7.47 / −8.60 |
+| distance-from-edge | −270.02 | −238.42 | −7.46 / −8.03 |
+| 2-layer edge shell | −268.42 | **−245.17** ← best | +7.28 / +8.78 |
+
+**Different forks select different winners and all four sit within ~3 AIC.** They agree on the
+*substance* — edge layers have higher C, t = 7.3–8.8 — and disagree on the curve. Do not report a
+quadratic as established.
+
+**The residual profile after type + gradient (this is the real object):**
+
+```
+ layer:    0      1      2      3      4      5      6      7      8      9     10     11     12
+f1500:  +.255  +.117  +.033  -.075  -.162  -.068  -.204  -.197  -.073  -.019  -.057  +.236  +.118
+f2000:  +.436  +.237  -.047  -.067  -.166  -.117  -.254  -.215  -.140  -.051  -.080  +.218  +.115
+```
+
+**Both ends are lifted** — layer 0 at +0.26/+0.44 and layer 11 at +0.24/+0.22 — against a flat,
+negative interior with a clean minimum at **layers 6–7** (−0.20/−0.25). The 2-layer both-ends shell
+beats a first-layers-only term decisively (AIC −268.42 vs −241.97; −245.17 vs −227.65).
+
+*(Correction within this iteration: an intermediate test contrasted "first layer" against "last
+layer" using layer 12 as the last and found the last-layer term unresolved at t≈1.5. The network has
+13 layer slots, 0–12, and the lift sits at layer 11. The both-ends form is correct.)*
+
+**Amended band 10** from "U-shape in depth" to "**C is lifted at the boundary layers**", with the
+form left open and both ends required to lift. The magnitude is ~0.25–0.44 dex against a ~0.10 dex
+noise floor.
+
+**Why this matters for REQ-036.** The per-type LR design assumes C is a per-type constant. Band 10
+says the largest structural term is **per-depth**, not per-type, and is concentrated at the first and
+last layers. If Arm A confirms it, a per-type-only prescription is leaving the biggest effect on the
+table — a per-type × boundary rule would fit the data better. **This is a finding about the shipped
+design, and it should be read before REQ-036's results are interpreted.**
 
 **=== ITERATION 69: THE OFFSETS ARE MOSTLY NOT RESOLVED — and what is really there is a U-SHAPE IN DEPTH ===**
 
