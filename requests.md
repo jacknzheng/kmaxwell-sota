@@ -262,6 +262,7 @@ measured value so a seed result can be compared directly.
 | **11** | **the assembled model generalises** (iter. 72) | **leave-one-layer-out rmse ≤ 0.20 dex** and **cross-fork rmse ≤ 0.20 dex** for `type + two-slope gradient + layer-0 term`, versus ~0.38 dex for C's own spread | LOLO 0.138 / 0.164; cross-fork 0.165 / 0.140 dex |
 | **12** | **the six type offsets reduce to two binaries + weight norm** (iter. 73–75) | **LOLO rmse within 0.02 dex of the 6-free-offset model with 7 params**; **residual-writer ≈ −0.47 dex**, **mlp.proj ≈ −0.65 dex** — same signs in every seed. **Weight norm is a cross-sectional correlate only — no causal weight-norm term** | LOLO 0.168 vs 0.162 / 0.209 vs 0.217; horse-race t = 0.3 / 1.2 |
 | **13** | **the causal exponent is exactly 2** (iter. 76) | **2.000 inside the 95% CI** by both OLS-with-matrix-fixed-effects and the IV Wald ratio, in every seed; **per-type exponent spread must NOT clear its permutation null** (p > 0.05) | OLS +2.094 CI [1.843, 2.310], IV +2.076 CI [1.900, 2.251]; per-type p = 0.104 / 0.003 |
+| **14** | **q,k carry a large C excess in λ/g²** (iter. 77) | **mean log(λ/g²) for attn.q + attn.k exceeds the other four by ≥ +0.6 dex**, and **both q and k exceed all four others in ≥10 of 12 blocks**, in every seed | gap +0.808 / +0.842 dex, p < 10⁻⁵, 12/12 blocks, noise floor 0.06–0.09 dex |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
 exponent differs systematically by type — **~3.8 for the two projection matrices, ~0.9–1.4 for the
@@ -270,6 +271,74 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 77: WITH THE EXPONENT FIXED AT 2, THE q,k GAP REAPPEARS — IN C ===**
+
+*Band 13 fixed the exponent at exactly 2 by derivation. That licenses defining **C ≡ λ/g² with no
+fitting at all**. Re-deriving the account on that footing overturns this campaign's largest
+retraction — and shows the retraction and the new result are the same fact.*
+
+**Dividing out g² makes the type structure BIGGER, not smaller:**
+
+| | f1500 | f2000 |
+|---|---:|---:|
+| sd of log λ across matrices | 0.391 | 0.404 |
+| **sd of log(λ/g²) across matrices** | **0.444** | **0.477** |
+| **spread across the six types** | **1.036 dex** | **1.085 dex** |
+
+And the ordering is completely different from the fitted-intercept C. **attn.q and attn.k are now the
+two highest types**, not attn.proj:
+
+| type | log(λ/g²) f1500 | f2000 |
+|---|---:|---:|
+| **attn.q** | **−2.865** | **−2.829** |
+| **attn.k** | **−3.038** | **−2.996** |
+| mlp.fc | −3.618 | −3.626 |
+| attn.v | −3.667 | −3.653 |
+| attn.proj | −3.852 | −3.824 |
+| mlp.proj | −3.901 | −3.914 |
+
+**The gap is the largest and cleanest structural effect in the campaign:**
+
+| fork | q,k vs others | permutation null | p | blocks where both q,k exceed all four others |
+|---|---:|---:|---:|---:|
+| 1500 | **+0.808 dex** | +0.001 ± 0.110 | **< 10⁻⁵** | **12 / 12** |
+| 2000 | **+0.842 dex** | −0.002 ± 0.119 | **< 10⁻⁵** | **12 / 12** |
+
+Against a duplicate-arm noise floor of **0.060–0.094 dex on this same object** — the gap is **~9× the
+noise**, with perfect block-level separation.
+
+**This overturns iteration 52, the campaign's biggest retraction — and both were right.** Iteration
+52 concluded "the q,k gap is in the GRADIENT (−0.40 dex), not in C (+0.007 dex)", and seven
+mechanisms hunted for it were abandoned. The arithmetic reconciles exactly:
+
+```
+   q,k minus others, log λ        = +0.016 dex
+   q,k minus others, log g        = −0.403 dex
+   +0.016 − 2 × (−0.403)          = +0.823 dex        (fork-2000: +0.022 − 2×(−0.407) = +0.836)
+```
+
+**q,k have a 0.40 dex gradient deficit, which under λ ∝ C·g² should have depressed their curvature by
+0.81 dex. It fell by 0.016.** That entire shortfall is a C excess: **q,k hold ~0.82 dex more curvature
+than their gradients justify.**
+
+**What was actually wrong in iteration 52 was the *object*, not the arithmetic.** It measured C as a
+per-matrix **fitted intercept**, and the fitted slope (+1.08/+0.51 for q,k versus +2.24/+2.08 for the
+others — noted at the time) absorbed the very gap being searched for. A free slope will always soak up
+a level difference that is correlated with the predictor. **With the exponent fixed at 2 by
+derivation rather than by fitting, the gap has nowhere to hide.**
+
+**This is the general lesson, and it is worth more than the specific result:** several negatives in
+this campaign were measured on the fitted-intercept C and may be similarly compromised. **Bands 6, 9,
+10 and 12 are all defined on that object.** They are not withdrawn — they were correctly computed —
+but each should be re-derived on λ/g² before being treated as settled. That is now the highest-value
+analysis remaining, and it costs no compute.
+
+**Registered as band 14.** *Caveat:* q and k are the two QK-normed matrices, so this gap is
+confounded with QK-norm exactly as the residual-writer/second-in-sub-block pair was — a mechanism
+cannot be assigned from this data. **REQ-038's `|a|`/`|d|` fields are the direct test**, and the
+"single number to check first" already recorded at the top of this queue — the |d| ratio for q,k
+versus the others — now has a specific quantitative target: it must account for ~0.82 dex.
 
 **=== ITERATION 76: THE CAUSAL EXPONENT IS EXACTLY 2 — a derivable law, not a fitted number ===**
 
