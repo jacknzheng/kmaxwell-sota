@@ -795,6 +795,56 @@ out-of-sample (0.176 dex vs 0.093), so it does not change REQ-036's design.
     matrices in every seed). This distinguishes a genuine depth-position field from an
     endpoint artifact, and is the version worth trusting.
 
+**ITERATION 9 — the boundary term does NOT improve the LR rule, and the reason generalises.**
+
+*Direct test of adding the boundary correction to REQ-036's prescription*, scored by how well
+each rule transfers between the two fork states (SNR = prescription spread / disagreement):
+
+| prescription | spread | disagreement | corr | **SNR** |
+|---|---:|---:|---:|---:|
+| per-matrix | 0.323 | 0.0261 | +0.877 | **12.4** |
+| **per-type (REQ-036 as filed)** | 0.191 | 0.0164 | +0.998 | **11.6** |
+| per-type + boundary term | 0.231 | 0.0314 | +0.982 | **7.4** |
+
+**Adding the boundary term makes the rule worse — SNR 11.6 → 7.4, disagreement nearly doubles.
+REQ-036 stands exactly as filed; no change.** The fitted boundary correction is also
+non-monotone in C (+0.329, −0.125, +0.033, +0.006, −0.117, −0.126 dex), unlike its clean
+monotone profile in the residual — which is the diagnostic.
+
+*Why — and this is the third instance of one mechanism.* The boundary field lives in the
+offset b, not in C:
+
+| within-type residual of | corr with d_edge (f1500) | (f2000) |
+|---|---:|---:|
+| log C | −0.331 | −0.427 |
+| log g | +0.087 | +0.110 |
+| **offset b = log C − 2 log g** | **−0.606** | **−0.673** |
+
+`log g` carries an **opposite-signed** edge profile, so in C = 2 log g + b the two partly
+cancel. Per-edge means at fork-1500 make it explicit: 2·log g residual runs +0.069, −0.166,
++0.015, +0.047, +0.013, +0.022 while b runs +0.264, +0.040, −0.003, −0.052, −0.122, −0.126;
+their sum is the small non-monotone remainder that is log C.
+
+**GENERAL PRINCIPLE, now observed three independent times.** C is systematically the small
+remainder of two larger, oppositely-structured quantities:
+1. **by type** — g and R both ~85% type-determined (eta² 0.846, 0.814), C only 0.287;
+2. **by slope** — within-type slope +2.12 vs pooled +0.74 (Simpson attenuation);
+3. **by position** — boundary field strong in b (−0.6/−0.7), weak in C (−0.33/−0.43).
+
+Every structure discovered in this campaign has been strong in an *ingredient* of C and weak
+in C itself. **This is why C resists prediction, and it is a property of the quantity, not a
+deficiency of the search.** Practical consequence, now demonstrated rather than argued: adding
+a genuinely real, replicated structural covariate to the LR rule *degrades* it.
+
+**Seed criterion 5, revised to test the mechanism rather than just the effect:**
+5. corr(d_edge, within-type residual of **b**) = −0.6 ± 0.2 in every seed *(the field itself)*;
+5b. it must survive excluding blocks 0 and 11 (corr ≤ −0.3 on interior matrices);
+5c. **corr(d_edge, within-type residual of log g) must be small and POSITIVE (0.0 to +0.3)**
+    in every seed — this is the cancellation, and it is what makes the field invisible in C.
+    If 5 and 5b hold but 5c comes out negative, the two structures would *add* rather than
+    cancel in that seed, C would become boundary-predictable, and the general principle above
+    would be falsified.
+
 **So the question sharpens to: what sets S_m?** lam_top is not special — it is S_m times a
 fixed per-matrix shape constant. The between-layer difference in C *is* the between-layer
 difference in overall Hessian scale. Arm A is unchanged and remains the right next step;
