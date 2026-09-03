@@ -1,0 +1,14 @@
+run_id	batch_label	batch_tokens	microbatch_sequences	skip_batches	kernel	optimizer
+eos_shared_base	b1x_base	524288	64	0	base(muon-thru-1000)	bimaxwell_muon
+req033_b0.25x_A_s0	b0.25x	131072	16	4000	A	muon
+req033_b0.25x_B_s0	b0.25x	131072	16	4000	B	bimaxwell_muon
+req033_b0.25x_C_s0	b0.25x	131072	16	4000	C	annealed_weights_muon
+req033_b0.25x_D_s0	b0.25x	131072	16	4000	D	annealed_weights_muon
+req033_b0.5x_A_s0	b0.5x	262144	32	2000	A	muon
+req033_b0.5x_B_s0	b0.5x	262144	32	2000	B	bimaxwell_muon
+req033_b0.5x_C_s0	b0.5x	262144	32	2000	C	annealed_weights_muon
+req033_b0.5x_D_s0	b0.5x	262144	32	2000	D	annealed_weights_muon
+req033_b2x_A_s0	b2x	1048576	64	500	A	muon
+req033_b2x_B_s0	b2x	1048576	64	500	B	bimaxwell_muon
+req033_b2x_C_s0	b2x	1048576	64	500	C	annealed_weights_muon
+req033_b2x_D_s0	b2x	1048576	64	500	D	annealed_weights_muon
