@@ -891,6 +891,49 @@ QK-vs-rest split specifically.
 **Zero-cost addition to Arm A:** report the adjusted level against log(Muon group rank) per seed;
 the slope must be **−1.0 ± 0.3** in every seed for the rank reading to hold.
 
+**=== ITERATION 47: PROBE AUDIT — a depth-axis mislabelling found; the boundary field survives ===**
+
+*Two mechanisms died in iterations 45–46 on errors traceable to not checking what the probe
+measures. Before proposing anything further, I audited the probe's own labels against `ebf53cd`.*
+
+**The mislabelling.** The EoS trainer defines `num_attn_layers = num_layers - 1` and skips
+attention at layer 6 (`attn_weights[i - (i > 6)]`, and the comment "skip on layer 6" is present in
+the pinned commit itself). So there are **11 attention layers**. But the probe reports **12
+attention blocks including block 6**, whose curvature is entirely normal (z = +1.14 / +0.05 versus
+the other eleven — not padding, not degenerate).
+
+**Therefore the probe's `block` index is a POSITION IN THE PARAMETER BANK, not a network layer.**
+For attention matrices the true layer is `slot` for slot < 6 and `slot + 1` for slot ≥ 6. Every
+depth-indexed result in iterations 7–25 used the bank slot as if it were network depth.
+
+**Re-testing the boundary field with the corrected index:**
+
+| index | fork-1500 block-level corr | fork-2000 | perm p |
+|---|---:|---:|---:|
+| bank slot (as used in iters 7–25) | −0.893 | −0.878 | < 0.0001 |
+| **true network layer (corrected)** | **−0.912** | **−0.891** | **< 0.0001** |
+
+**The finding survives and slightly strengthens.** The boundary field is not an artifact of the
+mislabelling — correcting the axis improves it at both forks. Matrix-level correlations are
+essentially unchanged (−0.606 → −0.606, −0.673 → −0.678).
+
+**Why this matters even though nothing changed.** This was a real risk: a mechanism built on a
+misaligned depth axis would have been unfalsifiable from inside the analysis, and two of the last
+three mechanisms died on exactly this class of error (iteration 46: the probe measures 768×768
+matrices while Muon updates 128×768 groups). **The boundary result is now verified against the
+actual architecture rather than an assumed one**, which it never was before iteration 44.
+
+**Two corrections to the record for anyone reading the earlier iterations:**
+1. Iteration 8 tested "is block 6 an outlier?" as a check on whether the layer-6 attention skip
+   confounded the boundary field, and concluded it did not. **That conclusion stands, but the
+   reasoning was luckier than it looked** — block 6 in the probe is not network layer 6.
+2. All depth-indexed results should be read as **bank-slot indexed**. For MLP matrices slot =
+   layer (mlp_bank has all 12), so only attention matrices at slots ≥ 6 are shifted.
+
+**Registered addition to Arm A (zero cost):** report the matrix-name-to-network-layer mapping
+explicitly in the output JSON. **This campaign spent 40 iterations without knowing whether its
+depth axis was correct**, and the fix is one field in the probe.
+
 **=== ITERATION 46: THE RANK ANALYSIS IS WITHDRAWN — IT TESTED THE WRONG OBJECT ===**
 
 *Iteration 45 proposed Muon group rank as a mechanism, with a slope of −1.044/−1.083 on
