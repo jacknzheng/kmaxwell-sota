@@ -347,6 +347,69 @@ All four arms reach step 500 (or documented stop after one resume); path A or B 
   and Jerry (your live instruction). Please surface the conflict to Jerry rather than
   resolving it on my say-so.
 
+**=== CONSOLIDATED STATE OF KNOWLEDGE (2026-09-03, after 13 analysis iterations) ===**
+
+*Read this section first; the iteration-by-iteration record below is kept for provenance but
+contains superseded claims. Every number here was re-derived from scratch in a final
+verification pass — all seven checks passed with no discrepancies.*
+
+**ESTABLISHED (re-derived independently, replicated across two fork states):**
+1. **The noise floor is ~0.10 dex**, from duplicate arms at identical fork/s/age (rms 0.118 and
+   0.084). Not the 0.030 dex median quoted early on — the distribution is heavy-tailed.
+2. **C spreads 0.379 dex (2.4x) across the 72 matrices**, with a per-matrix power law
+   `log10 lam = logC − k log10 s`, k ≈ 1.39 ± 0.45.
+3. **Three slopes of d log C / d log g**, using only lam and g, no derived quantities:
+   within-type **+2.124**, between-type **+0.375**, pooled **+0.742**.
+4. **The response ratio is ~2.0**: pooled 2SLS +2.069 / +2.095 across the two forks, robust to
+   dropping weak instruments (+2.05 at F≥10 → +2.23 at F≥50). Placebo on
+   `curvature_along_polar` gives +1.80 — consistent with whole-Hessian (Gauss-Newton) rescaling.
+5. **A boundary field**: corr(d_edge, within-type residual) = **−0.606 / −0.673**, symmetric
+   (block 0 ≈ block 11), surviving removal of both end blocks (−0.451 / −0.539 on the 60
+   interior matrices), and replicating **across two different experimental designs at +0.937**.
+6. **The instrument does not apply the geometric-tail correction** — committed `top_eigenvalue`
+   is the raw Ritz value (median tail 0.024); `residual_tail` is diagnostic only.
+7. **REQ-036's per-type LR rule is sound**: transfer SNR 13.1, per-type prescription correlating
+   **+0.9979** across independent states.
+
+**NOT ESTABLISHED — stated as such:**
+- The **between-type slope rests on only 6 type means**; its bootstrap CI is wide
+  ([−0.94, +1.90]) and excludes 2.0 but does not pin the value. n=4 seeds takes this to 24
+  type-means and settles it.
+- The **exclusion restriction is untested and probably false**. The response ratio is causal
+  only if the LR moves lam exclusively through g. Sensitivity: a true exponent of 1.0 requires
+  52% of the LR's curvature effect to bypass the gradient. **REQ-037 tests this; seeds cannot.**
+- Whether the per-matrix residual (~0.20 dex, reproducible at corr +0.931) is **architectural or
+  learned** — the single question Arm A decides.
+
+**RETRACTED — four claims, all the same failure mode:**
+- *anisotropy* `A = lam_top/lam_grad`, *C_grad*, *spectral scale*, and the *offset b* each
+  "explained" C brilliantly. All four are **algebraically derived from lam_top itself**;
+  `b ≡ −2 log R` at corr +0.9985. **Rule: any candidate predictor built from the same Lanczos
+  tridiagonal as lam_top is circular. Check |corr| against all previously-defined quantities
+  before claiming novelty — >0.99 means it is a rename.**
+- `curvature_along_gradient` is **exactly the first Krylov coefficient alpha_1** (Lanczos is
+  started from the gradient), so the "C_grad captures 77%" result measured the probe's start
+  vector, not gradient physics.
+- The **"cancellation" argument from corr(log g, log R) = +0.66 is withdrawn**: its mechanical
+  null is +0.782, so the observed value is *below* what the artifact alone predicts.
+- **"eta²(b) ≫ eta²(C) proves cancellation" is withdrawn** — simulation shows eta²(b) is high
+  whenever eta²(g) is high, by construction, regardless of C.
+
+**THE ANSWER, as far as the data supports it.** Within a matrix type, gradient scale sets
+curvature at a Gauss-Newton-like exponent of ~2. Between types, that relationship largely
+disappears (+0.375), so pooled regressions estimate a badly attenuated slope — which is why
+every covariate model in this campaign failed out-of-sample and why **no model beats simply
+re-measuring C** (best 0.246 dex vs 0.090 dex). Adding genuinely real structure — the boundary
+field — *degrades* the LR rule (SNR 11.6 → 7.4). **C is best treated as a measured per-matrix
+quantity, not a predicted one**, which is exactly REQ-036's design.
+
+**Queue note (2026-09-03 ~02:40Z):** four requests are open (034/035/036/037) behind a ≤2-node
+ceiling with ~20–26h before the first node frees. **No further requests will be filed from
+analysis** — offline work has been exhausted (verified: the exclusion restriction cannot be
+tested from committed data via any of three routes). Priority is the operator's call; if only
+one runs, REQ-035 Arm A and REQ-037 answer different load-bearing questions and REQ-036 is
+independent of both.
+
 **Background — what the committed data already settles (no new compute).** Re-analysis of
 the REQ-019/022 per-matrix JSONs (72 Muon matrices, 11-point s ladder, forks 1500 and 2000):
 
