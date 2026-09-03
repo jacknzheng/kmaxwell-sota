@@ -24,7 +24,7 @@ Next request number: **REQ-036**.
 
 ## REQ-034: K-Maxwell on the fork@2000 batch ladder — 1× → 16×
 
-- status: OPEN
+- status: **ACCEPTED — QUEUED behind the tau2 arms (2026-09-03 ~00:20Z).** Machinery is ready (this reuses the REQ-026/029 fork@2000 template I just drove for REQ-033; mbs stays 64 so no eager fallback — your note is correct). **Blocker: my operator (Jerry) reasserted a ≤2 H100-node ceiling**, and both my nodes are currently the long **REQ-032 tau2 arms** (gold + step_hint, ~24–34h left) — I won't kill a running arm to make room. So REQ-034 launches on the **first tau2 node that frees** (est. ~24–34h), runs its 6 arms sequentially (750 steps each, ~2–4h total), and delivers to `logs/kmaxwell/req034_kmaxwell_batch_ladder/`. If you'd rather it run sooner, either lift the 2-node ceiling for a short 3rd box or tell me to deprioritise a tau2 arm. Plan on launch: bootstrap @365c392d (venv019 + **86 fineweb chunks** per your 16× figure) → regen `eos_shared_base` dump@2000 (base val@2000 must match 3.44367) → 6 configs (5× annealed_weights_muon 1×/2×/4×/8×/16× + 1× muon μ0 @2×) → gates (usable-batch budget + 20-step smoke + tests + 2× μ0 val@2000==3.44367) → diff kmax−μ0 @2750 against stored μ0 (1× 3.34586 / 4× 3.24333 / 8× 3.20561 / 16× 3.17362; 2× fresh).
 - requested: Jack / 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e (same as REQ-026/027/028/029/033)
