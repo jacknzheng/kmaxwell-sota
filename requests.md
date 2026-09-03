@@ -19,7 +19,7 @@ four are active. Run independent arms in parallel within that cap. Completed
 REQ logs live under `logs/async_sdpo_req024/` and `logs/async_sdpo_req031/` —
 do not keep those request blocks in this queue.
 
-Next request number: **REQ-038**.
+Next request number: **REQ-039**.
 
 
 ## REQ-034: K-Maxwell on the fork@2000 batch ladder — 1× → 16×
@@ -2246,6 +2246,101 @@ if that is not cheap.
 
 ### Artifacts
 `logs/kmaxwell/req037_nonlr_instrument/`
+
+## REQ-038: per-type activation and backward statistics — the q/k/v probe
+
+- status: OPEN
+- requested: Jack (via Claude analysis session) / 2026-09-03 PDT
+- repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
+- pinned SHA: `ebf53cd` (same trainer + probe as REQ-019/022/023)
+- **cost: ONE forward+backward pass on an EXISTING checkpoint. No training. Minutes, not
+  hours.** This is the cheapest request in the queue by a wide margin and needs no fresh fork.
+- **node budget: whatever is in force.** I am the requester, not your operator; run it in the
+  gaps of any other job.
+
+**Why this is now the highest-value measurement available.** Iteration 32 scored the campaign's
+answer as a variance budget of the 0.379 dex spread in log C:
+
+| contribution | share |
+|---|---:|
+| gradient scale (lam ∝ g², Gauss-Newton) | 21.8% |
+| **matrix type, beyond gradient** | **53.3%** |
+| end-block position | 8.2% |
+| writer-role interaction | 1.9% |
+| unexplained | 14.8% |
+
+**The largest term is a label, not a mechanism**, and it is irreducible to anything computable
+from committed data: against the type label's R² = 0.751, the best architectural descriptor set
+(writer role + attn/mlp + fan-in + fan-out) reaches 0.484 and the best measured set (polar
+curvature + spectral gap + negative-eigenvalue fraction) reaches 0.505.
+
+**Iteration 33 localised it precisely, and the result is sharp.** Taking the gradient-adjusted
+level `log C − 2 log g` (which removes the one component we *do* understand):
+
+| type | adjusted level | vs attn.q |
+|---|---:|---:|
+| attn.q | −2.855 | 0.000 |
+| attn.k | −3.026 | −0.171 |
+| **attn.v** | **−3.666** | **−0.812** |
+| mlp.fc | −3.605 | −0.750 |
+| attn.proj | −3.842 | −0.987 |
+| mlp.proj | −3.898 | −1.044 |
+
+**q, k and v span 0.428 dex — 98% of the entire between-type spread — despite being identical in
+shape (768×768), identical in input (the same residual vector), and identical in block position.**
+
+And the ordering is essentially deterministic:
+
+| | v < k < q holds in | binomial p (chance 1/6) |
+|---|---:|---:|
+| fork-1500 | **11 of 12 blocks** | **2.8 × 10⁻⁸** |
+| fork-2000 | **12 of 12 blocks** | **4.6 × 10⁻¹⁰** |
+
+Two independent states, twelve independent blocks. **This is not noise and it is not
+architecture-as-shape.** The only remaining difference between q, k and v is *how each is used
+downstream*: q and k enter a bilinear inner product (so their Hessians carry each other's scale),
+while v passes through a linear mixing weighted by attention probabilities. **No committed
+measurement captures that**, which is exactly why 53% of the variance is unexplained.
+
+### What to measure — one forward+backward pass, per Muon matrix
+
+At a single existing checkpoint (any of REQ-019's fork-1500 arms; s=1.00 preferred), record per
+matrix:
+1. **input activation second moment**: RMS and Frobenius norm of the matrix's input tensor `a`;
+2. **output-gradient second moment**: RMS and Frobenius norm of the backward tensor `d`;
+3. **effective rank of both**: participation ratio of the singular value spectrum of `a` and `d`;
+4. **for attention specifically**: the attention-probability entropy per head, and the RMS of the
+   q·k logits — the quantity that distinguishes q/k from v mechanically;
+5. token count and batch used, so the moments are normalisable.
+
+Fields 1–3 are generic; field 4 is the discriminating one.
+
+### Registered predictions, bands fixed in advance
+
+- **P1.** The gradient identity `|grad| ≈ |d| · |a|` must hold per matrix to within 20% —
+  a correctness check on the probe itself. If it fails, the other numbers are not interpretable.
+- **P2.** **q and k have near-identical `|a|` (within 5%, they read the same tensor) but differ in
+  `|d|` by ≥ 15%.** If instead their `|d|` matches too, the q/k difference is not in the backward
+  pass and the bilinear explanation fails.
+- **P3.** **v's `|d|` differs from q/k's by ≥ 30%**, consistent with its 0.81 dex adjusted-level
+  gap being the largest of the three.
+- **P4.** Adding `|a|`, `|d|` and the two effective ranks as regressors to the model
+  `log C ~ log g + …` **raises R² from 0.218 (gradient only) to ≥ 0.60**. If it does not reach
+  0.60, the activation/backward moments do **not** explain the type effect either, and the 53%
+  should be reported as irreducible in this architecture — a negative result worth having and one
+  that would close the campaign's central question rather than leave it open.
+
+### Success criteria
+- One JSON per matrix with fields 1–5 plus the existing `gradient_block_norm` for the P1 check.
+- `summary.tsv` with the per-type means of every recorded quantity.
+- The P4 regression run and reported against the 0.60 band, whichever way it falls.
+
+### Artifacts
+`logs/kmaxwell/req038_activation_probe/`
+
+**Priority note for the operator, offered not asserted:** this targets the 53% term; REQ-036's LR
+arms target the 8% and the measurable parts. If a node frees for a short window, this fits in it
+and the others do not. Sequencing remains the operator's call.
 
 ## Template
 
