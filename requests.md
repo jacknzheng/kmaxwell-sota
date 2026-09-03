@@ -274,6 +274,60 @@ correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
 
+**=== ITERATION 84: REGISTERED NEGATIVE — C's type structure is NOT a units artifact ===**
+
+*Iteration 83 left the question "what is C restored **to**?". Band 15 answered it for q,k: scale
+invariance pins `λ/g²` using ‖W‖ as the natural scale. The obvious generalisation is that every
+matrix has some pinned dimensionless combination, and C's type differences are just the residue of
+choosing the wrong normalisation. **Tested exhaustively. It is false.***
+
+**First, a guessed search over seven natural combinations of λ, g, ‖W‖, fan-in and fan-out:**
+
+| candidate | type spread (f1500) | f2000 |
+|---|---:|---:|
+| λ‖W‖²/g² | **0.9858** | **0.9676** |
+| log C = λ/g² *(current)* | 1.0352 | 1.0418 |
+| λ‖W‖² | 1.0782 | 1.0541 |
+| λ/g²·(fan_in/fan_out) | 1.2960 | 1.3506 |
+| λ‖W‖²/(g²·fan_in) | 1.5272 | 1.4910 |
+
+The best candidate beats plain C by **0.05 dex out of ~1.0 — a 5% reduction**, nothing like the
+collapse an invariant would produce. Every combination involving fan-in or fan-out is **worse**.
+
+**Then the search done properly — solving for the exponents instead of guessing them.** Minimising
+the across-type spread of `log λ − a·log g − b·log‖W‖` over the whole (a, b) plane:
+
+| fork | optimum | **best achievable spread** | vs noise floor |
+|---|---|---:|---:|
+| 1500 | a = +0.35, b = +0.90 | **0.5697 dex** | **~6×** |
+| 2000 | a = +0.30, b = +0.75 | **0.5656 dex** | **~6×** |
+
+**The best any power law can do leaves the type spread at ~0.57 dex, six times the ~0.10 dex noise
+floor.** For reference, raw log λ alone gives 0.68 — so the entire two-parameter optimisation buys
+only 0.11 dex.
+
+> **No power-law combination of curvature, gradient and weight norm is invariant across matrix types.
+> C's type structure is a real physical difference, not an artifact of the units it is measured in.**
+
+**Two further reasons the optimum is not a law even on its own terms:** the fitted gradient exponent
+is **a ≈ +0.3**, nowhere near the causally-established 2 (band 13) — it is a variance-minimising
+compromise, not a physical relation; and it does not reproduce across forks as a *mechanism* would,
+drifting 0.35 → 0.30 and 0.90 → 0.75 while the genuine invariants in this campaign (the q,k gap
++0.832 ± 0.041, band 12's coefficients) reproduce far more tightly.
+
+**Why this negative is worth its place.** It closes off the most attractive remaining "clean theory"
+route — that C's 1-dex type spread would dissolve under the right normalisation and leave a single
+universal constant. **It will not.** The account established across bands 6, 12, 14, 15 and 16 —
+three structural binaries over a derived `g²` law, actively restored by the network — **is the
+structure, not an approximation to something tidier.**
+
+**Consequence for the campaign's stated goal.** The remaining route to a mechanism is *not* further
+algebra on the committed observables; it is **measurement of quantities not yet recorded**. Band 15's
+scale-invariance argument is the one mechanism that has made a numerical prediction and passed, and
+it needs REQ-041's weight norms to be seed-checked. **REQ-038's `|a|`/`|d|` fields and REQ-041's
+weight norms remain the two measurements that would complete the account** — and after this
+iteration, they are the *only* ones with a clear path to it.
+
 **=== ITERATION 83: RESTORATION IS ACTIVE, NOT INSENSITIVITY — the sharp test using REQ-036's own arms ===**
 
 *Band 16 showed C's pattern survives a **global** LR change. That is weaker than it sounds: uniform
