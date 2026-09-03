@@ -509,6 +509,81 @@ prediction that Arm A can test at no extra cost, since it already varies s per s
 This is the highest-value single number Arm A can return, and it requires only that each
 seed's arms record `gradient_block_norm` alongside `top_eigenvalue` — which they already do.
 
+**THE MECHANISM (same session) — C is a near-cancellation, which is why every covariate
+model failed.** Combining the causally-verified exponent with a variance decomposition gives
+an exact and complete account.
+
+Start from the identity implied by the Gauss-Newton result (exponent 2 verified causally,
+CI [1.90, 2.11]):
+
+```
+log C = 2 log g − 2 log R          where R = g / sqrt(lam)
+```
+
+Decomposing the cross-matrix variance (n=72, fork-1500, full ladder):
+
+| term | value |
+|---|---:|
+| Var(log C) | 0.1434 |
+| 4·Var(log g) | 0.2268 |
+| 4·Var(log R) | 0.1942 |
+| −8·Cov(log g, log R) | −0.2769 |
+| reconstruction | 0.1442 (vs 0.1434 actual — identity check passes) |
+| corr(log g, log R) | **+0.660** |
+
+**Both ingredients are type-locked; their combination is not:**
+
+| quantity | eta² (fraction of variance BETWEEN types) |
+|---|---:|
+| log g | **0.846** |
+| log R | **0.814** |
+| **log C** | **0.287** |
+
+Per-type means make the cancellation explicit (log10 units):
+
+| type | 2 log g | −2 log R | sum | actual log C |
+|---|---:|---:|---:|---:|
+| attn.proj | 7.576 | −3.859 | 3.717 | 3.734 |
+| attn.k | 7.058 | −3.046 | 4.012 | 4.032 |
+| mlp.fc | 7.679 | −3.626 | 4.053 | 4.074 |
+| attn.q | 7.057 | −2.874 | 4.183 | 4.202 |
+| attn.v | 7.949 | −3.670 | 4.279 | 4.283 |
+| mlp.proj | 8.247 | −3.904 | 4.342 | 4.348 |
+
+spread of 2 log g across types = 0.476 dex; of −2 log R = 0.432 dex; **of their sum = 0.221
+dex — a 2.2x cancellation**, and the sum reproduces the actual per-type log C to ~0.02 dex.
+
+**The answer to "what causes the difference in C between layers".** Matrix type sets *two*
+large quantities — the gradient scale g and the effective residual scale R — each ~85%
+type-determined. They correlate at +0.66: types with big gradients also have big effective
+residuals. In the Gauss-Newton ratio g²/R² those two type effects **largely cancel**, and C
+is the small surviving residual.
+
+**This explains the entire history of negative results in this campaign.** Type explains 85%
+of each *ingredient* but only 16–29% of their near-cancelling *combination*. Predicting C
+from architecture means predicting a small difference of two large, strongly-correlated
+numbers to high relative precision. That is an **ill-conditioned problem, not a
+missing-covariate problem** — so the repeated failure of norm/depth/type/geometry models was
+structural, not a failure to find the right covariate.
+
+**REGISTERED n=4 SEED CHECK (supersedes the earlier one; still zero extra cost on Arm A).**
+Every quantity below is already recorded by the existing probe. Bands registered in advance:
+1. eta²(log g) ≥ 0.7 **and** eta²(log R) ≥ 0.7 in every seed — ingredients type-locked.
+2. corr(log g, log R) = **+0.66 ± 0.15** in every seed — the cancellation itself.
+3. eta²(log C) < 0.45 in every seed — C stays the small residual.
+4. within-matrix causal exponent d log lam/d log g = **2.00 ± 0.15** in every seed.
+
+Interpretation rules, fixed now: if (1),(2),(4) hold and (3) holds, the near-cancellation is
+a reproducible law of this architecture and the C question is **answered** — C is
+ill-conditioned by construction and should be *measured*, never predicted (which is exactly
+what REQ-036's design does). If (1) and (2) hold but eta²(log C) is high in some seeds, the
+cancellation is an accident of this particular network and C is a learned per-network
+property. If (4) fails, the Gauss-Newton reading is wrong and this whole account falls.
+
+**Consequence for REQ-036, already reflected in its design:** since C must be measured rather
+than predicted, the equalized-curvature LR rule — which reads C off the measured ladder — is
+the *correct* form for a design, and no amount of further covariate search would improve it.
+
 **So the question sharpens to: what sets S_m?** lam_top is not special — it is S_m times a
 fixed per-matrix shape constant. The between-layer difference in C *is* the between-layer
 difference in overall Hessian scale. Arm A is unchanged and remains the right next step;
