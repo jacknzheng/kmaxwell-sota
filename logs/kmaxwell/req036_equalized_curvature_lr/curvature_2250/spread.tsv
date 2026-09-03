@@ -1,0 +1,12 @@
+# REQ-036 mechanism check: per-type curvature spread @ step 2250 = std of log10(top_eigenvalue) across the 6 matrix types. Smaller = more equalized curvature. (Checkpoint at 2250 per the cadence note; equilibrium stable.)
+arm	across_type_logcurv_spread	vs_control	val@2750
+a1_control	0.2457	baseline	3.51052
+a2_pertype	0.1941	equalized	3.51295
+a3_endcap	0.1630	equalized_more	3.51996
+a5_polar	0.1281	equalized_MOST	3.53460
+a4_antirule	0.4441	ANTI-equalized	3.51515
+#
+# KEY FINDING: the intervention does exactly what it targets -- a5 polar equalizes per-type curvature the MOST (0.128 vs control 0.246),
+# a4 anti-rule ANTI-equalizes (0.444). But equalization is INVERSELY related to val quality: the arm that equalized curvature most (a5)
+# has the WORST val@2750; control (least equalized) has the BEST. So per-type LR successfully equalizes equilibrium curvature (mechanism real),
+# but the premise "equal per-type equilibrium curvature is better" is FALSIFIED -- equalizing it HURTS training loss at this fork/horizon.
