@@ -423,6 +423,37 @@ s-independent shape.
   *explains the gate attrition* — attn.v is the most spectrally degenerate type, hence
   its 66% Lanczos failure rate.
 
+**NEGATIVE RESULT (same session) — the clean non-circular scoreboard.** Re-scored using
+ONLY predictors measured outside the curvature probe, per the hard rule above:
+
+| model (non-circular) | LOO (dex) | share of explainable signal |
+|---|---:|---:|
+| mean only | 0.381 | 0% |
+| weight norm | 0.384 | 0% |
+| matrix size / fan-in / Muon shape factor | 0.379-0.384 | 0% |
+| depth | 0.388 | 0% |
+| gradient norm g | 0.347 | 16% |
+| type | 0.346 | 16% |
+| type + depth | 0.355 | 12% |
+| **g + type** | **0.212** | **73%** |
+| g + type + depth | 0.217 | 72% |
+| g + ||W|| + type + depth | 0.214 | 73% |
+
+g and type each carry 16% alone but 73% together — the interaction is the entire effect,
+i.e. each matrix type converts gradient scale into curvature scale at a different rate.
+Tested directly as `C_m = K_type * g_m^p`:
+
+- per-type exponents p = 0.87 (attn.k), 1.34 (attn.q), 1.41 (attn.v), 1.43 (mlp.fc),
+  3.76 (attn.proj), 3.94 (mlp.proj) — mean 2.12, sd 1.23. Not a law; six fits to 12 points.
+- **Out-of-sample (fit fork-1500, predict fork-2000): rms 0.247 dex, vs 0.090 dex for
+  simply re-measuring C.** The mechanism model is ~3x WORSE than the trivial baseline.
+
+**Conclusion: no covariate model of C currently beats re-measuring it.** The 73% in-sample
+figure does not survive transfer to a new state. This is a genuine negative result and it
+raises the stakes on Arm A: if C is also seed-dependent, then C is a learned per-network
+property and no static covariate model can ever reach the floor — which would make the
+"C = f(norm, depth, type, geometry)" framing wrong as posed, not merely unsolved.
+
 **So the question sharpens to: what sets S_m?** lam_top is not special — it is S_m times a
 fixed per-matrix shape constant. The between-layer difference in C *is* the between-layer
 difference in overall Hessian scale. Arm A is unchanged and remains the right next step;
