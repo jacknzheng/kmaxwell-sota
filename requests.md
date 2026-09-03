@@ -567,6 +567,67 @@ mlp.fc drops to the low group in ≥2 of 4 seeds, the correct reading is "QKV ma
 rather than "nonlinearity exposure", and this iteration's conclusion should be reversed.** That is
 the sharpest single discriminator available and it costs nothing to check.
 
+**ITERATION 39 — MAJOR QUALIFICATION. The nonlinearity binary does not survive a full
+within-block pair analysis. The +0.64 dex gap is real but is NOT a clean nonlinearity effect.**
+
+*The natural experiment first — genuinely supportive.* mlp.fc and mlp.proj sit in the same block,
+see the same residual stream, are trained by the same optimiser at the same LR, and differ **only**
+by the activation function between them. Paired within-block:
+
+| | mlp.fc − mlp.proj | t | positive in |
+|---|---:|---:|---:|
+| fork-1500 | **+0.294 dex** | +3.83 | 9/12 |
+| fork-2000 | **+0.291 dex** | +3.58 | 9/12 |
+
+Identical across forks, and **the QKV reading cannot explain this at all** — neither matrix is a
+QKV matrix. But note it is **less than half** the +0.64 population gap, and the sign test is only
+p = 0.073.
+
+*The full 15-pair table is where it breaks.* Testing every within-block pair:
+
+| pair | gap f1500 | t | cross-group? |
+|---|---:|---:|---|
+| attn.q − mlp.proj | +1.044 | +10.00 | YES |
+| attn.q − mlp.fc | **+0.750** | **+11.02** | **no** |
+| attn.k − mlp.fc | **+0.579** | **+10.15** | **no** |
+| mlp.fc − mlp.proj | +0.294 | +3.83 | YES |
+| **attn.v − mlp.fc** | **−0.062** | **−1.06** | **YES** |
+
+**The decisive row is attn.v − mlp.fc: a cross-group pair with essentially zero separation
+(−0.062 / −0.024 dex, t = −1.06 / −0.40).** Under the nonlinearity mechanism these two should
+differ by ~0.64 dex — mlp.fc is nonlinear-path, attn.v is linear-path. **They do not differ at
+all.** Meanwhile attn.q − mlp.fc, a *within-group* pair that should be null, separates by +0.750
+dex at t = 11.0.
+
+Aggregate: cross-group mean |gap| **0.640** vs within-group **0.327** — a ratio of only **1.96x**,
+and of the 9 largest gaps only 7 are cross-group against 5.4 expected by chance.
+
+**Corrected reading.** The population-level +0.64 dex gap (iteration 37) is a real, highly
+significant fact — but it is **not** produced by a clean nonlinear/linear dichotomy. The data are
+better described as an **ordering** — attn.q > attn.k > mlp.fc ≈ attn.v > attn.proj ≈ mlp.proj —
+in which the nonlinearity split happens to cut near the middle. The binary's R² of 0.515 comes
+substantially from attn.q and attn.k being high and the two proj types being low, **not from
+nonlinearity exposure per se**.
+
+**What survives, and what does not:**
+- **SURVIVES:** the mlp.fc > mlp.proj within-block gap (+0.29 dex, both forks, t ≈ 3.7). This is a
+  genuine same-block, same-input, activation-only contrast and is the one piece of direct evidence
+  that a nonlinearity matters at all.
+- **SURVIVES:** iteration 36's negfrac separation (perfect rank ordering, p ≈ 10⁻⁹) — that result
+  is about negative curvature, not levels, and is untouched.
+- **DOES NOT SURVIVE:** the claim that nonlinearity exposure explains ~34% of the variance in C.
+  The correct statement is that it explains the mlp.fc/mlp.proj contrast (~0.29 dex on one pair)
+  and is confounded with the q/k-vs-proj ordering elsewhere.
+
+**Revised registered seed checks, replacing iteration 37/38's:**
+- **primary:** mlp.fc − mlp.proj paired within-block gap = **+0.29 ± 0.15 dex** in every seed. This
+  is the clean contrast and the only one that isolates nonlinearity.
+- **the falsifier that matters:** **attn.v − mlp.fc must remain near zero (|gap| < 0.20 dex)**. If
+  it opens to ~0.6 dex in the seeds, the nonlinearity binary is rehabilitated and this iteration's
+  qualification was premature.
+- the +0.64 population gap should still reproduce, but it must now be reported as an *ordering*
+  effect rather than evidence for the binary.
+
 **REGISTERED SEED CHECK — the single most important one, zero cost:**
 - **the nonlinear-minus-linear gap in adjusted level must be +0.64 ± 0.20 dex in every seed**, and
   the nonlinear group must exceed the linear group in ≥10 of 12 blocks per seed.
