@@ -3550,10 +3550,15 @@ With capacity free, run in this order; parallelise across boxes wherever arms ar
 
 | priority | request | why |
 |---:|---|---|
-| **1** | **REQ-038** | Cheapest by far — one forward+backward pass on an existing checkpoint, minutes not hours. Carries the sharpest prediction (below). |
-| **2** | **REQ-035 Arm A** | Load-bearing: 4 seeds decide whether any finding is architectural or an artifact of one trained network. |
-| **3** | **REQ-036** | The per-layer LR design, 5 arms including the anti-rule falsifier. |
-| **4** | **REQ-037** | Non-LR instrument; tests the exclusion restriction behind the gradient law. |
+| **1** | **REQ-035 Arm A, with REQ-038's probe folded in** | Load-bearing: 4 seeds decide whether any finding is architectural or an artifact of one trained network. **Add REQ-038's five measurement fields (`\|a\|`, `\|d\|`, effective ranks, attention-logit stats) to Arm A's probe** — Arm A already regenerates step-1500 states by design, so this makes REQ-038 a free by-product tested at n=4 instead of n=1. |
+| **2** | **REQ-036** | The per-layer LR design, 5 arms including the anti-rule falsifier. Tests a shipped design. |
+| **3** | **REQ-037** | Non-LR instrument; tests the exclusion restriction behind the gradient law. |
+| **4** | REQ-038 standalone | **Only if Arm A cannot be extended.** See the cost correction in REQ-038: it is no longer cheap, because no checkpoints are committed and the state must be regenerated. |
+
+**Correction (iteration 57):** REQ-038 was originally ranked first on the false premise that it
+needed only a forward pass over an existing checkpoint. **Jerry correctly flagged that no
+checkpoints are committed** — REQ-019's README says so explicitly. The ordering above reflects the
+real cost.
 
 REQ-034 is unrelated to this queue — order it against the above as you see fit.
 
