@@ -1452,6 +1452,51 @@ independent units: per-type uses 12 parameters (2.1 units/param), +is_end 13 (1.
 looks in LOBO, would not be trustworthy. Any further model development needs REQ-035's seeds
 for additional independent units.
 
+**TRANSFER AUDIT (iteration 21) — CORRECTION: iteration 20's pessimism was overstated.**
+
+Iteration 20 reported that the rule captures "only ~30% of the variance" on the REQ-023 holdout
+(0.478 dex against a 0.571 spread) and warned to expect little benefit. **That framing was wrong
+because it had no ceiling to compare against.**
+
+*The control that was missing.* Predict REQ-023's prescription from **REQ-019's own per-matrix C**
+— i.e. the best any rule could possibly do when transferring between these two experiments:
+
+| | rms on REQ-023 |
+|---|---:|
+| **ceiling** (REQ-019's per-matrix C, no rule at all) | **0.4584** |
+| our type + end-block rule | 0.4784 |
+| **remaining headroom** | **0.020 dex** |
+
+**The rule is within 0.02 dex of the theoretical ceiling.** Almost all of the 0.478 is
+irreducible cross-experiment variation, not rule failure. C itself correlates **+0.9707** between
+the two experiments — the quantity transfers nearly perfectly; what does not transfer is the
+*prescription*, because of how k enters it.
+
+*Where the loss actually comes from.* Refitting REQ-019 using only its own three multipliers
+{0.60, 1.00, 1.70} — same data, same experiment, only the ladder degraded — isolates the ladder
+effect: sd(k) inflates 1.17x, and the prescription shifts by **0.132 dex**. That is **29% of the
+0.458 ceiling**. The remaining ~71% is genuine between-run variation that no ladder length fixes.
+
+*Independent validation of a design choice.* REQ-036 uses a **per-type k** (averaged over 12
+matrices) in the denominator rather than per-matrix k. Testing both under ladder degradation:
+
+| k denominator | 11-point vs 3-point prescription shift |
+|---|---:|
+| per-matrix | 0.1319 dex |
+| **per-type (as filed)** | **0.0404 dex** |
+
+Averaging k over 12 matrices cuts ladder sensitivity by **69%** — the filed rule is **3.3x less
+sensitive** to ladder length than the per-matrix alternative. This was chosen in iteration 3
+because k was the noisier ingredient; it is now independently confirmed as the right choice for a
+second, unrelated reason.
+
+**Revised guidance for REQ-036's readout.** The earlier warning stands in weakened form: expect
+the benefit to be smaller than within-design numbers imply, because ~71% of cross-experiment
+variation is irreducible. But **the rule is not leaving meaningful accuracy on the table** — no
+better rule is derivable from this data, since the ceiling is 0.020 dex away. A null result would
+indicate that curvature equalisation does not translate into loss improvement, **not** that the
+prescription was poorly constructed.
+
 **Registered addition:** the per-type × is_end interaction must reproduce in every seed
 (interaction t > 2, same sign) in REQ-035 Arm A. If it does not, revert to the uniform is_end
 term; if the uniform term also fails to reproduce, revert to per-type only.
