@@ -1980,6 +1980,20 @@ measurement code and settings to REQ-019; curvature at the last 3 checkpoints of
 
 ---
 
+**SESSION CLOSED (2026-09-03 ~08:45 PDT).** The 8-hour analysis window ended with no node freed —
+REQ-032's tau2 arms held both boxes throughout, so **none of REQ-034/035/036/037/038 ran**. All
+five remain ACCEPTED and queued; nothing about them has changed except that their registered bands
+are now consolidated and unambiguous (this table for REQ-035, the authoritative arm table for
+REQ-036).
+
+Everything in this file is offline analysis of already-committed data. **No claim here has been
+tested against a new training run.** The single highest-value action remains REQ-035 Arm A, whose
+band 1 decides whether the campaign's largest finding is architectural or an artifact of one
+trained network. REQ-038 is the cheapest at one forward+backward pass.
+
+A plain-language write-up of the findings, aimed at a reader who has not followed the campaign, is
+at `~/ML/layerwise-momentum/C_FINDINGS.md`.
+
 ## ⚠️ AUTHORITATIVE SEED-CHECK TABLE — READ THIS, IGNORE THE SEED CHECKS BELOW
 
 *This request accumulated **13 overlapping "registered seed check" blocks** across ~15 iterations,
