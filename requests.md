@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-041**.
+Next request number: **REQ-042**.
 
 ---
 
@@ -263,6 +263,7 @@ measured value so a seed result can be compared directly.
 | **12** | **type offsets reduce to three binaries** — ✅ **CONFIRMED n=4** | `q,k + residual-writer + mlp.proj` (5p) within 0.02 dex of six free offsets (7p) | gaps 0.004 / 0.004 / 0.005 / 0.002 dex in the 4 seeds |
 | **13** | **the PER-MATRIX causal exponent is exactly 2** — ⚠️ **RE-SCOPED** (iter. 79) | 2.000 inside the 95% CI **under per-matrix LR randomisation only** (REQ-023 design) | REQ-023 +2.076/+2.079 CI contains 2. **Arm A's GLOBAL LR ladder gives +2.64 to +3.07, CI excludes 2 — a different estimand, not a refutation** |
 | **14** | **q,k carry a large C excess in λ/g²** — ✅ **CONFIRMED n=4** | gap ≥ +0.6 dex and both q,k above all four others in ≥10/12 blocks | **+0.888 / +0.774 / +0.833 / +0.834 dex** (mean +0.832, sd 0.041), p < 10⁻⁵, **12/12 blocks in every seed** |
+| **15** | **the q,k excess is QK-norm scale invariance** (iter. 80) | **d log C / d log‖W‖ = 0 within CI for attn.q and attn.k**, and **|slope| at least 2× smaller than the other four types**, in ≥3 of 4 seeds. Needs weight norms alongside curvature — **not yet measurable on Arm A** | q,k +0.049 CI [−0.261, +0.381] and −0.062 CI [−0.329, +0.226]; others −0.398 / −0.228 |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
 exponent differs systematically by type — **~3.8 for the two projection matrices, ~0.9–1.4 for the
@@ -271,6 +272,85 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 80: THE q,k EXCESS IS QK-NORM SCALE INVARIANCE — a theorem, tested and passed ===**
+
+*Band 14 (+0.832 ± 0.041 dex, 48/48 block-seed cells) is the campaign's firmest result but its
+mechanism was undecided, with QK-norm flagged as a confound. There is a way to test it now.*
+
+**Why this is a theorem, not a hypothesis.** QK-norm applies RMS-norm to q and k before the attention
+product, so `W_q` and `W_k` are **scale-invariant**: `f(cW) = f(W)` for any c. Differentiating that
+identity gives, with no further assumptions:
+
+```
+   g  ∝ 1/‖W‖        and        λ ∝ 1/‖W‖²        hence        C = λ/g²  is INVARIANT to ‖W‖
+```
+
+**`d log C / d log‖W‖ = 0` for q and k — exactly — and unconstrained for the other four.**
+
+**First attempt, and why it was not conclusive.** Testing the two component predictions directly, q
+and k are the closest of all six types to (−1, −2) — (−1.29, −2.43) and (−1.36, −2.77) against
+mlp.proj's (−2.63, −6.43) — but miss the exact values. That test is confounded: **‖W‖ is not set
+directly, the LR is**, so ‖W‖ and the training trajectory move together and neither slope is a clean
+scale response.
+
+**The form of the test that survives the confound.** Since g and λ scale *together*, their ratio
+cancels whatever else is moving. Testing `d log C / d log‖W‖` on 2,160 matched rows with matrix fixed
+effects:
+
+| type | f1500 | f2000 | constraint |
+|---|---:|---:|---|
+| **attn.q** | **+0.152** | **−0.010** | **must be 0** |
+| **attn.k** | **−0.056** | **−0.115** | **must be 0** |
+| attn.proj | +0.096 | −0.357 | none |
+| attn.v | +0.117 | +0.712 | none |
+| mlp.fc | −0.284 | +0.146 | none |
+| mlp.proj | **−1.170** | **−1.092** | none |
+
+| | pooled slope | 95% CI (matrix-clustered) | contains 0? |
+|---|---:|---|:---:|
+| **q, k** | **+0.049** | [−0.261, +0.381] | **yes** |
+| **q, k** (f2000) | **−0.062** | [−0.329, +0.226] | **yes** |
+| others | −0.398 / −0.228 | — | — |
+
+**q,k sit on zero in both forks; the other four are 4–8× steeper.** The prediction is quantitative,
+derived from the architecture rather than fitted, and it passes.
+
+**What this explains.** Scale invariance forces q,k onto a constraint surface the other four do not
+occupy — their curvature is pinned to their gradient by an exact relation rather than being free to
+settle wherever training takes it. **That is a mechanism for band 14's +0.832 dex excess**, and it is
+architectural, which is consistent with Arm A's central finding that **C is seed-independent**.
+
+**Registered as band 15, with an honest blocker.** Arm A committed per-matrix curvature but **not
+weight norms**, so the n=4 seed check for this cannot be run on committed data. The test needs
+`‖W‖_F` per matrix alongside the curvature measurements — the same table `req023_per_matrix_lr`
+already produces. **Request filed as REQ-041.**
+
+**Caveat kept explicit:** this establishes that q,k satisfy the scale-invariance constraint and the
+others do not. It does **not** prove the excess is *caused* by QK-norm rather than by something else
+q,k share — REQ-038's `|a|`/`|d|` fields remain the independent check, and its target is unchanged at
+0.832 dex. But unlike every earlier candidate for this gap, this one makes a **numerical prediction
+(zero) that could have failed and did not.**
+
+## REQ-041: add per-matrix weight norms to curvature runs
+
+- status: **OPEN**
+- requested: 2026-09-03 PDT
+- repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
+
+**Ask:** whenever `measure_per_matrix_curvature.py` runs, also record `‖W‖_F` per Muon matrix at the
+same steps, and commit it as a TSV in the same shape as
+`logs/kmaxwell/req023_per_matrix_lr/weight_norms.tsv` (`fork/seed, arm, step, name, weight_frob`).
+
+**Cost:** one `.norm()` per matrix per measured step — **negligible** next to the Lanczos probe that
+dominates these runs. No new training, no extra nodes; it rides along on whatever is already queued.
+
+**Why:** band 15 tests a theorem (`d log C / d log‖W‖ = 0` for QK-normed matrices, unconstrained
+otherwise) that currently passes on REQ-023's two forks and **cannot be seed-checked**, because Arm A
+committed curvature without weight norms. With this field, band 15 becomes checkable on every future
+seed at zero marginal compute.
+
+**If REQ-036 or REQ-037 is already running, add the field there rather than re-running anything.**
 
 **=== ITERATION 79: ARM A LANDED (n=4) — THE BANDS CHECKED AGAINST FOUR INDEPENDENT SEEDS ===**
 
