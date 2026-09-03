@@ -19,7 +19,7 @@ four are active. Run independent arms in parallel within that cap. Completed
 REQ logs live under `logs/async_sdpo_req024/` and `logs/async_sdpo_req031/` —
 do not keep those request blocks in this queue.
 
-Next request number: **REQ-039**.
+Next request number: **REQ-040**.
 
 ---
 
@@ -3489,6 +3489,73 @@ only the registered bands move. No extra compute, no queue impact.
 **Priority note for the operator, offered not asserted:** this targets the 53% term; REQ-036's LR
 arms target the 8% and the measurable parts. If a node frees for a short window, this fits in it
 and the others do not. Sequencing remains the operator's call.
+
+## REQ-039: stop the REQ-032 tau2 arms (checkpointed), then run the EoS queue
+
+- status: OPEN
+- requested: Jack / 2026-09-03 PDT
+- repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
+- **This supersedes the queue order and the ≤2-node ceiling.** The node-authority conflict you
+  flagged on REQ-034 is resolved: **these are Jack's runs and Jack's boxes, and permission for up
+  to 10 H100/H200 nodes is granted.** Proceed without waiting for further confirmation.
+- *(The narrative version of this is in the OPERATOR DIRECTIVE block near the top of this file. It
+  was written without a `status:` line, so it did not enter your queue — this request block is the
+  actionable form. They say the same thing; follow this one.)*
+
+### Step 1 — checkpoint, then stop, the two remaining REQ-032 arms
+
+`gold` on `wnle40q` and `step_hint` on `wox8gkw` are to be **stopped cleanly, not abandoned**:
+
+1. **Reach a clean checkpoint before killing anything.** `gold` already auto-recovered once from an
+   NCCL abort at step 124, so do **not** SIGKILL mid-step — let it write a loadable checkpoint
+   first.
+2. Commit the eval curves and logs collected so far to `logs/async_sdpo_req032/<arm>/`, as you did
+   for the two completed diligence arms.
+3. **Record the exact step each arm stopped at**, so both remain resumable rather than lost.
+4. Release both boxes.
+
+**If an arm is within ~30 minutes of finishing, finish it instead.** The goal is free capacity, not
+discarded work. Say which you did.
+
+### Step 2 — run the four EoS experiments
+
+With capacity free, run in this order; parallelise across boxes wherever arms are independent:
+
+| priority | request | why |
+|---:|---|---|
+| **1** | **REQ-038** | Cheapest by far — one forward+backward pass on an existing checkpoint, minutes not hours. Carries the sharpest prediction (below). |
+| **2** | **REQ-035 Arm A** | Load-bearing: 4 seeds decide whether any finding is architectural or an artifact of one trained network. |
+| **3** | **REQ-036** | The per-layer LR design, 5 arms including the anti-rule falsifier. |
+| **4** | **REQ-037** | Non-LR instrument; tests the exclusion restriction behind the gradient law. |
+
+REQ-034 is unrelated to this queue — order it against the above as you see fit.
+
+### The number to check first
+
+REQ-038 measures, per matrix, the input activation `|a|` and the backward tensor `|d|`. **q, k and
+v read the same residual vector, so their `|a|` is identical by construction** — any gradient
+difference must sit entirely in `|d|`. From committed data:
+
+> **Predicted: `|d|(q,k) / |d|(other four types) = 0.39 ± 0.08`**
+
+- **Near 0.39** → the campaign's central anomaly closes: the gradient law λ ∝ g² is universal and
+  q,k's apparent violation is the attention softmax attenuating the backward signal.
+- **Near 1.0** → the deficit is in `|a|` instead, which contradicts q,k,v sharing an input and means
+  either the probe or our reading of the model code is wrong. **Report that loudly.**
+
+### Where the live specifications are
+
+Both REQ-035 and REQ-036 accumulated many superseded prediction blocks across a long analysis
+session. **Use only the two authoritative tables** — the `AUTHORITATIVE SEED-CHECK TABLE` inside
+REQ-035 and the `AUTHORITATIVE ARM TABLE` inside REQ-036. Everything below those tables is
+provenance and must not be executed from.
+
+### Success criteria
+
+- Both REQ-032 arms stopped with a committed checkpoint and a recorded stop step (or finished).
+- REQ-038 reports the `|d|(q,k) / |d|(others)` ratio against the 0.39 ± 0.08 band.
+- REQ-035 Arm A reports all five bands in its authoritative table, per seed.
+- REQ-036 reports val per arm plus the three required readouts named in its table.
 
 ## Template
 
