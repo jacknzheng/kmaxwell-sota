@@ -2427,6 +2427,64 @@ stream care about their position in it. Matrices that read from it do not.
 - **falsifier:** if the non-proj slope is also strongly negative in ≥3 seeds, the network-wide
   reading revives and this narrowing was wrong.
 
+**=== ITERATION 62: THE "WRITER" READING IS REJECTED — it groups the two most dissimilar matrices ===**
+
+*"Writes to the residual stream" had appeared independently three times — the boundary effect
+(iterations 22–25), the end-block LR term (iteration 19), and the proj-specific position effect
+(iteration 61). That repetition made it look like the campaign's primary structural variable.
+Tested directly; it is not.*
+
+**It looked promising out-of-sample.** A 3-parameter writer model (writer binary + writer×edge
+interaction) matches the 6-parameter type label on leave-one-out:
+
+| | writer model (3 params) | type label (6 params) |
+|---|---:|---:|
+| fork-1500 | 0.3513 | 0.3464 |
+| fork-2000 | **0.3515** | 0.3652 |
+
+Half the parameters, and "writes into the residual stream" is architecturally meaningful where
+"attn.k" is a naming convention.
+
+**But the F-test rejects it.** Comparing the 6-group model against the 2-group writer split:
+
+> **F(9, 60) = 5.62 (fork-1500) and 5.43 (fork-2000)** — the full label carries structure the
+> writer split discards, at both forks.
+
+**And the reason is fatal to the interpretation.** Within-group spread of log C:
+
+| group | per-type means | spread within group |
+|---|---|---:|
+| **writers** | attn.proj 3.73, mlp.proj **4.35** | **0.434 dex** |
+| readers | attn.k 4.03, attn.q 4.20, attn.v 4.28, mlp.fc 4.07 | 0.115 dex |
+
+**attn.proj and mlp.proj differ from each other by 0.434 dex — nearly 4× the entire spread among
+the four readers.** The "writer" category groups together the two *most dissimilar* matrices in the
+network. Whatever the shared property of writing to the residual stream is, it is not what makes
+these matrices' curvature similar — because their curvature is not similar.
+
+**Why the LOO test missed this.** LOO measures average prediction error; the writer model wins some
+matrices and loses others, netting out. The F-test asks whether the discarded structure is *real*,
+and it is. **This is a case where two reasonable model-selection criteria disagree, and the F-test
+is the right one** — the question is whether structure exists, not whether a coarse model predicts
+tolerably.
+
+**Consequence for earlier iterations.** The writer/reader framing appears in iterations 19, 22–25
+and 61. Those findings stand *as measurements* — proj matrices genuinely do show the position
+effect while others do not — but **"because they write to the residual stream" is not supported as
+the explanation**, since the two writers behave very differently from each other.
+
+**Corrected statement of the position effect (replaces iteration 61's):**
+
+> The position effect is present in **attn.proj and mlp.proj** and absent in the other four types.
+> These two are the residual-stream writers, but they are also the two most dissimilar matrices in
+> the network by settled curvature, so their shared position dependence is **not** explained by
+> their shared role.
+
+**Registered seed check (revised):** the position slope must be ≤ −0.35 for **each proj type
+separately** (not pooled) in every seed. If the effect is present in one proj type and absent in
+the other, even the descriptive grouping fails and the finding reduces to a single-matrix-type
+effect.
+
 ## ⚠️ AUTHORITATIVE SEED-CHECK TABLE — READ THIS, IGNORE THE SEED CHECKS BELOW
 
 *This request accumulated **13 overlapping "registered seed check" blocks** across ~15 iterations,
