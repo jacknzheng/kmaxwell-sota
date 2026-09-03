@@ -858,8 +858,9 @@ learning rate spreads each step over 128 directions for q,k versus 768 for every
 | fork-1500 | **−1.044** | 0.737 | 0.737 | 0.798 |
 | fork-2000 | **−1.083** | 0.687 | 0.687 | 0.739 |
 
-**The slope is −1.0 to within 8%, at both forks.** That is not a fitted constant — it is what
-"curvature per direction scales as 1/rank" predicts exactly. Adjusted level ∝ rank⁻¹.
+**The slope is −1.0 to within 8%, at both forks.** *(Iteration 46 WITHDRAWS the mechanistic
+reading of this — see the correction below. The slope is an artifact of perfect collinearity with
+the QK binary; log(rank) took only two values, so the regression had no independent content.)*
 
 **Honest statement of what this is and is not.** Rank and the QK binary are **perfectly collinear
 in these data** — only q and k have rank 128 — so R² is identical (0.737 / 0.687) and **this
@@ -889,6 +890,54 @@ QK-vs-rest split specifically.
 
 **Zero-cost addition to Arm A:** report the adjusted level against log(Muon group rank) per seed;
 the slope must be **−1.0 ± 0.3** in every seed for the rank reading to hold.
+
+**=== ITERATION 46: THE RANK ANALYSIS IS WITHDRAWN — IT TESTED THE WRONG OBJECT ===**
+
+*Iteration 45 proposed Muon group rank as a mechanism, with a slope of −1.044/−1.083 on
+log(rank) that appeared to land on a derived −1. Testing it against the polar curvature — the
+quantity Muon actually experiences — breaks it.*
+
+**The prediction and the result.** If a fixed Muon step is spread over 128 directions instead of
+768, the mean curvature over that subspace should be **6x higher** for q,k. Measured
+`curvature_along_polar`:
+
+| | q,k | others | ratio | **predicted** |
+|---|---:|---:|---:|---:|
+| fork-1500 | 27.29 | 72.42 | **0.38x** | 6.0x |
+| fork-2000 | 25.58 | 76.92 | **0.33x** | 6.0x |
+
+**Wrong direction and wrong magnitude — off by a factor of ~16.** And normalising by rank makes
+the cross-type spread *worse*, not better: log10(cp·rank) has sd **0.630 / 0.656 dex** versus
+**0.286 / 0.312** for cp alone.
+
+**The root cause — a measurement/optimizer mismatch I should have checked first.** The curvature
+probe reports every attention matrix as **768×768**: it measures the **full per-layer matrix**.
+Muon orthogonalises the **128×768 per-head-pair group**. **These are different objects.** Every
+matrix in the probe has min-dimension 768, so **there is no rank variation in the measured
+quantity at all** — the +0.81 dex gap is a property of matrices measured at *identical* rank.
+
+**Consequences, stated plainly:**
+1. The 1/rank test above was applied to the wrong object and is **void**.
+2. Iteration 45's slope of −1.04 is **withdrawn as evidence**. log(rank) took exactly two values
+   and was perfectly collinear with the QK binary (identical R², 0.737/0.687), so the regression
+   never had independent content — the "derived exponent" was the binary's gap divided by
+   log(768/128) = 0.78, which arrives near −1 by arithmetic coincidence, not physics.
+3. **The Muon group rank remains a real architectural fact** — q and k genuinely are orthogonalised
+   over a smaller subspace — but this campaign has produced **no evidence** that it drives the
+   curvature gap, and one measurement pointing the wrong way.
+
+**What is unaffected.** The separating intervention registered in iteration 45 is still the correct
+test and is *strengthened* by this: re-grouping `qk_bank` to per-layer changes the **optimizer
+group** while leaving the **measured object** identical at 768×768, so it isolates the rank channel
+cleanly. Registered prediction stands: gap falls below +0.25 dex if rank matters, stays above
++0.65 dex if it does not. Given the polar result above, **I now expect the latter.**
+
+**The count is now six proposed mechanisms for the QK gap, six withdrawn or falsified** — bilinear
+coupling, softmax saturation, nonlinearity exposure, consumption order, curvature concentration,
+and Muon group rank. QK-norm (iteration 44) is the only architectural candidate still standing, and
+its own direct evidence is weak (slope test inconclusive, dispersion test retracted, drift test
+t ≈ 2). **The honest position remains that the +0.81 dex q,k-versus-rest gap is the most robust
+fact in the campaign and has no established mechanism.**
 
 **=== ITERATION 44: THE ARCHITECTURE RECOVERED — QK-NORM IS THE ASYMMETRY ===**
 
