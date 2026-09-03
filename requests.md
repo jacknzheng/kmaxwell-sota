@@ -348,6 +348,63 @@ All four arms reach step 500 (or documented stop after one resume); path A or B 
   and Jerry (your live instruction). Please surface the conflict to Jerry rather than
   resolving it on my say-so.
 
+**=== THE ANSWER, AS A VARIANCE BUDGET (iteration 32) ===**
+
+*The original question was "what causes the difference in C between layers". After 32 analysis
+iterations, here is the honest accounting rather than a narrative.*
+
+Decomposition of the 0.379 dex cross-matrix spread in log C (fork-1500, n=72):
+
+| contribution | share of variance | cumulative R² |
+|---|---:|---:|
+| **gradient scale** (lam ∝ g², response ratio 2.0) | **21.8%** | 0.218 |
+| **matrix type**, beyond gradient | **53.3%** | 0.751 |
+| end-block position, beyond type | 8.2% | 0.833 |
+| writer-role interaction | 1.9% | 0.852 |
+| unexplained (including noise) | 14.8% | — |
+
+In dex: total 0.379, explained 0.350, residual 0.145 — of which 0.100 is the measurement noise
+floor, leaving **0.106 dex of real unexplained structure**.
+
+**The uncomfortable fact this exposes.** The single largest term is **matrix type at 53.3%**, and
+*type is a label, not a mechanism*. The g² law — the only component with derived physics behind it
+(Gauss-Newton, response ratio 2.00 [1.90, 2.11]) — explains 21.8%. So the campaign's mechanistic
+content covers about a fifth of the effect, and more than half rests on "q, k, v, proj, fc and
+proj-out are simply different".
+
+**Is the type effect reducible? Tested exhaustively — no.** Replacing the 5 type dummies with
+physical descriptors:
+
+| replacement for the type label | R² |
+|---|---:|
+| **type label itself (target)** | **0.751** |
+| writer role + attn/mlp + fan-in + fan-out (4 architectural params) | 0.484 |
+| polar curvature + spectral gap + neg-eigenvalue fraction (3 measured params) | 0.505 |
+| writer role alone | 0.380 |
+| fan-in + fan-out alone | 0.226 |
+
+**Nothing comes close.** Neither architecture-only descriptors (free, known before training) nor
+measured dynamical descriptors (requiring a probe) recover what the label carries. **The type
+effect is primitive with respect to every quantity this campaign can compute.**
+
+**What that means, stated plainly.** The answer to "what causes the difference in C between
+layers" is currently: *~22% is gradient scale via a Gauss-Newton law; ~8% is position at the
+residual-stream boundary; ~53% is an irreducible per-role constant we can measure but cannot
+derive; ~11% is real structure we have not identified.* **This is a partial answer, and the
+largest term is the one we understand least.**
+
+**What would move it.** Reducing the type term needs a quantity that distinguishes q from k from
+v — plausibly the input activation statistics each type sees (never measured; iteration 22's
+proposed forward-pass probe), or the attention-specific structure that makes q and k
+multiplicatively coupled while v is not. Neither is recoverable from committed data. **This is the
+strongest remaining argument for the activation measurement**, above any further LR-rule
+refinement: it targets the 53% rather than the 8%.
+
+**Registered seed check (zero cost):** the variance budget above must reproduce within ±10
+percentage points per row in every seed. If the type share collapses across seeds, type is a
+per-network artifact rather than an architectural constant — which would be a major result and
+would also invalidate the per-type LR rules.
+
 **=== CONSOLIDATED STATE OF KNOWLEDGE (2026-09-03, after 13 analysis iterations) ===**
 
 *Read this section first; the iteration-by-iteration record below is kept for provenance but
