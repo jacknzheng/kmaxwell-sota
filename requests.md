@@ -696,6 +696,60 @@ attn.v/mlp.fc tie that falsified the previous account, and uses one parameter ra
 (ii) It leaves the attn.q vs attn.k gap (~0.17 dex, both at position 0) unexplained. (iii) It is
 correlational; no intervention moves a matrix's consumption order.
 
+**ITERATION 41 — DEFLATION: "consumption order" is not an ordinal variable, and it reduces to
+"q and k are different". The campaign's explanatory ladder ends here.**
+
+*The test that distinguishes a variable from a relabelling.* Three free group means can fit any
+three levels. A genuine ordinal variable predicts **equal steps**. Measured:
+
+| | step 0→1 | step 1→2 | paired t on the difference |
+|---|---:|---:|---:|
+| fork-1500 | **+0.695 dex** | **+0.234 dex** | **+8.93** |
+| fork-2000 | **+0.727 dex** | **+0.230 dex** | **+8.57** |
+
+**The steps differ by a factor of three, at t ≈ 9 in both forks. The ordinal model is rejected.**
+Enforcing linearity costs 0.059 R² (0.724 vs 0.783 for free group means) — position is three
+arbitrary groups, not a scale.
+
+*And the group structure collapses further.* Since the 0→1 step is 3x the 1→2 step, the real
+structure is q,k versus everything else:
+
+| | other 4 types | q, k | gap | t | Cohen's d | blocks |
+|---|---:|---:|---:|---:|---:|---:|
+| fork-1500 | −3.753 | −2.940 | **+0.812** | **+14.01** | **3.50** | 12/12 |
+| fork-2000 | −3.746 | −2.904 | **+0.842** | **+12.40** | **3.10** | 12/12 |
+
+Model ladder (fork-1500): **QK binary (2 params) R² 0.737** | 3 position groups (3) 0.783 | full
+type label (6) 0.798. **One binary captures 94% of what the three-group "position" model
+achieves.** The position framing added a parameter and a narrative but almost no explanatory power.
+
+**Corrected conclusion, and it walks back iteration 40.** The consumption-order account is
+withdrawn as a *mechanism*. What remains is the single robust fact iteration 33 already
+established: **q and k sit +0.81 dex above the other four types in gradient-adjusted equilibrium
+curvature — 12/12 blocks, both forks, Cohen's d ≈ 3.3.** Every framing since (nonlinearity
+exposure, softmax path, consumption order) has been a different dress on that one fact, and each
+was falsified on its own extra content while the QK gap survived untouched.
+
+**THE HONEST TERMINAL STATE OF THE OFFLINE CAMPAIGN.** The between-layer difference in C
+decomposes as:
+- **~22%** — gradient scale, via the response ratio 2.0 (Gauss-Newton); *the only derived law here*;
+- **~50%** — a **q,k-versus-rest binary of +0.81 dex** that is statistically overwhelming and
+  mechanistically **unexplained**: four candidate mechanisms tested (bilinear coupling,
+  nonlinearity exposure, softmax saturation, consumption order) and all four falsified;
+- **~8%** — residual-stream boundary position (writer-specific, iterations 16–25);
+- **~20%** — unexplained, of which ~0.10 dex is measurement noise.
+
+**No further offline analysis should be spent on the QK gap.** Four mechanisms have now been
+proposed and killed using the same 72 matrices; a fifth would be over-fitting a fixed dataset. The
+gap needs an *intervention* — REQ-038's activation/backward probe is the only queued item that can
+distinguish what q and k receive from what v receives.
+
+**FINAL REGISTERED SEED CHECK (supersedes all previous type-related checks):**
+- **the q,k-versus-rest gap must be +0.81 ± 0.20 dex in every seed, with q,k above in ≥10 of 12
+  blocks per seed.** If it holds, it is an architectural law of this trainer awaiting a mechanism.
+- **registered negative:** the equal-spacing test must continue to FAIL (steps differing by >2x).
+  If spacing becomes equal in the seeds, the ordinal reading revives and this deflation was wrong.
+
 **REGISTERED SEED CHECK — replaces iteration 37/38/39's as primary, zero cost:**
 - **strict pos0 > pos1 > pos2 in ≥10 of 12 blocks in every seed**;
 - **the position variable must reach R² ≥ 0.55 on the adjusted level in every seed**;
