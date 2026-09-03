@@ -1277,6 +1277,57 @@ an unplanned consistency check on both the method and the existing hand-tuned co
 **Arms must apply these multipliers on top of a build with that hard-coded 2x removed, or
 explicitly account for it; state which was done.**
 
+**AMENDMENT (2026-09-03, iteration 17) — add an end-block term. This supersedes the
+prescription table above; the six per-type values are unchanged, one term is added.**
+
+Iteration 9 tested a boundary correction and it *lost* (SNR 11.6 → 8.4), so it was dropped.
+That test used a **6-level free edge correction** — five extra parameters, which overfit.
+Re-tested with the constrained form the block-level analysis actually implies — a **single
+binary `is_end` term** for blocks 0 and 11:
+
+| rule | prescription spread | between-state disagreement | corr | **SNR** |
+|---|---:|---:|---:|---:|
+| per-type only (as filed) | 0.175 | 0.0133 | +0.9979 | **13.1** |
+| **per-type + is_end (1 extra param)** | 0.209 | 0.0137 | +0.9908 | **15.2** |
+| per-type + 6-level edge (5 extra params) | 0.213 | 0.0253 | +0.9860 | 8.4 |
+
+**One well-chosen parameter improves the rule; five overfit it.** The end-block offset is
+**+0.399 dex** at fork-1500 and **+0.499 dex** at fork-2000 — reproducible across independent
+states — implying an extra **×1.9 learning-rate multiplier for blocks 0 and 11**.
+
+*Why this is justified rather than fitted.* The boundary field was established independently
+(iterations 7–8, 16): symmetric in block 0 vs 11, surviving removal of both end blocks
+(−0.451/−0.539 on interior matrices), replicating **across two experimental designs** at
+corr +0.937, and significant at the block level by permutation test (**−0.893 / −0.878,
+p < 0.0001, n=12 blocks**). It is not a term discovered by searching the prescription.
+
+*Correction to iteration 9.* That iteration concluded the boundary field "cancels in C and
+cannot improve an LR rule." At the **block level** — the honest unit given ICC = +0.378 — the
+field *is* present in C itself: corr(d_edge, block-mean log C) = **−0.596 / −0.705**,
+permutation p = 0.037. The cancellation weakens the effect but does not remove it. The earlier
+conclusion was an artifact of testing at the matrix level with an over-parameterised correction.
+
+**REVISED PRESCRIPTION for arm 2** (per-type multiplier × 1.94 if block ∈ {0, 11}):
+
+| type | base | at blocks 0 / 11 |
+|---|---:|---:|
+| attn.proj | 0.40 | 0.77 |
+| attn.k | 0.88 | 1.71 |
+| mlp.fc | 0.91 | 1.76 |
+| attn.q | 1.18 | 2.28 |
+| attn.v | 1.25 | 2.42 |
+| mlp.proj | 1.56 | 3.03 |
+
+**Arm 2 should use this revised table. Please also keep the original per-type-only rule as a
+fifth arm if capacity allows** — the two differ by a factor of 1.9 on 12 of 72 matrices, and
+their comparison directly tests whether the block-level boundary field is real in a way no
+offline analysis can settle. If only four arms fit, run the revised table (arm 2) and drop the
+half-strength arm (arm 3) instead.
+
+**Additional registered prediction:** arm 2 (revised) should beat arm 2 (original per-type only)
+by 0.0005–0.003 val. If the original beats the revised, the block-level boundary field does not
+translate into training benefit and the amendment should be reverted.
+
 ### Arms — 750-step continuations from the shared step-2000 state, val@2750
 
 | # | arm | multipliers |
