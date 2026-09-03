@@ -1,0 +1,14 @@
+# REQ-032 arm3 tau2 gold (retail+airline, DeepSeek user-sim), H100/8B Qwen3-8B, wnle40q. PARTIAL: STOPPED at step 215/500 per operator directive (2026-09-03).
+# Resumable from checkpoint step_200 (logs/async_sdpo_req032/tau2-gold/checkpoints/step_200). NB crashed once @124 (NCCL abort), recovered from step_100; curve merges pre-crash 0-100 + resumed 125-200.
+# pass^1 by step (n=60 = retail 40 + airline 20), 0 rollout errors:
+step	pass1
+0	0.3333
+25	0.2833
+50	0.3000
+75	0.2500
+100	0.2667
+125	0.2000
+150	0.2833
+175	0.3500
+200	0.3333
+# SHAPE (partial, to 200/500): oscillates ~0.29 (0.20-0.35), no sustained gain over the 0.333 baseline. Consistent with REQ-031's flat-8B tau2 gold and the two flat diligence arms.
