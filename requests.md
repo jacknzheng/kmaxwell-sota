@@ -19,7 +19,7 @@ four are active. Run independent arms in parallel within that cap. Completed
 REQ logs live under `logs/async_sdpo_req024/` and `logs/async_sdpo_req031/` —
 do not keep those request blocks in this queue.
 
-Next request number: **REQ-035**.
+Next request number: **REQ-036**.
 
 
 ## REQ-034: K-Maxwell on the fork@2000 batch ladder — 1× → 16×
@@ -28,7 +28,11 @@ Next request number: **REQ-035**.
 - requested: Jack / 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e (same as REQ-026/027/028/029/033)
-- priority: ONE node is enough; arms are sequential and short (750 steps each).
+- **node budget: operator permission has been granted for ≥10 H100 nodes. The ≤2-node
+  ceiling does not apply to REQ-034.** Provision as many boxes as the 6 arms can use
+  (one arm per box) and run them in parallel; the 16× arm is the long pole, so start it
+  first. Arms are short (750 steps each, ~10 cost units total), so this completes in
+  one pass rather than queueing behind REQ-032's long tau2 arms.
 
 **Why.** REQ-026→029 built the momentum-benefit-vs-batch curve for the frozen
 bi-Maxwell kernel — `1x −0.01063, 4x −0.00438, 8x −0.00233, 16x ~0` — a clean decay
@@ -323,6 +327,132 @@ logs/async_sdpo_req032/
 
 All four arms reach step 500 (or documented stop after one resume); path A or B recorded; checkpoints pushed at 250/500/final; eval every 25; diligence 30/30 held-out (or documented judge failure); tau2 `eval/pass1*` on W&B default step axis.
 
+
+## REQ-035: what sets the per-matrix equilibrium curvature constant C? (seed-replicated discriminator)
+
+- status: OPEN
+- requested: Jack (via Claude analysis session) / 2026-09-03 PDT
+- repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
+- pinned SHA: `ebf53cd` (the REQ-019/022 serialized-fork-state design, unchanged)
+- **node budget: operator permission has been granted for up to 10 H100/H200 nodes.
+  The earlier 4-box fleet cap does not apply to REQ-035.** Arms are independent — run
+  one arm per box in parallel. If this conflicts with a standing ceiling, the operator
+  (Jack) has explicitly enabled this budget; proceed.
+
+**Background — what the committed data already settles (no new compute).** Re-analysis of
+the REQ-019/022 per-matrix JSONs (72 Muon matrices, 11-point s ladder, forks 1500 and 2000):
+
+1. Each matrix obeys `log10 lam = log10 C - k*log10(s)`; k = 1.38 +/- 0.45; per-matrix fit
+   residual ~0.034 dex. C spreads 0.376 dex (2.4x) across matrices.
+2. **The run-to-run noise floor is ~0.100 dex**, from the duplicate arms (s=1.00 vs
+   s=1.00dup: rms 0.118 dex; s=0.85 vs s=0.85dup: rms 0.084 dex) — same fork, same s, same
+   age, differing only by run randomness. Explainable signal is sqrt(0.376^2 - 0.100^2) =
+   0.363 dex, so a perfect model scores ~0.100 dex, not 0. (Note: the median |delta| is only
+   0.019-0.030 dex; the distribution is heavy-tailed, so rms is the honest scale.)
+3. Leave-one-matrix-out scoring of log C against that floor:
+
+   | model | LOO (dex) | share of explainable signal |
+   |---|---:|---:|
+   | mean only | 0.382 | 0% |
+   | weight norm | 0.384 | 0% |
+   | architecture (type + depth) | 0.356 | 12% |
+   | gradient block norm g | 0.347 | 16% |
+   | Lanczos spectral gap + neg-eig fraction | 0.347 | 16% |
+   | **curvature-along-gradient (C_grad)** | **0.201** | **77%** |
+   | C_grad + type | 0.188 | 81% |
+   | C_grad + type + depth | 0.175 | 84% |
+
+4. **Weight norm has zero cross-sectional power** (slope +0.01, R^2 0.000); normalizing to
+   lam*||W||^2 makes the spread 48% worse. Norm is a within-matrix channel only (REQ-023's
+   raw -1.29 vs gauge -0.57), not a between-matrix one.
+5. **Depth is real but type-specific and sign-flipping**: corr(logC, depth) = -0.71 for
+   attn.v, +0.49 for mlp.fc, ~0 for the other four types; pooled it cancels to R^2 = 0.000.
+   The previously reported "R^2 up to 0.83" reproduces exactly (attn.v, blocks 2-11, 4 params
+   on 10 points) and is not chance (shuffle p = 0.002), but extrapolates badly (in-sample
+   0.064 dex -> held-out blocks 0-1: 0.221 dex). Giving each type its own depth slope makes
+   out-of-sample error WORSE than the mean (0.398 vs 0.382).
+6. **The anisotropy A = lam_top / lam_grad is learning-rate-independent** (slope +0.07 +/-
+   0.27, vs +1.38 for lam itself) and stable across states (corr +0.936, median shift 0.042
+   dex). But `log C = log C_grad + log A` is an algebraic identity, not an explanation: it
+   scores R^2 = 1.000 tautologically, and as a cross-state predictor (0.110 dex) it does no
+   better than simply re-measuring C (0.099 dex). Recorded so it is not rediscovered.
+7. **Instrument note:** the committed `top_eigenvalue` is the RAW Ritz value — the geometric
+   tail correction is NOT applied (correction factor 1.000 at median and p90); `residual_tail`
+   is diagnostic only. Applying it ourselves shifts C by 0.025 dex median and changes no
+   ranking above. Gate attrition is strongly type-dependent (attn.q 10%, attn.v 66%) and is
+   explained by the spectral gap (corr(log gap, log tail) = -0.81 across types).
+
+**The open question.** C_grad captures 77% of the explainable signal alone; no architectural
+covariate exceeds 16%. But C_grad is itself a measured curvature, so this relocates the
+question rather than answering it. Nothing reaches the 0.100 dex floor. Three hypotheses
+remain live and are distinguished by the arms below.
+
+**Common settings for all arms:** 8-iteration Lanczos, fixed 131072-token batch, identical
+measurement code and settings to REQ-019; curvature at the last 3 checkpoints of each arm.
+
+### Arm A — seed replication (n=4). The load-bearing arm. 4 boxes.
+
+Four independent seeds (0,1,2,3), each trained from scratch to step 1500, each forked into
+the ladder s in {0.60, 1.00, 1.70}. **Registered question: is C a property of the
+architecture, or of the individual trained network?**
+
+- median |delta log C| across seed pairs **<= 0.10 dex** (the noise floor) => C is
+  seed-independent; architecture determines it; the covariate hunt is justified.
+- **>= 0.20 dex** => C is a learned per-network property; every static covariate model is
+  then bounded away from the floor by construction, and the program pivots to state variables.
+- in between => report the seed-reproducible fraction; that becomes the true ceiling for any
+  covariate model, replacing 0.363 dex of "explainable" signal.
+
+Also report corr(C_seed_i, C_seed_j), and separately whether the **type ordering** (attn.v
+highest, attn.proj lowest) reproduces across seeds even if the levels do not.
+**This arm is worth running even if every other arm is dropped.**
+
+### Arm B — depth-sweep discriminator. 3 boxes.
+
+Same recipe at 6, 12, and 24 blocks. Distinguishes absolute depth (block 6 of the 24-block
+model matches block 6 of the 12-block model) from relative depth d/D (matches block 12).
+Registered on attn.v and mlp.fc — the only two types with real depth structure. If neither
+matches, depth is a proxy for a local quantity and the architecture hypothesis is dead.
+
+### Arm C — shape / update-geometry sweep. 2 boxes.
+
+The Muon shape factor sqrt(max(1, rows/cols)) currently takes only two values (2.0 for
+mlp.fc, 1.0 for everything else), so update geometry has almost no natural variance to
+explain anything with — despite REQ-023 showing a strong causal exponent of -1.3. Vary
+head_dim and mlp_ratio so the factor spans {0.5, 1, 2, 4}. Registered: does C shift by the
+-1.3 exponent REQ-023 measured, or does the shape factor act only through the effective LR
+and not through C?
+
+### Arm D — norm-pinning control. 1 box.
+
+Project each Muon matrix back to a held Frobenius norm after every optimizer step; half the
+matrices pinned +25%, half -25%, balanced by type, untouched matrices as internal control.
+Registered band from REQ-023's gauge slope (-0.57): a held +25% norm change moves C by
+**-0.055 dex** if the norm channel is causal at equilibrium, **0** if norm is purely a
+transient channel. This is the one remaining test of the weight-norm hypothesis after its
+cross-sectional death.
+
+### Ordering
+
+Arm A first, and alone if capacity is tight — B, C and D are only interpretable once A says
+whether C is seed-stable. With 10 boxes available, run A (4) + B (3) + C (2) + D (1)
+concurrently.
+
+### Success criteria
+
+- Arm A reports cross-seed median |delta log C| with an explicit verdict against the two
+  registered bands and comparison to the 0.100 dex floor.
+- Every arm commits `per_matrix_curvature.json` with the existing field set — critically
+  including `curvature_along_gradient`, `curvature_along_polar`, and `gradient_block_norm`,
+  which carry the entire result above.
+- A `summary.tsv` reporting per matrix: C, k, C_grad, and A.
+- Shared-state gate as in REQ-019 (identical sha256, zero abs-diff, LR = base x mult).
+- **Do not** apply the geometric-tail correction silently — commit raw Ritz values plus
+  `residual_tail`, as REQ-019 does, so the correction stays reversible.
+
+### Artifacts
+
+`logs/kmaxwell/req035_C_mechanism/<arm>/`
 
 ## Template
 
