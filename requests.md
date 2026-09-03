@@ -1632,6 +1632,68 @@ term remains unaccounted for, and it is a whole-spectrum effect — which means 
 the residual boundary (iteration 22's proposed measurement) is now the leading candidate, since a
 larger input scale sharpens every direction rather than reorganising them.
 
+**ITERATION 25 — the residual-scale hypothesis is FALSIFIED, and a cleaner statistic replaces it.**
+
+*First, a verified negative on the data itself.* Every curvature JSON in the repo records exactly
+eight fields — `alphas`, `offdiags`, `top_eigenvalue`, `residual_tail`, `curvature_along_gradient`,
+`curvature_along_polar`, `gradient_block_norm`, `shape`. **No activation data exists anywhere**,
+and `measure_per_matrix_curvature.py` is not in the repo (it lived on the boxes). The
+activation-variance test genuinely requires a new run; it cannot be recovered offline.
+
+*The falsification.* Iterations 22–24 built toward "the residual stream is larger at the boundary,
+so writers see more curvature". That hypothesis makes a sharp prediction: attn.q, attn.k, attn.v
+and mlp.fc all **read the residual stream directly**, so if |a| were elevated at the boundary,
+all four gradients would rise there (grad = d·aᵀ, so |grad| ~ |d|·|a|). Measured end-block delta
+log g by type:
+
+| type | fork-1500 | fork-2000 |
+|---|---:|---:|
+| mlp.proj (writer) | **+0.206** | **+0.209** |
+| attn.proj (writer) | **+0.155** | **+0.155** |
+| mlp.fc (reader) | −0.005 | +0.009 |
+| attn.k (reader) | −0.012 | −0.015 |
+| attn.q (reader) | −0.034 | −0.046 |
+| attn.v (reader) | −0.061 | −0.057 |
+
+**No reader shows elevation; both writers do.** The residual-stream-scale reading is dead — and
+the sign runs the wrong way as well: reader log g correlates **+0.63 / +0.66** with distance to
+edge, meaning reader gradients are *lower* at the ends.
+
+*The constraint this leaves is sharp.* Writers and readers move in **opposite directions** at the
+boundary (corr with d_edge: writers −0.277/−0.268, readers +0.196/+0.213). Same block, same
+backward pass — so whatever happens at the boundary **raises what writers receive while lowering
+what readers receive.** Since writers differ from readers only in (i) taking the block's internal
+activation as input rather than the residual stream, and (ii) receiving output-gradient from the
+residual stream rather than from inside the block, the effect must live in one of those two.
+
+*The cleanest statistic in the campaign.* The **within-block writer/reader gradient ratio** cancels
+every block-level common factor (data, batch, global scale, network age), leaving only the role
+asymmetry:
+
+| block | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| log(writer g / reader g) | .301 | .314 | .383 | .230 | .118 | .195 | .084 | .130 | .109 | .167 | .300 | **.522** |
+
+**corr(d_edge, ratio) = −0.784 (fork-1500) and −0.785 (fork-2000), permutation p = 0.0024 /
+0.0026 with only 12 blocks.** Two independent states agree to three decimal places. This is a
+within-block, common-factor-free, permutation-tested position field — the most robust
+non-circular result the campaign has produced.
+
+**REGISTERED SEED CHECK — replaces the residual-scale checks, zero cost:**
+- writer/reader gradient ratio: **corr(d_edge, ratio) ≤ −0.6 in every seed**, with block 11 the
+  maximum in at least 3 of 4 seeds.
+- **falsifier retained:** if readers *do* show end-block gradient elevation (delta log g ≥ +0.10)
+  in any seed, the residual-scale hypothesis revives and this falsification was premature.
+
+**Status of the mechanism question.** Three candidate mechanisms have now been falsified — tied
+embeddings (iteration 22), matrix shape/fan-in (22), and residual-stream scale (25) — and one is
+quantified but insufficient (curvature concentration, ~20% of the residue, iteration 24). What
+survives is a precisely-located asymmetry: **at the first and last block, residual-writing
+matrices receive systematically more gradient and ~4x more curvature than their gradient predicts,
+while the readers beside them receive less.** Distinguishing the two remaining channels
+(writer input vs writer output-gradient) requires per-tensor activation and backward-pass norms —
+the measurement noted in iteration 22, still not filed to avoid deepening a 4-request queue.
+
 **Additional zero-cost seed checks:** PR must fall at the boundary for writers (delta ≤ −0.5) and
 the residue-vs-log-PR slope must be −4.5 ± 1.5 in every seed. **And a registered negative:** the
 lam_top-minus-sub-top divergence must stay **below +0.25 dex** — if a seed shows concentration
