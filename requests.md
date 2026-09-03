@@ -1977,6 +1977,50 @@ remain live and are distinguished by the arms below.
 **Common settings for all arms:** 8-iteration Lanczos, fixed 131072-token batch, identical
 measurement code and settings to REQ-019; curvature at the last 3 checkpoints of each arm.
 
+
+---
+
+## ⚠️ AUTHORITATIVE SEED-CHECK TABLE — READ THIS, IGNORE THE SEED CHECKS BELOW
+
+*This request accumulated **13 overlapping "registered seed check" blocks** across ~15 iterations,
+several claiming to supersede each other, and most tied to mechanisms that were subsequently
+falsified (seven of them). **Only the five bands here are live.** Everything below is provenance.*
+
+**All five reproduce at both fork states in the committed data.** Each is stated with its current
+measured value so a seed result can be compared directly.
+
+| # | band | must hold | measured f1500 / f2000 |
+|---|---|---|---|
+| **1** | **q,k vs other four, gradient-adjusted level** | **+0.81 ± 0.20 dex**, q,k above in **≥10 of 12 blocks** per seed | +0.812 (12/12) / +0.842 (12/12) |
+| **2** | **response ratio d log λ / d log g** | **2.00 ± 0.15** per seed | +2.069 / +2.095 |
+| **3** | boundary field, **true-layer axis** | corr(d_edge, block-mean residual) **≤ −0.5** | −0.912 / −0.891 |
+| **4** | negative-curvature separation | every nonlinear-path type above every linear-path type | 0.198 > 0.146 / 0.200 > 0.138 |
+| **5** | position spacing stays **unequal** | step(0→1) ≥ **2×** step(1→2) | 3.0× / 3.2× |
+
+**Band 1 is the single most important number in the campaign.** It is the largest unexplained
+effect (~50% of the variance in C) and has survived seven mechanism falsifications untouched. If it
+reproduces across four independent seeds it is a property of the architecture and worth a dedicated
+programme; **if it varies by more than ±0.3 dex across seeds it is a property of this one trained
+network and the question largely dissolves.**
+
+**Band 5 is registered as a NEGATIVE and matters as much as the positives.** Iteration 41 rejected
+an ordinal "consumption order" reading because the spacing is 3× uneven. If the seeds show *equal*
+spacing, that rejection was wrong and the ordinal model revives.
+
+**Two required readouts, both zero-cost, both fixing errors this campaign made:**
+- **the matrix-name → network-layer mapping**, emitted explicitly. The probe's `block` index is a
+  parameter-bank slot; the model skips attention at layer 6, so for attention matrices the true
+  layer is slot+1 for slot ≥ 6. **This campaign ran 40 iterations on a mislabelled depth axis.**
+- **raw Ritz values plus `residual_tail`**, uncorrected. The geometric-tail correction is *not*
+  applied in the committed data (median tail 0.024) and must stay reversible.
+
+**Retired — do not score these.** Every band registered against a falsified mechanism: bilinear
+q·k coupling, softmax saturation, nonlinearity exposure *as an explanation of levels*, within-block
+consumption order, curvature concentration, Muon group rank, and QK-norm scale-invariance. Band 4
+above survives only in its narrow form — nonlinearity predicts *negative curvature*, not the level.
+
+---
+
 ### Arm A — seed replication (n=4). The load-bearing arm. 4 boxes.
 
 Four independent seeds (0,1,2,3), each trained from scratch to step 1500, each forked into
