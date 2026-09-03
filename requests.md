@@ -255,6 +255,7 @@ measured value so a seed result can be compared directly.
 | **4** | negative-curvature separation | every nonlinear-path type above every linear-path type | 0.198 > 0.146 / 0.200 > 0.138 |
 | **5** | position spacing stays **unequal** | step(0→1) ≥ **2×** step(1→2) | 3.0× / 3.2× |
 | **6** | **per-type gradient-slope heterogeneity** (iteration 63/64) | **Q(5) > 10** in every seed; **mlp.proj, attn.proj ≥ 2.5** and **attn.k, attn.q, attn.v, mlp.fc ≤ 1.8** in ≥3 of 4 seeds; **F(6 free slopes vs proj-binary) > 2.5** in ≥3 of 4 seeds | Q = 66.7 / 68.3 |
+| **7** | **the split is residual-stream position, not shape** (iteration 65) | **slope(attn.proj + mlp.proj) − slope(other four) ≥ +1.5** in ≥3 of 4 seeds, each proj type individually ≥ +2.0 vs internal | +2.173 / +2.183, p < 0.0001 |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
 exponent differs systematically by type — **~3.8 for the two projection matrices, ~0.9–1.4 for the
@@ -263,6 +264,48 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**Band 7 identifies what band 6 could not.** Iteration 65 asked what physically separates the two
+projection matrices from the other four, and **shape is decisively ruled out by the committed
+shapes themselves**:
+
+| type | shape | slope (f1500) |
+|---|---|---:|
+| attn.q / attn.k / attn.v | (768, 768) | 1.34 / 0.87 / 1.41 |
+| **attn.proj** | **(768, 768)** — *identical* | **3.76** |
+| mlp.fc | (3072, 768) | 1.43 |
+| **mlp.proj** | **(768, 3072)** — *its transpose* | **3.93** |
+
+`attn.proj` has exactly the same shape as q, k and v yet sits 2.4–2.9 above them, and `mlp.fc` and
+`mlp.proj` are transposes of each other yet differ by 2.5. **Parameter count, aspect ratio, fan-in
+and fan-out all predict no difference and are therefore falsified.**
+
+What remains is **position in the block**: `attn.proj` and `mlp.proj` are the two matrices whose
+output is added back into the **residual stream**. The other four write into an activation consumed
+inside the block. Grouping on that single structural fact:
+
+| | writes to residual (n=24) | internal (n=48) | difference | permutation p |
+|---|---:|---:|---:|---:|
+| fork-1500 | +2.542 | +0.369 | **+2.173** | **< 0.0001** |
+| fork-2000 | +2.422 | +0.239 | **+2.183** | **< 0.0001** |
+
+Null computed by shuffling the 24/48 labels 20,000 times (mean −0.032, sd ~0.51), per the standing
+permutation rule — and each proj type clears it **alone** (+3.39 and +3.57, both p < 0.0001), so
+this is not one type dragging a pair.
+
+**Two readings remain open, and REQ-038's `|a|`/`|d|` fields separate them.** Residual writers may
+differ because (a) their input is a *mixture* of many block outputs rather than a single clean
+activation, or (b) their gradient arrives directly down the residual highway without passing through
+a nonlinearity. **`|a|` distinguishes these:** reading (a) predicts residual writers have distinctly
+larger and more slowly varying `|a|`; reading (b) predicts `|a|` is unremarkable and the difference
+lives in `|d|`. This is a further reason to keep REQ-038's probe folded into REQ-035 Arm A.
+
+**Registered negative (iteration 65).** Four candidate omitted variables were tested as controls on
+the six per-type slopes — weight norm, negative-curvature fraction, and layer index. **Every one
+made the spread worse, not better** (uncontrolled 3.06 / 3.43; controlled 3.14–4.49 / 3.98–5.21).
+None is the omitted variable behind the slope differences. *(A fourth candidate was excluded before
+interpretation: it is built from the same Lanczos tridiagonal as λ_top and is circular by the
+standing rule.)*
 
 **Do NOT register corr(range, slope).** Its permutation null is **+0.72, not 0**, so the once-cited
 +0.96 is uninformative and was retracted in iteration 64.
