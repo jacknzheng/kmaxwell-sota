@@ -13,11 +13,11 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-**Operator directive (2026-09-02, Jack):** Jerry is **not** capped at 2 GPU
-nodes. Use **all boxes the operator makes available** to run OPEN work **in
-parallel** wherever arms are independent. Completed REQ logs live under
-`logs/async_sdpo_req024/` and `logs/async_sdpo_req031/` — do not keep those
-request blocks in this queue.
+**Operator directive (2026-09-02, Jack):** **Max 4 concurrent 8×GPU boxes**
+fleet-wide (H100 and/or H200 — mix allowed). Do not provision a 5th box while
+four are active. Run independent arms in parallel within that cap. Completed
+REQ logs live under `logs/async_sdpo_req024/` and `logs/async_sdpo_req031/` —
+do not keep those request blocks in this queue.
 
 Next request number: **REQ-034**.
 
@@ -30,8 +30,9 @@ Next request number: **REQ-034**.
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - pinned SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e (same as REQ-026/027/028/029)
 - priority: arms are 2250 steps each (3x the REQ-026/029 forks), 12 of them.
-  **Run in parallel across as many 8×GPU nodes as needed** (operator confirmed
-  no 2-node ceiling). Split by batch size when sharing a node — arms in a row
+  **At most 4 concurrent 8×GPU nodes fleet-wide** (see operator directive).
+  Use remaining capacity after other OPEN work (e.g. REQ-032); never exceed 4
+  total active boxes. Split by batch size when sharing a node — arms in a row
   must share a node so the within-batch contrast is same-hardware.
 
 **Question.** REQ-026→029 established the benefit-vs-batch curve for the **frozen
@@ -213,7 +214,7 @@ over-reading n=1.
 ## REQ-032: diligence (answer_free + answer_bearing) + tau2 (gold + step_hint) — 500 steps, 4 boxes in parallel
 
 - status: OPEN
-- agent status: **PIVOT (2026-09-02 ~17:28 PDT, operator update).** Prior sequential Path B on one box is superseded. **Operator confirmed: no 2-node ceiling — use all available boxes.** Provision **four 8-GPU nodes in parallel**, one arm each. **H200 + Qwen3.8-27B authorized** on all four when inventory allows; else H100 + Qwen3-8B (Path B). If an arm is already in-flight on the old sequential box, **keep it**; spin up the other three immediately. Do not restart a healthy in-flight arm. REQ-031 is **DONE** — see `logs/async_sdpo_req031/`.
+- agent status: **PIVOT (2026-09-02 ~17:28 PDT, operator update).** Prior sequential Path B on one box is superseded. **Max 4 concurrent 8×GPU boxes fleet-wide** (H100 and/or H200). REQ-032 uses **up to 4 boxes in parallel**, one arm each — this fills the fleet cap when all four arms run. **H200 + Qwen3.8-27B preferred** per box when available; **H100 + Qwen3-8B** fallback per box is OK (mix H100/H200 across boxes). If an arm is already in-flight on the old sequential box, **keep it**; spin up the other three if slots remain under the cap. Do not restart a healthy in-flight arm. REQ-031 is **DONE** — see `logs/async_sdpo_req031/`.
 - requested: Jack / 2026-09-02 PDT
 - repo (training code): https://github.com/jacknzheng/scaling-sdpo
 - repo (artifacts + checkpoints): https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
@@ -225,7 +226,10 @@ Follow-up to REQ-024: diligence judge curves were flat at ~0.10 over 200 steps o
 
 ### Concurrency (required)
 
-**Four independent 8-GPU boxes, all at once:**
+**Up to four independent 8×GPU boxes in parallel** (one arm each). This is the
+**fleet maximum** — do not run REQ-032 arms plus other OPEN work on more than
+four boxes total. Coordinate with REQ-033: if REQ-033 holds a box, REQ-032 may
+use at most **3 additional** boxes until a slot frees.
 
 | Box | Arm | Script |
 |-----|-----|--------|
@@ -234,13 +238,14 @@ Follow-up to REQ-024: diligence judge curves were flat at ~0.10 over 200 steps o
 | 3 | tau2 `gold` | `run_taubench.sh gold` |
 | 4 | tau2 `step_hint` | `run_taubench.sh step_hint` |
 
-Do **not** serialize arms on one node unless a hard provisioner failure leaves fewer than four boxes. Record box IDs in README.
+Do **not** serialize all four on one node if four boxes are available. Record
+box ID and GPU type (H100 vs H200) per arm in README.
 
-### Hardware + model (same path on all four boxes)
+### Hardware + model (per box; mix H100/H200 OK)
 
-**Path A (preferred):** 8× **H200** + `model.model=Qwen/Qwen3.8-27B`
+**Path A (preferred per box):** 8× **H200** + `model.model=Qwen/Qwen3.8-27B`
 
-**Path B (fallback if H200 unavailable):** 8× **H100** + `model.model=Qwen/Qwen3-8B` — do not wait; record `path=B` and provisioner reason.
+**Path B (fallback per box):** 8× **H100** + `model.model=Qwen/Qwen3-8B` — do not wait for H200 fleet-wide; record `path=B` on that arm if H200 unavailable.
 
 Map on every box: `cuda:0-3` vLLM TP=4; `cuda:4-7` FSDP2 trainer ×4. `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`. Default `generator.engine.disable_custom_all_reduce=True`.
 
