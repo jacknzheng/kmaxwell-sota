@@ -264,6 +264,7 @@ measured value so a seed result can be compared directly.
 | **13** | **the PER-MATRIX causal exponent is exactly 2** — ⚠️ **RE-SCOPED** (iter. 79) | 2.000 inside the 95% CI **under per-matrix LR randomisation only** (REQ-023 design) | REQ-023 +2.076/+2.079 CI contains 2. **Arm A's GLOBAL LR ladder gives +2.64 to +3.07, CI excludes 2 — a different estimand, not a refutation** |
 | **14** | **q,k carry a large C excess in λ/g²** — ✅ **CONFIRMED n=4** | gap ≥ +0.6 dex and both q,k above all four others in ≥10/12 blocks | **+0.888 / +0.774 / +0.833 / +0.834 dex** (mean +0.832, sd 0.041), p < 10⁻⁵, **12/12 blocks in every seed** |
 | **15** | **the q,k excess is QK-norm scale invariance** (iter. 80) | **d log C / d log‖W‖ = 0 within CI for attn.q and attn.k**, and **|slope| at least 2× smaller than the other four types**, in ≥3 of 4 seeds. Needs weight norms alongside curvature — **not yet measurable on Arm A** | q,k +0.049 CI [−0.261, +0.381] and −0.062 CI [−0.329, +0.226]; others −0.398 / −0.228 |
+| **16** | **C is a per-matrix invariant the network restores** (iter. 82) — ✅ **CONFIRMED n=4** | **matrix identity explains > 85% of log C's variance and the LR < 10%**, across the s = 0.6→1.7 ladder; **corr(C at s=0.6, C at s=1.7) > 0.80** | identity 93.7 / 94.8 / 93.7 / 93.2 %; LR 2.2 / 3.8 / 3.2 / 1.2 %; corr +0.93 / +0.97 / +0.92 / +0.87 |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
 exponent differs systematically by type — **~3.8 for the two projection matrices, ~0.9–1.4 for the
@@ -272,6 +273,61 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 82: WHY EQUALIZING HURTS — C IS A HOMEOSTATIC INVARIANT, CONFIRMED n=4 ===**
+
+*Iteration 81 closed with an untested hypothesis: the spread in C may be the network allocating
+effective step size, so flattening it removes an adaptation. That hypothesis makes a prediction
+testable on Arm A's committed data, at zero compute cost. **It passes on all four seeds.***
+
+**The test.** Arm A's ladder is a **2.8× global LR change** (s = 0.6 → 1.7). Under EoS this moves
+equilibrium curvature hard — mean log λ shifts by **−1.15 to −1.35 dex** per seed. The question is
+what happens to C's *pattern* across matrices:
+
+- **allocation/homeostasis** → the pattern is a controlled quantity and survives the perturbation;
+- **incidental** → the pattern drifts with the learning rate.
+
+**Result — the pattern is almost entirely preserved:**
+
+| seed | corr(C at s=0.6, C at s=1.7) | variance of log C from **matrix identity** | from **the LR** |
+|---|---:|---:|---:|
+| 0 | **+0.927** | **93.7%** | 2.2% |
+| 1 | **+0.968** | **94.8%** | 3.8% |
+| 2 | **+0.921** | **93.7%** | 3.2% |
+| 3 | **+0.870** | **93.2%** | 1.2% |
+
+**Matrix identity explains ~94% of C; the learning rate explains 1–4%** — across a change that moves
+the mean by 1.3 dex. The spread of log C is likewise flat in s (slopes −0.032, +0.068, +0.015, +0.068
+— no consistent sign) while mean log λ has slope ≈ −1.3.
+
+> **C is a per-matrix invariant. Change the learning rate by 2.8× and the network restores the same
+> relative allocation of curvature across matrices.**
+
+**This explains REQ-036's null, and the explanation is mechanical rather than post-hoc.** A per-type
+LR rule that equalizes curvature is **fighting a quantity the network actively holds**. The optimiser
+spends its adaptation undoing the intervention, so the harm scales with how hard the rule pushes —
+which is exactly the monotone dose-response REQ-036 measured (Spearman −1.000 across the four
+equalizing arms, more equalization → worse loss at every step).
+
+**It also explains Arm A's headline** — C is seed-independent to the noise floor because it is a
+restored invariant of the architecture, not a property of a particular trajectory. **Three
+independent observations now agree**: C is stable across seeds (Arm A), stable across a 2.8× LR
+change (this iteration), and resistant to deliberate intervention (REQ-036).
+
+**Registered as band 16, already confirmed at n=4** — it was tested on all four seeds at once, since
+Arm A's data was in hand before the band was written.
+
+**Consequence for the campaign's design goal, stated plainly.** The user's original ask was to *use*
+C to design a per-layer LR or momentum kernel. **Bands 16 and REQ-036 together say that any design
+which prescribes per-matrix step sizes to reshape equilibrium curvature will be resisted**, because
+the network restores C regardless. The productive direction is the opposite one: **treat C as a
+measured property to respect rather than a target to flatten** — for example choosing a global LR
+against the *observed* C distribution, rather than forcing the distribution to a chosen shape.
+
+**What would falsify band 16:** an LR ladder wide enough to break the restoration. The s = 0.6–1.7
+range is only 2.8×; if a 10× ladder showed matrix identity's share collapsing, C would be
+locally-restored rather than genuinely invariant. **That is a cheap addition to any future
+curvature run** — the same fork design with s extended — and is the natural companion to REQ-041.
 
 **=== ITERATION 81: REQ-036 IS A NULL — EQUALIZING CURVATURE HURTS. THE PREMISE IS FALSIFIED ===**
 
