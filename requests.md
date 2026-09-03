@@ -382,9 +382,10 @@ across all 72 matrices:
 | **negfrac + softmax-path flag** | **2** | **0.737** |
 | negfrac alone | 1 | 0.076 |
 
-**Two physically-motivated parameters recover 92% of what the five-dummy label achieves.** This is
-the first time in the campaign that the type term has been substantially reduced to a mechanism
-rather than relabelled — and it uses only committed data, with no circularity (negfrac is the sign
+**Two physically-motivated parameters recover 92% of what the five-dummy label achieves.**
+*(Iteration 36 substantially qualifies this — see the correction below; the R² is largely carried
+by the flag isolating q and k, not by negfrac driving the level.)* This looked like the first
+reduction of the type term to a mechanism rather than a relabelling — and it uses only committed data, with no circularity (negfrac is the sign
 structure of the Krylov spectrum; the target is the gradient-adjusted level).
 
 **The honest caveats.** (i) negfrac alone explains almost nothing (R² 0.076) — the *interaction*
@@ -407,6 +408,66 @@ fork-specific artifact and the term returns to irreducible.
 should now be read alongside this: **the softmax-path account already reaches 0.737 on the adjusted
 level without any activation data.** REQ-038 remains valuable — it would test whether attention
 logit statistics drive negfrac, closing the chain — but it is no longer the only route to the 53%.
+
+**=== ITERATION 36: CORRECTION AND GENERALISATION — the mechanism explains NEGATIVE CURVATURE,
+not the LEVEL ===**
+
+*Iteration 35 claimed a 2-parameter model (negfrac + softmax flag, R² 0.737) had largely explained
+the 53% type term. Separating that into its two component claims shows one is strong and general
+and the other is close to relabelling.*
+
+**CLAIM A — nonlinearity exposure determines negative curvature. STRONG, and more general than
+softmax.** Classifying each type by what its output passes through: q, k → softmax; mlp.fc →
+activation; v, attn.proj, mlp.proj → linear (attention-weighted sum or residual add).
+
+| type | negfrac f1500 | f2000 | downstream |
+|---|---:|---:|---|
+| attn.v | 0.0350 | 0.0347 | linear |
+| mlp.proj | 0.1244 | 0.1308 | linear |
+| attn.proj | 0.1455 | 0.1377 | linear |
+| **attn.q** | **0.1979** | **0.2002** | **nonlinear** |
+| **attn.k** | **0.2604** | **0.2558** | **nonlinear** |
+| **mlp.fc** | **0.3176** | **0.3275** | **nonlinear** |
+
+**Perfect rank separation at both forks** — every nonlinear type above every linear type, no
+overlap (min nonlinear 0.198 vs max linear 0.146). Per-block, perfect separation holds in **9/12
+and 8/12 blocks (binomial p = 3.7 × 10⁻¹⁰ and 1.6 × 10⁻⁸** against the 1/20 chance of a 3-vs-3
+rank split). **mlp.fc joining q and k — not attn.proj — confirms the variable is nonlinearity
+exposure, not softmax specifically.** This resolves iteration 35's caveat that attn.proj "broke
+the binary": it never belonged in the nonlinear group.
+
+**CLAIM B — that this explains the curvature LEVEL. WEAKER than iteration 35 stated.** The
+adjusted levels, sorted:
+
+| type | adjusted level | negfrac | nonlinear |
+|---|---:|---:|---:|
+| mlp.proj | −3.898 | 0.124 | no |
+| attn.proj | −3.842 | 0.146 | no |
+| attn.v | −3.666 | 0.035 | no |
+| **mlp.fc** | **−3.605** | **0.318** | yes |
+| **attn.k** | **−3.026** | 0.260 | yes |
+| **attn.q** | **−2.855** | 0.198 | yes |
+
+The three nonlinear types do occupy the top three levels and the three linear types the bottom
+three — a real and non-trivial grouping. **But negfrac does not order them monotonically:** mlp.fc
+has the *highest* negfrac and the *lowest* level of the three. So the softmax flag's R² = 0.737
+beats the nonlinearity flag's 0.591 only because it isolates q and k, which happen to be the two
+highest-level types — **that is closer to relabelling than to mechanism.**
+
+**Corrected statement of what is established.** Nonlinearity exposure causes negative curvature,
+with perfect type separation at p ≈ 10⁻⁹. Nonlinear-path matrices also sit at systematically higher
+adjusted curvature levels. **But the quantitative link — negfrac predicting the level — does not
+hold across types.** The 53% type term is *partially* explained: its sign is now understood
+(nonlinearity), its magnitude is not.
+
+**REGISTERED SEED CHECKS — revised, replacing iteration 35's:**
+- **Claim A (primary):** perfect nonlinear-vs-linear negfrac separation in ≥8 of 12 blocks in every
+  seed, with mlp.fc grouping with q,k rather than with the proj matrices.
+- **Claim B (secondary):** the three nonlinear types must occupy the top three adjusted levels in
+  every seed. **Registered negative:** corr(negfrac, adjusted level) across the six type means need
+  NOT be high — if it is below +0.5 in most seeds, that confirms this iteration's finding that
+  negfrac explains the sign but not the magnitude, and the level term should be reported as
+  partially irreducible.
 
 **=== THE ANSWER, AS A VARIANCE BUDGET (iteration 32) ===**
 
