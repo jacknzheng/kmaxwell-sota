@@ -1,0 +1,14 @@
+# REQ-035 Arm A READOUT: is C seed-independent? median |delta log10 C| across seed pairs vs ~0.10 dex noise floor.
+seed_pair	median_ddex	rms_ddex
+seed0-seed1	0.1061	0.1750
+seed0-seed2	0.0949	0.1504
+seed0-seed3	0.1151	0.1835
+seed1-seed2	0.1282	0.1857
+seed1-seed3	0.0884	0.1623
+seed2-seed3	0.0903	0.1491
+# median-of-pairs |delta logC| = 0.1061 dex (noise floor ~0.10). VERDICT: C seed-independent to the noise floor -> architecture determines it.
+# type-mean log10(C) ordering per seed (attn.proj lowest, attn.v/mlp.proj top in all 4):
+# seed0: mlp.proj(4.32) > attn.v(4.31) > attn.q(4.20) > mlp.fc(4.06) > attn.k(4.04) > attn.proj(3.73) > other(2.72)
+# seed1: mlp.proj(4.37) > attn.v(4.36) > attn.q(4.13) > mlp.fc(4.05) > attn.k(4.02) > attn.proj(3.72) > other(2.61)
+# seed2: mlp.proj(4.38) > attn.v(4.29) > attn.q(4.21) > mlp.fc(4.08) > attn.k(4.07) > attn.proj(3.79) > other(2.82)
+# seed3: attn.v(4.38) > mlp.proj(4.37) > attn.q(4.18) > attn.k(4.11) > mlp.fc(4.09) > attn.proj(3.73) > other(2.85)
