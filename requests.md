@@ -1587,6 +1587,57 @@ normalized spectrum is s-invariant** (CV 1.5–3% across the s ladder): that was
 *learning-rate* change, and it holds. Spectral shape is *not* invariant across **depth position**.
 Both statements are true; the earlier one should not be read as "shape never varies".
 
+**ITERATION 24 — curvature concentration is real but explains only ~20% of the residue.**
+
+*The hypothesis.* If boundary writers concentrate curvature into fewer directions, lam_top rises
+without total curvature or gradient changing. Measured via the Krylov participation ratio
+PR = (sum|w|)²/sum(w²) and the top-direction share |w0|/sum|w|:
+
+| | interior | end | delta |
+|---|---:|---:|---:|
+| PR, writer (fork-1500) | 4.980 | 4.152 | **−0.828** |
+| PR, writer (fork-2000) | 4.973 | 4.012 | **−0.961** |
+| top share, writer (fork-1500) | 0.284 | 0.379 | **+0.094** |
+| top share, writer (fork-2000) | 0.285 | 0.388 | **+0.103** |
+
+Both move exactly as predicted, at both forks. And residue-vs-concentration regresses with a
+**near-identical slope at the two independent forks: −4.552 and −4.539** (R² 0.47 / 0.57,
+corr −0.683 / −0.757) — slope stability across states is the signature of a mechanical
+relationship rather than a fit.
+
+*Circularity check — passes.* PR and top-share are built from the same tridiagonal as lam_top, so
+the hard rule applies. The mechanical null (lam shuffled across matrices) gives corr = **+0.076,
+95% [−0.322, +0.362]**; the observed **−0.683 sits well outside it**. The correlation is real, not
+forced by shared terms.
+
+***But the non-circular test deflates the claim substantially.*** Comparing lam_top against the
+**sub-top mass** (sum|w1..w7|) shares no term between the two sides:
+
+| | delta log lam_top | delta log sub-top mass | **divergence** |
+|---|---:|---:|---:|
+| **writer** | +0.936 | +0.822 | **+0.115** |
+| reader | +0.131 | +0.082 | +0.049 |
+
+**The sub-top spectrum rises almost as much as the top eigenvalue.** True concentration accounts
+for only **+0.115 dex of the ~0.6 dex residue — roughly 20%.** At the boundary the *whole Hessian
+block gets sharper*; it does not merely redistribute existing curvature into the top direction.
+
+**Corrected reading.** The end-block residue decomposes approximately as:
+- ~0.36 dex — explained by the gradient (the g² law);
+- ~0.12 dex — genuine curvature concentration into fewer directions;
+- **~0.46 dex — still unexplained: a uniform sharpening of the entire Hessian block.**
+
+The concentration finding is real and worth having, but it is **not** the mechanism. The dominant
+term remains unaccounted for, and it is a whole-spectrum effect — which means activation scale at
+the residual boundary (iteration 22's proposed measurement) is now the leading candidate, since a
+larger input scale sharpens every direction rather than reorganising them.
+
+**Additional zero-cost seed checks:** PR must fall at the boundary for writers (delta ≤ −0.5) and
+the residue-vs-log-PR slope must be −4.5 ± 1.5 in every seed. **And a registered negative:** the
+lam_top-minus-sub-top divergence must stay **below +0.25 dex** — if a seed shows concentration
+accounting for most of the residue, this iteration's deflation was wrong and concentration is the
+mechanism after all.
+
 **REGISTERED SEED CHECKS — additions to Arm A, all zero cost:**
 - writer gradient asymmetry: end-block delta log g ≥ +0.10 for writers and ≤ +0.05 for readers.
 - unexplained residue: delta log C − 2·delta log g ≥ +0.4 dex for writers, in every seed.
