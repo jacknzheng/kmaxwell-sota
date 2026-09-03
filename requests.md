@@ -25,7 +25,7 @@ Next request number: **REQ-039**.
 
 ## ⚠️ OPERATOR DIRECTIVE (2026-09-03, Jack) — STOP REQ-032, RUN THE EoS QUEUE
 
-**These are my runs and my boxes. This directive supersedes the queue order and the ≤2-node
+**These are my runs. This directive supersedes the queue order and the ≤2-node
 ceiling for the purposes below.** Earlier hesitation in this file about node authority is resolved:
 **proceed.**
 
