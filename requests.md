@@ -268,6 +268,65 @@ correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
 
+**=== ITERATION 71: WALKING BACK ITERATION 70'S WARNING TO REQ-036 ===**
+
+*Iteration 70 closed by warning that REQ-036's per-type LR design "leaves the biggest effect on the
+table." That warning was overstated. Quantifying it properly changes the recommendation.*
+
+**What I claimed, and what is actually true.** I inferred from band 10's F = 28.98/41.51 that the
+boundary term must dominate the per-type term. Measuring both on the same footing:
+
+| | f1500 | f2000 |
+|---|---:|---:|
+| per-type offset spread | **0.614 dex** | **0.584 dex** |
+| boundary coefficient | **0.183 dex** | **0.290 dex** |
+| **ratio boundary / type** | **0.30×** | **0.50×** |
+
+**The boundary term is one-third to one-half the size of the per-type spread it would supplement —
+smaller, not larger.** And the practical gain from adding it to a per-type rule is modest: R²
+0.287 → 0.337 and 0.248 → 0.367, with rms prescription error improving only **0.318 → 0.306 dex**.
+**"Leaving the biggest effect on the table" was wrong** and is withdrawn.
+
+**Why band 10's F was so large anyway — both numbers are correct.** F was computed *on top of the
+gradient*, which already absorbs most of C's variance:
+
+| model | R² (f1500) | boundary adds |
+|---|---:|---:|
+| type | 0.287 | — |
+| type + boundary | 0.337 | **+5.0 pts** |
+| type + gradient | 0.751 | — |
+| type + gradient + boundary | 0.864 | **+11.3 pts** |
+
+A large F against a small residual variance is still a large F. It measures *reliability*, not
+*magnitude*, and I conflated the two. Band 10 stands exactly as amended in iteration 70 — the
+correction is to my reading of its practical weight, not to the finding.
+
+**The number REQ-036 actually needs.** Under the EoS relation `s ∝ λ^(−1/2)`, a boundary coefficient
+of +0.183/+0.290 dex in C implies a learning-rate multiplier of:
+
+> **0.81× (f1500) / 0.72× (f2000) on the boundary layers**, against per-type multipliers that span a
+> factor of ~3.
+
+**Revised recommendation for REQ-036: ship the per-type design as filed.** The boundary correction is
+real, consistent in sign across both forks, and worth roughly a 20–28% LR reduction on the first two
+and last two layers — a worthwhile refinement, but clearly second-order next to the per-type
+multipliers, and not a reason to hold or redesign the arm. **If Arm A confirms band 10 at n=4, the
+natural follow-up is a per-type × boundary arm, filed separately after REQ-036 reports.**
+
+**One genuinely useful diagnostic from this.** The matrices a per-type rule serves worst are
+overwhelmingly at the boundary:
+
+| matrix | error of per-type rule (f1500) | |
+|---|---:|---|
+| mlp.proj layer 11 | **+1.296 dex** | boundary |
+| attn.proj layer 12 | +0.997 dex | boundary |
+| mlp.proj layer 2 | +0.811 dex | |
+| mlp.fc layer 11 | +0.624 dex | boundary |
+
+Four of the six worst-served matrices sit in the boundary shell, in both forks. So while the
+*average* gain is small, the correction is concentrated exactly where a per-type rule fails hardest —
+which is the right shape for a follow-up arm, and is worth checking in Arm A's per-matrix output.
+
 **=== ITERATION 70: BAND 10 ATTACKED — it survives, but it is a BOUNDARY effect, not a smooth U ===**
 
 *Band 10 was the largest effect in the campaign, so this iteration tried to break it. It survives two
