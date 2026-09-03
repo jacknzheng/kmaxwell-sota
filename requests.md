@@ -836,6 +836,59 @@ JSONs in a final verification pass — 7 of 7 checks passed.*
 overwhelming and mechanistically unexplained** · ~8% residual-stream boundary position · ~20%
 unexplained, of which ~0.10 dex is noise.
 
+**=== ITERATION 44: THE ARCHITECTURE RECOVERED — QK-NORM IS THE ASYMMETRY ===**
+
+**The pinned EoS commit `ebf53cd` has been recovered.** Iteration 8 recorded that it was absent
+from the clone, so every structural claim in this campaign rested on *assumed* architecture. A
+full-refs fetch (`git fetch origin '+refs/*:refs/remotes/origin-all/*'`) resolved it. The
+architecture behind all 45 curvature measurements is now readable, and it contains a hard
+asymmetry hitting exactly the two matrices with the +0.81 dex gap:
+
+> **`train_gpt.py` line 1106 at `ebf53cd`: `q, k = norm(q), norm(k)  # QK norm`**
+> where `norm` is `F.rms_norm` (line 952). **Applied to q and k only.** v, attn.proj, mlp.fc and
+> mlp.proj have no output normalisation.
+
+**Why this matters.** QK-norm makes q and k **exactly scale-invariant in their own output**:
+multiplying W_q by any constant leaves the loss unchanged, because the RMS-norm divides it out.
+The other four matrices have no such invariance. **This is a genuine, hard architectural
+distinction that separates {q,k} from the rest — the exact partition of the campaign's largest
+unexplained effect — and it was not among the five mechanisms tested, because the architecture
+could not be read.**
+
+**Evidence status — honest, and weaker than the discovery deserves.**
+- *Slope test (log C vs log‖W‖, predicted −2 for scale-invariant matrices):* **inconclusive.**
+  −2.669 at fork-1500 but +1.811 at fork-2000, |corr| < 0.16 in both. No power at n=24 with the
+  available norm range.
+- *Dispersion test:* **negative.** I first read QK norms as 4x tighter (sd 0.007–0.011 vs
+  0.014–0.048), but that used a single-step slice and conflated across-block with across-step
+  variation. Pooled correctly, **every type has sd ≈ 0.073–0.080 — ratio 1.0x, no separation.**
+  Retracted.
+- *Drift test:* **marginal support.** QK norms drift less over training than the others
+  (−0.0008 vs −0.0037 per 1000 steps at fork-1500, t = +1.97; +0.0281 vs +0.0252 at fork-2000,
+  t = +2.11). Consistent with only weight decay acting on an invariant norm, but t ≈ 2 on 72
+  matrices is not strong.
+
+**So: a compelling architectural candidate with weak direct evidence.** It is the first proposed
+mechanism that (a) partitions the types exactly as the data does, (b) is a hard property of the
+code rather than an interpretation, and (c) was not available to the previous five attempts. It is
+*not* yet established — the tests that would establish it need norm variation the committed data
+does not contain.
+
+**THE DECISIVE EXPERIMENT — and it already exists in the queue.** REQ-036's **arm 4 is the
+anti-rule (multipliers inverted)** and REQ-037 perturbs weight norms directly. Better still, the
+clean test is a **rescale fork**: multiply W_q and W_k by 2x at a checkpoint and continue.
+- **Scale-invariance predicts the loss is EXACTLY unchanged at step 0** and λ_q, λ_k fall by
+  exactly 4x (‖W‖⁻²), then recover as weight decay pulls the norm back.
+- **For v, attn.proj, mlp.fc, mlp.proj the same rescale changes the loss immediately.**
+This is a one-line intervention on an existing checkpoint, costs one short run, and is a **binary
+test of scale-invariance** rather than a correlational fit. **Registered prediction: rescaling
+W_q, W_k by 2x changes the training loss by < 0.001 at the first step; the same rescale on
+mlp.fc changes it by > 0.01.**
+
+**Added to the REQ-035 Arm A seed check (zero cost):** report per-type log‖W‖ drift. QK drift must
+remain smaller than the non-QK types' in ≥3 of 4 seeds; if it does not, the scale-invariance
+reading loses its only supporting evidence.
+
 **FIVE MECHANISMS PROPOSED FOR THE QK GAP; ALL FIVE FALSIFIED.**
 
 | mechanism | iteration | how it died |
