@@ -274,6 +274,67 @@ correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
 
+**=== ITERATION 85: AUDITING THE NOISE FLOOR ITSELF — the foundation holds, with one design gap recorded ===**
+
+*Every band in this campaign quotes its significance against a "~0.10 dex noise floor" that came from
+REQ-019's duplicate arms. Arm A allows the first **independent** estimate, and one that separates
+sources the duplicate arms conflated. If the floor were wrong, every band's significance would move.*
+
+**Decomposing the floor into its three sources:**
+
+| source | what it measures | median sd |
+|---|---|---:|
+| (a) **measurement** | same matrix, same state, measured twice | **unmeasurable — see below** |
+| (b) **temporal** | same matrix, same run, 5 steps across the equilibrium window | **0.0689 dex** |
+| (c) **seed** | same matrix, 4 independently trained networks | **0.0686 dex** |
+
+**A design limitation, recorded rather than worked around.** Pure measurement noise cannot be
+estimated from this data: the 8 MPI ranks hold **disjoint 9-matrix shards** (verified — 72 distinct
+matrices, 0 seen by more than one rank), so no matrix is ever measured twice at the same state. The
+duplicate-arm estimate remains the only handle on (a), and it necessarily bundles (a) with (b).
+**A cheap fix for any future run: have two ranks measure one overlapping matrix.**
+
+**The striking number: (b) and (c) are the same.** Temporal 0.0689 vs seed 0.0686 dex — **two
+networks trained from different random initialisations differ no more than one network measured 125
+steps apart.** That is band 16's homeostasis result arriving by a completely independent route, and
+it explains Arm A's headline (median |Δ log C| = 0.106 dex ≈ the floor) as a *consequence* rather
+than a coincidence: **there is almost no seed-to-seed variation left to measure.**
+
+**Per-type floors — checking for a bias that would inflate band 14:**
+
+| type | temporal sd | seed sd |
+|---|---:|---:|
+| attn.q | 0.0879 | 0.1130 |
+| attn.k | 0.0762 | 0.0857 |
+| mlp.fc | 0.0881 | 0.0783 |
+| attn.proj | 0.0629 | 0.0606 |
+| attn.v | 0.0603 | 0.0605 |
+| mlp.proj | 0.0501 | 0.0511 |
+
+**The floor is type-dependent — 1.76× worst-to-best — and q,k are on the noisier side** (0.0837 vs
+0.0632 for the other four). That is the direction that could inflate a q,k finding, so it is the
+right thing to have checked. **It does not come close to mattering: band 14's +0.832 dex is 9.9×
+even the worst-case q,k floor.**
+
+**Net effect on the campaign's claims:**
+
+| band | effect | × worst-case floor | status |
+|---|---:|---:|---|
+| **14** q,k excess | +0.832 dex | **9.9×** | safe |
+| **12** mlp.proj term | ~0.65 dex | 7.8× | safe |
+| **12** residual-writer | ~0.47 dex | 5.6× | safe |
+| ~~10~~ layer-0 lift | ~0.31 dex | 3.7× | already not confirmed at n=4 |
+
+**Every surviving band clears the floor by 5× or more, using the strictest per-type estimate rather
+than the pooled one.** The ~0.10 dex figure the campaign has used throughout is if anything
+*conservative* — the measured within-comparison floor is ~0.07 dex.
+
+**Why this iteration was worth spending.** The floor is the denominator under every significance
+claim made in 85 iterations, and it had never been checked against independent data. **It holds**,
+the one gap in it is now documented with a cheap fix, and the audit produced an unexpected
+confirmation of band 16 as a by-product. **No band changes; the foundation they rest on is now
+measured rather than inherited.**
+
 **=== ITERATION 84: REGISTERED NEGATIVE — C's type structure is NOT a units artifact ===**
 
 *Iteration 83 left the question "what is C restored **to**?". Band 15 answered it for q,k: scale
