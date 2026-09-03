@@ -403,6 +403,43 @@ re-measuring C** (best 0.246 dex vs 0.090 dex). Adding genuinely real structure 
 field — *degrades* the LR rule (SNR 11.6 → 7.4). **C is best treated as a measured per-matrix
 quantity, not a predicted one**, which is exactly REQ-036's design.
 
+**SETTLEDNESS AUDIT (iteration 14) — REQ-036 is robust; two caveats for the record.**
+
+Every C in this campaign is fitted on the last-3-checkpoint (250-step) window, assuming it is
+settled. That assumption was never audited. It is now.
+
+**REQ-036 is insensitive to the window choice.** Rebuilding the per-type prescription from
+different windows:
+
+| window | max shift vs last-3 (fork-1500 / fork-2000) | corr |
+|---|---:|---:|
+| last 2 checkpoints | 0.015 / 0.015 dex | +0.9998 / +0.9990 |
+| final checkpoint only | 0.035 / 0.022 dex | +0.9979 / +0.9970 |
+| all 5 checkpoints | 0.016 / 0.011 dex | +0.9986 / +0.9994 |
+
+Every shift is far below the 0.10 dex noise floor. **Restricting to only well-settled arms**
+(|drift| ≤ 0.10 dex over the window) shifts the prescription by at most **0.028 dex**
+(corr +0.998 at fork-1500; exactly 0.000 at fork-2000). **REQ-036's multipliers are not driven
+by unsettled measurements — the design stands unchanged.**
+
+**Caveat 1 — curvature is still relaxing downward at measurement time.** Mean drift is
+systematically negative: −0.0207 dex/250 steps at fork-1500 (t = −3.30, n=792) and −0.0310 at
+fork-2000 (t = −2.91, n=216). Small relative to the floor, but *systematic*, so every C in this
+campaign is very slightly **over**-estimated. It is a common-mode offset across matrices, so it
+does not affect the between-matrix comparisons that all conclusions rest on — but it should not
+be described as "settled" without this qualifier.
+
+**Caveat 2 — unsettledness is type-structured, and mlp.fc is the outlier.** Fraction of
+matrix-arms with |drift| > 0.10 dex, by type: **mlp.fc 0.34**, attn.v 0.21, attn.proj 0.19,
+attn.k / attn.q / mlp.proj 0.17. mlp.fc drifts roughly twice as often as any other type. Its
+prescribed multiplier (0.906) is therefore the **least trustworthy of the six**, and it is the
+one to watch in REQ-036's readout. Drift is also weakly LR-dependent (corr(log s, mean drift)
+= −0.298), consistent with the known slow from-below equilibration at low s.
+
+**Recommended addition to REQ-036's readout (no extra compute):** report the per-type drift over
+the final window alongside the realized curvature spread, so the mlp.fc caveat can be checked
+directly rather than assumed.
+
 **Queue note (2026-09-03 ~02:40Z):** four requests are open (034/035/036/037) behind a ≤2-node
 ceiling with ~20–26h before the first node frees. **No further requests will be filed from
 analysis** — offline work has been exhausted (verified: the exclusion restriction cannot be
