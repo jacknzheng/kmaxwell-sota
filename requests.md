@@ -1307,6 +1307,47 @@ field *is* present in C itself: corr(d_edge, block-mean log C) = **−0.596 / �
 permutation p = 0.037. The cancellation weakens the effect but does not remove it. The earlier
 conclusion was an artifact of testing at the matrix level with an over-parameterised correction.
 
+**VALIDATION OF THE AMENDMENT (iteration 18) — it survives three stricter tests plus a
+permutation test over all block pairs. Confirmed; no change to the revised table below.**
+
+The amendment was justified by an SNR gain (13.1 → 15.2). SNR is spread/disagreement, and the
+`is_end` term *increases* spread by construction — so that gain alone could have been an
+artifact. Re-tested against proper error metrics:
+
+| test | per-type only | + is_end |
+|---|---:|---:|
+| rms vs per-matrix truth, fork-1500 | 0.2273 | **0.1852** |
+| rms vs per-matrix truth, fork-2000 | 0.2648 | **0.1997** |
+| **out-of-sample** (offset fit on fork-1500, applied at fork-2000) | 0.2648 | **0.2070** |
+| **leave-one-block-out** (never uses a block to predict itself) | 0.2500 | **0.2099** |
+
+LOBO is decisive: a term that merely memorised blocks 0 and 11 could not win it. It wins.
+
+*Where the gain comes from — it is not harming the interior:*
+
+| | mean LOBO delta |
+|---|---:|
+| end blocks (0, 11) | **−0.1137 dex** |
+| interior blocks (1–10) | −0.0148 dex |
+
+Only 20% of interior blocks get marginally worse (max +0.016 dex). The term does what it claims
+and costs nothing elsewhere.
+
+*Permutation test over every possible pair.* Repeating the LOBO gain for **all 66 two-block
+pairs**: `{0, 11}` ranks **1st of 66**, with a gain of **+0.0400 dex versus +0.0057** for the
+runner-up `{7, 8}` — a factor of 7 clear of second place. Empirical p = 0.015. **The end-block
+pair is not a post-hoc selection; it is the single best two-block split available**, which is
+what an architectural boundary effect predicts and a fitted artifact would not.
+
+*One observation for the readout:* **block 11 has the worst baseline error of any block**
+(0.514 dex under the per-type rule, versus 0.116–0.315 elsewhere), and gains the most from the
+correction (−0.129). The final block is the least well described by a pure type rule. Worth
+reporting block 11's realized curvature separately in the arm-2 readout.
+
+**Status: the amendment is validated as far as offline analysis can take it.** What remains is
+the training run — the registered prediction (revised beats original by 0.0005–0.003 val, with
+the revert condition if not) stands unchanged.
+
 **REVISED PRESCRIPTION for arm 2** (per-type multiplier × 1.94 if block ∈ {0, 11}):
 
 | type | base | at blocks 0 / 11 |
