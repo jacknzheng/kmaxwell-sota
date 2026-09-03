@@ -1,0 +1,30 @@
+# REQ-033 annealed K-Maxwell vs batch size. SHA 365c392d, node wox8gkw (8xH100), venv019 torch 2.10.0+cu128.
+# 12 arms = batch{0.25x,0.5x,2x} x kernel{A single-EMA muon mu0.95, B bimaxwell_muon record, C annealed_weights_muon shipped decays, D annealed_weights_muon batch-rescaled decays}.
+# 2250-step continuations from a shared step-1000 state (eos_shared_base = bimaxwell switch_step:1000 = plain Muon through 1000). Base val@1000 = 3.65169.
+# seed 0, n=1 per cell. lr 0.025 wd 0.05 mu 0.95 fixed across all arms; cool_down cooldown_frac 0.7; start 1000 -> stop 3250; checkpoint 3250 only; dense val [3000,3250]/10 + coarse /125.
+# 1x row deliberately omitted (existing n=8 1x full-runs = out-of-band context only, never differenced).
+#
+# NB torch.compile mbs<64 NaN bug: the first pass NaN'd every arm within 10 steps of the fork. Root-caused to a compile shape bug at
+#   microbatch_sequences<64 (verified: 1x batch @mbs16/32 also NaN; mbs=64 stable; eager fixes it). 0.25x/0.5x (mbs 16/32) run EAGER
+#   (TORCHDYNAMO_DISABLE=1, identical math), 2x (mbs 64) runs compiled. Column 'engine' records which. Within-batch contrast is unaffected.
+#
+# final_val@3250 per arm:
+batch	batch_tokens	microbatch_seq	engine	kernelA_singleEMA	kernelB_bimax	kernelC_annealShipped	kernelD_annealRescaled
+0.25x	131072	16	eager	3.45397	3.44905	3.45460	3.55950
+0.5x	262144	32	eager	3.35723	3.35343	3.35355	3.36726
+2x	1048576	64	compiled	3.21181	3.21097	3.20668	3.20972
+#
+# NOTE absolute loss is NOT comparable across batch sizes (2x sees 8x the tokens of 0.25x): 0.25x~3.45, 0.5x~3.35, 2x~3.21. Only the within-batch contrast below is meaningful.
+#
+# === within-batch benefit = final_val(kernel) - final_val(A), same batch, @3250 (negative = kernel beats single-EMA) ===
+batch	benefit(B-A)	benefit(C-A)	benefit(D-A)
+0.25x	-0.00492	+0.00063	+0.10553
+0.5x	-0.00380	-0.00368	+0.01003
+2x	-0.00084	-0.00513	-0.00209
+#
+# === REQ-029 frozen bi-Maxwell curve (bimax - mu0), for context/axes (DIFFERENT reference: mu0 not single-EMA) ===
+batch	bimax_minus_mu0	source
+1x	-0.01063	REQ-026/027
+4x	-0.00438	REQ-026/027
+8x	-0.00233	REQ-028
+16x	~0.00000	REQ-029

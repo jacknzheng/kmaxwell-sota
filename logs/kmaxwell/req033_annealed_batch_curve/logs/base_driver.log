@@ -1,0 +1,4 @@
+[BASE] start 22:20:05Z
+[BASE] torchrun exit=0 22:24:43Z
+-rw-r--r-- 1 root root 572215797 Sep  2 22:24 eos_shared_state/train_state_model_step001000.pt
+[BASE] STATE-OK
