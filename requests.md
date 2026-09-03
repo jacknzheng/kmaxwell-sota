@@ -1256,6 +1256,64 @@ is a magnitude refinement of arm 2.
 elevation. If judged unsafe, cap end-block multipliers at 3x and report the cap — the registered
 predictions still apply.
 
+**ITERATION 31 — the single-type concentration is REAL SIGNAL, and a 2-parameter rule
+nearly matches the 6-parameter one.**
+
+*Shrinkage does not help — clean negative.* Iteration 30 flagged that the lam_top rule draws 49%
+of its dynamic range from attn.proj. James-Stein shrinkage toward the grand mean was the obvious
+fix. It fails on both counts:
+
+| shrinkage | out-of-sample rms | LOBO | max single-type dependence |
+|---:|---:|---:|---:|
+| 0.00 (filed) | **0.2652** | **0.2500** | 49% |
+| 0.50 | 0.2655 | 0.2490 | 54% |
+| 2.00 | 0.2716 | 0.2545 | 52% |
+| 8.00 | 0.2883 | 0.2691 | — |
+
+Error is flat-to-worse, and shrinkage **does not even reduce the concentration** (49% → 54% →
+48%). Optimum is essentially zero shrinkage. **Keep the unshrunk per-type means.**
+
+*Why — the concentration is genuine, not noise.* Distance of each type mean from the grand mean,
+in units of its own standard error:
+
+| type | mean log C | dist. from grand | **signal/SE** |
+|---|---:|---:|---:|
+| **attn.v** | 4.283 | 0.170 | **3.54** |
+| **attn.proj** | 3.734 | 0.378 | **3.24** |
+| attn.k | 4.032 | 0.080 | 2.32 |
+| attn.q | 4.202 | 0.090 | 2.30 |
+| mlp.proj | 4.348 | 0.236 | 1.32 |
+| mlp.fc | 4.074 | 0.038 | 0.57 |
+
+attn.proj sits **0.378 dex below the grand mean at 3.2 SE** — it is genuinely extreme, not noisily
+estimated, which is exactly why shrinkage should and does leave it alone. **The 49% concentration
+is a feature of the physics, not a fragility of the fit.** This retires iteration 30's caution.
+
+*Consequence — the rule is simpler than six parameters suggest.* If attn.proj carries half the
+range because it is genuinely 0.4 dex low, the rule is essentially *"lower attn.proj a lot, adjust
+everything else mildly"*. Tested directly:
+
+| rule | params | out-of-sample rms | LOBO |
+|---|---:|---:|---:|
+| 6-type (filed) | 6 | 0.2652 | 0.2500 |
+| 3-group (attn.proj / mlp.proj / rest) | 3 | 0.2701 | 0.2536 |
+| **2-group (attn.proj / rest)** | **2** | 0.2743 | **0.2485** |
+
+**A 2-parameter rule matches the 6-parameter rule** — marginally *better* on leave-one-block-out
+(0.2485 vs 0.2500), marginally worse out-of-sample (0.2743 vs 0.2652). The four extra parameters
+buy ~0.009 dex, well inside the 0.10 dex noise floor.
+
+**OPTIONAL SIMPLIFICATION for the operator — not a change to the authoritative table.** If a
+minimal-risk arm is preferred, `attn.proj = 0.40, everything else = 1.06` captures nearly all the
+measurable benefit with two parameters instead of six, and cannot be distorted by any single
+mismeasured type except attn.proj itself. **I am not recommending it over arm 2** — the 6-type rule
+is better out-of-sample and already filed — but it is the more defensible rule if the run is
+treated as a first test of the concept rather than a tuned deployment.
+
+**Registered seed check (zero cost):** attn.proj's signal/SE must exceed 2.0 in every seed. If it
+does not, the concentration *is* noise after all, shrinkage becomes correct, and both the 6-type
+and 2-group rules should be refit with it.
+
 **Registered predictions** (magnitudes, per the REQ-019 lesson):
 - arm 2 beats arm 1 by 0.001–0.006 val; arm 3 beats arm 2 by 0.0005–0.003; **arm 5 beats arm 2 by
   0.0005–0.003**.
