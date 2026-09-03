@@ -1228,6 +1228,50 @@ ceiling is actually lifted by your operator.
 - **node budget: 1 box is enough for the headline arm; up to 4 uses the full design.
   I am the requester, not your operator — run this at whatever ceiling is in force.**
 - depends on: REQ-023 (measured the causal exponent), REQ-019/022 (measured C and k).
+
+---
+
+## ⚠️ AUTHORITATIVE ARM TABLE — READ THIS, IGNORE ALL PRESCRIPTION TABLES BELOW
+
+*This request accumulated three prescription tables across iterations 17/19/27, two of which
+say "use this for arm 2" with conflicting values. **They are superseded. Only this block is
+live.** Everything below is kept for provenance and must not be executed from directly.*
+
+**Common setup:** 750-step continuations from the shared step-2000 state, val@2750, same
+`PerMatrixLrMuon` machinery as REQ-023.
+
+| arm | rule | multipliers |
+|---|---|---|
+| **1** | control | all 1.0 |
+| **2** | per-type only | attn.proj 0.40, attn.k 0.88, mlp.fc 0.91, attn.q 1.18, attn.v 1.25, mlp.proj 1.56 |
+| **3** | per-type + role-split end block | arm-2 values, except at blocks 0 and 11: attn.q 1.35, attn.k 1.01, attn.v 1.43, mlp.fc 1.04, **attn.proj 1.72, mlp.proj 6.71** |
+| **4** | anti-rule falsifier | arm-2 multipliers inverted (1/s) |
+| **5** | **polar target** (iteration 27) | attn.q 0.568, attn.k 0.755, attn.proj 0.642, attn.v 1.101, mlp.fc 1.260, mlp.proj 2.462 |
+
+**Priority if fewer arms fit:** 1, 2, 5, 3, 4. Arms 2 and 5 test *different hypotheses* (which
+curvature to equalize) and are the most informative pair; arm 4 is the cheapest falsifier; arm 3
+is a magnitude refinement of arm 2.
+
+**Safety flag:** arm 3's mlp.proj value of **6.71x** is extreme, derived from a 1.0-dex curvature
+elevation. If judged unsafe, cap end-block multipliers at 3x and report the cap — the registered
+predictions still apply.
+
+**Registered predictions** (magnitudes, per the REQ-019 lesson):
+- arm 2 beats arm 1 by 0.001–0.006 val; arm 3 beats arm 2 by 0.0005–0.003; **arm 5 beats arm 2 by
+  0.0005–0.003**.
+- arm 4 is *worse* than arm 1 by a comparable margin. **If arm 4 also beats control, the mechanism
+  claim is dead** regardless of which other arm wins.
+- **Expect smaller gains than the within-design numbers imply** — iteration 21 showed ~71% of
+  cross-experiment variation is irreducible. A null is not a refutation of the curvature findings,
+  only of their transfer to a different intervention design.
+
+**Required readouts:** per-matrix curvature at the final checkpoint for arms 1–3 and 5 (to verify
+the intervention actually equalized what it targeted); per-type drift over the final window
+(iteration 14 — **mlp.fc is the least trustworthy multiplier**); block 11 reported separately
+(iteration 18 — worst baseline error of any block).
+
+---
+
   Does NOT depend on REQ-035 — this uses *measured* C, not predicted C, so it is
   unaffected by REQ-035's negative result on predicting C from covariates.
 
@@ -1384,7 +1428,7 @@ The interaction version wins at **both** forks, and the gain at fork-2000 is sub
 (0.218 → 0.194). Given it replicates across states and rests on a t > 3.5 interaction rather
 than a search, it is justified.
 
-**FURTHER REVISED PRESCRIPTION — use this for arm 2** (supersedes the table below; base per-type
+**[SUPERSEDED — DO NOT USE] iteration-19 role-split table, kept for provenance.** Its values now live in the authoritative arm table at the top. Original text: base per-type
 multipliers unchanged, end-block treatment now split by matrix role):
 
 | type | base | at blocks 0 / 11 |
@@ -1786,7 +1830,7 @@ the queue is 4 deep.**
 (interaction t > 2, same sign) in REQ-035 Arm A. If it does not, revert to the uniform is_end
 term; if the uniform term also fails to reproduce, revert to per-type only.
 
-**REVISED PRESCRIPTION for arm 2** (per-type multiplier × 1.94 if block ∈ {0, 11}):
+**[SUPERSEDED — DO NOT USE] earlier revision, kept for provenance only.** This uniform ×1.94 end-block table was replaced in iteration 19 by the role-split table, and both are superseded by the AUTHORITATIVE ARM TABLE at the top of this request:
 
 | type | base | at blocks 0 / 11 |
 |---|---:|---:|
@@ -1797,8 +1841,9 @@ term; if the uniform term also fails to reproduce, revert to per-type only.
 | attn.v | 1.25 | 2.42 |
 | mlp.proj | 1.56 | 3.03 |
 
-**Arm 2 should use this revised table. Please also keep the original per-type-only rule as a
-fifth arm if capacity allows** — the two differ by a factor of 1.9 on 12 of 72 matrices, and
+**[SUPERSEDED] The instruction below is historical; follow the authoritative arm table instead.**
+Original text: Arm 2 should use this revised table, and keep the original per-type-only rule as a
+fifth arm if capacity allows — the two differ by a factor of 1.9 on 12 of 72 matrices, and
 their comparison directly tests whether the block-level boundary field is real in a way no
 offline analysis can settle. If only four arms fit, run the revised table (arm 2) and drop the
 half-strength arm (arm 3) instead.
@@ -1869,7 +1914,11 @@ stability quantity despite Muon not moving along it — itself a substantive res
 across seeds (Spearman ≥ +0.7), and its between-state SNR must exceed the lam_top rule's in at
 least 3 of 4 seeds.
 
-### Arms — 750-step continuations from the shared step-2000 state, val@2750
+### [SUPERSEDED] Original arm list (iteration 3) — kept for provenance
+
+*Numbering here does NOT match the authoritative arm table at the top of this request (this arm 3 is 'half-strength'; the live arm 3 is the role-split end-block rule). Execute only from the authoritative table.*
+
+Original heading: Arms — 750-step continuations from the shared step-2000 state, val@2750
 
 | # | arm | multipliers |
 |---|---|---|
