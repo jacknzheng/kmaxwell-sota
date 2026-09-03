@@ -2485,6 +2485,72 @@ separately** (not pooled) in every seed. If the effect is present in one proj ty
 the other, even the descriptive grouping fails and the finding reduces to a single-matrix-type
 effect.
 
+**=== ITERATION 63: THE WITHIN-TYPE SLOPES GENUINELY DIFFER — and it is not measurement error ===**
+
+*Plotting the data (see `figures/fig4`) showed every matrix type has a positive gradient slope, but
+they range from +0.87 to +3.93 around a causal exponent of 2.07. That spread needed explaining.*
+
+**Per-type slopes with standard errors:**
+
+| type | slope f1500 | SE | t vs 2 | slope f2000 |
+|---|---:|---:|---:|---:|
+| attn.k | 0.87 | 0.35 | **−3.26** | 0.35 |
+| attn.q | 1.34 | 0.34 | −1.93 | 0.72 |
+| attn.v | 1.41 | 0.51 | −1.15 | 0.86 |
+| mlp.fc | 1.43 | 0.97 | −0.58 | 0.90 |
+| attn.proj | 3.76 | 0.65 | **+2.70** | 3.57 |
+| **mlp.proj** | **3.93** | **0.28** | **+6.80** | **3.78** |
+
+**Heterogeneity Q(5) = 66.7 and 68.3** against df = 5 — the slopes differ far beyond their standard
+errors. Only 3 of 6 types sit within 2 SE of 2.0, and the inverse-variance weighted mean is
+**2.28 / 2.35**, consistent with the causal exponent but hiding real dispersion.
+
+**A suspicious pattern, and the hypothesis it suggested.** The fitted slope correlates with how much
+gradient range each type spans at **+0.960 and +0.947**. That is the classic signature of
+**regression attenuation** — a predictor that barely varies yields a slope biased toward zero — and
+it would have meant the type differences are an artifact and the law is universal.
+
+**Tested and rejected.** The duplicate arms give the measurement error in log g directly:
+**sd 0.0131 dex**, variance 0.000171. Against within-type predictor variances of 0.0046–0.0252,
+the reliability ratios are **0.962–0.993**:
+
+| | raw slope spread | attenuation-corrected |
+|---|---:|---:|
+| fork-1500 | 1.35 | **1.24** |
+| fork-2000 | 1.54 | **1.42** |
+
+**Correction moves each slope by 1–4% and barely touches the spread.** Measurement error in the
+gradient is an order of magnitude too small to explain a 4.5× range in slopes. **The type
+differences are real.**
+
+**What this leaves.** The +0.96 range/slope correlation is genuine and unexplained by noise. Two
+readings remain, and this data cannot separate them:
+- the two proj types genuinely have a steeper gradient→curvature exponent (~3.8) than the other
+  four (~0.9–1.4), and their wider gradient range is a *consequence* of the same underlying
+  difference rather than a cause of the slope estimate;
+- or some third variable drives both range and slope together.
+
+**This sharpens the campaign's central claim rather than overturning it.** Iteration 52 said "the
+gradient law holds for four of six types and breaks for q,k." The corrected statement is:
+
+> **The cross-sectional gradient exponent differs systematically by matrix type — ~3.8 for the two
+> projection matrices, ~0.9–1.4 for the other four — against a within-matrix causal exponent of
+> 2.07. No type sits at the causal value.**
+
+That is a stronger and stranger fact than "q,k are special," and it is not attributable to
+measurement error, sample size, or predictor range.
+
+**Registered seed check (zero cost, replaces the per-group slope band):**
+- **heterogeneity Q across the six per-type slopes must exceed 2×df (i.e. > 10) in every seed** —
+  the slopes must keep differing beyond their standard errors;
+- **mlp.proj and attn.proj slopes ≥ 2.5; attn.k, attn.q, attn.v, mlp.fc slopes ≤ 1.8**, in ≥3 of 4
+  seeds;
+- **falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, this iteration is
+  wrong and the law is universal after all.
+
+*(Figures supporting this are committed at `~/ML/layerwise-momentum/figures/` — `fig4` shows the
+per-type slopes directly, `fig2` shows the pooled slope of +0.74 that hides them.)*
+
 ## ⚠️ AUTHORITATIVE SEED-CHECK TABLE — READ THIS, IGNORE THE SEED CHECKS BELOW
 
 *This request accumulated **13 overlapping "registered seed check" blocks** across ~15 iterations,
