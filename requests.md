@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-040**.
+Next request number: **REQ-041**.
 
 ---
 
@@ -933,6 +933,26 @@ only the registered bands move. No extra compute, no queue impact.
 ### Artifacts
 `logs/kmaxwell/req038_activation_probe/` — or, if folded into Arm A as recommended, alongside
 `logs/kmaxwell/req035_C_mechanism/armA/` with the fields recorded per seed.
+
+## REQ-040: dispatch the active queue
+
+- status: **OPEN — start now.**
+- requested: Jack / 2026-09-03 PDT
+- repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
+
+Please begin the existing active queue immediately, following the standing constraints and
+authoritative specifications already recorded above. This is a dispatch request, not a change to
+any experiment's protocol.
+
+1. Start **REQ-035 Arm A** first, fold **REQ-038's** activation/backward probe fields into it, and
+   run its four seeds sequentially on one box.
+2. After Arm A has landed its results, run **REQ-036**, then **REQ-037**, sequentially under the
+   fleet-wide ≤2-node ceiling.
+3. Run **REQ-034** when capacity permits, without delaying the priority queue.
+
+Do not start REQ-035 Arms B/C/D or a standalone REQ-038 unless their existing request blocks say
+their prerequisite or fallback condition has been met. Mark each affected request `RUNNING` when
+work begins and preserve the prescribed artifact paths and reporting gates.
 
 ## Template
 
