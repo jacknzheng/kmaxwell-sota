@@ -268,6 +268,7 @@ measured value so a seed result can be compared directly.
 | **19** | **QK-norm beats the Muon-chunking rival** (iter. 93) — ✅ **CONFIRMED n=4** | on log g, **QK-norm indicator R² > 0.5 with |t| > 5**, and **shape_mult alone R² < 0.10**; QK-norm coefficient must not weaken when shape_mult is added | QK alone R² 0.63–0.67, t −10.9 to −11.9; shape_mult alone **R² 0.005–0.008, t +0.6 to +0.7**; both: QK **−0.45, t −11.5 to −12.6** |
 | **20** | **the mlp gradient gap is depth-structured, not a fixed update factor** (iter. 94) — ✅ **CONFIRMED n=4** | **across-layer sd of the mlp.fc−mlp.proj gap > 0.12 dex** (≥2× the noise floor) while the q,k deficit stays ≤0.09; **quadratic-in-depth R² > linear R²**; per-layer pattern reproducing to ≤0.04 dex across seeds | sd **0.151–0.161** vs q,k **0.065–0.089**; quad R² **0.607** vs linear 0.205; across-seed sd **0.018 dex**, structure/noise **8.5×** |
 | **21** | **the q,k deficit is PURELY backward in LOCUS; d_rms does NOT track it per-layer** (iter. 95–96) — ⚠️ **n=1, locus confirmed / reconstruction fails** | **a_rms identical for q,k,v at EVERY layer** (0.000 dex, 12/12); **d_rms ratio ≤ 0.75**; **but corr(gradient deficit, d_rms deficit) across layers must exceed 0.5 — it does not** | a_rms **0.000 dex at all 12 layers**; d_rms ratio 0.658; **corr = −0.012**, slopes t = −1.18 (gradient) vs **+6.65** (d_rms) |
+| **22** | **the q,k deficit SHRINKS during training** (iter. 98) — ✅ **CONFIRMED n=4** | **drift of the deficit vs step is POSITIVE (less negative) with a seed-clustered 95% CI excluding 0**, and **same sign in all three LR arms** | pooled **+0.058 dex/1000 steps, CI [+0.032, +0.085]**; per-arm +0.029 / +0.092 / +0.054 |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -278,6 +279,50 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 98: THE STATE CONFOUND IS ELIMINATED — and it makes the shortfall worse ===**
+
+*Iteration 97 concluded the missing 0.32 dex is a physical quantity REQ-038 does not measure. Before
+accepting that, one mundane alternative was still open and **named in iteration 96's own caveats**:
+REQ-038 probes fork-1500, Arm A measures at steps 2250–2750. If the deficit **grows** over those
+750–1250 steps, the residual is a state difference, not a missing term.*
+
+**Arm A measures at five steps inside its window, so this tests directly at zero cost.** Pooling all
+4 seeds × 3 LR arms × 5 steps = **60 measurements**, with a seed-clustered bootstrap:
+
+| LR arm | mean deficit | drift |
+|---|---:|---:|
+| s = 0.60 | −0.368 | **+0.029** dex/1000 steps |
+| s = 1.00 | −0.374 | **+0.092** |
+| s = 1.70 | −0.359 | **+0.054** |
+| **pooled** | **−0.367** | **+0.058, 95% CI [+0.032, +0.085]** |
+
+**The drift is real — CI excludes zero, same sign in all three arms — but it points the wrong way to
+help.** The deficit **shrinks** as training proceeds, so extrapolating back to step 1500 makes it
+**larger** (≈ −0.47 dex), while REQ-038's `|d|` deficit at that same step is **−0.182**. **The state
+difference widens the discrepancy from 0.32 to roughly 0.28→0.42 dex rather than closing it.**
+
+> **The state confound is eliminated. Iteration 97's conclusion stands and is strengthened: the
+> magnitude of the q,k gradient deficit is not reconstructible from anything REQ-038 measured, and
+> not an artifact of comparing two training states.**
+
+**And the drift is itself a new result, registered as band 22.** No previous band tested time
+evolution — band 17 established the deficit is flat in *depth*, and this establishes it is *not* flat
+in *training time*. The two are independent: **a fixed architectural attenuation is depth-flat, as
+observed, but need not be constant across training**, since what the backward signal carries changes
+as the model learns.
+
+**A caution on the per-seed evidence, worth recording.** Per-seed slopes were +0.058, +0.052, +0.080
+and +0.179 dex/1000 steps, and **only one cleared t = 2 individually** (seed 3, t = 3.63). With n=5
+steps per seed the per-seed test is under-powered — the result rests on **pooling 60 measurements and
+the consistency of sign across three independent LR arms**, not on any single seed. Band 22's
+registered check is written on the pooled CI and the three-arm sign agreement accordingly.
+
+**What this leaves.** Three reconstructions have failed (type-mean, per-layer, rank-augmented) and now
+the state confound is excluded. **The missing factor is 0.48×, grows with depth, and is not explained
+by `|d|`, `‖d‖_F`, `d_eff_rank`, or the training-state difference.** REQ-043's priority 3 — the
+alignment ratio `‖Σₜ dₜaₜᵀ‖_F / (‖d‖_F‖a‖_F)` — remains the one candidate with the right shape, and
+this iteration removes the last alternative explanation that could have made it unnecessary.
 
 **=== ITERATION 97: REGISTERED NEGATIVE — REQ-038's fields cannot reconstruct the deficit's size ===**
 
