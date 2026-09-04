@@ -270,6 +270,7 @@ measured value so a seed result can be compared directly.
 | **21** | **the q,k deficit is PURELY backward in LOCUS; d_rms does NOT track it per-layer** (iter. 95–96) — ⚠️ **n=1, locus confirmed / reconstruction fails** | **a_rms identical for q,k,v at EVERY layer** (0.000 dex, 12/12); **d_rms ratio ≤ 0.75**; **but corr(gradient deficit, d_rms deficit) across layers must exceed 0.5 — it does not** | a_rms **0.000 dex at all 12 layers**; d_rms ratio 0.658; **corr = −0.012**, slopes t = −1.18 (gradient) vs **+6.65** (d_rms) |
 | **22** | **the q,k deficit SHRINKS during training** (iter. 98) — ✅ **CONFIRMED n=4** | **drift of the deficit vs step is POSITIVE (less negative) with a seed-clustered 95% CI excluding 0**, and **same sign in all three LR arms** | pooled **+0.058 dex/1000 steps, CI [+0.032, +0.085]**; per-arm +0.029 / +0.092 / +0.054 |
 | **23** | **the g² law is CROSS-SECTIONAL/CAUSAL ONLY — it does not hold in TIME** (iter. 99) | **slope of λ-drift on g-drift across matrices must be < 1.5** (attenuation-corrected), i.e. NOT 2; **C's drift CI must include 0** and **step must explain < 1% of C's variance** | slope **+0.634**, CI [0.329, 0.982], corrected **0.860**; reliability 0.738 so a true 2 would read 1.476. C drift CI [−0.055, +0.049]; step **0.2–0.4%** of variance vs LR 2.0–3.5% |
+| **24** | **the measurement window IS equilibrated** (iter. 100) — ✅ **CONFIRMED n=4** | **autocorrelation of successive Δlog λ negative with seed-clustered CI excluding 0** (mean-reverting, not drifting), **and strictly above −0.5** (real dynamics, not white noise); **change magnitude ratio second/first half ≈ 1** | AC **−0.228, CI [−0.437, −0.117]**, implied AR(1) ρ = **0.54**; ratio **0.898** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -280,6 +281,53 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 100: VALIDATING THE WORD "EQUILIBRIUM" — the campaign's core assumption, finally tested ===**
+
+*Band 23 concluded the g² law has no time dynamics. That conclusion is only meaningful if the
+measurement window is genuinely at **equilibrium** — if matrices were still **relaxing**, band 23
+would be describing a transient, or a window placed too late to see one. **Every band in this
+campaign rests on `λ_eq` measured over steps 2250–2750, and the word "equilibrium" has been assumed
+throughout, never tested.***
+
+**The discriminator.** A relaxing system approaches its fixed point monotonically, with **shrinking**
+step-to-step changes and **positive** autocorrelation of successive differences. An equilibrated one
+fluctuates around the point: **negative** autocorrelation (mean reversion), flat change magnitudes.
+
+| test | result |
+|---|---|
+| autocorrelation of successive Δlog λ | **−0.228, 95% CI [−0.437, −0.117]** |
+| change magnitude, 2nd half / 1st half | **0.898** (relaxation predicts ≪1) |
+
+**Mean-reverting, with flat change magnitudes across the window. The system is fluctuating around a
+fixed point, not approaching one.**
+
+**But mean reversion alone is not enough, because pure noise fakes it.** If `λ` were constant plus
+white measurement noise, the differenced autocorrelation would be **exactly −0.5**. The observed
+−0.228 sits *between* white noise (−0.5) and a drifting random walk (0.0), and that position is
+informative — for an AR(1) around a fixed point with persistence ρ, the differenced autocorrelation
+is `(ρ−1)/2`:
+
+> **ρ = 2(−0.228) + 1 = 0.54.** The series retains **54% of a deviation across 125 steps**. That is a
+> system with **real persistence** — not white noise — that is nonetheless **mean-reverting rather
+> than drifting**.
+
+**Registered as band 24.** The campaign's foundational assumption is now measured rather than
+asserted, and it holds.
+
+**It also explains, rather than merely coexisting with, band 23's need for a reliability correction.**
+The within-window fluctuation of log λ is **0.040 dex median**, against a **0.07 dex noise floor** —
+the real time-variation is *smaller than the measurement noise*. That is precisely why band 23's
+regression of λ-drift on g-drift was attenuated (reliability 0.738) and had to be corrected before it
+could be interpreted. **The two findings are one fact seen twice: there is little genuine
+time-variation to detect, and what exists does not follow the g² law.**
+
+**What this closes.** The campaign's central law is now bounded on all sides: it holds
+**cross-sectionally** (band 8), **causally under LR perturbation** (band 13, exponent exactly 2), and
+**not in training time** (band 23) — with the time-domain test now confirmed to have been run on a
+genuinely equilibrated system (band 24) rather than a transient. **"Equilibrium curvature" means what
+it says**: a fixed point the matrices fluctuate around with ρ ≈ 0.54, restored against LR
+perturbation (band 16), invariant across seeds (Arm A) and across training time (iteration 99).
 
 **=== ITERATION 99: BAND 16 SURVIVES A TIME TEST — but the g² law does NOT ===**
 
