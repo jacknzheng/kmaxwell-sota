@@ -271,7 +271,7 @@ measured value so a seed result can be compared directly.
 | **22** | **the q,k deficit SHRINKS during training** (iter. 98) — ✅ **CONFIRMED n=4** | **drift of the deficit vs step is POSITIVE (less negative) with a seed-clustered 95% CI excluding 0**, and **same sign in all three LR arms** | pooled **+0.058 dex/1000 steps, CI [+0.032, +0.085]**; per-arm +0.029 / +0.092 / +0.054 |
 | **23** | **the g² law is CROSS-SECTIONAL/CAUSAL ONLY — it does not hold in TIME** (iter. 99) | **slope of λ-drift on g-drift across matrices must be < 1.5** (attenuation-corrected), i.e. NOT 2; **C's drift CI must include 0** and **step must explain < 1% of C's variance** | slope **+0.634**, CI [0.329, 0.982], corrected **0.860**; reliability 0.738 so a true 2 would read 1.476. C drift CI [−0.055, +0.049]; step **0.2–0.4%** of variance vs LR 2.0–3.5% |
 | **24** | **the measurement window IS equilibrated** (iter. 100) — ✅ **CONFIRMED n=4** | **autocorrelation of successive Δlog λ negative with seed-clustered CI excluding 0** (mean-reverting, not drifting), **and strictly above −0.5** (real dynamics, not white noise); **change magnitude ratio second/first half ≈ 1** | AC **−0.228, CI [−0.437, −0.117]**, implied AR(1) ρ = **0.54**; ratio **0.898** |
-| **25** | **the shortfall is REAL and reproducible; its depth trend is PARTLY a state artifact** (iter. 101–103) — ⚠️ **size confirmed n=4, slope qualified** | **SIZE (unaffected):** across-seed sd < 0.05 dex, mean ≤ −0.15 dex. **SLOPE (qualified):** ~34% attributable to the fork-1500 vs 2250–2750 state mismatch — **needs the probe at a second state to state correctly** | mean **−0.240 dex** (0.575×), across-seed sd **0.041**; raw slope −0.0176 (t = −5.67), **state-corrected −0.0117** (CI −0.0064 to −0.0169) |
+| **25** | **the shortfall = the token-wise ALIGNMENT deficit** (iter. 101–105, REQ-043 P2/P3) — ✅ **RESOLVED n=4** | **align_deficit measured at a single state ≤ −0.15 dex with across-seed sd < 0.02**; **identity align_deficit = grad_deficit − d_deficit holds to < 0.001 dex**; **depth slope state-dependent** | **−0.1896 ± 0.0068 dex** (0.646×), identity gap **< 0.0005 dex/seed**; artifact-free slope **−0.0075 dex/layer**; state drift +0.0101 dex/layer per 1000 steps |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -282,6 +282,64 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 105: REQ-043 P2/P3 LAND — band 25 resolved, and it is a RENAMING, not a mechanism ===**
+
+**Jerry delivered the alignment ratio and the second training state.** Both were filed against
+iteration 102's specification and iteration 103's correction. Both land — and the honest reading of
+the result is narrower than the commit title suggests.
+
+**The central point, stated first: the identity is true by construction.**
+
+```
+   align_ratio = ‖Σₜ dₜaₜᵀ‖_F / (‖d‖_F‖a‖_F) = ‖W.grad‖_F / (‖d‖_F‖a‖_F)
+   log(align)  = log‖grad‖ − log‖d‖ − log‖a‖
+   align_deficit = grad_deficit − d_deficit − a_deficit,  and a_deficit = 0 for q,k vs v (band 21)
+   ⟹  align_deficit ≡ grad_deficit − d_deficit ≡ the shortfall
+```
+
+**Verified: max |align_deficit − shortfall| = 0.0004 dex across the four seeds.** So **the alignment
+ratio does not *explain* band 25's missing factor — it *is* that factor, measured directly rather
+than inferred.** Recording this plainly because the commit title ("alignment ratio IS band-25's
+missing factor") is correct but could be read as a mechanism, and it is not one.
+
+**What it genuinely buys — three real results:**
+
+**1. A single-state measurement, 6× tighter.** Band 25 computed the shortfall by *differencing two
+states*: −0.240 ± 0.041. Measured within one state:
+
+> **align_deficit = −0.1896 ± 0.0068 dex (0.646×), n=4** — across-seed sd falls **6.0×**, and the
+> cross-state artifact is gone entirely.
+
+**2. Iteration 103's correction is confirmed, quantitatively.** That iteration argued the cross-state
+value was inflated and predicted a corrected slope of −0.0117 with CI **[−0.0169, −0.0064]**. The
+artifact-free measurement is **−0.0075 dex/layer — inside the predicted interval.** The filed −0.240
+mean was inflated by 0.050 dex relative to the artifact-free −0.190, in the direction predicted.
+
+**3. The state-dependence is confirmed directly, not inferred.** Jerry probed seed 0 at fork-2000 as
+well as fork-1500:
+
+| state | align_deficit | depth slope |
+|---|---:|---:|
+| fork-1500 | −0.1845 | **−0.00909** |
+| fork-2000 | −0.1905 | **−0.00405** |
+
+**The depth slope flattens by +0.0101 dex/layer per 1000 steps** — so it *is* state-dependent, and a
+cross-state comparison manufactures part of the trend, exactly as iteration 103 warned. **The mean is
+stable across states (−0.1845 vs −0.1905); only the slope moves.**
+
+**Band 25 is resolved and restated.** The missing factor is the **token-wise alignment between the
+backward and forward tensors** — q,k's gradients accumulate less coherently across tokens than v's,
+at 0.646× the alignment. **That is a real, measured, seed-stable quantity (sd 0.0068 dex) and it
+closes the arithmetic exactly.** What remains open is *why* the softmax Jacobian's output aligns less
+well across tokens — a question about attention dynamics, not about the gradient bookkeeping, which
+is now complete.
+
+**The campaign's account of the q,k effect is now closed end to end:**
+
+> **q,k gradient deficit (−0.37 dex) = backward attenuation (−0.18, band 21, softmax Jacobian) +
+> alignment deficit (−0.19, band 25).** Both terms measured at n=4, both seed-stable, and the two
+> sum to the whole with no residual.
 
 **=== ITERATION 104: AUDITING EVERY BAND AGAINST THE NEW RULE — and verifying REQ-043's seeds are real ===**
 
