@@ -273,6 +273,7 @@ measured value so a seed result can be compared directly.
 | **24** | **the measurement window IS equilibrated** (iter. 100) — ✅ **CONFIRMED n=4** | **autocorrelation of successive Δlog λ negative with seed-clustered CI excluding 0** (mean-reverting, not drifting), **and strictly above −0.5** (real dynamics, not white noise); **change magnitude ratio second/first half ≈ 1** | AC **−0.228, CI [−0.437, −0.117]**, implied AR(1) ρ = **0.54**; ratio **0.898** |
 | **25** | **the shortfall = the token-wise ALIGNMENT deficit** (iter. 101–105, REQ-043 P2/P3) — ✅ **RESOLVED n=4** | **align_deficit measured at a single state ≤ −0.15 dex with across-seed sd < 0.02**; **identity align_deficit = grad_deficit − d_deficit holds to < 0.001 dex**; **depth slope state-dependent** | **−0.1896 ± 0.0068 dex** (0.646×), identity gap **< 0.0005 dex/seed**; artifact-free slope **−0.0075 dex/layer**; state drift +0.0101 dex/layer per 1000 steps |
 | **26** | **C's six-type structure is genuinely THREE-term** (iter. 108) — ✅ **CONFIRMED n=4** | **the identity log g = log‖a‖_F + log‖d‖_F + log(align) holds exactly**; across the six types **no term correlates with C above 0.55**, and **each term's spread exceeds C's own** (offsetting) | identity exact to **1e-6 dex**; corr(C, −2‖a‖) +0.36–0.39, (C, −2‖d‖) +0.44–0.49, (C, −2align) +0.38–0.40; term spreads 1.35 / 1.02 / 0.64 vs C's **1.04** |
+| **27** | **forward and backward magnitudes trade off across DEPTH** (iter. 110) — ✅ **CONFIRMED n=4** | **corr(log‖a‖_F, log‖d‖_F) ≤ −0.80 within every matrix type across the 12 depths**, permutation p < 0.01, in every seed; **var(log‖a‖+log‖d‖) / (var‖a‖+var‖d‖) < 0.20** | corr **−0.944 / −0.980 / −0.971 / −0.952 / −0.986 / −0.875** (p ≤ 0.0002); variance ratio **0.045–0.080** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -283,6 +284,67 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 110: THE CANCELLATION IS REAL — but across DEPTH, not across type ===**
+
+*Iteration 109 rejected the cancellation as chance and concluded the architecture's six types were an
+insurmountable limit. **That conclusion was premature.** Collapsing to six type-means discarded 12×
+the data: there are 72 matrices, and the same test run **within each type across the 12 depths** has
+twelve times the resolution.*
+
+**Within every type, the cancellation is overwhelming:**
+
+| scope | n | variance ratio | null | **p** |
+|---|---:|---:|---:|---:|
+| within attn.k | 12 | **0.094** | 1.00 ± 0.31 | **0.0001** |
+| within attn.proj | 12 | **0.063** | 1.00 ± 0.32 | **0.0000** |
+| within attn.q | 12 | **0.081** | 1.00 ± 0.31 | **0.0000** |
+| within attn.v | 12 | **0.077** | 1.00 ± 0.31 | **0.0000** |
+| within mlp.fc | 12 | **0.155** | 1.00 ± 0.31 | **0.0006** |
+| within mlp.proj | 12 | **0.198** | 1.00 ± 0.31 | **0.0007** |
+| **all 72 matrices** | 72 | **0.34–0.35** | 1.00 ± 0.13 | **< 0.0001**, all 4 seeds |
+
+**But that test has a defect I had to check before believing it.** The alignment term is *defined* as
+`al = lg − la − ld`, so `la + ld + al ≡ lg` identically — the variance ratio is small whenever the
+components each vary more than their sum, which can happen with no constraint at all. **The ratio is
+not admissible evidence on its own.**
+
+**The decisive test uses only independently measured quantities.** `a_frob` and `d_frob` both come
+from REQ-043's probe; neither is derived from the other or from the gradient:
+
+| type | corr(log‖a‖, log‖d‖), 4 seeds | mean | perm p |
+|---|---|---:|---:|
+| attn.k | −0.934 / −0.960 / −0.929 / −0.953 | **−0.944** | **0.0000** |
+| attn.proj | −0.977 / −0.986 / −0.971 / −0.987 | **−0.980** | **0.0000** |
+| attn.q | −0.964 / −0.979 / −0.957 / −0.982 | **−0.971** | **0.0000** |
+| attn.v | −0.964 / −0.950 / −0.934 / −0.961 | **−0.952** | **0.0000** |
+| mlp.fc | −0.990 / −0.990 / −0.987 / −0.978 | **−0.986** | **0.0000** |
+| mlp.proj | −0.853 / −0.946 / −0.819 / −0.880 | **−0.875** | **0.0002** |
+
+**Correlations from −0.87 to −0.99, in every type and every seed, between two independently measured
+quantities.** Using only those two terms, `var(‖a‖+‖d‖) / (var‖a‖ + var‖d‖) = 0.045–0.080` — **the
+sum varies at roughly 6% of what independence would give.**
+
+> **Across depth, a matrix's forward activation magnitude and backward gradient magnitude trade off
+> almost exactly. Layers with large activations receive small backward signals and vice versa, so
+> their product — the gradient — is far more uniform across depth than either factor.**
+
+**Why iteration 109 missed it.** That test compared **six type-means**, which averages over depth and
+destroys precisely the variation where the trade-off lives. Its negative was correct *for the
+question it asked* — cancellation **across types** is not established — and wrong as a general
+conclusion. **Iteration 109's closing claim, that no probe on this model could resolve it, is
+withdrawn: the resolution was already in the committed data, one aggregation level down.**
+
+**Registered as band 27.** This is the strongest single correlation the campaign has measured, and it
+reframes band 26: C's three terms are comparable *across types*, but **across depth two of them are
+locked in near-perfect anti-correlation** — which is why the gradient, and hence C, is so much flatter
+in depth than its components (bands 17 and 22 both observed that flatness without explaining it).
+
+**A caution kept explicit.** The trade-off is *observed*, not explained. A plausible reading — that
+the residual stream's growth with depth raises activations while the backward signal attenuates
+through the same blocks — is consistent with the sign but untested here, and the campaign has
+repeatedly found such readings to be depth in disguise. **It is recorded as a measured relationship,
+not a mechanism.**
 
 **=== ITERATION 109: REGISTERED NEGATIVE — the three-term cancellation is NOT a constraint ===**
 
