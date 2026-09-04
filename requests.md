@@ -1554,6 +1554,21 @@ information is already in memory and is being discarded.** Add four reductions p
 4. **`grad_rank1_frac`** — `σ₁²/Σσᵢ²` of the accumulated `Σₜ dₜaₜᵀ`: how close the weight gradient is
    to rank-1, i.e. how coherently the outer products add.
 
+**IMPLEMENTATION NOTES — verified against the committed probe, 2026-09-04.**
+
+*Confirmed implementable as an increment:* the forward hook stores `acts[nm]=inp[0].detach()` and the
+backward hook `grads[nm]=gout[0].detach()` (lines 43–47), and **both remain in scope through the
+reduction loop at line 62** — the per-token tensors are live where the new statistics would be
+computed. No new hooks, no second pass.
+
+**One correctness detail that must not be missed.** The existing `eff_rank` flattens with
+`mat.reshape(-1, mat.shape[-1])`, collapsing **batch and sequence into one axis**. That is fine for a
+rank statistic but **wrong for `da_cos_mean`**: flattening would pair the last token of one sequence
+with the first token of the next, injecting spurious decorrelation at every sequence boundary.
+**`da_cos_mean` must be computed along the sequence axis within each batch row**, e.g. on a tensor
+shaped `[batch, seq, feat]` compare `d[:, :-1]` with `d[:, 1:]`, then average. **The same applies to
+any per-token ordering statistic added here.**
+
 **Run on:** Arm A's four fork-1500 seeds (as REQ-043 did), so every result is n=4 immediately.
 
 **The two questions this settles, both currently measurement-bound:**
