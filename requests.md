@@ -429,363 +429,108 @@ a free per-layer knob without changing the kernel. Filing a momentum rule now wo
 inventing a mapping rather than deriving one. The prerequisite is a registered experiment
 asking whether mu does anything LR cannot at fixed `s_eff`; that is REQ-037 if wanted.
 
-**=== ITERATION 118 ANALYSIS (2026-09-03): a systematic cross-band consistency audit ===**
-
-*Iteration 117 tested one constraint implied by three bands and it held. **Three more constraints are
-implied by band pairs and had never been checked** — each would falsify a pair if violated. Testing
-them all, once, rather than discovering a contradiction later.*
-
-**CONSTRAINT A — bands 21 + 26.** Band 21 says `a_rms` is *identical* for q, k and v; band 26 says C's
-structure is three-term with the forward term contributing. **Together they require the forward term
-to contribute exactly zero among those three types.**
-
-| seed | `a_frob` spread across q, k, v |
-|---|---:|
-| 0–3 | **0.000000 (0.0000%)** |
-
-**Exactly zero in all four seeds.** ✅
-
-**CONSTRAINT C — bands 14 + 28.** Band 14 says the q,k deficit is in the *gradient*, with λ not
-significantly different; band 28 says λ varies 3.2× more than g across depth. **Together they require
-the q,k λ-equality to hold despite λ being the more variable quantity.**
-
-| seed | \|Δ log λ (q,k vs v,proj)\| | within-type depth sd | ratio |
-|---|---:|---:|---:|
-| 0 | 0.138 | 0.255 | **0.54** |
-| 1 | 0.018 | 0.236 | **0.08** |
-| 2 | 0.115 | 0.245 | **0.47** |
-| 3 | 0.086 | 0.264 | **0.32** |
-
-**The q,k λ difference is consistently smaller than λ's own depth spread.** ✅
-
-**CONSTRAINT B — bands 16 + 23. This one needed care, and my framing of it was wrong.** I stated it as
-"C must be flat under the LR ladder." **C's level shifts −0.127 to −0.211 dex across s = 0.6→1.7**,
-which looks like a contradiction with band 16's "actively restored."
-
-**It is not, because band 16 never claimed the level is invariant — only the pattern.** But my
-script's follow-up verdict was also too generous: it proposed the shift is uniform, and **it is not**:
-
-| seed | mean shift | sd(shift) across matrices | ratio | **corr(C@0.6, C@1.7)** |
-|---|---:|---:|---:|---:|
-| 0 | −0.174 | 0.178 | 1.03 | **0.927** |
-| 1 | −0.211 | 0.114 | 0.54 | **0.968** |
-| 2 | −0.204 | 0.184 | 0.90 | **0.921** |
-| 3 | −0.127 | 0.258 | **2.03** | **0.870** |
-
-**The shift is non-uniform — its spread across matrices is comparable to or larger than its mean.**
-Yet the **pattern correlation is +0.87 to +0.97**, which is exactly what band 16 registered (> 0.80),
-and it passes in every seed. **Both facts hold: matrices move by different amounts, and the ordering
-survives anyway.** That is a stronger statement about restoration than a uniform shift would be.
-
-> **All three constraints pass. Band 16 is amended in wording only: it claims C's PATTERN is restored,
-> not its level — the level shifts ~0.17 dex under a 2.8× LR change, non-uniformly.**
-
-**Two corrections recorded from this iteration.** My initial statement of constraint B misread band 16
-as a claim about level; and my script's rescue of it ("uniform shift") was wrong in the opposite
-direction. **The passing verdict is correct; both routes I first took to it were not.**
-
-**The audit is now complete.** Four implied constraints across bands 10, 14, 16, 21, 23, 25, 26, 27
-and 28 have been tested and all hold. **Fourteen bands describing the same 72 matrices are mutually
-consistent** — which is a different and stronger claim than each being individually validated, and it
-is the last structural check available on committed data.
-
-**=== ITERATION 117 ANALYSIS (2026-09-03): a consistency requirement between bands 27 and 10/25 ===**
-
-*Band 27 says the gradient is **flat in depth** because the `‖a‖·‖d‖` product it is built from is
-conserved. Bands 10 and 25 found **depth structure in C**. Since `C = λ/g²` identically, both can only
-hold if **λ carries that structure**. **That requirement links three bands and had never been
-checked** — if it failed, one of them would be wrong.*
-
-**It passes, in every type and every seed:**
-
-| type | sd(log λ) | sd(log g) | **ratio** |
-|---|---:|---:|---:|
-| attn.v | 0.1872 | 0.0922 | **2.03 ± 0.13** |
-| attn.q | 0.2069 | 0.0777 | **2.76 ± 0.60** |
-| attn.k | 0.2091 | 0.0760 | **2.85 ± 0.63** |
-| mlp.fc | 0.2108 | 0.0724 | **2.93 ± 0.51** |
-| mlp.proj | 0.6520 | 0.1558 | **4.19 ± 0.17** |
-| attn.proj | 0.3973 | 0.0924 | **4.32 ± 0.29** |
-
-**Curvature varies ~3.2× more than the gradient across depth, in all six types.** The bands are
-mutually consistent: C's depth structure is a curvature phenomenon, and the gradient's flatness —
-band 27's conserved product — is what makes it visible rather than swamped.
-
-**A second result the decomposition surfaced.** The λ variance shares exceed 1 for **attn.proj
-(1.40)** and **mlp.proj (1.76)**, which means λ and g **move together** across depth there, so
-subtracting `2·log g` *removes* variance rather than adding it. Checking the correlation directly:
-
-| type | corr(log λ, log g) across depth |
-|---|---:|
-| **mlp.proj** | **+0.964** |
-| **attn.proj** | **+0.828** |
-| attn.v | +0.693 |
-| attn.q | +0.513 |
-| mlp.fc | +0.417 |
-| attn.k | +0.253 |
-
-**The two residual writers have by far the strongest λ–g coupling across depth** — which is **band 6
-reappearing in a different domain.** Band 6 established that residual writers have a steep
-*cross-sectional* gradient slope (+2.5 vs +0.3), meaning their curvature tracks their gradient. Here
-the same two types show the same coupling *across depth*, at +0.83 and +0.96. **Two independent
-measurements of the same architectural fact**, and band 6 was never tested this way.
-
-**Registered as band 28.** Its check is deliberately the *consistency requirement* rather than a new
-effect: `sd(log λ)/sd(log g) > 1.5` in every type. **If a seed violated it, bands 27 and 10/25 could
-not both be true**, so this is a cross-band falsifier rather than a standalone claim — the first the
-campaign has registered.
-
-**Why consistency checks earn their place.** Fourteen bands now describe overlapping aspects of the
-same 72 matrices. **Individually validated bands can still be jointly impossible**, and nothing in the
-campaign's method until now would have caught that. This iteration tests three bands against each
-other rather than against data, and they agree.
-
-**=== ITERATION 116 ANALYSIS (2026-09-03): applying the new rule to the campaign's OWN bands ===**
-
-*Iteration 115 added a standing rule — **drop each group in turn before accepting a correlation over
-few points** — after it caught a verdict in my own script. **A rule written and not applied to
-existing findings is worthless**, so this iteration applies it retroactively to every band that has
-the vulnerable shape.*
-
-**BAND 27 — the campaign's strongest correlation, and the most exposed** (six correlations, each over
-12 layers):
-
-| type | full corr | **LOO worst case** | range |
-|---|---:|---:|---:|
-| mlp.fc | −0.986 | **−0.974** | 0.019 |
-| attn.proj | −0.980 | **−0.970** | 0.017 |
-| attn.q | −0.971 | **−0.956** | 0.023 |
-| attn.v | −0.952 | **−0.933** | 0.033 |
-| attn.k | −0.944 | **−0.919** | 0.038 |
-| mlp.proj | −0.875 | **−0.848** | 0.085 |
-
-**The weakest any correlation becomes when its most influential layer is removed is −0.848.** No
-single layer carries any of the six. **Band 27 is robust.**
-
-**BAND 14 — the q,k gradient deficit at identical shape:**
-
-| seed | full | LOO range |
-|---|---:|---|
-| 0 | −0.378 | [−0.387, −0.366] |
-| 2 | −0.356 | [−0.373, −0.341] |
-
-**Maximum movement 0.032 dex across all folds** — well inside the 0.07 noise floor. **Robust.**
-
-**BAND 18 — q and k interchangeable.** Full differences −0.008 to −0.017; LOO ranges stay within
-[−0.021, −0.003]. **Never approaches the 0.05 dex threshold.** Robust.
-
-**BAND 20 — the mlp gradient gap.** Full −0.277 to −0.283; LOO ranges [−0.297, −0.249].
-**Maximum movement 0.034 dex.** Robust.
-
-**BAND 12 — the three-binary reduction, tested by leave-one-TYPE-out** (the form the rule actually
-targets, since this band is a claim about the six types):
-
-| dropped type | free-offsets LOLO | three-binaries | **gap** |
-|---|---:|---:|---:|
-| *(none)* | 0.288 | 0.292 | **+0.005** |
-| attn.k | 0.287 | 0.288 | **+0.000** |
-| attn.q | 0.290 | 0.291 | **+0.000** |
-| **mlp.proj** | 0.269 | 0.275 | **+0.006** |
-| attn.v | 0.304 | 0.309 | +0.005 |
-
-**The reduction holds with every type removed in turn**, gap 0.000–0.006 dex throughout.
-
-**This also addresses iteration 115's flag.** That iteration warned that bands involving **mlp.proj**
-carry a plausible IV contamination the others do not, and listed bands 12, 20 and 27 as exposed.
-Testing directly: **dropping mlp.proj leaves band 12's gap at +0.006** (from +0.005), **band 27's
-mlp.proj correlation is the weakest of the six but still −0.848 under LOO**, and **band 20 does not
-involve the contaminated estimate at all** — it is a raw gradient ratio, not an IV exponent. **The
-flag stands as a caution on the IV exponent for that type; it does not propagate into the bands.**
-
-> **All five type-level bands survive leave-one-out. The new rule, applied retroactively, changes
-> nothing — which is the outcome that makes the earlier results trustworthy rather than merely
-> unchallenged.**
-
-**Why this was worth an iteration.** Fourteen bands rest on aggregates over six types or twelve
-layers. **The rule was introduced because that shape had already produced one wrong verdict in this
-session**, and every prior band was established before the rule existed. Confirming they pass is not
-a null result — it is the difference between findings that happen to have survived and findings that
-have been tested against a known failure mode.
-
-**=== ITERATION 115 ANALYSIS (2026-09-03): the contamination's per-type structure is UNRESOLVABLE ===**
-
-*Iteration 114 proved a non-gradient channel exists. Whether that damages the campaign's other bands
-depends on its **structure**: a uniform channel shifts every matrix equally and **cancels in every
-type/depth contrast** (bands 14, 17, 18, 20, 26, 27 are all contrasts); a structured one biases them.*
-
-**Per-type exponent differences (top_eigenvalue − curvature_along_polar):**
-
-| type | fork-1500 | fork-2000 | 95% CI (f1500) |
-|---|---:|---:|---|
-| attn.k | +0.236 | **+0.003** | [−0.009, +0.544] |
-| attn.proj | +0.318 | +0.302 | [−0.120, +0.734] |
-| attn.q | **−0.275** | **+0.466** | [−0.672, +0.132] |
-| attn.v | −0.269 | −0.268 | [−0.640, −0.043] |
-| mlp.fc | +0.026 | −0.075 | [−0.154, +0.193] |
-| **mlp.proj** | **+0.796** | **+0.736** | **[+0.293, +1.205]** |
-
-**A correction to my own analysis.** My script computed the cross-fork correlation as **+0.609** and
-printed "reproduces" against a threshold. **That verdict was wrong.** Dropping a single type collapses
-it:
-
-| drop | corr |
-|---|---:|
-| attn.q | +0.972 |
-| *(none)* | +0.609 |
-| **mlp.proj** | **+0.109** |
-
-**The apparent reproducibility rests entirely on mlp.proj.** And **attn.q flips sign** (−0.275 →
-+0.466) between forks — something a structured contamination cannot do, since the two forks are the
-same network 500 steps apart and every genuine type-level quantity here reproduces at corr ≈ +0.99
-(band 14's C ordering, per-type gradients).
-
-**The CIs explain why: 4 of 6 include zero, with widths of 0.35–0.91 dex** — far too wide to resolve
-differences of the size observed. Only attn.v (negative) and mlp.proj (positive) exclude zero, and
-they point opposite ways.
-
-> **Iteration 114's violation is established in the POOLED estimate, where the CI is narrow
-> ([+0.033, +0.443]). Its per-type structure cannot be resolved from this data at all.**
-
-**What that means for the other bands, stated symmetrically.** The contamination **cannot be shown to
-bias** the type-level bands — and **equally cannot be shown not to**. The honest position is
-*unresolved*, not *harmless*. **The one exception is mlp.proj**, whose +0.80/+0.74 difference
-reproduces across forks with a CI excluding zero; **bands involving mlp.proj carry a plausible
-contamination that the others do not.** Bands 12 and 20 both give mlp.proj its own term, and band 27's
-weakest compensation (TLS −0.994, widest sd-ratio 0.493) is also mlp.proj — **worth flagging, not
-withdrawing.**
-
-**Why no further analysis will settle this.** The per-type CIs are set by having 12 matrices × 3 LR
-levels per type. Narrowing them needs more matrices per type or more LR levels — **neither exists in
-committed data, and neither is what arm 4 provides** (arm 4 removes the LR channel; it does not
-subdivide the contamination by type). **Registered as a limitation of the design, not a gap in the
-analysis.**
-
-**Method note.** I let a threshold in my own script produce a verdict ("corr +0.609 → reproduces")
-before checking whether one point drove it. **That is the same failure the standing permutation rule
-exists to prevent, applied to a correlation rather than a group summary.** Extending rule 1: *before
-accepting a correlation across a handful of groups, drop each group in turn.*
-
-**=== ITERATION 114 ANALYSIS (2026-09-03): the exclusion restriction is VIOLATED — shown on committed data ===**
-
-*Iteration 113 concluded the exclusion restriction "remains untested" and that arm 4 was the only way
-to test it. **That was wrong** — committed data tests it, one-sidedly, and it fails.*
-
-**The logic.** If the LR moves curvature **only** through the gradient, then **every functional of the
-Hessian must respond with the same exponent** — they all inherit the same single channel. Different
-exponents prove a second channel exists. *(One-sided: agreement would be consistent with exclusion
-but not prove it; disagreement disproves it.)*
-
-**REQ-023 recorded two admissible functionals.** *(A third, `curvature_along_gradient`, is α₁ from the
-same tridiagonal — circular by the standing rule and excluded.)*
-
-| fork | top_eigenvalue | curvature_along_polar | **difference** | 95% CI |
-|---|---:|---:|---:|---|
-| 1500 | +2.1302 [1.96, 2.31] | +1.8890 [1.79, 1.98] | **+0.2413** | **[+0.033, +0.443]** |
-| 2000 | +2.0967 [1.92, 2.26] | +1.8284 [1.70, 1.96] | **+0.2683** | **[+0.068, +0.465]** |
-
-**Both differences exclude zero, in both forks.** Two functionals of the same Hessian, under the same
-instrument, respond differently. **A pure gradient channel cannot produce that.**
-
-> **The exclusion restriction is violated. REQ-035's +2.07 is not a clean causal exponent — it is a
-> response ratio contaminated by at least one non-gradient channel.**
-
-**How much damage — stated carefully, because the bound is one-sided in a second way.** The 0.255 dex
-discrepancy bounds only the part of the LR effect that acts **differently** on the two functionals. A
-channel acting **equally** on both — a uniform rescaling of the whole Hessian — moves both exponents
-together and is **invisible to this test**. So **0.25 dex is a lower bound on the non-gradient
-channel, not an estimate of it.**
-
-**Consequence for band 13 — the registered check is unaffected, the reading is not.** Band 13 asks
-whether 2.000 sits inside the CI. It does, for both estimators and both forks, so **the band holds as
-written.** What changes: its agreement with 2.000 is now known to be *partly* luck — the contamination
-is small relative to the interval width rather than absent. **The IV caveat carried since iteration 76
-("this is a response ratio, not a structural parameter; the exclusion restriction is an assumption")
-is now demonstrated rather than hypothesised**, and band 13 is amended to say so.
-
-**What survives untouched.** The Gauss-Newton *derivation* of exponent 2 is theory, not an estimate —
-it never depended on the instrument. Both functionals land within 0.25 of 2.0, so the derivation
-remains consistent with everything measured. **Bands 6, 12, 14, 16–27 are unaffected**: none is an IV
-estimate.
-
-**And this sharpens arm 4's value.** Iteration 113 justified it as testing an untested assumption.
-**The assumption is now known to be false**, so arm 4's job changes: not "does a non-gradient channel
-exist" — it does — but **"how large is it once the LR channel is removed entirely."** The registered
-check stands (monotone reduced form, all per-type ratios positive); the interpretation of a result
-near +2 becomes *"the non-gradient channel is small"* rather than *"exclusion holds."*
-
-**=== ITERATION 113 ANALYSIS (2026-09-03): the batch arms bound the exclusion restriction — badly ===**
-
-*I named arm 4 as the highest-value remaining work. Before speccing it, the committed arms 1–3 were
-tested to see whether they already settle the question. **They do not, and the reason is itself
-informative.***
-
-**The batch instrument gives a completely different exponent:**
-
-| instrument | exponent | first-stage F | 95% CI |
-|---|---:|---:|---|
-| **LR** (REQ-023, REQ-035) | **+2.07** | 780–914 | contains 2.000 |
-| **batch** (REQ-037 arms 1–3) | **+0.383** | **590** | **[+0.028, +0.726]** |
-
-**The CIs are disjoint and 2.07 is decisively outside the batch interval**, with a strong first stage
-either way. Taken at face value that would mean the exclusion restriction fails badly — most of the
-LR's effect on curvature bypassing the gradient.
-
-**But the batch arm is not a usable instrument, and the data shows it directly.**
-
-**1. The reduced form is non-monotone.** Geomean curvature dips at the control and rises at both
-ends (0.5× 13520 / 1× 12850 / 2× 14792 per-matrix; the run summary's whole-model figures show the
-same dip). **A monotone dose cannot produce a non-monotone response** — so the Wald ratio built on it
-is unreliable in *either* direction, not just biased.
-
-**2. The per-type estimates have no consistent sign:**
-
-| type | first stage | batch Wald ratio |
-|---|---:|---:|
-| mlp.proj | +0.213 | **+1.121** |
-| mlp.fc | +0.228 | +0.896 |
-| attn.k | +0.186 | +0.429 |
-| attn.q | +0.176 | +0.356 |
-| attn.proj | +0.084 | **−0.384** |
-| attn.v | +0.131 | **−1.249** |
-
-**Ratios spanning −1.25 to +1.12 across types**, where the LR instrument gave +1.8 to +2.5 with every
-type positive. That spread is the signature of a weak or contaminated instrument, not of a real
-exponent.
-
-**3. The confound's direction argues against the observed value.** More tokens → lower loss → lower
-curvature; larger batch → less gradient noise → lower g. **Both channels share a sign**, so
-tokens-seen should bias the ratio **up**, not down. The observed +0.38 is far *below* the LR estimate
-in the direction the confound cannot explain — consistent with the instrument being broken rather
-than with a genuine low exponent.
-
-> **The batch instrument disagrees with the LR instrument, but it is a bad instrument — non-monotone
-> reduced form, sign-inconsistent per-type estimates. This is not evidence against REQ-035's
-> exponent; it is quantitative confirmation of REQ-037's own judgement that arm 4 is the clean test.**
-
-**Registered as a negative on the batch instrument itself.** REQ-035's exponent is unchallenged by
-this analysis, and the exclusion restriction **remains untested** — exactly as REQ-037 filed it.
-
-**Arm 4 specification, revised against this evidence.** The per-matrix gradient clip is the right
-instrument because it moves `g` **without** changing the optimiser's step size, the token budget, or
-the number of steps — so it has none of the batch arm's confounds:
-
-- **Design:** fork@2000, 750 steps, one box. Per-matrix clip multiplier randomised over
-  **{0.5, 1.0, 2.0}** on the *pre-orthogonalisation* gradient, each matrix receiving each level
-  exactly once across three arms — the REQ-023 balanced design, which is what made the LR instrument
-  clean.
-- **Hook:** clip the gradient in the Muon update path *before* `shape_mult` and Newton-Schulz, so the
-  orthogonalised step's spectral scale is untouched. This is the piece that does not exist in
-  `ebf53cd`.
-- **Measure:** per-matrix curvature at 2750 (existing probe) plus `weight_frob`; REQ-041's field
-  rides along.
-- **Registered check:** the clip Wald ratio must have a **monotone reduced form** (unlike batch) and
-  **every per-type ratio positive** (unlike batch). If it lands near **+2**, the exclusion restriction
-  is supported and REQ-035's exponent is causal. If it lands near **+1** or below with a monotone
-  reduced form, **52% of the LR effect bypasses the gradient** and band 13's "exactly 2" becomes a
-  statement about LR response, not about curvature-gradient physics.
-
-**This is the one measurement that could still overturn a load-bearing band**, and unlike the
-per-token probe I declined to file, it is a small, well-specified run on one box.
+### CONSOLIDATED FINDINGS III (iterations 112–118) — and where the goal stands
+
+*Six iteration blocks replaced. Provenance in git history from `ab04e19` onward.*
+
+#### The instrument, audited
+
+- **The batch instrument (REQ-037 arms 1–3) is unusable.** It gives +0.383 [+0.028, +0.726] against
+  the LR instrument's +2.07, but its reduced form is **non-monotone** and per-type ratios span
+  **−1.25 to +1.12** with no consistent sign. Not evidence against REQ-035 — evidence that arm 4 is
+  the clean test, as REQ-037 itself judged.
+- **The exclusion restriction is VIOLATED — shown on committed data.** Two functionals of the same
+  Hessian under the same instrument must give the same exponent. They do not: top_eigenvalue
+  **+2.13/+2.10** vs curvature_along_polar **+1.89/+1.83**, differences **+0.241/+0.268** with CIs
+  excluding zero in both forks. **REQ-035's +2.07 is a response ratio contaminated by ≥1 non-gradient
+  channel.** The bound is one-sided twice over: a channel acting *equally* on both functionals is
+  invisible here.
+- **Band 13's registered check is unaffected** (2.000 is inside every CI) but its **reading is
+  qualified** — agreement with 2.000 is partly luck. The Gauss-Newton *derivation* is theory and never
+  depended on the instrument.
+- **The contamination's per-type structure is unresolvable.** 4 of 6 CIs include zero, widths
+  0.35–0.91 dex, and attn.q flips sign between forks. **mlp.proj is the one exception** (+0.80/+0.74,
+  CI excluding zero) — flagged as a caution on that type's IV exponent only; it does **not** propagate
+  into bands 12, 20 or 27 (verified by leave-one-type-out).
+
+#### Two audits that changed nothing — which is the point
+
+- **Leave-one-out, applied retroactively** to bands 12, 14, 18, 20, 27 after the rule was introduced.
+  All survive: band 27's weakest LOO correlation is **−0.848**, band 14 moves ≤ **0.032 dex**, band 12's
+  reduction holds with **every type dropped** (gap 0.000–0.006 dex).
+- **Cross-band consistency, four implied constraints tested.** Bands 27+10/25 → λ must carry C's depth
+  structure (**ratio 2.03–4.32, mean 3.2×** ✅). Bands 21+26 → the forward term must contribute exactly
+  zero among q,k,v (**0.000000** ✅). Bands 14+28 → q,k λ-equality must survive λ's greater variability
+  (**ratios 0.08–0.54** ✅). Bands 16+23 → **passes, after two wrong framings of my own** (see below).
+  **Fourteen bands describing the same 72 matrices are mutually consistent.**
+
+#### New in this stretch
+
+- **Band 28:** C's depth structure is carried by **λ, not g** — sd(log λ)/sd(log g) = **2.03–4.32** in
+  every type. Registered as the campaign's **first cross-band falsifier**.
+- **Band 6 reappears in a new domain:** the two residual writers have the strongest λ–g coupling
+  *across depth* (**+0.964, +0.828**), matching their steep *cross-sectional* slope. Two independent
+  measurements of one architectural fact.
+- **Band 16 amended in wording:** it claims C's **pattern** is restored, not its **level** — the level
+  shifts ~0.17 dex under a 2.8× LR change, **non-uniformly** (sd of the shift ≈ its mean), while the
+  pattern correlation holds at **+0.87 to +0.97**.
+
+#### Corrections logged
+
+My statement of constraint B misread band 16 as a level claim; my script's rescue ("the shift is
+uniform") erred the other way. A `corr = +0.609` verdict rested on **one type** — dropping mlp.proj
+gave +0.109. Iteration 113's "the exclusion restriction remains untested" was **wrong** (iteration 114
+tested it). Iteration 109's "no probe could resolve the cancellation" was **withdrawn** — the
+resolution was in committed data one aggregation level down (band 27).
+
+#### Standing rules, final list
+
+1. Permute group labels and report the null before citing a correlation between group summaries —
+   **and drop each group in turn** (extension, iteration 115).
+2. Count a predictor's distinct values before fitting a continuous coefficient; one or two makes it a
+   label, not a law.
+3. Any predictor built from the same Lanczos tridiagonal as `lam_top` is circular and rejected.
+4. A confound cleared for one statistic is not cleared generally.
+5. Consistency across seeds is not replication of a cross-type pairing.
+6. Prefer identities to fits — a regression on terms that sum to the target absorbs the omitted term.
+
+---
+
+### WHERE THE STATED GOAL STANDS
+
+**Goal:** *"a mathematically rigorous account of what sets the between-layer difference in C, plus
+validation of the REQ-036 per-type LR design."*
+
+**The design question is ANSWERED, negatively and with a mechanism.** REQ-036 is a null: uniform LR
+beats every per-type rule, the predicted-best arm is worst by 120× the val noise floor, and harm is
+**monotone in the amount of equalization** (Spearman −1.000, p = 0.042). Band 16 explains why — the
+rule fights a quantity the network restores. **Do not build a momentum kernel or per-layer LR on
+curvature equalization.**
+
+**The account of C is complete at n=4 and mutually consistent**, with every term measured:
+
+> **λ_eq = C·g²**, exponent 2 by Gauss-Newton derivation. **C is restored** against LR perturbation,
+> seed-independent, and time-invariant on an equilibrated window (AR(1) ρ ≈ 0.54).
+> **log g = log‖a‖_F + log‖d‖_F + log(align)** exactly, and C's type structure is three comparable,
+> partly-offsetting terms — **not** two, as iteration 107 briefly claimed.
+> **q,k:** −0.37 dex, **purely backward** (softmax Jacobian −0.18, alignment −0.19), input shared
+> bit-identically. **mlp:** −0.30 dex, **purely forward** (ReLU² scale, matching to 0.001 dex).
+> **Across depth, `‖a‖·‖d‖` is conserved** (2–4× flatter than either factor), which is why the
+> gradient — and C — are flat in depth.
+
+**What is NOT settled, and why no further analysis will settle it:**
+
+1. **Why the softmax Jacobian's output aligns less well across tokens.** Needs per-token backward
+   vectors. Committed observables are exhausted (attention entropy and logit RMS tested and rejected —
+   the apparent relationship is depth, and the survivor flips sign under a quadratic depth term).
+2. **Why ‖a‖ and ‖d‖ trade off.** Same measurement.
+3. **How large the non-gradient channel is.** **REQ-037 arm 4** is specified and is the only design
+   that removes it rather than bounding it. **This is the one open measurement that could still
+   overturn a load-bearing band.**
+
+**Recommendation.** The analysis loop has reached the end of what committed data supports. The
+productive path is **arm 4**, then — if the exponent survives — treating C as a measured property to
+respect rather than a target to flatten.
 
 ## REQ-037: a NON-learning-rate instrument for the curvature-gradient exponent
 
