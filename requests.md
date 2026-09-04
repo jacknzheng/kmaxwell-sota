@@ -29,6 +29,86 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅ END-TO-END CONSISTENCY CHECK + CONSOLIDATED STATE (iteration 169)
+
+*46 bands, six audits, five retractions. **Never checked end-to-end: do the surviving load-bearing claims
+cohere on one dataset, or has the account drifted into mutually inconsistent pieces?** All four claims
+that must hold simultaneously were tested together.*
+
+| # | claim | result | verdict |
+|---|---|---|---|
+| 1 | **identity** (band 40): C profile ≡ λ profile − 2× g profile | max error **5.55e-16** | **PASS** *(machine precision)* |
+| 2 | **the bowl** (bands 39/45): interior minimum, beats a line, every seed | cubic R² 0.830–0.969; linear 0.014–0.181; argmin **L6,L6,L6,L7** | **PASS 4/4** |
+| 3 | **gauge stability** (band 42): C more fork-stable than λ, per matrix | sd 0.1449 vs 0.3320 = **0.44×** | **PASS** |
+| 4 | **held-out prediction** (band 39, corrected): near but above the floor | LOLO **0.0982** vs floor **0.0903** = **1.09×** | **PASS** |
+
+**The account is internally consistent.** No drift, no mutually contradictory pieces.
+
+---
+
+### THE STATE OF THE CAMPAIGN — what is established about between-layer C
+
+**THE ANSWER, as far as the evidence supports it.** Between-layer variation in C is **overwhelmingly
+positional**, and the position field is a **specific, reproducible, asymmetric bowl**:
+
+- **Position explains 68.8%** of between-layer variance; **the gradient 3.5%**; **type 0.0%** (removed by
+  construction when block-means are taken). *(band 38)*
+- The profile is a **smooth bowl**, minimum at **layer 6**, ends **unequal** (L11 +0.302 > L0 +0.166),
+  best described by a **cubic**; a monotone trend explains almost nothing. *(band 39)*
+- It is **time-stationary** (argmin L6 at all 5 checkpoints, profile corr +0.974) *(iter. 163)* and
+  present **independently in 5 of 6 matrix types** (mutual corr +0.54 to +0.91) *(band 45)*.
+- **`type + gradient + cubic position` predicts a held-out layer to 0.0982 dex against a 0.0903 floor
+  (1.09×)** — a **49% error reduction** over the no-position model. *(band 39, corrected iter. 163)*
+
+**WHERE IT LIVES.** The bowl is in **λ, not the gradient** (var shares 144% vs 30%, corr +0.866 vs
++0.130) *(band 40)*, and specifically in the **top of the spectrum**: the same gauge-invariant ratio built
+on Muon's actual step direction (`C_polar`) is **monotone, not bowl-shaped** *(band 43)*.
+
+**WHAT IT CANNOT BE — a closed class, not a list of failed guesses.** The **gauge theorem** (band 42):
+*any scalar multiplying a matrix's whole contribution to the loss cancels exactly in `C = λ/g²`.* This
+forecloses `post_lambda`, `resid_lambda` and its downstream product, the LR, and every output gate **in
+one line**. Individually excluded as well: Muon's step magnitude *(band 31)*, residual-stream scale,
+input effective rank *(iter. 156)*, matrix shape *(iter. 161)*, and an axis artifact *(iter. 157)*.
+**⇒ The bowl is a conditioning property of the loss surface — curvature relative to a matrix's own
+gradient — not a scale.**
+
+**THE REQ-036 VERDICT — three independent reasons the per-type LR design was a null:**
+1. **Band 16** — C is actively restored, so equalising it is fighting a homeostat.
+2. **Band 43** — along the direction Muon actually steps there is **no bowl to equalise**.
+3. **Bands 45/46** — types share **one positional bowl**; a per-**type** LR cannot address a
+   **positional** effect, and the bowl's amplitude varies by type as well. **Two orthogonal axes.**
+**The empirical result (uniform LR best; harm monotone in equalization, Spearman −1.000) now has a
+mechanism.** **Recommendation stands: do not build per-layer or per-type LR on curvature equalization.**
+
+**WHAT REMAINS OPEN, precisely bounded:**
+- **~0.039 dex** of between-layer structure the cubic does not capture — **real in magnitude,
+  unlocalised** (the layer-2/3/6/8 localisation was retracted as pseudo-replication, iter. 164).
+- **Why** the surface is stiffest at both ends and softest at layer 6. **REQ-048** (spectral
+  participation ratio) is the filed, un-run measurement designed to answer exactly this.
+- The **bowl's amplitude varies 19.6× by type** with **no structural predictor surviving** a permutation
+  null at n=6 *(band 46)*.
+
+**METHODOLOGICAL LEDGER — 16 standing rules, most written after an error.** The five retractions:
+band 37 (depth artifact), band 27's correlation half, iteration 129's band-13 overturning, iteration
+163's residual localisation, and iteration 160's `align`-vs-C correlation. **The single most valuable
+guard was the hard rule on the Lanczos tridiagonal**: `residual_tail` correlates with the bowl at
+**−0.833 (|t| 31.4, 12/12)** — the strongest correlate found anywhere in this campaign — and is
+**inadmissible**, coming from the same `eigh()` as `lam_top` *(iter. 161)*.
+
+---
+
+**⚠️ RUN-LENGTH NOTE FOR THE HUMANS.** This loop was specified as an **8-hour run started 2026-09-03
+~00:45 PDT**. It is now **2026-09-04 16:27 PDT — roughly 15.6 hours elapsed, nearly double the stated
+window.** Flagging rather than silently continuing: **the operator may want to stop the loop, or extend
+it explicitly.** Work continues to be scoped at **≤2 nodes** with no assertion of higher authority.
+
+**⚠️ QUEUE.** **REQ-048 remains OPEN and un-run** — it is the only outstanding request and the only
+measurement that can advance the central open question. Jerry's last commit was **REQ-047 at 12:35 PDT**
+(~4h ago); today's inter-delivery gaps have run 3h29m–6h45m, so this is **still inside normal turnaround
+and no escalation is being made**. **If REQ-048 is not picked up, the campaign has no further path on the
+central question from committed data** — iterations 156–168 exhausted it deliberately, and the admissible
+predictor set explains only **4.3%** of the bowl *(iter. 162)*.
+
 ## ⚠️/✅ THE BOWL'S AMPLITUDE IS TYPE-VARYING (iteration 168) — a real misspecification that costs nothing
 
 *Band 45 found the bowl shared across five of six types with **type contributing only an offset**. That
