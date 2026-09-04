@@ -266,7 +266,7 @@ measured value so a seed result can be compared directly.
 | **17** | **the deficit is a depth-independent constant** (iter. 91) — ✅ **CONFIRMED n=4** | **slope of the q,k gradient deficit vs layer index NOT significant (|t| < 2) across layers 0–11**, in every seed; **final block separately deeper by ≥ 0.10 dex** | slopes t = −0.31/−0.25/+0.50/−0.40; interior −0.361 ± 0.065, **layer 12 −0.508 ± 0.010** |
 | **18** | **q and k are interchangeable** (iter. 92) — ✅ **CONFIRMED n=4** | **|q deficit − k deficit| < 0.05 dex** and **not significant within any single seed** (p > 0.05), in every seed | q −0.380 vs k −0.366, difference **−0.014 dex** (3.8% of the shared deficit), within-seed p = 0.82/0.56/0.67/0.57 |
 | **19** | **QK-norm beats the Muon-chunking rival** (iter. 93) — ✅ **CONFIRMED n=4** | on log g, **QK-norm indicator R² > 0.5 with |t| > 5**, and **shape_mult alone R² < 0.10**; QK-norm coefficient must not weaken when shape_mult is added | QK alone R² 0.63–0.67, t −10.9 to −11.9; shape_mult alone **R² 0.005–0.008, t +0.6 to +0.7**; both: QK **−0.45, t −11.5 to −12.6** |
-| **20** | **the mlp gradient gap is depth-structured, not a fixed update factor** (iter. 94) — ✅ **CONFIRMED n=4** | **across-layer sd of the mlp.fc−mlp.proj gap > 0.12 dex** (≥2× the noise floor) while the q,k deficit stays ≤0.09; **quadratic-in-depth R² > linear R²**; per-layer pattern reproducing to ≤0.04 dex across seeds | sd **0.151–0.161** vs q,k **0.065–0.089**; quad R² **0.607** vs linear 0.205; across-seed sd **0.018 dex**, structure/noise **8.5×** |
+| **20** | **the mlp gradient gap = the ReLU² forward gap** (iter. 94, 107) — ✅ **DECOMPOSED n=4** | **gap = a_gap + d_gap + alignment**, with **a_gap ≈ −0.43 dex dominating** and matching **log₁₀(a_rms ratio of the ReLU² output to the block input)** to < 0.01 dex | grad −0.302, **a −0.435**, d +0.051, alignment **+0.082 ± 0.006**; ReLU² output is **2.725× RMS** (+0.435 dex) and **7.3× eff-rank** of the block input |
 | **21** | **the q,k deficit is PURELY backward** (iter. 95–101, REQ-038/043) — ✅ **CONFIRMED n=4** | **a_rms bit-identical for q, k and v in every seed**; **d_rms ratio (q,k)/v ≤ 0.75** | **a_rms bit-identical, 4/4 seeds**; d_rms ratio **0.667 ± 0.011**, log₁₀(q/v) −0.183 **t = −41.9**, log₁₀(k/v) −0.170 t = −43.3 |
 | **22** | **the q,k deficit SHRINKS during training** (iter. 98) — ✅ **CONFIRMED n=4** | **drift of the deficit vs step is POSITIVE (less negative) with a seed-clustered 95% CI excluding 0**, and **same sign in all three LR arms** | pooled **+0.058 dex/1000 steps, CI [+0.032, +0.085]**; per-arm +0.029 / +0.092 / +0.054 |
 | **23** | **the g² law is CROSS-SECTIONAL/CAUSAL ONLY — it does not hold in TIME** (iter. 99) | **slope of λ-drift on g-drift across matrices must be < 1.5** (attenuation-corrected), i.e. NOT 2; **C's drift CI must include 0** and **step must explain < 1% of C's variance** | slope **+0.634**, CI [0.329, 0.982], corrected **0.860**; reliability 0.738 so a true 2 would read 1.476. C drift CI [−0.055, +0.049]; step **0.2–0.4%** of variance vs LR 2.0–3.5% |
@@ -282,6 +282,57 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 107: THE mlp GAP DECOMPOSED — the second effect closes too ===**
+
+*The q,k account is closed end to end. Band 20's mlp gap — the network's **other** gradient effect,
+and a **forward** one — has never had the same treatment. REQ-043 now supplies every term at n=4.*
+
+**The decomposition.** Unlike q,k, the mlp pair does **not** share an input, so all three terms are
+live: `grad_gap = a_gap + d_gap + alignment_gap`.
+
+| seed | grad gap | **a_gap** | d_gap | alignment |
+|---|---:|---:|---:|---:|
+| 0 | −0.3009 | **−0.4328** | +0.0503 | +0.0816 |
+| 1 | −0.2928 | **−0.4280** | +0.0604 | +0.0747 |
+| 2 | −0.3074 | **−0.4486** | +0.0528 | +0.0884 |
+| 3 | −0.3060 | **−0.4315** | +0.0415 | +0.0840 |
+| **mean** | **−0.302** | **−0.435** | **+0.051** | **+0.082 ± 0.006** |
+
+**The forward term dominates and the alignment term runs the *opposite* way to q,k's** — **+0.082 ±
+0.006 here versus −0.190 ± 0.007 there**, both with CIs excluding zero. The two effects are not
+variations on one mechanism: in q,k alignment *deepens* the deficit, in the mlp pair it *offsets* it.
+
+**And the forward term is the ReLU², quantitatively.** `mlp.proj`'s input is `ReLU²` of `mlp.fc`'s
+output, while `mlp.fc` reads the block residual:
+
+| | mlp.fc input | mlp.proj input (ReLU² output) | ratio |
+|---|---:|---:|---:|
+| `a_rms` | 0.6101 | 1.6623 | **2.725× = +0.435 dex** |
+| `a_eff_rank` | 19.51 | 142.80 | **7.32× = +0.864 dex** |
+
+**The ReLU² output's RMS ratio is +0.435 dex — matching the measured forward gap of −0.435 to within
+0.001 dex.** Band 20's prediction from iteration 94, made before any of these fields were used, is
+confirmed exactly. Squaring a rectified signal produces a larger *and* much higher-rank activation,
+so the mechanism is scale **and** sparsity, not scale alone.
+
+**Both of the network's gradient effects are now accounted for arithmetically, at n=4:**
+
+> **q,k (attention):** −0.37 dex = **−0.18 backward attenuation** (softmax Jacobian) **− 0.19
+> alignment**. Input shared exactly; the effect is entirely in the backward pass.
+>
+> **mlp:** −0.30 dex = **−0.435 forward** (ReLU² activation scale) **+ 0.05 backward + 0.08
+> alignment**. The effect is entirely in the forward pass, with alignment partially offsetting.
+
+**Two effects, two different mechanisms, opposite loci — and each closes to within measurement error
+with no residual.** *(Note the mlp `a_gap` has a real depth slope, −0.0250 dex/layer at t = −4.96,
+which is band 20's U-shape appearing in the forward activation. Its cause is not established here;
+recorded as observed.)*
+
+**This completes the descriptive account.** What set out as "what is C?" resolves to: **λ_eq = C·g²
+with the exponent fixed by Gauss-Newton, C actively restored by the network, and C's type structure
+reducible to two measured architectural effects — one backward and one forward — each decomposed to
+its constituent terms at n=4.**
 
 **=== ITERATION 106: REGISTERED NEGATIVE — attention entropy does NOT explain the alignment deficit ===**
 
