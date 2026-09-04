@@ -29,6 +29,50 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅ REQ-045 RE-ANALYSED (2026-09-04) — a third LR design, and a rate that transfers
+
+**REQ-045's committed raw curvature JSON had not been used.** Its headline (β_neighbour null →
+iteration 124's partial/total reading withdrawn) was recorded from the commit summary alone. **The raw
+data supports a second, independent test: REQ-045's global scale `S` is a third LR ladder, built for a
+different purpose, so band 30 can be tested on data not collected to test it.**
+
+**The design worked as pre-flight simulated** — iteration 126 predicted separability `corr ≈ +0.62` for
+3 global levels; the run achieved **+0.722**, against REQ-023's **−1.000**. *(That is the pre-flight
+check from iteration 126 paying off: a design verified by simulation before being requested.)*
+
+| S | cov(log λ, log g) | corr | sd log λ | sd log g |
+|---:|---:|---:|---:|---:|
+| 0.70 | **0.0917** | 0.629 | 0.513 | 0.284 |
+| 1.00 | 0.0825 | 0.641 | 0.454 | 0.283 |
+| 1.40 | **0.0785** | 0.636 | 0.449 | 0.275 |
+
+**Right sign, not individually significant:** −0.0131, CI **[−0.0620, +0.0336]** — includes zero.
+
+**That is a range effect, and the rate transfers.** REQ-045 moves the LR **2.0×** where the other two
+move it **2.8×**. Normalising by log-range:
+
+| design | LR span | cov drop | **per dex** |
+|---|---:|---:|---:|
+| Arm A (global, n=4 seeds) | 2.83× | −0.0181 | **−0.040** |
+| REQ-023 (per-matrix) | 2.83× | −0.0348 | −0.077 |
+| **REQ-045 (crossed global)** | **2.00×** | −0.0132 | **−0.044** |
+
+**Arm A's rate predicts −0.0120 at REQ-045's narrower range; REQ-045 observed −0.0131.** REQ-023's
+predicts −0.0232 — also inside the CI.
+
+> **REQ-045 is CONSISTENT with band 30 and individually underpowered. It neither confirms nor refutes,
+> which is the correct reading of a wide interval containing both zero and the predicted value.**
+
+**Band 30 amended** to state the *rate* (−0.04 to −0.08 dex per dex of LR) rather than only the
+endpoint drops, since the rate is what transfers across designs with different ranges. **The
+underpowered third design is recorded as such** — not as a third confirmation, which would overstate
+it, and not as a failure, which would misread a CI that contains the prediction.
+
+**Method note.** I recorded REQ-045's headline from a commit summary without opening its data. **The
+raw JSON contained an independent test of a different band.** *Reading a delivery's summary is not
+reading the delivery* — the same class of omission as checking commit messages instead of request
+statuses, which cost three turns earlier today.
+
 ## ✅ REQ-044 VERIFIED INDEPENDENTLY (2026-09-04) — and a crossover the headline understates
 
 **Correction to my own reporting first.** I claimed "no new measurements" for three consecutive turns.
@@ -401,7 +445,7 @@ measured value so a seed result can be compared directly.
 | **33** | **Muon steps nearly ORTHOGONAL to peak curvature, and the RATIO predicts C** (iter. 134, 140) — ✅ **CONFIRMED n=4, ratio verified by free coefficients** | **cp/λ < 0.02 every type**; and in `C ~ a·log λ + b·log cp` with **free** coefficients, **b/a ≈ −1** (the ratio the data prefers unprompted) with **|t(b)| > 5** | ratio **0.001–0.006**; **b/a = −1.045/−1.301/−1.082/−1.193**, t(b) = **−8.8 to −11.0**; λ-only RSS **~2× worse** |
 | **34** | **alignment and the q,k excess are SEPARATE effects** (iter. 135, 139) — ✅ **CONFIRMED n=4, raw-component checked** | **controlling for step-curvature shrinks the q,k C-coefficient by < 35%** — and **by ≤ 0% when the control uses raw `log cp`** (no shared λ) | shrinkage with alignment **22/19/16/20 %**; with `log cp` **−5/−7/−3/−9 %**; `log cp` net of q,k only t = **1.6–2.9** |
 | **35** | **q and k differ in step ALIGNMENT, and the gap is DEPTH-STRUCTURED** (iter. 136–137) — ✅ **CONFIRMED n=4** | **|alignment(q) − alignment(k)| ≥ 0.15 dex, same sign every seed** (band 18's gradient equality is 0.014 dex); **gap deepens with depth then recovers — quadratic R² > 0.5**. *Attention entropy does NOT explain it* | mean **−0.306 dex** (sd 0.037, 4/4); L0 **−0.134** → L8 **−0.474** → L12 −0.327; quadratic R² **0.563**; entropy t **+5.03 → +0.26** under quadratic depth |
-| **30** | **a higher LR DECOUPLES curvature from the gradient** (iter. 121, 123) — ✅ **CONFIRMED on TWO INDEPENDENT DESIGNS** | **cov(log λ, log g) falls as the LR rises**, seed/matrix-clustered CI excluding 0, on **both** the global ladder and REQ-023's per-matrix randomisation. *Shape not resolved — the two designs differ in where the drop occurs* | Arm A **0.0552/0.0448/0.0371**; REQ-023 **0.0766/0.0425/0.0418** (f1500) and **0.0784/0.0421/0.0402** (f2000), endpoint CIs **[−0.071,−0.002]** and **[−0.077,−0.005]** |
+| **30** | **a higher LR DECOUPLES curvature from the gradient** (iter. 121, 123, 144) — ✅ **CONFIRMED on 2 designs, CONSISTENT on a 3rd** | **cov(log λ, log g) falls as the LR rises**, CI excluding 0 on the global ladder and REQ-023's per-matrix randomisation. **Rate ≈ −0.04 to −0.08 dex of covariance per dex of LR** | Arm A **0.0552→0.0371**; REQ-023 **0.0766→0.0418**; REQ-045 **0.0917→0.0785** (CI [−0.062,+0.034], **underpowered at 2.0× range** — Arm A's rate predicts −0.0120, observed **−0.0131**) |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
