@@ -272,6 +272,7 @@ measured value so a seed result can be compared directly.
 | **23** | **the g² law is CROSS-SECTIONAL/CAUSAL ONLY — it does not hold in TIME** (iter. 99) | **slope of λ-drift on g-drift across matrices must be < 1.5** (attenuation-corrected), i.e. NOT 2; **C's drift CI must include 0** and **step must explain < 1% of C's variance** | slope **+0.634**, CI [0.329, 0.982], corrected **0.860**; reliability 0.738 so a true 2 would read 1.476. C drift CI [−0.055, +0.049]; step **0.2–0.4%** of variance vs LR 2.0–3.5% |
 | **24** | **the measurement window IS equilibrated** (iter. 100) — ✅ **CONFIRMED n=4** | **autocorrelation of successive Δlog λ negative with seed-clustered CI excluding 0** (mean-reverting, not drifting), **and strictly above −0.5** (real dynamics, not white noise); **change magnitude ratio second/first half ≈ 1** | AC **−0.228, CI [−0.437, −0.117]**, implied AR(1) ρ = **0.54**; ratio **0.898** |
 | **25** | **the shortfall = the token-wise ALIGNMENT deficit** (iter. 101–105, REQ-043 P2/P3) — ✅ **RESOLVED n=4** | **align_deficit measured at a single state ≤ −0.15 dex with across-seed sd < 0.02**; **identity align_deficit = grad_deficit − d_deficit holds to < 0.001 dex**; **depth slope state-dependent** | **−0.1896 ± 0.0068 dex** (0.646×), identity gap **< 0.0005 dex/seed**; artifact-free slope **−0.0075 dex/layer**; state drift +0.0101 dex/layer per 1000 steps |
+| **26** | **C's six-type structure is genuinely THREE-term** (iter. 108) — ✅ **CONFIRMED n=4** | **the identity log g = log‖a‖_F + log‖d‖_F + log(align) holds exactly**; across the six types **no term correlates with C above 0.55**, and **each term's spread exceeds C's own** (offsetting) | identity exact to **1e-6 dex**; corr(C, −2‖a‖) +0.36–0.39, (C, −2‖d‖) +0.44–0.49, (C, −2align) +0.38–0.40; term spreads 1.35 / 1.02 / 0.64 vs C's **1.04** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -282,6 +283,68 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 108: THE WHOLE-ACCOUNT TEST — and it qualifies what iteration 107 claimed ===**
+
+*Bands 21/25 closed q,k; band 20 closed the mlp pair. But those are **four of six types**, chosen
+because they form clean pairs. Iteration 107 concluded "C's type structure reduces to two measured
+architectural effects." **That claim was never tested on all six types**, and testing it changes it.*
+
+**A methodological catch first.** Regressing `log g` on `log a_rms` and `log d_rms` across all six
+types gives R² 0.58–0.67 with fitted coefficients of **~1.5**. But
+
+```
+   log g = log‖a‖_F + log‖d‖_F + log(alignment)
+```
+
+is an **identity with coefficients of exactly 1**. A fitted 1.5 means the regression is silently
+absorbing the alignment term, which correlates with both. **Using the identity instead of a fit — the
+gap is 1×10⁻⁶ dex, exact by construction:**
+
+| type | log‖a‖_F | log‖d‖_F | log align | = log g |
+|---|---:|---:|---:|---:|
+| attn.q | 3.366 | 0.762 | **−0.600** | 3.527 |
+| attn.k | 3.366 | 0.779 | **−0.604** | 3.541 |
+| attn.v | 3.366 | 0.933 | **−0.283** | 4.016 |
+| attn.proj | 3.396 | 0.912 | −0.509 | 3.799 |
+| mlp.fc | **3.167** | **1.273** | −0.584 | 3.856 |
+| mlp.proj | **3.851** | 0.865 | −0.580 | 4.135 |
+
+**The finding: across all six types, no single term dominates.**
+
+| | seed 0 | seed 1 | seed 2 | seed 3 |
+|---|---:|---:|---:|---:|
+| corr(C, −2·log‖a‖) | +0.385 | +0.369 | +0.356 | +0.381 |
+| corr(C, −2·log‖d‖) | +0.454 | +0.447 | +0.490 | +0.437 |
+| corr(C, −2·log align) | +0.386 | +0.393 | +0.378 | +0.400 |
+
+**All three sit between +0.36 and +0.49 — comparable, none decisive.** And each term's spread across
+types (**1.35, 1.02, 0.64 dex**) *exceeds* C's own spread (**1.04 dex**), which means the terms
+substantially **offset each other**. C's structure is not one large effect; it is three
+comparably-sized effects that partly cancel.
+
+**Why the pairwise decompositions looked so much cleaner.** Each pair was chosen to isolate one term:
+q,k share their input **exactly**, so `‖a‖` drops out and only backward terms remain; mlp.fc/mlp.proj
+have near-identical `‖d‖`, so the forward term dominates. **The pairs are clean because of how they
+were selected, not because the underlying structure is two-term.**
+
+**Iteration 107's claim is therefore narrowed.** "C's type structure reduces to two architectural
+effects" is true *for those two pairs* and **overstated as a general claim**. The corrected statement:
+
+> **Every type's gradient decomposes exactly into forward magnitude, backward magnitude, and
+> token-wise alignment. Two specific pairs isolate one term each and were solved completely. Across
+> all six types the three terms are comparable in size and partly offsetting, so C's structure is
+> genuinely three-term.**
+
+**Registered as band 26.** Note this does not withdraw bands 20, 21 or 25 — each is a statement about
+its own pair and each still closes to within measurement error. **What is withdrawn is the
+generalisation from those pairs to the whole network**, which I made in iteration 107's closing
+paragraph without testing it.
+
+**A prediction-quality check, for honesty about how good the account actually is.** Reconstructing C
+from the fitted forward/backward terms gives **corr +0.74 to +0.83, rmse 0.28–0.32 dex** — against a
+0.07 dex noise floor, that is **4× the floor**. The account is arithmetically exact term-by-term but
+**not yet a quantitatively accurate predictor of C across types.**
 
 **=== ITERATION 107: THE mlp GAP DECOMPOSED — the second effect closes too ===**
 
