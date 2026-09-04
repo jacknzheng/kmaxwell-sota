@@ -262,7 +262,7 @@ measured value so a seed result can be compared directly.
 | **11** | **the assembled model generalises** (iter. 72) | **leave-one-layer-out rmse ≤ 0.20 dex** and **cross-fork rmse ≤ 0.20 dex** for `type + two-slope gradient + layer-0 term`, versus ~0.38 dex for C's own spread | LOLO 0.138 / 0.164; cross-fork 0.165 / 0.140 dex |
 | **12** | **type offsets reduce to three binaries** — ✅ **CONFIRMED n=4** | `q,k + residual-writer + mlp.proj` (5p) within 0.02 dex of six free offsets (7p) | gaps 0.004 / 0.004 / 0.005 / 0.002 dex in the 4 seeds |
 | **13** | **the PER-MATRIX causal exponent is exactly 2** — ⚠️ **RE-SCOPED** (iter. 79) | 2.000 inside the 95% CI **under per-matrix LR randomisation only** (REQ-023 design) | REQ-023 +2.076/+2.079 CI contains 2. **Arm A's GLOBAL LR ladder gives +2.64 to +3.07, CI excludes 2 — a different estimand, not a refutation** |
-| **14** | **q,k carry a GRADIENT DEFICIT, not a curvature excess** (iter. 77–89) — ✅ **CONFIRMED n=4** | **Δlog g (q,k − others) ≤ −0.30 dex, p < 0.01**, and **Δlog λ NOT significant (p > 0.05)**, in ≥3 of 4 seeds; C excess ≥ +0.6 dex follows arithmetically | Δlog g = −0.419/−0.421/−0.408/−0.420, **p < 10⁻⁴ all seeds**; Δlog λ = +0.050/−0.069/+0.016/−0.006, **p = 0.62/0.50/0.87/0.95** |
+| **14** | **q,k carry a GRADIENT DEFICIT at identical shape** (iter. 77–90) — ✅ **CONFIRMED n=4, size-artifact excluded** | **within the four 768×768 attention matrices only:** Δlog g (q,k − v,attn.proj) ≤ −0.30 dex with p < 0.01, Δlog λ NOT significant, both q,k below both v,attn.proj in ≥10/12 blocks — in ≥3 of 4 seeds | **Δlog g = −0.378/−0.378/−0.356/−0.381, p < 10⁻⁴ all seeds, 48/48 blocks**; Δlog λ p = 0.17/0.85/0.21/0.43 |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -273,6 +273,66 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 90: THE DEFICIT SURVIVES AT IDENTICAL SHAPE — the cleanest form of the result ===**
+
+*Iteration 89 reframed band 14 as a **gradient deficit** (−0.42 dex at identical curvature). Before
+hunting a physical mechanism, the mundane explanation had to be excluded: `gradient_block_norm` is a
+norm over a block of parameters, so if q,k's block is smaller the norm is mechanically smaller — no
+physics required.*
+
+**Partial credit to the mundane reading.** A Frobenius norm over N comparable entries scales as √N,
+and the mlp types have 4× the parameters (2,359,296 vs 589,824). Predicted from √N alone: −0.199 dex
+against an observed −0.417. Normalising each gradient by √(params) shrinks the deficit consistently:
+
+| seed | Δ log g raw | Δ log g per-parameter |
+|---|---:|---:|
+| 0 | −0.419 | **−0.268** |
+| 1 | −0.421 | −0.271 |
+| 2 | −0.408 | −0.258 |
+| 3 | −0.420 | −0.270 |
+
+**Parameter count explains about a third of the deficit.** That is a real correction and it is now
+recorded — but two-thirds survives it.
+
+**The clean test removes the confound entirely.** Restrict to the **four 768×768 attention
+matrices**, where parameter count is identical *by construction*:
+
+> **q, k** (QK-normed) **vs v, attn.proj** (not QK-normed) — same shape, same sub-block, same
+> residual-stream input, same parameter count.
+
+| seed | **Δ log g** | perm p | Δ log λ | perm p | Δ log C |
+|---|---:|---:|---:|---:|---:|
+| 0 | **−0.378** | **< 10⁻⁴** | +0.138 | 0.174 | +0.893 |
+| 1 | **−0.378** | **< 10⁻⁴** | +0.018 | 0.854 | +0.774 |
+| 2 | **−0.356** | **< 10⁻⁴** | +0.115 | 0.211 | +0.827 |
+| 3 | **−0.381** | **< 10⁻⁴** | +0.086 | 0.427 | +0.848 |
+
+**Both q and k sit below both v and attn.proj in 48 of 48 block-seed cells.** The curvature
+difference remains non-significant in every seed.
+
+> **At identical shape, identical sub-block and identical input, the two QK-normed matrices carry a
+> ~0.37 dex smaller gradient than the two that are not — with their curvature unchanged. Parameter
+> count is excluded; the only systematic difference remaining is QK-norm.**
+
+**This is the cleanest statement the campaign has produced.** It needs no fitted exponent (band 13's
+`g²` law is not invoked), no derived quantity, no cross-type normalisation, and no assumption about
+what C *is* — it compares four matrices that differ in exactly one architectural feature. Band 14 is
+updated to be defined on this comparison rather than the six-type one.
+
+**What it does and does not say about mechanism.** It restores QK-norm as the *locus* of the effect —
+iteration 89 demoted band 15 because scale invariance could not produce the deficit's **magnitude**
+from weight norms, and that failure stands. **QK-norm is where the effect lives; scale invariance is
+not how it gets there.** The distinction matters: RMS-norm on q,k does more than make them
+scale-invariant — it also **rescales the backward signal by 1/RMS(q)**, which directly attenuates the
+gradient without touching the curvature along the same direction. That is a *different* consequence
+of the same architectural feature, and it predicts precisely what is observed.
+
+**Registered as the sharpened target for REQ-038.** The `|d|` field measures the backward tensor
+magnitude per matrix. **If the attenuation reading is right, `|d|` for q,k should be ~0.37 dex below
+v and attn.proj while `|a|` is equal** (all four read the same residual). That is a two-sided
+prediction on a measurement already specified — **`|d|` low AND `|a|` equal** — and it is now the
+single most informative number in the queue.
 
 **=== ITERATION 89: THE EXCESS IS A GRADIENT DEFICIT — band 14 reframed, band 15's magnitude test FAILS ===**
 
