@@ -29,6 +29,56 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⚠️ QUESTION (b) — PARTIALLY ANSWERED, with an exception I could not explain (iteration 147)
+
+*REQ-047's CHECK 3 used **participation** and was inconclusive. But the token-norm distributions also
+carry **mean** and **sd**, and the **coefficient of variation** is the more direct discriminator for
+band 27's two readings — a support trade-off concentrates the signal (CV rises as the norm falls), a
+scale trade-off leaves the distribution's shape unchanged (CV flat).*
+
+| type | **corr(log‖d‖, d_cv) across depth** |
+|---|---:|
+| attn.v | **−0.861 ± 0.022** |
+| mlp.proj | −0.823 ± 0.029 |
+| attn.k | −0.805 ± 0.018 |
+| attn.proj | −0.597 ± 0.064 |
+| attn.q | −0.435 ± 0.040 |
+| **mlp.fc** | **+0.867 ± 0.040** |
+
+> **Five of six types show the concentration signature: as ‖d‖ falls with depth, the backward signal
+> concentrates on fewer tokens. That is a SUPPORT trade-off, not a pure rescaling — question (b)'s
+> answer for those five.**
+
+**mlp.fc reverses sharply, and tightly enough (sd 0.040) that it is not noise.**
+
+**My proposed explanation is refuted by the same data, and I am recording that rather than the
+hypothesis.** mlp.fc is the only type whose measured backward signal passes through **ReLU²**, so
+sparsification looked like the obvious account — it predicts mlp.fc's `d` should be **sparse and
+skewed**: low participation, high CV. **The opposite holds:**
+
+| type | active fraction | d_cv |
+|---|---:|---:|
+| attn.v | **0.056** | **1.256** |
+| attn.k | 0.087 | 0.964 |
+| attn.q | 0.115 | 0.862 |
+| **mlp.fc** | **0.336** | **0.647** |
+| mlp.proj | 0.405 | 0.580 |
+
+**mlp.fc has among the highest participation and lowest CV of any type** — the least concentrated
+backward signal, not the most. **The ReLU² sparsification reading is wrong**, and the exception is
+unexplained.
+
+**Registered as band 37 with the exception in the band text**, not hidden in a footnote: the check
+requires ≥5 of 6 types negative, which the data supports, and names mlp.fc as the known reversal so a
+future seed showing 6 of 6 would be the informative surprise.
+
+**What this leaves.** Question (b) is **answered for five types and open for one**. The honest state is
+better than "inconclusive" (REQ-047's CHECK 3) and worse than "answered" — and the exception is now
+sharply posed: *why does the one type with the least concentrated backward signal also invert the
+concentration trade-off?* **That is a better question than the one this iteration started with, and it
+needs no new instrument** — the per-token distributions to answer it may already be recoverable from
+REQ-047's raw tensors if the probe is re-run with a sparsity field.
+
 ## ✅ REQ-047 DELIVERED (2026-09-04) — question (a) answered, and a probe disagreement recorded
 
 **REQ-047 ran and its status line still reads OPEN**, which is why I nearly missed it again — found by
@@ -511,6 +561,7 @@ measured value so a seed result can be compared directly.
 | **24** | **the measurement window IS equilibrated** (iter. 100) — ✅ **CONFIRMED n=4** | **autocorrelation of successive Δlog λ negative with seed-clustered CI excluding 0** (mean-reverting, not drifting), **and strictly above −0.5** (real dynamics, not white noise); **change magnitude ratio second/first half ≈ 1** | AC **−0.228, CI [−0.437, −0.117]**, implied AR(1) ρ = **0.54**; ratio **0.898** |
 | **25** | **the shortfall = the token-wise ALIGNMENT deficit** (iter. 101–105, REQ-043 P2/P3) — ✅ **RESOLVED n=4** | **align_deficit measured at a single state ≤ −0.15 dex with across-seed sd < 0.02**; **identity align_deficit = grad_deficit − d_deficit holds to < 0.001 dex**; **depth slope state-dependent** | **−0.1896 ± 0.0068 dex** (0.646×), identity gap **< 0.0005 dex/seed**; artifact-free slope **−0.0075 dex/layer**; state drift +0.0101 dex/layer per 1000 steps |
 | **36** | **the q,k alignment deficit IS token incoherence — complete mediation** (iter. 145, REQ-047) — ✅ **CONFIRMED n=4** | **q,k adjacent-token backward coherence < 20% of v/attn.proj's**, every seed; and **controlling for `da_cos_mean` drives the q,k alignment coefficient to ZERO** (shrinkage ≥ 90%) | da_cos **+0.020 vs +0.250** (8–9%, 4/4); mediation shrinkage **101/128/103/104 %**, da_cos t = **+11.3 to +12.6**; corr(da_cos, log align) **+0.83 to +0.86** |
+| **37** | **the ‖a‖–‖d‖ trade-off is CONCENTRATION, in 5 of 6 types** (iter. 147, REQ-047) — ⚠️ **CONFIRMED n=4 with one unexplained exception** | **corr(log‖d‖, d_cv) across depth negative in ≥5 of 6 types**, every seed — CV rises as the norm falls, the support-trade-off signature. **mlp.fc reverses (+0.867) and is not explained** | attn.v **−0.861**, mlp.proj −0.823, attn.k −0.805, attn.proj −0.597, attn.q −0.435; **mlp.fc +0.867 ± 0.040** |
 | **26** | **C's six-type structure is genuinely THREE-term** (iter. 108) — ✅ **CONFIRMED n=4** | **the identity log g = log‖a‖_F + log‖d‖_F + log(align) holds exactly**; across the six types **no term correlates with C above 0.55**, and **each term's spread exceeds C's own** (offsetting) | identity exact to **1e-6 dex**; corr(C, −2‖a‖) +0.36–0.39, (C, −2‖d‖) +0.44–0.49, (C, −2align) +0.38–0.40; term spreads 1.35 / 1.02 / 0.64 vs C's **1.04** |
 | **27** | **the ‖a‖·‖d‖ PRODUCT is the depth-conserved quantity** (iter. 110–111) — ✅ **CONFIRMED n=4** | **corr(log‖a‖, log‖d‖) ≤ −0.80 within every type across depth**, perm p < 0.01; **sd(log‖a‖+log‖d‖) < 0.6 × sd of the smaller factor**, every type. *Compensation is near-exact but NOT universal — TLS slope contains −1 in only 2/6 types* | corr −0.875 to −0.986; sd-ratio **0.262–0.493**; TLS slopes −0.765 to −1.230 |
 | **28** | **C's depth structure is carried by λ, not g** (iter. 117) — ✅ **CONFIRMED n=4** | **sd(log λ) / sd(log g) across depth > 1.5 in every matrix type**, every seed — the consistency requirement linking bands 27 and 10/25 | ratios **2.03 / 2.76 / 2.85 / 2.93 / 4.19 / 4.32**, mean **3.2×**; λ variance share 0.51–1.76 |
