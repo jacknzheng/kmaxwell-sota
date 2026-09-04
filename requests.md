@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-045**.
+Next request number: **REQ-046**.
 
 ---
 
@@ -1384,6 +1384,70 @@ The load-bearing decisions are: whether `mu95-mu0` is still noise-sized at 16×;
 fresh bi-Maxwell curve again reaches zero; and whether K-Maxwell remains materially negative
 at 8×/16× in every independent paired replicate. Report disagreement across seeds rather
 than averaging it away.
+
+## REQ-045: crossed global × per-matrix LR — the identifiable partial/total design
+
+- status: **OPEN**
+- requested: 2026-09-03 PDT
+- repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
+- **node budget: ONE box.** Reuses REQ-023's machinery entirely.
+
+**What to run.** REQ-023's per-matrix LR randomisation, **crossed with a global multiplier that
+differs by arm**:
+
+> `effective_lr(i) = base_lr × S_arm × m_i`
+
+- **`S_arm` ∈ {0.7, 1.0, 1.4}** — one value per arm, applied to *every* matrix.
+- **`m_i`** — per-matrix, drawn independently per arm from {0.6, 0.85, 1.0, 1.2, 1.7}. **Do not
+  balance** `m_i` across matrices; independent draws are fine and balancing is not required here.
+- **3 arms** (one per `S_arm`), fork@2000, 750 steps, per-matrix curvature at 2750 plus
+  `weight_frob` (REQ-041's field rides along).
+
+**Why the crossing is essential — a design that looks equivalent does NOT work.** The question is
+whether a matrix's curvature responds to **its own** LR differently from **its neighbours'**
+(the partial vs total distinction). That needs `own` and `others' mean` to vary independently.
+
+**REQ-023 cannot do it**, and neither can an unbalanced version of REQ-023 — **both give
+`corr(own, others' mean) = −1.0000`**, because `mean_others = (Σ − own)/71` is an *arithmetic*
+identity whenever the sum comes from the same draw. **Randomising or unbalancing the levels does not
+help.** *(Verified by simulation before filing: 2,000 draws of each design, correlation −1.0000 in
+both.)*
+
+**The crossing breaks it**, because `log(own) = log S + log m_i` while `log(others' mean) = log S +
+mean(log m_j)` — they share only the `S` term:
+
+| design | corr(own, others' mean) | identifiable? |
+|---|---:|---|
+| REQ-023 balanced | **−1.0000** | no |
+| unbalanced per-matrix | **−1.0000** | no |
+| **3 global levels × per-matrix** | **+0.62** | **yes** |
+| 5 global levels × per-matrix | +0.57 | yes |
+
+**What it settles.** Band 30 (a higher LR decouples λ from g) is confirmed on two designs, **but they
+disagree on shape**: REQ-023's per-matrix perturbation shows the decoupling **saturates by s = 1.0**
+(the 1.0→1.7 step is not significant, and the two steps differ significantly, both forks), while Arm
+A's global ladder shows an **even decline** (both steps significant, indistinguishable). Iteration 124
+read this as partial-vs-total — saturation being a property of a matrix in isolation, with the global
+ladder's extra decline coming from the network-wide state change. **That reading is currently
+untested and untestable on committed data.**
+
+**Registered check.** Regress `d log λ` on **both** `log(own multiplier)` and `log(others' mean
+multiplier)` with matrix fixed effects:
+- **the two coefficients must be separately estimable** — report `corr(own, others')` in the output
+  and confirm |corr| < 0.9 before interpreting anything;
+- **if the neighbour coefficient is significant**, iteration 124's reading is supported and band 30's
+  shape is design-dependent for the stated reason;
+- **if it is null**, the shape disagreement needs a different explanation and the partial/total
+  reading is withdrawn.
+
+**Cost.** 3 arms × 750 steps on one box, same as REQ-037's arms 1–3. No new hooks — REQ-023's
+`per_matrix_lr_mul` machinery already exists (`train_gpt.py:514–522`) and a global `S_arm` is a
+single scalar on the base LR.
+
+**Priority: LOW.** This settles the *shape* of band 30, not its sign, and band 30 is already
+confirmed on two designs. **It should not displace REQ-037 arm 4**, which can still overturn a
+load-bearing band. File it as a background run if a box is idle.
+
 
 ## Template
 
