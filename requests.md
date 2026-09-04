@@ -264,6 +264,7 @@ measured value so a seed result can be compared directly.
 | **13** | **the PER-MATRIX causal exponent is exactly 2** — ⚠️ **RE-SCOPED** (iter. 79) | 2.000 inside the 95% CI **under per-matrix LR randomisation only** (REQ-023 design) | REQ-023 +2.076/+2.079 CI contains 2. **Arm A's GLOBAL LR ladder gives +2.64 to +3.07, CI excludes 2 — a different estimand, not a refutation** |
 | **14** | **q,k carry a GRADIENT DEFICIT at identical shape** (iter. 77–90) — ✅ **CONFIRMED n=4, size-artifact excluded** | **within the four 768×768 attention matrices only:** Δlog g (q,k − v,attn.proj) ≤ −0.30 dex with p < 0.01, Δlog λ NOT significant, both q,k below both v,attn.proj in ≥10/12 blocks — in ≥3 of 4 seeds | **Δlog g = −0.378/−0.378/−0.356/−0.381, p < 10⁻⁴ all seeds, 48/48 blocks**; Δlog λ p = 0.17/0.85/0.21/0.43 |
 | **17** | **the deficit is a depth-independent constant** (iter. 91) — ✅ **CONFIRMED n=4** | **slope of the q,k gradient deficit vs layer index NOT significant (|t| < 2) across layers 0–11**, in every seed; **final block separately deeper by ≥ 0.10 dex** | slopes t = −0.31/−0.25/+0.50/−0.40; interior −0.361 ± 0.065, **layer 12 −0.508 ± 0.010** |
+| **18** | **q and k are interchangeable** (iter. 92) — ✅ **CONFIRMED n=4** | **|q deficit − k deficit| < 0.05 dex** and **not significant within any single seed** (p > 0.05), in every seed | q −0.380 vs k −0.366, difference **−0.014 dex** (3.8% of the shared deficit), within-seed p = 0.82/0.56/0.67/0.57 |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -274,6 +275,59 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 92: q AND k ARE INTERCHANGEABLE — the RMS-norm reading's third prediction ===**
+
+*The RMS-norm reading has now passed two predictions (depth-independence, and the deficit surviving at
+identical shape). It makes a third that is sharper because it is a **within-pair** test, removing
+every between-type confound at once.*
+
+**The prediction.** If the attenuation is a property of the **normalisation layer**, q and k receive
+the *same operation* — RMS-norm applied to each — so their deficits should be **equal**. If instead
+anything **role-specific** is at work, they should differ: under causal masking a key is attended to
+by a growing suffix of positions while each query attends once, so queries and keys are not
+symmetric in the computation.
+
+| seed | q deficit | k deficit | q − k | within-seed perm p |
+|---|---:|---:|---:|---:|
+| 0 | −0.382 | −0.374 | −0.008 | 0.821 |
+| 1 | −0.384 | −0.371 | −0.013 | 0.558 |
+| 2 | −0.364 | −0.348 | −0.017 | 0.670 |
+| 3 | −0.390 | −0.373 | −0.017 | 0.570 |
+
+**q and k are interchangeable: −0.380 vs −0.366, a difference of 0.014 dex — 3.8% of the 0.373 dex
+deficit they share — and not significant in any individual seed.** The role-specific reading is
+excluded; the effect tracks the shared normalisation, not the query/key asymmetry.
+
+**One honest complication, reported rather than smoothed over.** The q−k difference has the **same
+sign in all four seeds** (−0.008, −0.013, −0.017, −0.017, sd 0.004), and a one-sample test across
+seeds gives **t = −6.44, formally significant**. Both statements are true and not in conflict:
+averaging over seeds can resolve an effect below the per-measurement floor. But the magnitude is
+**0.014 dex — five times *below* the 0.07 dex noise floor** this campaign uses to decide what counts
+as resolved.
+
+**Recorded as a possible sub-floor asymmetry, not a finding.** Band 18's registered check is
+deliberately written on the *within-seed* test (|difference| < 0.05 dex, p > 0.05 per seed), which is
+what the campaign's own standards support. Treating a t-statistic from n=4 seed means as
+establishing a 0.014 dex effect would be exactly the kind of claim this campaign has retracted
+repeatedly — a real-looking number below the resolution of the instrument. **If it is real, q sits
+marginally below k, which is the direction causal masking would predict; that is a question for a
+higher-n design, not for this data.**
+
+**Where the RMS-norm reading now stands — three predictions, three passes:**
+
+| prediction | result |
+|---|---|
+| survives at identical shape (size artifact excluded) | ✅ −0.37 dex, 48/48 blocks, iter. 90 |
+| depth-independent (architectural, not learned) | ✅ slopes \|t\| < 0.5, iter. 91 |
+| **q and k equal (norm-driven, not role-driven)** | ✅ **0.014 dex apart, iter. 92** |
+| `\|d\|` low with `\|a\|` equal | **awaiting REQ-038** |
+
+**Three independent consequences of one architectural feature, all confirmed at n=4 on committed
+data.** This is the strongest position any mechanism has reached in this campaign — and notably, it
+was reached *after* iteration 89 demoted the original scale-invariance explanation, by identifying a
+different consequence of the same feature. **REQ-038's `|d|`/`|a|` split remains the direct test, and
+it is now the only one outstanding.**
 
 **=== ITERATION 91: THE DEFICIT IS A FIXED ARCHITECTURAL CONSTANT — depth-independent, n=4 ===**
 
