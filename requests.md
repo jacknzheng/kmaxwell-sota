@@ -283,6 +283,69 @@ correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
 
+**=== ITERATION 106: REGISTERED NEGATIVE — attention entropy does NOT explain the alignment deficit ===**
+
+*Iteration 105 closed the q,k arithmetic and left one question open: **why** do q,k's gradients
+accumulate less coherently across tokens? REQ-038/043 recorded per-block **attention entropy** and
+**qk-logit RMS** — statistics I had never used, and the natural candidates.*
+
+**The hypothesis.** The softmax Jacobian is `diag(p) − ppᵀ`. Its structure depends on how spread the
+attention distribution is, so diffuse attention (high entropy) should mix many tokens, make
+successive backward vectors point in different directions, and produce **low alignment**.
+
+**The raw correlations look strong:**
+
+| | vs `\|d\|` deficit | vs `d_eff_rank` deficit |
+|---|---:|---:|
+| attention entropy | −0.545 | **−0.786** |
+| qk-logit RMS | +0.468 | +0.617 |
+
+**But entropy is nearly a function of depth** — it falls monotonically from **4.91 nats at layer 0 to
+0.25 at layer 12**, with `corr(entropy, layer) = −0.861`. This campaign has been caught by exactly
+this shape of confound before (band 7's collinear pair, band 12's one-value fan-in), so the raw
+numbers mean nothing until depth is partialled out.
+
+**Partialling out depth, three of four collapse:**
+
+| | raw | **partial (depth removed)** |
+|---|---:|---:|
+| `\|d\|` vs entropy | −0.545 | **+0.111** |
+| `\|d\|` vs logit RMS | +0.468 | −0.316 |
+| `d_eff_rank` vs logit RMS | +0.617 | −0.140 |
+| `d_eff_rank` vs entropy | −0.786 | **−0.379** |
+
+One survivor, and in a horse race it holds at `t = −2.7` against depth's `t = +2.1`. **With 12
+distinct layers and 0.86 collinearity, that is a fragile regime, so it gets three stability checks
+rather than a headline:**
+
+| check | result |
+|---|---|
+| leave-one-layer-out | entropy `t` ranges **−4.89 to −1.57** — **crosses the threshold** |
+| seed-clustered bootstrap | CI [−0.098, −0.085], excludes 0 |
+| **depth allowed to be quadratic** | **entropy `t` flips sign: −2.7 → +2.13** |
+
+**The third check is decisive. Allowing depth a quadratic term — a wholly reasonable
+respecification — reverses the sign of entropy's coefficient.** A predictor that flips direction
+under a benign change of functional form is not measuring anything; it is absorbing curvature in the
+depth profile that a linear term left behind. Leave-one-out agrees, dropping to |t| = 1.57 on some
+folds.
+
+*(The bootstrap CI is the one check that looks supportive, and it is the least relevant here: it
+resamples **seeds**, but the collinearity that threatens this estimate is across **layers**. Recording
+that, because a CI excluding zero is easy to quote out of context.)*
+
+> **Attention entropy and qk-logit RMS do not explain the alignment deficit. Their apparent
+> relationship is depth, measured differently.**
+
+**Registered as a negative.** The alignment deficit's cause remains open, and the space of committed
+observables that could address it is now exhausted — entropy and logit RMS were the last two
+unexamined fields in REQ-043. **Answering "why does the softmax Jacobian's output align less well
+across tokens" requires a measurement nobody has made**: the per-token backward vectors themselves,
+or a decomposition of the alignment ratio by token position. That is a substantially heavier probe
+than anything filed so far, and **I am not filing it** — the campaign's account is closed
+arithmetically at n=4, and this last question is a research problem in attention dynamics rather than
+a gap in the C account.
+
 **=== ITERATION 105: REQ-043 P2/P3 LAND — band 25 resolved, and it is a RENAMING, not a mechanism ===**
 
 **Jerry delivered the alignment ratio and the second training state.** Both were filed against
