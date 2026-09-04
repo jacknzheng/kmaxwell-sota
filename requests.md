@@ -29,6 +29,56 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅ BAND 27 SURVIVES THE mlp.fc EXCEPTION (iteration 148) — the trade-off is intact everywhere
+
+*Band 37 left mlp.fc reversing the concentration signature at +0.867. **The load-bearing question was
+whether band 27's trade-off itself inverts for mlp.fc, or only the mechanism by which it happens.**
+That had not been checked.*
+
+| type | corr(log‖d‖, d_cv) | corr(log‖a‖, a_cv) | **corr(log‖a‖, log‖d‖) — band 27** |
+|---|---:|---:|---:|
+| attn.k | −0.805 | −0.440 | **−0.943** |
+| attn.proj | −0.597 | −0.552 | **−0.980** |
+| attn.q | −0.435 | −0.440 | **−0.972** |
+| attn.v | −0.861 | −0.440 | **−0.954** |
+| **mlp.fc** | **+0.867** | −0.513 | **−0.986** ← *strongest of all six* |
+| mlp.proj | −0.823 | −0.221 | **−0.887** |
+
+> **mlp.fc's ‖a‖–‖d‖ trade-off is not merely intact — it is the STRONGEST of the six types (−0.986).
+> Band 27 has no exception. Only the concentration mechanism differs for mlp.fc, and its forward side
+> behaves like everyone else's (a_cv −0.513, mid-range).**
+
+**That substantially narrows band 37's exception**: it is a statement about *how* one type's backward
+distribution reshapes with depth, not about whether the trade-off holds. **Band 27 is unaffected.**
+
+**A hypothesis for the reversal, tested and found incomplete.** mlp.fc's `d_cv` is **U-shaped** across
+depth (0.808 → 0.604 at layer 8 → 0.645) while its `log‖d‖` falls monotonically — and correlating a
+monotone series with a U gives a positive value without any inversion. **That would have made the
+exception mundane.** Fitting each type's `d_cv` to depth + depth²:
+
+| type | quadratic coef | R² linear | R² quad | U-shaped? |
+|---|---:|---:|---:|---|
+| attn.proj | +0.00229 | 0.501 | 0.976 | **yes** |
+| attn.q | +0.00772 | 0.328 | 0.904 | **yes** |
+| **mlp.fc** | +0.00312 | 0.440 | 0.897 | **yes** |
+| attn.k | +0.00592 | 0.792 | 0.942 | no |
+| attn.v | −0.00184 | 0.928 | 0.931 | no |
+
+**Three types are U-shaped, not one.** attn.proj and attn.q share mlp.fc's U-shaped `d_cv` and still
+show the *negative* concentration correlation. **A U-shape alone does not produce the reversal, so the
+shape-mismatch explanation is incomplete and is not adopted.**
+
+**Net state of band 37.** The exception is **real, reproducible (sd 0.040), and unexplained** — two
+candidate mechanisms tested and both refuted: ReLU² sparsification (iteration 147: mlp.fc has the
+*least* concentrated backward signal, not the most) and shape mismatch (here: two other types share the
+U-shape without reversing). **What is now established is that the exception does not threaten band 27**,
+which was the only way it could have damaged the account.
+
+**Method note.** Both refuted hypotheses were mine, proposed and tested within two iterations. **The
+value of recording them is that the next candidate must explain why mlp.fc differs from attn.proj and
+attn.q specifically** — a much tighter constraint than "why is mlp.fc odd," and one neither hypothesis
+survives.
+
 ## ⚠️ QUESTION (b) — PARTIALLY ANSWERED, with an exception I could not explain (iteration 147)
 
 *REQ-047's CHECK 3 used **participation** and was inconclusive. But the token-norm distributions also
