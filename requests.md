@@ -17,300 +17,17 @@ Next request number: **REQ-047**.
 
 ---
 
-**=== ITERATION 132 (2026-09-04): BAND 31 QUESTIONS THE CAMPAIGN'S OWN DEFINITION — and it survives ===**
+### CONSOLIDATED NOTES (iterations 112–119, pre-table)
 
-*Band 31 established that Muon cannot see gradient magnitude. That raises a question about the
-campaign's central definition: **if the optimiser ignores g, does dividing by g² remove a nuisance or
-import variance the architecture does not control?** 100+ iterations rest on C = λ/g², and this had
-never been checked.*
+*Instrument audit and the arm-4 design history. Full text in git history from `ab04e19`.*
 
-**Tested on the campaign's own standard — seed-independence**, the criterion Arm A used to establish
-that C is architecture-determined:
-
-| quantity | median \|Δ\| across seed pairs | architecture-to-seed-noise ratio |
-|---|---:|---:|
-| **log C = λ/g²** | **0.0776 dex** | **15.7×** |
-| log λ | 0.1235 dex | 8.0× |
-| log g | 0.0332 dex | 31.3× |
-
-**C is markedly more seed-stable than λ and has twice its architecture-to-noise ratio.** Dividing by
-g² **removes** the seed-dependent part of λ rather than importing noise. **The definition is
-vindicated on the campaign's own criterion.**
-
-**A complication I had to resolve: log g scores highest of the three.** On ratio alone the campaign
-should have studied the *gradient*. Two reasons it should not, one of them testable:
-
-**The testable one — a high ratio can come from a small denominator rather than a large numerator:**
-
-| quantity | between-matrix spread | seed noise | resolvable levels |
-|---|---:|---:|---:|
-| **log C** | **0.4617 dex** | 0.1165 | **4** |
-| log λ | 0.3831 | 0.1356 | 3 |
-| log g | **0.2429** | **0.0434** | 6 |
-
-**log g has the *smallest* architectural spread — it wins on ratio only because its noise is 3× lower,
-not because it varies more across matrices.** It resolves finely but has little to resolve. **C has the
-largest architectural signal of the three.**
-
-**The untestable one, stated as such:** the campaign's question is about **curvature** — the
-equilibrium a network settles into and what an optimiser must respect. **A high reproducibility ratio
-measures how cleanly a quantity is determined, not whether it is the quantity of interest.** log g
-being well-determined is not an argument for studying it.
-
-> **Registered as band 32. C = λ/g² carries more architectural signal than λ or g, at lower seed noise
-> than λ. The g² division is a noise-removing transformation, not a distortion — even though the
-> optimiser is blind to g.**
-
-**Two corrections to my own analysis, recorded.** The script's closing text claimed "~16 resolvable
-levels" for C and quoted noise figures of 0.0117/0.0136 — **those were variances from an earlier
-block, not the standard deviations it had just printed.** The correct counts are **4 / 3 / 6** and C's
-noise sd is **0.117**, not 0.0117. **The verdict is unchanged** — C still has the largest spread and
-beats λ on both axes — but the supporting numbers in that paragraph were wrong by a factor of ten and
-would have misrepresented the resolution by 4×.
-
-**Why this closes a real gap rather than restating a known result.** Band 31 is a *theorem about the
-optimiser*; the campaign's definition is a *choice of statistic*. It was entirely possible for the
-theorem to invalidate the choice — if the optimiser cannot see g, `λ/g²` could have been an arbitrary
-rescaling. **It is not: g² is the component of λ that varies with the seed, and removing it leaves
-what the architecture fixes.**
-
-**=== ITERATION 131 (2026-09-04): THE INVARIANCE IS A THEOREM — REQ-046 WAS IMPOSSIBLE, NOT BOTCHED ===**
-
-*Iteration 130 asserted that under Muon the question "does gradient magnitude cause curvature" may be
-unanswerable by intervention, because the optimiser is invariant to magnitude **by construction**.
-**That was stated, not proved.** Proving it changes what REQ-046's null means.*
-
-**Jerry reached the same retraction independently**, and the two analyses agree numerically: raw-gradient
-slope **+0.0028**, CI **[−0.0143, +0.0200]** (Jerry) vs **[−0.0152, +0.0216]** (mine), with the same root
-cause identified — band 29. **Two separate analyses, same conclusion, same diagnosis.**
-
-**Where invariance could break, and whether it does:**
-
-**1. The epsilon.** `X = c·g / (‖c·g‖·1.02 + 1e-6)` is exactly scale-free only if `1e-6 ≪ ‖c·g‖`:
-
-| ‖g‖ | deviation from exact invariance |
-|---:|---:|
-| 10⁻³ | 1e-3 |
-| 10⁻² | **1e-4** |
-| 1 | 1e-6 |
-| 10 | **5e-8** |
-
-**REQ-046's matrices sit at ‖g‖ ≈ 10³·⁸.** The epsilon channel is dead — invariance is exact to float
-precision.
-
-**2. The momentum buffer** — the one that could have mattered, since it is *stateful*. Scaling the
-gradient by *c* gives `buffer_c = m·buffer_old + (1−m)·c·grad`, and `buffer_old` is not scaled at the
-moment the clip changes. But once the buffer reaches its scaled steady state, `buffer_c = c·buffer`
-exactly and the normalisation removes *c*. **The transient decays as `m^t`**; at m = 0.95 that is ~20
-steps per time constant, and **750 steps is ~37 time constants.** *(Correcting my own arithmetic: the
-printed 6-step ratios converge more slowly than "within a few steps" suggested — 0.95⁶ ≈ 0.74. The
-transient is real; it is simply negligible over 750 steps.)*
-
-**3. bfloat16 casting** happens *before* normalisation and is a relative operation — it does not
-introduce scale dependence.
-
-> **Registered as band 31. Muon's invariance to gradient magnitude is a property of the update rule,
-> exact up to a negligible epsilon and a transient lasting <3% of training. It is a theorem, not an
-> empirical regularity.**
-
-**The consequence, and it is the real finding.** **No intervention that scales the gradient can move
-this optimiser's trajectory.** REQ-046 was not a flawed execution of a workable design — **the design
-was impossible**, and iteration 119's "defect 2" fix could never have rescued it. Adding
-`clipped_gradient_block_norm` made the clip visible to the *measurement*; nothing could have made it
-visible to the *network*.
-
-**What this means for band 13, stated precisely.** The causal question is not merely *unresolved* — it
-is **unanswerable by gradient-scaling intervention under Muon**. Any future attempt must either change
-the **loss** (per-matrix loss weights — iteration 119's rejected option 2, which reintroduces the
-exclusion problem), change the **gradient's direction** rather than magnitude, or use a **different
-optimiser**. **This forecloses a whole class of experiments**, which is worth more than another
-inconclusive run.
-
-**And it explains band 29 mechanistically.** Band 29 observed that the λ–g relation *weakens* as the LR
-rises; band 31 says the optimiser cannot see gradient magnitude at all. **Together: the LR is the only
-channel by which the optimiser acts, so a relation measured under LR perturbation is a relation
-between λ and the LR — with g as a correlate, not an intermediary.** That is consistent with band 8
-(the cross-section is ~75% omitted-variable bias) and with iteration 114's exclusion violation, and it
-is now derived rather than inferred.
-
-**=== ITERATION 130 (2026-09-04): RETRACTING ITERATION 129 — REQ-046 HAS NO FIRST STAGE THAT MATTERS ===**
-
-*Iteration 129 read REQ-046's exponent of +0.009 as overturning band 13's causal reading. **That was
-an over-read, and I am retracting it.** The instrument did not do what a curvature experiment
-requires.*
-
-**What REQ-046 actually moved:**
-
-| quantity | slope vs log(clip) |
-|---|---:|
-| `clipped_gradient_block_norm` | **+1.0028** ✅ *(the registered first-stage check)* |
-| **`gradient_block_norm` (RAW)** | **+0.0028**, CI **[−0.0152, +0.0216]** |
-| `top_eigenvalue` | +0.0089 |
-
-**The clip scaled the gradient it was applied to, and the loss-surface gradient did not move at all.**
-
-**Two readings tested; both wrong, and the third is the answer.** I set out to distinguish *(A) the
-gradient is irrelevant to curvature* from *(B) the network compensated*. **Compensation is excluded** —
-full compensation predicts a raw-gradient slope near −1, and −1 sits far outside the CI. But **(A) is
-not what this shows either.** The mechanism is:
-
-```
-   clip applied to grad_chunk  →  momentum buffer  →  polar_express NORMALISES to unit spectral norm
-   ⟹ the orthogonalised update is unchanged
-   ⟹ the weight trajectory is unchanged
-   ⟹ the raw gradient is unchanged (measured: 0.003)
-   ⟹ curvature is unchanged (measured: 0.009)
-```
-
-**The clip never reached the loss surface.** Band 29 predicted exactly this — Muon's update carries no
-gradient-magnitude information — and I did not apply it to my own instrument design.
-
-> **REQ-046's exponent is 0/0. It is uninformative about curvature–gradient physics, not evidence
-> against it. Band 13's causal reading is UNRESOLVED, not overturned.**
-
-**This is iteration 119's defect 2 reappearing in a new form, and it is my error twice over.** In
-iteration 119 I found that the probe could not *see* the clip and fixed that by adding
-`clipped_gradient_block_norm`. **That fix was necessary but not sufficient:** it made the clip visible
-to the measurement without making it visible to the *network*. Moving the clip pre-momentum (defect 1)
-prevents `polar_express` from cancelling it *within a step*, but the normalisation still removes the
-scale from the update, so the trajectory barely changes. **I made a design decision in-session,
-justified it, and it was incomplete — the deeper problem was one I had already documented as band 29
-and failed to connect.**
-
-**What still stands.** **Iteration 114's detection of the non-gradient channel is unaffected** — it
-compares two functionals of the same Hessian under the same instrument, requires no intervention on
-the gradient, and its differences (+0.241/+0.268, CIs excluding zero) remain the campaign's only
-established evidence on this question. **Every descriptive band is untouched**, none being an IV
-estimate. **REQ-045's result stands** (β_own −1.161 confirming band 30 per-matrix; β_neighbour null,
-withdrawing iteration 124's partial/total reading).
-
-**What a valid instrument would require.** The intervention must change the gradient **as the network
-experiences it**, which under Muon means it cannot act on the gradient's *magnitude* at all — the
-normalisation removes that channel by construction. **The options are to change the loss (per-matrix
-loss weights, which reintroduces the exclusion problem — iteration 119's rejected option 2), or to
-accept that under Muon the question "does gradient magnitude cause curvature" may not be answerable
-by intervention, because the optimiser is invariant to it.** That second possibility is a real
-finding about this optimiser, and it is where band 29 was already pointing.
-
-**Method note.** *Standing rule 7 (iteration 119) said: read the code path an intervention modifies.
-I did — and still missed that a band I had established ten iterations earlier made the intervention
-inert. Extending it: **before designing an intervention, check it against the campaign's own
-findings**, not only against the code.*
-
-**=== ITERATION 129 (2026-09-04): REQ-046 LANDS — BAND 13's CAUSAL READING IS OVERTURNED ===**
-
-**Jerry ran REQ-046 and REQ-045.** I had missed both by checking only the branch tip; they were in the
-log. **REQ-046 is the measurement this campaign has been building toward, and it overturns a
-load-bearing band.**
-
-**The instrument is validated.** `PerMatrixClipMuon` clips pre-momentum (fixing iteration 119's defect
-1) and the probe gained `clipped_gradient_block_norm` (fixing defect 2). **First stage = +1.0028** —
-the clip moves the measured gradient exactly as designed, which is what REQ-037's batch instrument
-could never achieve.
-
-**The result:**
-
-| quantity | value |
-|---|---:|
-| **exponent `d log λ / d log(clip)`** | **+0.0089** |
-| first stage `d log g_clipped / d log(clip)` | **+1.0028** ✅ |
-| λ movement predicted if the exponent were 2 | **1.204 dex** |
-| **λ movement observed across the 0.5→2.0 clip range** | **0.056 dex (4.6%)** |
-
-**Per-type: +0.104, +0.109, +0.006, −0.089, −0.060, −0.017 — three positive, three negative, mean
-+0.009.** Scatter about zero, not a weak positive trend.
-
-> **Changing gradient magnitude alone, at fixed learning rate, does not move equilibrium curvature.
-> Band 13's +2.07 is the LEARNING-RATE channel, not curvature–gradient physics.**
-
-**Reading the registered checks correctly — they fail for the opposite reason to the one they guard
-against.** I registered "monotone reduced form" and "every per-type ratio positive" to prevent
-accepting a **spurious positive** exponent — the two properties the broken batch instrument lacked.
-Both report FAIL here, but **because the exponent is zero**: there is no trend to be monotone, and
-per-type values scatter around zero by construction. **The checks did their job; the outcome is
-stronger than either branch they anticipated.**
-
-**This confirms band 29 and completes the picture it opened.** Iteration 120 established that Muon
-normalises the gradient to unit spectral norm, so the update magnitude carries no gradient
-information, and concluded the λ ∝ g² relation must be **equilibrium selection rather than a
-Gauss-Newton identity**. **REQ-046 is the direct test of that conclusion and confirms it:** move the
-gradient without moving the LR and curvature does not follow.
-
-**What survives, and what does not:**
-- ❌ **Band 13's causal reading.** The exponent ~2 measured under LR perturbation is a **response
-  ratio**, exactly as the standing IV caveat said since iteration 76 — now demonstrated by direct
-  intervention, not inferred. **The Gauss-Newton derivation remains valid as theory about the loss
-  surface; it is not what the LR instrument was measuring.**
-- ✅ **Every descriptive band.** Bands 6, 12, 14, 16–21, 24–30 are statements about *what C is* and
-  *how it varies*, none of them IV estimates. **The q,k deficit, the mlp ReLU² gap, the conserved
-  `‖a‖·‖d‖` product, C's restoration — all unaffected.**
-- ✅ **Bands 8 and 29** are strengthened: band 8 said the cross-section is ~75% omitted-variable bias;
-  band 29 said the relation weakens with the LR; **REQ-046 says the residual causal part is ~zero.**
-
-**REQ-045 also landed, and withdraws iteration 124's reading.** Separability was achieved as designed
-(`corr(own, others') = +0.722` post-FE, versus REQ-023's −1.000). **`β_own = −1.161 (t = −12.8)`
-confirms band 30 per-matrix; `β_neighbour = +0.143 (t = +1.14)` is NULL.** So the LR–curvature
-decoupling is a **local own-LR effect, not a network channel** — iteration 124's partial/total reading
-is **withdrawn**, and the design disagreement it tried to explain needs another explanation.
-
-**Net effect on the campaign's goal.** The account of *what C is* stands entirely. **What changes is
-the account of what the g² law means**: it is a cross-sectional and equilibrium regularity, not a
-causal mechanism — and the campaign now has direct interventional evidence for that, which is a
-stronger position than the descriptive account alone.
-
-**=== ITERATION 128 (2026-09-04): A THIRD DETECTION OF THE NON-GRADIENT CHANNEL — WITHDRAWN ===**
-
-*REQ-046 will remove the LR channel outright. Meanwhile I tried a third bound on committed data,
-independent of iteration 114's two-functional test. **It produced a significant-looking result that
-does not survive its own validity check, and is withdrawn.***
-
-**The logic.** Under exclusion, a matrix whose **gradient** barely responds to the LR must show a
-correspondingly weak **curvature** response — the two are locked. So regressing each matrix's reduced
-form (`d log λ/d log s`) on its first stage (`d log g/d log s`) must pass through the **origin**. A
-non-zero intercept means λ responds where g does not.
-
-**The result looked strong, and survived an errors-in-variables correction that made it *larger*:**
-
-| fork | OLS intercept | **TLS (errors-in-variables)** | 95% CI |
-|---|---:|---:|---|
-| 1500 | +0.409 | **+0.806** | **[+0.504, +1.208]** |
-| 2000 | +0.474 | **+1.068** | **[+0.660, +1.808]** |
-
-Both CIs exclude zero. Correcting for attenuation in the first stage (a fitted slope from 3 points)
-**increased** the intercept rather than explaining it away — the opposite of the iteration-63
-attenuation trap, and superficially convincing.
-
-**The validity check kills it. Zero is outside the observed range of the regressor:**
-
-| fork | first-stage range | matrices with \|first stage\| < 0.15 | matrices with first stage > 0 |
-|---|---|---:|---:|
-| 1500 | **[−1.516, −0.034]** | **1 / 72** | **0 / 72** |
-| 2000 | **[−1.555, −0.141]** | **1 / 72** | **0 / 72** |
-
-**Every one of 144 matrix-forks has a negative first stage.** The intercept sits at `first stage = 0`,
-which **no matrix approaches** — it is a **pure extrapolation beyond the data**, and its confidence
-interval describes the fit's behaviour outside the sampled region, not any measured quantity.
-
-**The direct version of the test, which needs no extrapolation, disagrees with it.** The one matrix
-per fork with a near-zero first stage has a reduced form of **−0.062 and −0.097** — close to zero, as
-exclusion predicts, and nowhere near the +0.81/+1.07 the extrapolation asserted. **n=1 per fork, so
-that is not evidence *for* exclusion either — it is simply the only relevant data, and it does not
-support the claim.**
-
-> **Withdrawn. The intercept test cannot bound the non-gradient channel with this design, because
-> REQ-023's LR perturbation moves every matrix's gradient substantially — by construction, there are
-> no weak-first-stage matrices to anchor the intercept.**
-
-**Iteration 114's detection is unaffected** and remains the campaign's only established evidence for
-the channel: it compares **two functionals of the same Hessian under the same instrument**, needs no
-extrapolation, and its differences (+0.241/+0.268, CIs excluding zero) are measured where the data
-actually is.
-
-**Method note — the fourth trap of this kind in this session.** Iterations 122 and 125 died on
-collinearity; iteration 126's pre-flight check caught a design that would have repeated it; this one
-died on **extrapolation beyond the regressor's support**. The common failure is **reading a
-coefficient without first checking where the data lives.** *Extending the standing rule once more:
-before interpreting an intercept, confirm the regressor actually reaches zero.*
+- **The batch instrument (REQ-037 arms 1–3) is unusable** — gives +0.383 [+0.028, +0.726] against the
+  LR instrument's +2.07, but its reduced form is **non-monotone** and per-type ratios span **−1.25 to
+  +1.12**. Not evidence against REQ-035; evidence that arm 4 was the right test.
+- **Arm 4's original spec was broken twice** (iter. 119): a clip inside `polar_express` is **cancelled
+  exactly** by the unit-norm step, and the probe **recomputes the gradient outside the optimiser**
+  (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
+  fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
 ## ⚠️ QUEUE STATUS NOTE (2026-09-04, from the analysis session)
 
@@ -864,399 +581,79 @@ curvature equalization.**
 productive path is **arm 4**, then — if the exponent survives — treating C as a measured property to
 respect rather than a target to flatten.
 
-**=== ITERATION 125 (2026-09-03): THE PARTIAL/TOTAL SPLIT IS UNTESTABLE ON REQ-023 — by construction ===**
-
-*Iteration 124 read the two designs' shape disagreement as a partial-vs-total distinction: REQ-023
-perturbs one matrix against a fixed background, Arm A moves everything together. **That reading was
-offered without test**, and REQ-023 appeared to support one — each matrix has its own multiplier and
-sits among 71 others with theirs.*
-
-**The test is impossible by construction, and the diagnostic says so immediately:**
-
-> **corr(own multiplier, others' mean multiplier) = −1.0000**
-
-**Why.** REQ-023's balanced design gives every arm the **identical multiplier total** — verified:
-`sum log₁₀(mult) = +0.206404` in all three assignments, since each arm is a permutation of the same
-multiset. That forces
-
-```
-   mean_others = (total − own) / 71
-```
-
-an **exact** linear function of `own` with slope −1/71. **The two regressors carry one piece of
-information between them.**
-
-**The regression output confirms it mechanically** — the coefficients are one number rescaled:
-
-| fork | own-LR | others'-LR | own / 71 |
-|---|---:|---:|---:|
-| 1500, λ | −1.149 | **+0.016** | **0.0162** |
-| 1500, g | −0.542 | **+0.008** | **0.0076** |
-
-Identical |t| for both regressors (17.7, 26.6) — the signature of exact collinearity, not two
-effects.
-
-> **The partial/total split cannot be estimated from REQ-023. Iteration 124's reading of the design
-> disagreement remains untested, and is now known to be untestable on committed data.**
-
-**The property that makes REQ-023 the campaign's cleanest instrument is the same property that blocks
-this.** Balanced assignment — each matrix receiving each level exactly once — is what removed
-confounding from the LR instrument (bands 8, 13) and what broke iteration 122's collinearity. It also
-fixes the arm total, which is precisely what makes the neighbour effect unidentifiable. **A design
-cannot be balanced and also vary its own aggregate.**
-
-**Recording this as my own error, plainly.** Standing rule 2 says to check whether a predictor is an
-exact function of another. **I recorded an extension to that rule in iteration 122 — after the same
-class of mistake — and then walked into it again two iterations later.** The rule was applied to the
-*predictor's relationship to a grouping* and not to *the relationship between two predictors in the
-same regression.* Extending it once more: **before regressing on two constructed variables, check
-their correlation before reading any coefficient.** A single `corrcoef` call would have stopped this
-iteration at its first line.
-
-**What would settle iteration 124's reading:** an unbalanced design — arms whose *total* LR differs,
-so a matrix's own multiplier and its neighbours' mean vary independently. **That is exactly the
-5-level ladder iteration 124 already identified**, and this iteration adds a requirement to it: the
-levels must not be balanced across matrices, or the same collinearity returns.
-
-**=== ITERATION 124 (2026-09-03): THE TWO DESIGNS DISAGREE ON SHAPE — and the disagreement is structured ===**
-
-*Iteration 123 confirmed band 30 on two designs but noted they differ in **where** the decoupling
-happens, and declined to resolve it. That is now testable directly: is the difference real, or were
-the CIs simply too wide?*
-
-**REQ-023 (per-matrix perturbation) shows a clear threshold:**
-
-| fork | step 0.6→1.0 | step 1.0→1.7 | **steps different?** |
-|---|---|---|---|
-| 1500 | **−0.0341** [−0.060, −0.010] ✅ | −0.0007 [−0.020, +0.018] ❌ | **−0.0334 [−0.064, −0.006]** ✅ |
-| 2000 | **−0.0363** [−0.064, −0.012] ✅ | −0.0018 [−0.022, +0.016] ❌ | **−0.0344 [−0.064, −0.007]** ✅ |
-
-**The first step is significant, the second is not, and the two differ significantly — in both forks.
-Decoupling saturates by s = 1.0.**
-
-**Arm A (global ladder) shows no threshold:**
-
-| step | value | CI | |
-|---|---:|---|---|
-| 0.6→1.0 | −0.0104 | [−0.0155, −0.0068] | **significant** |
-| 1.0→1.7 | −0.0074 | [−0.0133, −0.0017] | **significant** |
-| **difference** | −0.0030 | **[−0.0129, +0.0059]** | **not distinguishable** |
-
-**Both steps significant, indistinguishable from each other — an even decline across the range.**
-
-> **The two designs genuinely disagree on shape, and this is not a width problem: each is
-> individually decisive and they point different ways.** Band 30's *sign and magnitude* hold on both
-> (iteration 123); its *shape* is design-dependent.
-
-**The disagreement is structured, not random, and the designs differ in exactly one way.** In Arm A
-**every matrix moves together** — the whole network shifts to a new operating point, and the
-surrounding matrices' curvature changes too. In REQ-023 **one matrix is perturbed while the rest stay
-at baseline**, so the perturbed matrix responds against a fixed background. **A threshold in the
-per-matrix design and a smooth decline in the global one is what you would expect if the saturation is
-a property of a matrix in isolation, and the global ladder's extra decline comes from the network-wide
-state change** — the same distinction band 13's re-scoping identified between partial and total
-derivatives (iteration 79).
-
-**Recorded as an observation with a mechanism-shaped reading, not a band.** Registering it would
-require distinguishing the above from simpler explanations — three LR levels cannot resolve a
-saturation curve, and both designs have only one interior point. **A 5-level ladder on either design
-would settle it**, and that is a cheap addition to any future curvature run, but it is not worth a
-request on its own.
-
-**What this changes about band 30's use.** The band supports "raising the LR decouples λ from g" and
-**does not** support "the effect is proportional to the LR change." **Anyone using band 30 to predict
-the effect of a specific LR change should note the size is design-dependent and, on the per-matrix
-evidence, may already be saturated at the baseline LR.** Band 30's wording already claims sign and
-magnitude only; this iteration is the evidence behind that restriction rather than a change to it.
-
-**=== ITERATION 123 (2026-09-03): BAND 30 CONFIRMED ON AN INDEPENDENT DESIGN ===**
-
-*Iteration 122's test of band 30 was invalid because REQ-036's multiplier is a pure function of type.
-That iteration named the valid alternative: **REQ-023 varies the LR *within* each type**, which breaks
-the collinearity. Running it.*
-
-**The collinearity is verifiably broken.** Each matrix receives each of {0.6, 1.0, 1.7} exactly once,
-so **every type contains all three multipliers** (verified: 12 matrices per type, all three levels
-present in each). The regressor is no longer type in disguise.
-
-**Band 30's prediction — cov(log λ, log g) falls as the multiplier rises — reproduces:**
-
-| fork | mult 0.60 | mult 1.00 | mult 1.70 | **cov(1.7) − cov(0.6)** | 95% CI |
-|---|---:|---:|---:|---:|---|
-| 1500 | 0.0766 | 0.0425 | 0.0418 | **−0.0347** | **[−0.0712, −0.0022]** |
-| 2000 | 0.0784 | 0.0421 | 0.0402 | **−0.0381** | **[−0.0765, −0.0051]** |
-
-**Both CIs exclude zero, matrix-clustered.** Band 30 now holds on **two independent designs** — Arm A's
-global ladder (every matrix moved together, across seeds) and REQ-023's per-matrix randomisation (one
-matrix perturbed at a time, within a single run). **Different perturbation geometry, different fork,
-different resampling unit, same conclusion.**
-
-**A shape caveat, recorded rather than smoothed:**
-
-| design | 0.6 → 1.0 | 1.0 → 1.7 |
-|---|---:|---:|
-| Arm A (global) | **−19%** | **−17%** |
-| REQ-023 (per-matrix) | **−45%** | **−2% / −5%** |
-
-**Arm A's decline is roughly even; REQ-023's is almost entirely at the low end.** Both are consistent
-with band 30 as registered — *cov falls as the LR rises* — but they disagree on **where**. The
-REQ-023 endpoint CIs are wide enough ([−0.071, −0.002]) that the shape difference is **not
-resolvable**, so **band 30 is confirmed for its sign and magnitude and makes no claim of
-monotonicity.** The band's wording is amended to say so.
-
-**Why the confirmation matters beyond band 30.** It is the campaign's first result established on two
-designs whose *confounds do not overlap*: the global ladder confounds LR with whole-network state,
-while the per-matrix design confounds it with nothing (each matrix's perturbation is independent of
-every other's, which is what made REQ-023 the campaign's cleanest instrument in the first place).
-**A finding that survives both is not an artifact of either.**
-
-**And it closes iteration 122's loose end properly.** That iteration recorded a negative and named the
-test that would settle it. **Naming a test and then running it is the difference between a registered
-negative and an abandoned line** — the negative stands as filed, and the line it pointed to has now
-produced a positive.
-
-**=== ITERATION 122 (2026-09-03): AN INVALID TEST OF BAND 30 — the design, not the band, was wrong ===**
-
-*Band 30 came from Arm A's global LR ladder. REQ-036 looked like independent confirmation: five arms,
-per-type multipliers, a different fork and a different perturbation geometry. **The test I ran on it
-was invalid, and the reason is worth recording because it nearly produced a false refutation.***
-
-**What I tested.** Band 30 predicts a higher LR weakens the λ–g coupling, so within each REQ-036 arm,
-matrices given a larger multiplier should contribute *less* covariance. Regressing each matrix's
-covariance contribution on its log multiplier:
-
-| arm | slope | band 30 predicts |
-|---|---:|---|
-| a2_pertype | **+0.0722** | negative |
-| a3_endcap | **+0.0686** | negative |
-| a4_antirule | **+0.0836** | negative |
-| a5_polar | **+0.1503** | negative |
-
-**All four positive — an apparent clean refutation on independent data.**
-
-**It is not, because the regressor is type in disguise.** REQ-036 assigns multipliers **per type**, so
-within any arm the multiplier is **constant within a type** — verified: *one distinct multiplier per
-type in every arm.* Regressing on `log(mult)` across 72 matrices is therefore regressing on **type
-with six distinct values**, and the resulting slope is the type structure — the q,k excess, the mlp
-gap, the offsets — that bands 14, 20 and 26 spent the campaign measuring. **It contains no LR
-information at all.**
-
-> **The +0.07 to +0.15 slopes measure C's type structure, not an LR effect. Band 30 was never testable
-> this way. My test design was wrong; the band is untouched.**
-
-**The valid comparison REQ-036 supports is between arms**, each being a whole run with its own LR
-profile — the same shape as Arm A's ladder:
-
-| arm | corr(log λ, log g) | mean multiplier |
-|---|---:|---:|
-| a5_polar | **0.206** | 1.131 |
-| a3_endcap | 0.320 | 1.403 |
-| a2_pertype | 0.380 | 1.030 |
-| a1_control | 0.413 | 1.000 |
-| **a4_antirule** | **0.680** | 1.171 |
-
-`corr(arm correlation, mean multiplier) = −0.093` — **the right sign but nowhere near significant at
-n=5 arms.** Reported as uninformative, not as support.
-
-**One observation worth keeping.** **a4_antirule has the strongest λ–g coupling (0.680) and is the arm
-that deliberately ANTI-equalises curvature** (spread 0.444 vs control's 0.246, per REQ-036's own
-mechanism check). That is consistent with band 30 read in reverse — spreading curvature strengthens
-the coupling — but with n=1 arm it is an observation, not evidence.
-
-**Why this iteration is a negative worth recording.** A confounded test that *appeared* to refute a
-band on independent data would have been a serious error to publish, and the confound is subtle: the
-multiplier is a legitimate experimental variable, it just happens to be perfectly collinear with type
-**by design**. **This is standing rule 2 in a new guise** — the predictor takes six distinct values
-and each identifies a type, so it is a label, not a dose. *Extending rule 2: check not only how many
-distinct values a predictor takes, but whether those values are in one-to-one correspondence with a
-known grouping.*
-
-**Band 30 stands as filed, on Arm A's ladder alone.** Independent confirmation would need an
-experiment where the LR varies **within** a type — which REQ-023's per-matrix randomisation does
-provide, and which is the natural next test if this line is pursued.
-
-**=== ITERATION 121 (2026-09-03): C's SPREAD EXPANDS WITH THE LR — my prediction was backwards ===**
-
-*Band 29 found λ's spread compresses under a rising LR while g's stays flat. Since `C = λ/g²`, I
-predicted **C's spread must compress too** — which would have meant the campaign's type structure is
-itself LR-dependent and every effect size is quoted at one learning rate.*
-
-**The prediction was wrong, and in the informative direction:**
-
-| s | sd(log λ) | sd(log g) | **sd(log C)** | **type-spread of C** |
-|---:|---:|---:|---:|---:|
-| 0.60 | 0.427 | 0.246 | **0.450** | **0.997** |
-| 1.00 | 0.401 | 0.246 | 0.471 | 1.056 |
-| 1.70 | 0.379 | 0.242 | **0.478** | **1.079** |
-
-**C's spread EXPANDS: +6.2%, CI [+0.007, +0.061]; type-spread +8.2%, CI [+0.048, +0.110].** Both
-exclude zero. λ compresses, g is flat, and C widens anyway.
-
-**The variance identity explains it exactly, and closes to 1×10⁻⁶:**
-
-```
-   var(log C) = var(log λ) + 4·var(log g) − 4·cov(log λ, log g)
-```
-
-| s | var(log λ) | 4·var(log g) | **−4·cov** | = var(log C) |
-|---:|---:|---:|---:|---:|
-| 0.60 | 0.1825 | 0.2413 | **−0.2209** | 0.2029 |
-| 1.00 | 0.1607 | 0.2414 | **−0.1791** | 0.2230 |
-| 1.70 | 0.1440 | 0.2338 | **−0.1483** | 0.2295 |
-
-**The covariance term shrinks faster than λ's variance falls**, so C widens. Reading the mechanism
-directly:
-
-| s | **cov(log λ, log g)** | corr |
-|---:|---:|---:|
-| 0.60 | **0.0552** | 0.526 |
-| 1.00 | **0.0448** | 0.455 |
-| 1.70 | **0.0371** | 0.406 |
-
-> **Registered as band 30. A higher learning rate DECOUPLES curvature from the gradient. Band 29's
-> flattening slope and band 30's widening C-spread are the same fact seen twice** — the slope is
-> `cov/var(g)` and C's variance contains `−4·cov`, so a falling covariance flattens one and widens the
-> other simultaneously.
-
-**A caveat this establishes for every band, stated plainly.** C's type structure is **~8% narrower at
-s = 1.0 than at s = 1.7**. Every effect size the campaign quotes — the q,k excess, the mlp gap, the
-type offsets — is measured at s = 1.0 and carries that sensitivity. **They are not
-architecture-only constants; they are architecture-at-a-given-learning-rate.** The dependence is
-modest (~8% per 2.8× LR) and does not threaten any band's sign or significance, but it belongs in the
-record.
-
-**Consistency with band 16, checked and holding.** Band 16 says C's *pattern* is restored under the
-ladder (corr +0.87–0.97) while its level shifts. Band 30 adds that its *spread* also widens. All three
-are compatible: the ordering of matrices survives while their level and dispersion both move — which
-is precisely why band 16's registered check is a **correlation**, not a variance.
-
-**Method note.** I predicted compression from a two-term intuition (λ down, g flat ⇒ C down) and the
-third term — the covariance — reversed it. **`C = λ/g²` is not a two-variable relation when both are
-random;** the covariance is a first-class term and I treated it as absent. *This is the same class of
-error as iteration 118's constraint-B framing: reasoning about a derived quantity without writing out
-its full decomposition.*
-
-**=== ITERATION 120 (2026-09-03): MUON'S UPDATE IS GRADIENT-SCALE-INVARIANT — what λ ∝ C·g² can mean ===**
-
-*Iteration 119's defect 1 was found while checking a spec, but it has a consequence for the campaign's
-central law that is larger than the spec it came from.*
-
-**The structural fact.** `polar_express` normalises to unit spectral norm *before* Newton-Schulz, and
-everything after operates on that unit-norm matrix. The full path is
-**momentum → normalise → Newton-Schulz → scale by LR.** So **Muon's update magnitude is set by the
-learning rate alone and carries no gradient information** — only the update's *direction* depends on
-the gradient.
-
-**That removes the obvious reading of λ ∝ C·g².** Under plain SGD the law has a natural dynamical
-story: larger gradients take larger steps into higher-curvature regions. **Under Muon that story is
-unavailable by construction.** Two readings remain:
-
-- **(A) equilibrium selection** — the matrix settles where curvature balances a *fixed* step size, so
-  the relation is a property of the landscape *as sampled by this optimiser*, and should **weaken when
-  the step size changes**;
-- **(B) a Gauss-Newton identity** — `H ≈ JᵀJ`, `g = Jᵀr` make it a statement about the loss surface
-  alone, **invariant to the optimiser**.
-
-**Both predict the same exponent; only (A) predicts LR-dependence. The ladder discriminates:**
-
-| s (LR multiplier) | cross-sectional slope | corr(λ, g) |
-|---:|---:|---:|
-| 0.60 | **0.916** | 0.534 |
-| 1.00 | **0.742** | 0.497 |
-| 1.70 | **0.636** | 0.453 |
-
-**Monotone decline, spread 0.281, seed-clustered 95% CI [0.208, 0.365] — excludes zero.** Reading (A).
-
-**Range compression ruled out — the obvious artifact, checked.** A flatter fit can arise mechanically
-if the predictor's spread shrinks. It does not:
-
-| s | **sd(log g)** | sd(log λ) |
-|---:|---:|---:|
-| 0.60 | **0.246** | 0.429 |
-| 1.00 | **0.246** | 0.395 |
-| 1.70 | **0.242** | 0.367 |
-
-**The gradient's spread is flat to 0.004 dex across a 2.8× LR change**, while **λ's spread compresses
-by 14%.** The slope falls because the *response* compresses, not because the predictor narrows. **This
-is a real effect on λ, not a fitting artifact.**
-
-> **Registered as band 29. The λ–g relation is not an optimiser-independent identity: raising the
-> learning rate compresses curvature's spread while leaving the gradient's untouched, weakening the
-> relation. Reading (A) — equilibrium selection — is supported; reading (B) is not.**
-
-**What this does and does not touch.** Band 13's *derivation* of exponent 2 from Gauss-Newton is
-unaffected as **theory**; what iteration 120 shows is that the *measured* relation carries an
-optimiser-dependent component the derivation does not predict. **This is a second, independent line
-pointing the same way as iteration 114's exclusion violation** — both say the measured exponent is not
-a clean structural constant. They arrive from different directions: 114 from two functionals
-disagreeing, 120 from the relation weakening under the LR.
-
-**Consistency with band 16, checked.** Band 16 says C's *pattern* is restored under the ladder
-(corr +0.87–0.97) while its *level* shifts. Band 29 adds that the λ–g *relation* also weakens. These
-are compatible: a compressing λ spread with a fixed g spread moves the level and the slope while
-leaving the ordering intact — which is exactly what bands 16 and 29 measure separately.
-
-**=== ITERATION 119 (2026-09-03): ARM 4's SPEC IS BROKEN AS WRITTEN — corrected before filing ===**
-
-*I was about to file arm 4 as a formal request. **Reading the actual code first found two defects that
-would have made the arm a silent no-op.** Both are recorded, because a spec that returns the control
-result while appearing to run is worse than no spec.*
-
-**DEFECT 1 — a clip inside `polar_express` is cancelled exactly.** `train_gpt.py:177` reads:
-
-```python
-    momentum_buffer.lerp_(grad_chunk, 1 - momentum)   # momentum update
-    g = grad_chunk.lerp_(momentum_buffer, momentum)   # Nesterov
-    X = g.bfloat16()
-    X = X / (X.norm(dim=(-2,-1), keepdim=True) * (1 + 2e-2) + 1e-6)   # spectral normalisation
-```
-
-**That last line divides X by its own norm.** Scaling the gradient by *c* gives
-`(c·g)/‖c·g‖ = (c·g)/(c·‖g‖) = g/‖g‖` — **c cancels exactly.** Verified numerically: clips of 0.5,
-1.0 and 2.0 produce **identical** normalised values (0.794719 in all three).
-
-**Iteration 113 specified "clip before `shape_mult` and Newton-Schulz."** That is *inside* the
-normalised region, so **the arm would have had no effect on the update and would have silently
-returned the control result three times.**
-
-**The correct insertion point is BEFORE the momentum buffer update** — the buffer *accumulates* the
-clipped gradient, and its altered trajectory is not normalised away. Concretely: clip `grad_chunk` on
-entry to `polar_express`, ahead of `momentum_buffer.lerp_`, or at the reduce-scatter site
-(`train_gpt.py:604–619`) where `grad_chunk` is produced.
-
-**DEFECT 2 — the instrument has no measurable first stage, and this is the serious one.** The probe
-records `gradient_block_norm = ‖param.grad‖` — the **raw gradient, before the optimiser touches it**.
-A clip applied inside the optimiser **does not change `param.grad`**, so:
-
-> **`d log g / d log clip` ≈ 0 — the first stage is empty and the Wald ratio is undefined.**
-
-This is not a coding detail; it is a **flaw in arm 4 as conceived**, mine as much as REQ-037's.
-The clip changes the *update*, not the *measured gradient*, so it cannot instrument
-`d log λ / d log g` in the form the campaign has been estimating.
-
-**What would actually work — two options, both stated so the humans can choose:**
-
-1. **Clip and measure the same object.** Have the probe record the **post-clip** gradient norm
-   alongside `param.grad`. Then the first stage is mechanical (`d log g_clipped/d log clip = 1` by
-   construction) and the Wald ratio becomes `d log λ / d log clip` directly — a clean reduced form
-   needing no ratio at all. **This is the cheaper fix: one extra field in the existing probe.**
-2. **Scale the loss per matrix instead of clipping.** A per-matrix loss weight changes `param.grad`
-   itself, so the existing probe measures the first stage with no new field. But it also changes what
-   is optimised, which reintroduces an exclusion problem of its own.
-
-**Recommendation: option 1.** It keeps the intervention where REQ-037 wanted it (in the update, not
-the objective) and moves the measurement to match, rather than the reverse.
-
-**Status: arm 4 is NOT filed as a request.** Its premise needs the above decision from the humans
-first — filing a spec that cannot produce a first stage would waste a run and, worse, produce a
-confident-looking null. **REQ-037 remains DEFERRED with its reason now precisely stated** rather than
-"needs a new hook."
-
-**Method note.** Iteration 113 specified this arm from the *description* of Muon's update path
-without reading `polar_express`. **Two iterations of analysis rested on a spec that would not have
-run**, and the error surfaced only when I went to file it. *Standing rule 7: before specifying an
-intervention, read the code path it modifies — a spec derived from a description of the algorithm is
-not a spec.*
+### CONSOLIDATED FINDINGS IV (iterations 112–132) — the causal account, revised
+
+*Provenance in git history from `ab04e19` onward.*
+
+#### The headline change: the g² law is NOT causal, and cannot be tested under Muon
+
+- **The exclusion restriction is violated** (iter. 114, committed data): two functionals of the same
+  Hessian give **+2.13/+2.10** vs **+1.89/+1.83**, differences **+0.241/+0.268**, CIs excluding zero.
+  **The campaign's only established evidence on the causal question.**
+- **REQ-046 (clip instrument) is INERT, not decisive.** It moved `g_clipped` by **+1.003** and the
+  **raw** gradient by **+0.003**. The exponent +0.009 is **0/0**. *Iteration 129 read this as
+  overturning band 13 and was **retracted** (iter. 130); Jerry retracted independently, matching
+  numbers.*
+- **Band 31 — the invariance is a THEOREM.** Epsilon deviation **5e-8** at these gradient scales;
+  momentum transient ~20 of 750 steps. **No gradient-scaling intervention can move this optimiser.**
+  REQ-046 was impossible, not botched.
+- **Band 13 is unresolved and unanswerable by gradient scaling.** A future test must change the
+  **loss**, change gradient **direction**, or use a **different optimiser**.
+
+#### What survived
+
+- **Band 32:** band 31 could have made `λ/g²` arbitrary. It does not — C is **more seed-stable than λ**
+  (0.0776 vs 0.1235 dex), **twice the architecture-to-noise ratio** (15.7× vs 8.0×), **largest
+  architectural spread** (0.462 vs 0.383). **g² is λ's seed-varying component.**
+- **Bands 29–30:** raising the LR **decouples** λ from g (cov **0.0552 → 0.0371**), on **two
+  independent designs**. Band 31 derives it: the LR is the only channel, so g is a **correlate, not an
+  intermediary** — consistent with band 8's ~75% omitted-variable bias.
+- **All descriptive bands** (6, 12, 14, 16–21, 24–28, 30) — none is an IV estimate.
+- **REQ-045:** separability **+0.722** post-FE; **β_own −1.161 (t −12.8)** confirms band 30;
+  **β_neighbour null** → iteration 124's partial/total reading **withdrawn**.
+
+#### Registered negatives
+
+Batch instrument **unusable** (non-monotone; per-type −1.25 to +1.12). Intercept test of the
+non-gradient channel is **extrapolation** — 0 of 72 matrices have a positive first stage (withdrawn,
+iter. 128). Attention entropy **does not** explain the alignment deficit (**flips sign** under a
+quadratic depth term). Cross-type cancellation is **chance** (p 0.19–0.25) — its across-depth
+counterpart is real (band 27).
+
+#### Method failures carried forward
+
+**Five traps of one shape** — reading a coefficient without checking where the data lives: collinearity
+in REQ-036's per-type multipliers (122); collinearity in REQ-023's balanced totals (125,
+`corr = −1.0000` **by construction**); extrapolation beyond support (128); a `corr = +0.609` verdict
+resting on **one type** (115); an intervention my own band 29 predicted inert (130). **One caught
+pre-flight** (126, by simulating the design before requesting it) — that is the check that works.
+
+**Rules 7–9 added:** read the code path an intervention modifies *and check it against the campaign's
+own findings*; confirm a regressor reaches zero before interpreting an intercept; check two constructed
+regressors' correlation before reading either coefficient.
+
+---
+
+### WHERE THE GOAL STANDS (revised, 2026-09-04)
+
+**The design question: ANSWERED, negatively, with a mechanism.** REQ-036 is a null — uniform LR beats
+every per-type rule, predicted-best is worst by 120× the val noise floor, harm **monotone in
+equalization** (Spearman −1.000). Band 16 explains it. **Do not build a momentum kernel or per-layer LR
+on curvature equalization.**
+
+**The descriptive account: COMPLETE at n=4, mutually consistent, correctly scoped.**
+
+> **C = λ/g²** — the right object (band 32), seed-independent, **actively restored** (16),
+> time-invariant on an equilibrated window (24). Structure is **three partly-offsetting terms** (26):
+> **q,k purely backward** (softmax Jacobian −0.18, alignment −0.19), **mlp purely forward** (ReLU²,
+> matching to 0.001 dex), with **‖a‖·‖d‖ conserved across depth** (27) explaining the depth-flatness.
+>
+> **What it is NOT:** a causal law. It is an equilibrium regularity measured under an optimiser that
+> **cannot see gradient magnitude** (31).
+
+**Open, and measurement-bound:** why the softmax Jacobian aligns less well across tokens; why ‖a‖ and
+‖d‖ trade off (both need per-token backward vectors); how large the non-gradient channel is (**needs a
+non-gradient-scaling intervention — ruled out by theorem**).
 
 ## REQ-037: a NON-learning-rate instrument for the curvature-gradient exponent
 
