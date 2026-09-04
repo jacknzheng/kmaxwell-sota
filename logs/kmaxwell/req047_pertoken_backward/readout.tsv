@@ -1,0 +1,20 @@
+CHECK1_seed0	da_cos (q,k)=+0.0203 < (v,proj)=+0.2498	True
+CHECK1_seed1	da_cos (q,k)=+0.0234 < (v,proj)=+0.2529	True
+CHECK1_seed2	da_cos (q,k)=+0.0190 < (v,proj)=+0.2479	True
+CHECK1_seed3	da_cos (q,k)=+0.0204 < (v,proj)=+0.2515	True
+CHECK1_RESULT	q,k less token-coherent than v/proj in 4/4 seeds (>=3 pass)	PASS
+CHECK2_RESULT	corr(align_ratio, grad_rank1_frac)=+0.656 over 288 obs (|r|>0.5)	PASS
+CHECK3_attn.q	corr(a_part,d_part) across depth=+0.588	(neg=support, ~0=scale)
+CHECK3_attn.k	corr(a_part,d_part) across depth=+0.216	(neg=support, ~0=scale)
+CHECK3_attn.v	corr(a_part,d_part) across depth=-0.358	(neg=support, ~0=scale)
+CHECK3_attn.proj	corr(a_part,d_part) across depth=+0.322	(neg=support, ~0=scale)
+CHECK3_mlp.fc	corr(a_part,d_part) across depth=+0.300	(neg=support, ~0=scale)
+CHECK3_mlp.proj	corr(a_part,d_part) across depth=+0.114	(neg=support, ~0=scale)
+#
+# per-type means (n=4): da_cos_mean | grad_rank1_frac | a_participation | d_participation
+TYPE_attn.q	da_cos=+0.0598	rank1=0.2376	a_part=8137.8	d_part=940.8
+TYPE_attn.k	da_cos=-0.0182	rank1=0.1833	a_part=8137.8	d_part=714.5
+TYPE_attn.v	da_cos=+0.4166	rank1=0.5428	a_part=8137.8	d_part=456.4
+TYPE_attn.proj	da_cos=+0.0845	rank1=0.2183	a_part=6756.9	d_part=3157.2
+TYPE_mlp.fc	da_cos=+0.0361	rank1=0.2700	a_part=8131.0	d_part=2750.6
+TYPE_mlp.proj	da_cos=+0.0905	rank1=0.2274	a_part=3404.6	d_part=3320.5

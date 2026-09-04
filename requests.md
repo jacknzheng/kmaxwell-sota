@@ -1619,7 +1619,16 @@ bound is one-sided twice over, since a channel acting equally on both functional
 
 ## REQ-047: per-token backward statistics — the two open alignment questions
 
-- status: **OPEN**
+- status: **DONE 2026-09-04 (n=4)** → `logs/kmaxwell/req047_pertoken_backward/`
+- **RESULT — both mechanism questions answered.** (a) The q,k alignment deficit is a TOKEN-COHERENCE effect:
+  da_cos_mean (adjacent-token backward cosine) q,k≈+0.02 vs v=+0.42, proj=+0.09 — PASS 4/4 seeds; v's backward
+  vectors are coherent (cos 0.42) + concentrated (participation 456), q,k's are near-orthogonal token-to-token
+  (k slightly anti-coherent) + spread → low rank-1. grad_rank1_frac correlates with align_ratio r=+0.656 (PASS
+  |r|>0.5). So band 25's aggregate −0.190 dex deficit = incoherent per-token outer-product accumulation, NOT
+  sparsity. (b) Band 27's ‖a‖-‖d‖ depth tradeoff is a SCALE effect not support: corr(a_part,d_part) across
+  depth near-zero/positive for 5/6 types (only attn.v −0.36). da_cos computed ALONG seq axis (boundary-safe).
+  q/k/v share a_participation=8138 (band 21). Doesn't revive alignment as C-predictor (per scoping).
+- (was) status: **OPEN**
 - requested: 2026-09-04 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - **node budget: ONE box, one forward+backward pass per seed.** Same cost as REQ-038/043.
