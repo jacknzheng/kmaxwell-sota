@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-046**.
+Next request number: **REQ-047**.
 
 ---
 
@@ -34,14 +34,18 @@ collinearity traps caught and recorded.
 
 | priority | request | why it matters | status |
 |---:|---|---|---|
-| **1** | **REQ-037 arm 4** | The only open measurement that can still **overturn a load-bearing band** — the exclusion restriction is *known violated* (iteration 114) and this bounds the damage | **NOT filed** — needs a humans' decision first (see the arm-4 analysis block: the probe must record the *post-clip* gradient or the first stage is empty) |
+| **1** | **REQ-046** (was REQ-037 arm 4) | The only open measurement that can still **overturn a load-bearing band** — the exclusion restriction is *known violated* (iteration 114) and this bounds the damage | ✅ **FILED 2026-09-04.** The design decision was made in-session rather than deferred: the probe gains one field, `clipped_gradient_block_norm`. Rationale in the REQ-046 block. |
 | 2 | REQ-040 | Dispatch of the existing queue | OPEN |
 | 3 | REQ-044 | Jack's paired batch ablation | OPEN |
 | 4 | REQ-045 | Settles band 30's *shape*, not its sign | OPEN, **low priority** |
 
-**The one decision needed from the humans:** arm 4's probe must be changed to record the **post-clip**
-gradient norm, or the instrument has no first stage. That is a one-field change to an existing probe,
-but it is a design choice, not a detail — recorded in full in the REQ-037 analysis block above.
+**The decision that was blocking arm 4 has been made and the request filed as REQ-046.** The probe
+recomputes the gradient from scratch (`measure_per_matrix_curvature.py:100`,
+`torch.autograd.grad(loss, params)`), entirely outside the optimiser — verified by reading it — so a
+clip in the Muon path is invisible to it and the first stage would be identically zero. The fix is one
+extra field, `clipped_gradient_block_norm`, chosen over the alternative (per-matrix loss weights)
+because that alternative changes *what is optimised* and reintroduces the exclusion problem arm 4
+exists to remove. **No humans' decision is outstanding.**
 
 **Recommendation:** let the queue drain. Further analysis of committed data has low marginal value,
 and the campaign's open questions are measurement-bound, not analysis-bound.
@@ -1296,6 +1300,73 @@ Interpret absolute differences below roughly `±2e-4` as the established single-
 Plot these as a **new matched high-batch series**; do not draw one continuous line through the old
 fork-2000 bi-Maxwell points or fork-1000 K-Maxwell points. Report whether each kernel remains
 beneficial, is indistinguishable from control, or is worse at 32× and 64×.
+
+## REQ-046: REQ-037 arm 4 — the per-matrix gradient-clip instrument (design decision made)
+
+- status: **OPEN**
+- requested: 2026-09-04 PDT
+- repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
+- **node budget: ONE box, 3 arms × 750 steps.** Same shape as REQ-037 arms 1–3.
+- **priority: HIGHEST of the open analysis requests.** This is the only outstanding measurement
+  that can overturn a load-bearing band.
+
+**Why this supersedes the arm-4 sketch in the REQ-037 block.** That sketch had two defects, found by
+reading the code rather than its description (iteration 119). Both are fixed here.
+
+**Defect 1 — a clip inside `polar_express` is cancelled exactly.** `train_gpt.py:177` normalises to
+unit spectral norm before Newton-Schulz: `X = X / (X.norm(...) * (1+2e-2) + 1e-6)`. Scaling the
+gradient by *c* gives `(c·g)/(c·‖g‖) = g/‖g‖` — **c cancels**, verified numerically (clips of 0.5,
+1.0, 2.0 produce identical values to 6 dp). **The clip must be applied to `grad_chunk` BEFORE
+`momentum_buffer.lerp_`**, so the momentum buffer accumulates the clipped gradient and its trajectory
+is not normalised away.
+
+**Defect 2 — the existing probe cannot see the clip at all.**
+`measure_per_matrix_curvature.py:100` recomputes the gradient from scratch via
+`torch.autograd.grad(loss, params)` on its own batches, then line 202 records
+`gradient_block_norm = ‖g‖`. **This is the raw loss gradient, computed entirely outside the
+optimiser.** A clip in the Muon update path never touches it, so `d log g / d log clip ≡ 0` and the
+Wald ratio is undefined. *(Verified by reading the probe, not inferred.)*
+
+**DECISION MADE (this session, not deferred).** Of the two fixes proposed in iteration 119, **take
+option 1: change what is measured, not what is optimised.**
+
+> **Add one field to the probe: `clipped_gradient_block_norm` = ‖clip(g) ‖, the norm of the same
+> recomputed gradient after applying that matrix's clip multiplier.**
+
+**Rationale for choosing this over option 2 (per-matrix loss weights).** Option 2 changes
+`param.grad` directly, so the existing probe would measure the first stage with no new field — but it
+changes **what is being optimised**, reintroducing an exclusion problem of exactly the kind this arm
+exists to eliminate. Option 1 keeps the intervention in the update (where REQ-037 wanted it) and moves
+the measurement to match. **The cost is one line in the probe; the alternative costs the experiment's
+purpose.**
+
+**With that field the estimator simplifies and needs no ratio at all.** Because
+`d log g_clipped / d log clip = 1` by construction, the Wald ratio collapses to the **reduced form**:
+
+> **exponent = d log λ / d log(clip multiplier)**, estimated directly with matrix fixed effects.
+
+**Design.** Fork@2000, 750 steps, 3 arms. Per-matrix clip multiplier over **{0.5, 1.0, 2.0}**, each
+matrix receiving each level exactly once across the three arms (REQ-023's balanced assignment — it is
+the right choice *here*, since the neighbour effect is not the question and balance removes
+confounding from the own-clip effect). Record per-matrix curvature at 2750, `weight_frob`, and the new
+clipped-gradient field.
+
+**Registered check — the two properties the batch instrument lacked (iteration 113):**
+- **monotone reduced form** — `λ` must move monotonically across the three clip levels, unlike the
+  batch arm whose curvature dipped at the control;
+- **every per-type ratio positive** — the batch arm gave −1.25 to +1.12 across types;
+- **first stage confirmed** — report `d log g_clipped / d log clip` and verify it is ≈ 1.
+
+**What it settles.** The exclusion restriction is **already known violated** (iteration 114: two
+Hessian functionals under the same instrument give +2.13 vs +1.89, differences +0.241/+0.268 with CIs
+excluding zero). What is *not* known is **how large the non-gradient channel is** — iteration 114's
+bound is one-sided twice over, since a channel acting equally on both functionals is invisible to it.
+**Arm 4 removes the LR channel entirely rather than bounding it:**
+- **result near +2** → the non-gradient channel is small; band 13's exponent survives as approximately
+  causal;
+- **result near +1 or below, with a monotone reduced form** → ~52% of the LR effect bypasses the
+  gradient, and **band 13 becomes a statement about LR response, not curvature-gradient physics.**
+
 
 ## REQ-044: fully paired Muon / bi-Maxwell / K-Maxwell batch ablation
 
