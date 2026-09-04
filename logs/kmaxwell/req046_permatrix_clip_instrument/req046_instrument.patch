@@ -1,0 +1,96 @@
+diff --git a/records/track_3_optimization/offline_analysis/measure_per_matrix_curvature.py b/records/track_3_optimization/offline_analysis/measure_per_matrix_curvature.py
+index 54a0f34..34c2b67 100644
+--- a/records/track_3_optimization/offline_analysis/measure_per_matrix_curvature.py
++++ b/records/track_3_optimization/offline_analysis/measure_per_matrix_curvature.py
+@@ -133,6 +133,8 @@ def main() -> None:
+     ap.add_argument("--mbs", type=int, default=8)
+     ap.add_argument("--iters", type=int, default=8)
+     ap.add_argument("--out_tag", type=str, default="per_matrix_curvature")
++    ap.add_argument("--clip_json", type=str, default=None,
++                    help="JSON {matrix_name: clip_multiplier}; adds clipped_gradient_block_norm")
+     ap.add_argument("--no_dist", action="store_true",
+                     help="no process group: ranks are fully independent (no "
+                          "collectives exist in this script's compute path, and "
+@@ -146,6 +148,10 @@ def main() -> None:
+         torch.cuda.set_device(torch.device("cuda", int(os.environ["LOCAL_RANK"])))
+     else:
+         rank, world_size = start_distributed_if_launched()
++    clip_map = {}
++    if args.clip_json:
++        import json as _cj
++        clip_map = _cj.load(open(args.clip_json))
+     all_names = target_matrix_names()
+     my_names = all_names[rank::world_size]
+     results: dict[str, dict] = {}
+@@ -200,6 +206,7 @@ def main() -> None:
+                 curvature_along_polar=(float((hv_p[i] * polars[i]).sum())
+                                        if polars[i] is not None else None),
+                 gradient_block_norm=float(g[i].norm()),
++                clipped_gradient_block_norm=float(clip_map.get(name, 1.0)) * float(g[i].norm()),
+                 alphas=alphas[i], offdiags=offdiags[i],
+                 shape=list(params[i].shape))
+         results[str(step)] = dict(step=step, tokens=args.tokens,
+diff --git a/records/track_3_optimization/optimizers/__init__.py b/records/track_3_optimization/optimizers/__init__.py
+index 3ed88aa..3c6d0e0 100644
+--- a/records/track_3_optimization/optimizers/__init__.py
++++ b/records/track_3_optimization/optimizers/__init__.py
+@@ -9,7 +9,7 @@ import torch
+ from torch import nn
+ 
+ from .muon import (AnnealedDecayMuon, AnnealedWeightsMuon, BimaxwellMuon, Muon,
+-                   PerMatrixLrMuon, ScheduledWeightsMuon, SgdBlocks,
++                   PerMatrixClipMuon, PerMatrixLrMuon, ScheduledWeightsMuon, SgdBlocks,
+                    WeightedDecaysMuon)
+ from .secant_gmres_muon import SecantGmresMuon
+ 
+@@ -42,6 +42,7 @@ _REGISTRY: dict[str, Any] = {
+     "sgd_blocks": SgdBlocks,
+     "weighted_decays_muon": WeightedDecaysMuon,
+     "per_matrix_lr_muon": PerMatrixLrMuon,
++    "per_matrix_clip_muon": PerMatrixClipMuon,
+     "scheduled_weights_muon": ScheduledWeightsMuon,
+     "annealed_weights_muon": AnnealedWeightsMuon,
+     "annealed_decay_muon": AnnealedDecayMuon,
+diff --git a/records/track_3_optimization/optimizers/muon.py b/records/track_3_optimization/optimizers/muon.py
+index 2b6adda..db031ec 100644
+--- a/records/track_3_optimization/optimizers/muon.py
++++ b/records/track_3_optimization/optimizers/muon.py
+@@ -503,6 +503,38 @@ class PerMatrixLrMuon(BimaxwellMuon):
+         self._muon_steps_seen += 1
+ 
+ 
++class PerMatrixClipMuon(BimaxwellMuon):
++    """BimaxwellMuon that scales each matrix's gradient by a per-matrix clip
++    multiplier BEFORE the momentum lerp. A scale applied inside polar_express
++    cancels in the unit-spectral-norm normalisation (X/(c*||X||)); applied to the
++    gradient before the momentum update it enters the buffer trajectory instead.
++    ``clip_multipliers`` follows the size-descending sorted-param order used for
++    lr_multipliers. Momentum state/buffers are exactly BimaxwellMuon's, so
++    serialized bi-Maxwell fork states load unchanged."""
++    def __init__(self, params, lr=0.02, weight_decay=0, mu=0.95,
++                 fast_decay=PR340_BIMAXWELL["fast_decay"],
++                 slow_decay=PR340_BIMAXWELL["slow_decay"],
++                 fast_weight=PR340_BIMAXWELL["fast_weight"],
++                 switch_step=PR340_BIMAXWELL["switch_step"],
++                 clip_multipliers=()):
++        super().__init__(params, lr=lr, weight_decay=weight_decay, mu=mu,
++                         fast_decay=fast_decay, slow_decay=slow_decay,
++                         fast_weight=fast_weight, switch_step=switch_step)
++        if len(clip_multipliers) != len(self.sorted_params()):
++            raise ValueError(f"clip_multipliers has {len(clip_multipliers)} entries"
++                             f" for {len(self.sorted_params())} matrices")
++        self.clip_multipliers = tuple(float(c) for c in clip_multipliers)
++        self._clip_by_id = {id(p): self.clip_multipliers[i]
++                            for i, p in enumerate(self.sorted_params())}
++
++    def compute_polar_input(self, p, state, group):
++        c = self._clip_by_id[id(p)]
++        if c != 1.0:
++            p.grad.mul_(c)   # scale grad BEFORE the momentum lerp inside super()
++        return super().compute_polar_input(p, state, group)
++
++
++
+ class ScheduledWeightsMuon(WeightedDecaysMuon):
+     def __init__(self, params: list[torch.nn.Parameter], lr: float = 0.02,
+                  weight_decay: float = 0, mu: float = 0.95,

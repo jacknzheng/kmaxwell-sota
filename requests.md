@@ -1303,7 +1303,17 @@ beneficial, is indistinguishable from control, or is worse at 32× and 64×.
 
 ## REQ-046: REQ-037 arm 4 — the per-matrix gradient-clip instrument (design decision made)
 
-- status: **OPEN**
+- status: **DONE 2026-09-04** → `logs/kmaxwell/req046_permatrix_clip_instrument/`
+- **RESULT — band 13's causal reading OVERTURNED.** Exponent `d log λ / d log(clip) = +0.009` (≈0),
+  first stage `d log g_clipped / d log(clip) = +1.003` (✓ — the instrument works, unlike the batch arm's
+  first-stage≡0). Decisive logic: a causal +2 gradient channel would have moved log λ with slope ≈+2 given
+  the +1.003 first stage; it moved +0.009. So changing ONLY gradient magnitude (LR path fixed) does not move
+  equilibrium curvature — band 13's ≈+2 exponent is the LR channel, not curvature-gradient physics
+  (mechanism = band 29 Muon scale-invariance). Reduced form non-monotone + per-type symmetric-around-zero =
+  noise, confirming inert not weak. Instrument = PerMatrixClipMuon (grad clip pre-momentum) + probe field
+  clipped_gradient_block_norm; validated (zero-momentum cancels, fork-momentum perturbs ‖Δw‖=1.21). Registry-
+  lock test trips by design (new registry entry, research branch).
+- (was) status: **OPEN**
 - requested: 2026-09-04 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - **node budget: ONE box, 3 arms × 750 steps.** Same shape as REQ-037 arms 1–3.
