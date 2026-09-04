@@ -614,7 +614,18 @@ same footing as everything else. **Filed as REQ-043.**
 
 ## REQ-043: run the REQ-038 activation/backward probe on Arm A's seeds 1–3
 
-- status: **OPEN**
+- status: **BAND-21 DONE (n=4)** — priorities 2 (2nd state) + 3 (alignment ratio) in progress on the 2 warm nodes
+- delivered 2026-09-03 PDT → `logs/kmaxwell/req043_seeds_probe/` (summary.tsv + README + raw JSON seeds 0–3)
+
+**RESULT (band 21, the registered check — n=4):** the q/k output-gradient deficit is seed-reproducible.
+`(q,k)/v d_rms = 0.667 ± 0.011` across seeds 0–3 (range [0.655, 0.682]); log₁₀(q/v) = −0.183 dex, t = −41.9;
+log₁₀(k/v) = −0.170 dex, t = −43.3. **`a_rms` is bit-identical for q/k/v in all 4 seeds** (band 21 ✓), so the
+entire deficit is a **backward-pass** effect — q and k receive ≈0.66× v's output-gradient purely via the softmax
+Jacobian, not via less forward signal. Architectural, not seed-dependent (consistent with REQ-035's seed-independent
+C). Priorities 2 & 3 (below) require probe surgery + a 2nd fork state → running next on the same 2 nodes.
+
+---
+- (original) status: **OPEN**
 - requested: 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 
