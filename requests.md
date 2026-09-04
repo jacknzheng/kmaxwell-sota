@@ -534,6 +534,60 @@ curvature equalization.**
 productive path is **arm 4**, then — if the exponent survives — treating C as a measured property to
 respect rather than a target to flatten.
 
+**=== ITERATION 125 (2026-09-03): THE PARTIAL/TOTAL SPLIT IS UNTESTABLE ON REQ-023 — by construction ===**
+
+*Iteration 124 read the two designs' shape disagreement as a partial-vs-total distinction: REQ-023
+perturbs one matrix against a fixed background, Arm A moves everything together. **That reading was
+offered without test**, and REQ-023 appeared to support one — each matrix has its own multiplier and
+sits among 71 others with theirs.*
+
+**The test is impossible by construction, and the diagnostic says so immediately:**
+
+> **corr(own multiplier, others' mean multiplier) = −1.0000**
+
+**Why.** REQ-023's balanced design gives every arm the **identical multiplier total** — verified:
+`sum log₁₀(mult) = +0.206404` in all three assignments, since each arm is a permutation of the same
+multiset. That forces
+
+```
+   mean_others = (total − own) / 71
+```
+
+an **exact** linear function of `own` with slope −1/71. **The two regressors carry one piece of
+information between them.**
+
+**The regression output confirms it mechanically** — the coefficients are one number rescaled:
+
+| fork | own-LR | others'-LR | own / 71 |
+|---|---:|---:|---:|
+| 1500, λ | −1.149 | **+0.016** | **0.0162** |
+| 1500, g | −0.542 | **+0.008** | **0.0076** |
+
+Identical |t| for both regressors (17.7, 26.6) — the signature of exact collinearity, not two
+effects.
+
+> **The partial/total split cannot be estimated from REQ-023. Iteration 124's reading of the design
+> disagreement remains untested, and is now known to be untestable on committed data.**
+
+**The property that makes REQ-023 the campaign's cleanest instrument is the same property that blocks
+this.** Balanced assignment — each matrix receiving each level exactly once — is what removed
+confounding from the LR instrument (bands 8, 13) and what broke iteration 122's collinearity. It also
+fixes the arm total, which is precisely what makes the neighbour effect unidentifiable. **A design
+cannot be balanced and also vary its own aggregate.**
+
+**Recording this as my own error, plainly.** Standing rule 2 says to check whether a predictor is an
+exact function of another. **I recorded an extension to that rule in iteration 122 — after the same
+class of mistake — and then walked into it again two iterations later.** The rule was applied to the
+*predictor's relationship to a grouping* and not to *the relationship between two predictors in the
+same regression.* Extending it once more: **before regressing on two constructed variables, check
+their correlation before reading any coefficient.** A single `corrcoef` call would have stopped this
+iteration at its first line.
+
+**What would settle iteration 124's reading:** an unbalanced design — arms whose *total* LR differs,
+so a matrix's own multiplier and its neighbours' mean vary independently. **That is exactly the
+5-level ladder iteration 124 already identified**, and this iteration adds a requirement to it: the
+levels must not be balanced across matrices, or the same collinearity returns.
+
 **=== ITERATION 124 (2026-09-03): THE TWO DESIGNS DISAGREE ON SHAPE — and the disagreement is structured ===**
 
 *Iteration 123 confirmed band 30 on two designs but noted they differ in **where** the decoupling
