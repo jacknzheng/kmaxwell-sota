@@ -428,6 +428,80 @@ a free per-layer knob without changing the kernel. Filing a momentum rule now wo
 inventing a mapping rather than deriving one. The prerequisite is a registered experiment
 asking whether mu does anything LR cannot at fixed `s_eff`; that is REQ-037 if wanted.
 
+**=== ITERATION 113 ANALYSIS (2026-09-03): the batch arms bound the exclusion restriction — badly ===**
+
+*I named arm 4 as the highest-value remaining work. Before speccing it, the committed arms 1–3 were
+tested to see whether they already settle the question. **They do not, and the reason is itself
+informative.***
+
+**The batch instrument gives a completely different exponent:**
+
+| instrument | exponent | first-stage F | 95% CI |
+|---|---:|---:|---|
+| **LR** (REQ-023, REQ-035) | **+2.07** | 780–914 | contains 2.000 |
+| **batch** (REQ-037 arms 1–3) | **+0.383** | **590** | **[+0.028, +0.726]** |
+
+**The CIs are disjoint and 2.07 is decisively outside the batch interval**, with a strong first stage
+either way. Taken at face value that would mean the exclusion restriction fails badly — most of the
+LR's effect on curvature bypassing the gradient.
+
+**But the batch arm is not a usable instrument, and the data shows it directly.**
+
+**1. The reduced form is non-monotone.** Geomean curvature dips at the control and rises at both
+ends (0.5× 13520 / 1× 12850 / 2× 14792 per-matrix; the run summary's whole-model figures show the
+same dip). **A monotone dose cannot produce a non-monotone response** — so the Wald ratio built on it
+is unreliable in *either* direction, not just biased.
+
+**2. The per-type estimates have no consistent sign:**
+
+| type | first stage | batch Wald ratio |
+|---|---:|---:|
+| mlp.proj | +0.213 | **+1.121** |
+| mlp.fc | +0.228 | +0.896 |
+| attn.k | +0.186 | +0.429 |
+| attn.q | +0.176 | +0.356 |
+| attn.proj | +0.084 | **−0.384** |
+| attn.v | +0.131 | **−1.249** |
+
+**Ratios spanning −1.25 to +1.12 across types**, where the LR instrument gave +1.8 to +2.5 with every
+type positive. That spread is the signature of a weak or contaminated instrument, not of a real
+exponent.
+
+**3. The confound's direction argues against the observed value.** More tokens → lower loss → lower
+curvature; larger batch → less gradient noise → lower g. **Both channels share a sign**, so
+tokens-seen should bias the ratio **up**, not down. The observed +0.38 is far *below* the LR estimate
+in the direction the confound cannot explain — consistent with the instrument being broken rather
+than with a genuine low exponent.
+
+> **The batch instrument disagrees with the LR instrument, but it is a bad instrument — non-monotone
+> reduced form, sign-inconsistent per-type estimates. This is not evidence against REQ-035's
+> exponent; it is quantitative confirmation of REQ-037's own judgement that arm 4 is the clean test.**
+
+**Registered as a negative on the batch instrument itself.** REQ-035's exponent is unchallenged by
+this analysis, and the exclusion restriction **remains untested** — exactly as REQ-037 filed it.
+
+**Arm 4 specification, revised against this evidence.** The per-matrix gradient clip is the right
+instrument because it moves `g` **without** changing the optimiser's step size, the token budget, or
+the number of steps — so it has none of the batch arm's confounds:
+
+- **Design:** fork@2000, 750 steps, one box. Per-matrix clip multiplier randomised over
+  **{0.5, 1.0, 2.0}** on the *pre-orthogonalisation* gradient, each matrix receiving each level
+  exactly once across three arms — the REQ-023 balanced design, which is what made the LR instrument
+  clean.
+- **Hook:** clip the gradient in the Muon update path *before* `shape_mult` and Newton-Schulz, so the
+  orthogonalised step's spectral scale is untouched. This is the piece that does not exist in
+  `ebf53cd`.
+- **Measure:** per-matrix curvature at 2750 (existing probe) plus `weight_frob`; REQ-041's field
+  rides along.
+- **Registered check:** the clip Wald ratio must have a **monotone reduced form** (unlike batch) and
+  **every per-type ratio positive** (unlike batch). If it lands near **+2**, the exclusion restriction
+  is supported and REQ-035's exponent is causal. If it lands near **+1** or below with a monotone
+  reduced form, **52% of the LR effect bypasses the gradient** and band 13's "exactly 2" becomes a
+  statement about LR response, not about curvature-gradient physics.
+
+**This is the one measurement that could still overturn a load-bearing band**, and unlike the
+per-token probe I declined to file, it is a small, well-specified run on one box.
+
 ## REQ-037: a NON-learning-rate instrument for the curvature-gradient exponent
 
 - status: **arms 1-3 DONE (2026-09-03) — `logs/kmaxwell/req037_nonlr_instrument/`.** Batch instrument at fixed LR: curvature responds only WEAKLY to moving the gradient via batch — per-matrix elasticity dlog(curv)/dlog(batch) median 0.075 (mean 0.062, spread [-0.25,0.36]); geomean curvature non-monotonic. Suggests the gradient channel is NOT dominant for the LR->curvature effect (exclusion restriction questionable). **CAVEAT:** batch confounds g-noise with tokens-seen (val monotonic: 0.5x 3.626/1x 3.512/2x 3.421); the CLEAN instrument is **arm 4 (per-matrix grad clip), which is DEFERRED — no clip hook in ebf53cd, needs a new hook.** n=1/arm, noisy. arm2(0.5x) ran eager (mbs<64 compile bug). Read arms 1-3 as a confounded first look; arm 4 is the right test.
