@@ -324,7 +324,7 @@ measured value so a seed result can be compared directly.
 | **31** | **Muon's gradient-magnitude invariance is a THEOREM, not an approximation** (iter. 131) | the update `X = g/(‖g‖·1.02 + 1e-6)` is exactly scale-free wherever the epsilon is negligible; **deviation < 1e-4 for ‖g‖ ≥ 1e-2**, and REQ-046's matrices sit at ‖g‖ ≈ 10³·⁸. Momentum adds a transient of ~1/(1−m) steps only | epsilon deviation at ‖g‖=10: **5e-8**; transient ≈ 20 steps of 750 |
 | **32** | **C = λ/g² is the right object — the g² division REMOVES noise** (iter. 132) — ✅ **CONFIRMED n=4** | **C must be more seed-stable than λ** (median |Δ| across seed pairs) **and have a larger architecture-to-seed-noise ratio** | C **0.0776 dex** vs λ **0.1235**; ratio C **15.7×** vs λ **8.0×**; architectural spread C **0.462 dex** vs λ **0.383** |
 | **33** | **Muon steps nearly ORTHOGONAL to peak curvature, and that alignment predicts C** (iter. 134) — ✅ **CONFIRMED n=4** | **cp/λ < 0.02 in every type** (the step sees <2% of peak curvature); **corr(log(cp/λ), log C) ≤ −0.60** and must **clear a cp-shuffled null** in every seed | ratio **0.001–0.006** (overall **0.4%**); corr **−0.788/−0.791/−0.736/−0.782** vs null **−0.34/−0.25/−0.27/−0.29 ± 0.07**, **p < 10⁻⁴ all seeds** |
-| **34** | **alignment and the q,k excess are LARGELY SEPARATE effects** (iter. 135) — ✅ **CONFIRMED n=4** | **controlling for alignment shrinks the q,k C-coefficient by < 35%**, and **both terms stay significant** (|t| > 4), in every seed | shrinkage **22 / 19 / 16 / 20 %**; q,k coef **+0.699/+0.629/+0.694/+0.680** (t = 10.4–18.4); align coef **−0.616/−0.604/−0.582/−0.584** (t = −5.6 to −10.0) |
+| **34** | **alignment and the q,k excess are SEPARATE effects** (iter. 135, 139) — ✅ **CONFIRMED n=4, raw-component checked** | **controlling for step-curvature shrinks the q,k C-coefficient by < 35%** — and **by ≤ 0% when the control uses raw `log cp`** (no shared λ) | shrinkage with alignment **22/19/16/20 %**; with `log cp` **−5/−7/−3/−9 %**; `log cp` net of q,k only t = **1.6–2.9** |
 | **35** | **q and k differ in step ALIGNMENT, and the gap is DEPTH-STRUCTURED** (iter. 136–137) — ✅ **CONFIRMED n=4** | **|alignment(q) − alignment(k)| ≥ 0.15 dex, same sign every seed** (band 18's gradient equality is 0.014 dex); **gap deepens with depth then recovers — quadratic R² > 0.5**. *Attention entropy does NOT explain it* | mean **−0.306 dex** (sd 0.037, 4/4); L0 **−0.134** → L8 **−0.474** → L12 −0.327; quadratic R² **0.563**; entropy t **+5.03 → +0.26** under quadratic depth |
 | **30** | **a higher LR DECOUPLES curvature from the gradient** (iter. 121, 123) — ✅ **CONFIRMED on TWO INDEPENDENT DESIGNS** | **cov(log λ, log g) falls as the LR rises**, seed/matrix-clustered CI excluding 0, on **both** the global ladder and REQ-023's per-matrix randomisation. *Shape not resolved — the two designs differ in where the drop occurs* | Arm A **0.0552/0.0448/0.0371**; REQ-023 **0.0766/0.0425/0.0418** (f1500) and **0.0784/0.0421/0.0402** (f2000), endpoint CIs **[−0.071,−0.002]** and **[−0.077,−0.005]** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
@@ -850,6 +850,51 @@ catching it, the second time only at the last step.
 share a term, test with the raw components before believing any correlation between them, regardless
 of how many robustness checks it survives.** Leave-one-out and cross-seed stability do **not** detect a
 construction artifact; both quantities are equally artifactual in every subsample.
+
+**=== ITERATION 139 (2026-09-04): SHARED-TERM AUDIT OF ALL BANDS — one exposed, and it strengthens ===**
+
+*Iteration 138's artifact survived leave-one-out **and** cross-seed replication, dying only to a
+construction check. That is a failure mode the campaign's other bands were never screened for, so this
+iteration screens all 18 at once.*
+
+**Audit result — 3 of 18 bands compare quantities sharing a term:**
+
+| band | comparison | shared term | status |
+|---:|---|---|---|
+| 32 | C vs λ **seed-stability** | contains λ | **not a correlation** — compares stability, artifact does not apply |
+| 33 | alignment vs C | log λ, opposite signs | **null was run at the time** (iter. 134, cp-shuffled, cleared at p < 10⁻⁴) |
+| **34** | alignment + q,k → C | log λ | **exposed, never checked** |
+
+**The other 15 are clean by construction:** bands 14, 17, 18, 35 compare *the same quantity* between
+groups (λ cancels within each matrix before differencing); 21, 27 use independent probe fields; 25, 26
+are stated identities; 6, 28, 30 relate λ and g, which are independent measurements.
+
+**Band 34 under the raw-component test — replacing `alignment` with `log cp`, which contains no λ:**
+
+| seed | q,k alone | ctrl by alignment | shrink | **ctrl by log cp** | **shrink** |
+|---|---:|---:|---:|---:|---:|
+| 0 | 0.893 | 0.699 | 22% | **0.939** | **−5%** |
+| 1 | 0.774 | 0.629 | 19% | **0.826** | **−7%** |
+| 2 | 0.827 | 0.694 | 16% | **0.849** | **−3%** |
+| 3 | 0.848 | 0.680 | 20% | **0.923** | **−9%** |
+
+**Band 34's conclusion strengthens.** With the shared-λ term removed the q,k coefficient does not
+shrink at all — it slightly *grows*. **The 16–22% shrinkage band 34 reported was itself partly the
+construction artifact**; the true mediation is ~zero.
+
+**And `log cp` barely predicts C net of q,k:** t = **+1.80 / +1.68 / +1.64 / +2.86** — significant in
+one seed of four. **Band 33's "alignment predicts C" holds only for the *ratio*, which is the
+meaningful geometric object; the raw curvature-along-polar does not carry it.**
+
+> **Band 34 amended and strengthened: alignment and the q,k excess are not merely "largely separate" —
+> they are separate, with mediation indistinguishable from zero once the shared term is removed.**
+
+**Why the audit was worth an iteration.** It found exactly one unchecked exposure out of eighteen, and
+that one **changed a reported number in the direction of the band's own conclusion.** The alternative —
+discovering later that a band's headline shrinkage was an artifact — is the failure iteration 138 came
+within one check of committing. **Screening the whole set once is cheaper than rediscovering the same
+trap band by band**, and the 15 clean cases are now documented as clean rather than merely
+unchallenged.
 
 ### CONSOLIDATED FINDINGS IV (iterations 112–132) — the causal account, revised
 
