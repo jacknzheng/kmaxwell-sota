@@ -70,17 +70,34 @@ then adding `da_cos_mean`:
 **CHECK 2 passed** — `corr(align_ratio, grad_rank1_frac) = +0.656` over 288 observations, confirming
 alignment and rank-1 concentration measure the same accumulation coherence.
 
-**A PROBE DISAGREEMENT, recorded rather than smoothed.** Band 25 measured the alignment deficit as
-**−0.190 ± 0.007 dex** from REQ-043's fields. REQ-047's `align_ratio` gives **−0.116** against
-v/attn.proj and **−0.055** against all four other types. **Neither reference group reproduces −0.190** —
-I checked both, expecting one to reconcile them, and it does not. **The two probes disagree on the
-deficit's magnitude by roughly 1.6×**, and this is unresolved.
+**~~A PROBE DISAGREEMENT~~ — RESOLVED (iteration 146), and it was my error.** I reported that REQ-047
+and band 25 disagreed by ~1.6× on the alignment deficit. **They do not.** REQ-043's `alignment.tsv`
+header states its reference group explicitly: *"align_deficit = mean over 12 layers of
+log10( ((q+k)/2) / v )"* — **attn.v ALONE.** I tested q,k against *v + attn.proj* and against *all four
+other types*, neither of which is the filed definition, and reported a conflict from the mismatch.
 
-**What that does and does not touch.** Band 36's mediation is computed **entirely within REQ-047's own
-fields**, so it is unaffected by the disagreement — the shrinkage is a within-probe result. **Band 25's
-magnitude should be treated as probe-dependent until the discrepancy is understood**, and its role in
-iteration 107's arithmetic (backward −0.18 + alignment −0.19 = the gradient deficit) rests on REQ-043's
-numbers, which remain internally consistent.
+| reference group | REQ-047 `align_ratio` deficit |
+|---|---:|
+| **attn.v alone** (REQ-043's definition) | **−0.1881 ± 0.0077** |
+| v + attn.proj | −0.1157 |
+| all four other types | −0.0552 |
+
+**Band 25 reported −0.1896 ± 0.0068. REQ-047 gives −0.1881 ± 0.0077 — agreement to 0.0015 dex**, far
+inside both error bars. The two probes use **identical definitions**
+(`‖W.grad‖_F / (‖d‖_F‖a‖_F)`, verified in both sources) and produce the same number on independent
+runs. **This is a cross-probe replication, not a conflict.**
+
+**What this means now.** **Band 25's magnitude is confirmed on an independent probe**, not
+probe-dependent — the strongest possible outcome, and the opposite of what I reported. Its role in
+iteration 107's arithmetic (backward −0.18 + alignment −0.19 = the gradient deficit) is correspondingly
+strengthened. Band 36's mediation was never at risk, being a within-probe result.
+
+**Method note.** I compared two measurements without first checking that they used the same reference
+group — the comparison was mis-specified, not the data. **The definition was written in the source
+file's header the whole time.** *Standing rule: before reporting that two measurements disagree, verify
+they are the same comparison — read the filed definition, not the reconstructed one.* This is the
+inverse of the day's other recurring error (missing deliveries by reading summaries instead of data):
+here I read the data and skipped the header.
 
 **CHECK 3 is inconclusive**, and I am not reading it either way: `corr(a_part, d_part)` across depth is
 +0.588, +0.216, −0.358, +0.322, +0.300, +0.114 — **no consistent sign across types**, so it
