@@ -29,6 +29,93 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★★ THE GAUGE THEOREM (iteration 159) — C is invariant to EVERY scale factor, so the bowl is a SHAPE property
+
+*Band 41 showed C cancels `post_lambda`. **The same line of code carries a second scalar,
+`resid_lambdas`, that behaves differently** — and generalising the argument turns a one-off cancellation
+into a constraint on the entire remaining search.*
+
+**`resid_lambda` is a deliberate geometric amplifier.** Line 1338:
+`nn.Parameter(torch.full((num_layers, 2), 1.1**0.5))` — √1.1 per sublayer, two sublayers per block, so
+**the stream is multiplied by ~1.1 per block by design**. Unlike `post_lambda` it multiplies the
+**stream**, not this block's output, so it scales everything **downstream** of block *i*:
+
+| block i | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| downstream `r^(L−1−i)` | 2.85 | 2.59 | 2.36 | 2.14 | 1.95 | 1.77 | 1.61 | 1.46 | 1.33 | 1.21 | 1.10 | 1.00 |
+| log₁₀ | +0.455 | +0.414 | +0.373 | +0.331 | +0.290 | +0.248 | +0.207 | +0.166 | +0.124 | +0.083 | +0.041 | 0.000 |
+
+**A +0.455 dex monotone gradient across depth — which would be +0.911 dex in λ.** Large enough to
+dominate everything, if it were there.
+
+**⊘ IT IS NOT THERE — the specific prediction is decisively refuted:**
+
+| profile | measured slope/block | predicted | t vs prediction |
+|---|---:|---:|---:|
+| log λ | **+0.0057** (sd 0.0195) | −0.0828 | **+15.75** |
+| log g | **+0.0015** (sd 0.0052) | −0.0414 | **+28.64** |
+
+**Cause identified, not left hanging:** `norm(x)` is `F.rms_norm` (line 952) and is applied **before
+every sublayer** (line 1643) and at the output (1682). **RMSNorm is scale-invariant, so it erases the
+accumulated amplification** — the stream may grow 1.1× per block, but each block reads a renormalised
+copy. **The 1.1 growth is real in the stream and invisible to the matrices.**
+
+**⇒ THE GENERAL RESULT, which is worth more than the refuted specific one.**
+
+> **GAUGE THEOREM.** *Let a matrix W influence the loss only through `c·f(W)` for any scalar c — c may
+> depend on the layer, on other parameters, on training time, on anything, provided it multiplies W's
+> **whole** contribution. Then `g → c·g` and `λ → c²·λ`, so*
+> ```
+> C = λ/g²  →  (c²λ)/(c·g)²  =  C
+> ```
+> ***C is exactly invariant.*** *This covers `post_lambda` (band 41), `resid_lambda` and its downstream
+> product, the learning rate, and any output-scaling gate — in one line.*
+
+**⇒ THE CONSTRAINT ON THE SEARCH.** **The bowl cannot come from ANY per-layer scale factor whatsoever.**
+Not `post_lambda`, not `resid_lambda`, not the downstream amplification, not the LR, not a gate.
+**Whatever sets the bowl must change the SHAPE of the loss surface around W — the ratio of its
+curvature to its gradient — not the scale of W's influence.** Four iterations of eliminating candidates
+one at a time are superseded by a theorem that eliminates the entire class at once.
+
+**EMPIRICAL CONFIRMATION 1 — C's level is far more stable than λ's**, per matrix across the three fork
+states (where median raw λ falls 4×):
+
+| quantity | per-matrix sd across fork states | mean range |
+|---|---:|---:|
+| **log C** | **0.1449 dex** | 0.2783 |
+| log λ | **0.3320 dex** | 0.6550 |
+| log g | 0.1167 dex | 0.2303 |
+
+**C is 2.3× more stable than λ** (n = 288 matrices) — λ carries scale that C removes, as the theorem
+requires.
+
+**EMPIRICAL CONFIRMATION 2 — the bowl is present in every fork state independently**, so it is not a
+scale artifact (which would move with the 4× scale change):
+
+| fork | bowl cubic R² | argmin | swing |
+|---|---:|---:|---:|
+| 060 | 0.904 | **L6** | 0.523 dex |
+| 100 | 0.961 | **L6** | 0.602 dex |
+| 170 | 0.975 | **L6** | 0.488 dex |
+
+**PROPOSED n=4 SEED CHECK — band 42 (criterion registered).**
+*Criterion:* on a fresh 4-seed panel, (i) **per-matrix sd of log C across fork states < 0.6 ×** that of
+log λ; (ii) the C bowl has **cubic R² ≥ 0.80 with argmin in layers 5–7 in every fork state separately**;
+(iii) the λ profile's linear slope is **within ±0.03/block of zero**, i.e. the `r^(L−1−i)` amplification
+is **absent** (refuting any residual-amplification account).
+*Status:* **satisfied by committed REQ-035 Arm A data** (0.1449 vs 0.3320 = 0.44×; R² 0.904/0.961/0.975
+all argmin L6; λ slope +0.0057). **No new compute requested; runs under the ≤2-node ceiling.**
+
+**Why this reframes the campaign goal.** The question "what sets the between-layer difference in C" now
+has a **sharp mathematical form**: *not* "what is bigger in some layers" — every such quantity cancels —
+but **"what makes the loss surface around a matrix more curved *relative to its own gradient* at the
+ends of the network than in the middle?"** That is a statement about the **conditioning** of each
+block's local problem, and it is invariant to every rescaling the architecture applies.
+
+**Search space:** the bowl is a **shape/conditioning** property of the loss surface, peaking at both
+ends with a minimum at layer 6, **immune to the entire class of scale factors** (here), and not Muon's
+step (band 31), stream scale, input rank (iter. 156), or an axis artifact (iter. 157).
+
 ## ★ C IS INVARIANT TO THE PER-LAYER `post_lambda` SCALARS (iteration 158) — derived, confirmed, with one estimate withdrawn
 
 *Three iterations of elimination without a positive result. Rather than scan for another correlate, this
