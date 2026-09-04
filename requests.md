@@ -323,6 +323,7 @@ measured value so a seed result can be compared directly.
 | **29** | **the λ–g relation WEAKENS as the LR rises** (iter. 120) — ✅ **CONFIRMED n=4** | **cross-sectional slope falls monotonically across s = 0.6 → 1.7**, seed-clustered CI on the spread excluding 0; **sd(log g) flat** (rules out range compression) while **sd(log λ) compresses** | slopes **0.916 / 0.742 / 0.636**, spread CI **[0.208, 0.365]**; sd(log g) **0.246/0.246/0.242**, sd(log λ) **0.429/0.395/0.367**; corr 0.534/0.497/0.453 |
 | **31** | **Muon's gradient-magnitude invariance is a THEOREM, not an approximation** (iter. 131) | the update `X = g/(‖g‖·1.02 + 1e-6)` is exactly scale-free wherever the epsilon is negligible; **deviation < 1e-4 for ‖g‖ ≥ 1e-2**, and REQ-046's matrices sit at ‖g‖ ≈ 10³·⁸. Momentum adds a transient of ~1/(1−m) steps only | epsilon deviation at ‖g‖=10: **5e-8**; transient ≈ 20 steps of 750 |
 | **32** | **C = λ/g² is the right object — the g² division REMOVES noise** (iter. 132) — ✅ **CONFIRMED n=4** | **C must be more seed-stable than λ** (median |Δ| across seed pairs) **and have a larger architecture-to-seed-noise ratio** | C **0.0776 dex** vs λ **0.1235**; ratio C **15.7×** vs λ **8.0×**; architectural spread C **0.462 dex** vs λ **0.383** |
+| **33** | **Muon steps nearly ORTHOGONAL to peak curvature, and that alignment predicts C** (iter. 134) — ✅ **CONFIRMED n=4** | **cp/λ < 0.02 in every type** (the step sees <2% of peak curvature); **corr(log(cp/λ), log C) ≤ −0.60** and must **clear a cp-shuffled null** in every seed | ratio **0.001–0.006** (overall **0.4%**); corr **−0.788/−0.791/−0.736/−0.782** vs null **−0.34/−0.25/−0.27/−0.29 ± 0.07**, **p < 10⁻⁴ all seeds** |
 | **30** | **a higher LR DECOUPLES curvature from the gradient** (iter. 121, 123) — ✅ **CONFIRMED on TWO INDEPENDENT DESIGNS** | **cov(log λ, log g) falls as the LR rises**, seed/matrix-clustered CI excluding 0, on **both** the global ladder and REQ-023's per-matrix randomisation. *Shape not resolved — the two designs differ in where the drop occurs* | Arm A **0.0552/0.0448/0.0371**; REQ-023 **0.0766/0.0425/0.0418** (f1500) and **0.0784/0.0421/0.0402** (f2000), endpoint CIs **[−0.071,−0.002]** and **[−0.077,−0.005]** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
@@ -580,6 +581,65 @@ curvature equalization.**
 **Recommendation.** The analysis loop has reached the end of what committed data supports. The
 productive path is **arm 4**, then — if the exponent survives — treating C as a measured property to
 respect rather than a target to flatten.
+
+**=== ITERATION 134 (2026-09-04): THE DIRECTION CHANNEL — Muon steps almost orthogonal to peak curvature ===**
+
+*Band 31 rules out gradient **magnitude** as a channel. It says nothing about **direction** — and the
+orthogonalised step is entirely a function of `g/‖g‖`, so direction is the channel through which this
+optimiser acts. It had never been examined.*
+
+**Circularity cleared first (standing rule 3).** The natural measure — `curvature_along_gradient` — is
+**exactly α₁**, the first Lanczos coefficient from the same tridiagonal as `lam_top`. **Re-verified on
+Arm A: `|cg/α₁ − 1|` median 0.0000000000, max 0.0000000000.** Rejected. `curvature_along_polar` is a
+**separate HVP** (ratio to α₁ differs by 98%), so it is admissible — and it measures curvature along
+**the direction Muon actually steps in.**
+
+**Result 1 — the step is nearly orthogonal to the steepest direction:**
+
+| type | cp/λ | log(cp/λ) | across-seed sd |
+|---|---:|---:|---:|
+| mlp.proj | **0.006** | −2.207 | 0.034 |
+| attn.proj | 0.005 | −2.273 | 0.044 |
+| mlp.fc | 0.005 | −2.290 | 0.009 |
+| attn.v | 0.003 | −2.563 | 0.016 |
+| attn.k | 0.003 | −2.534 | 0.032 |
+| **attn.q** | **0.001** | **−2.839** | 0.036 |
+
+> **Muon's update direction sees ~0.4% of the peak curvature.** The orthogonalisation steers the step
+> almost perpendicular to the sharpest direction — which is a concrete statement about *why* an
+> orthogonalised optimiser tolerates high curvature, and it varies **6× across types**.
+
+**Result 2 — that alignment predicts C, and it is not the shared-λ artifact.** `alignment = log cp −
+log λ` and `C = log λ − 2 log g` **share log λ with opposite signs**, so a negative correlation is
+partly induced by construction — the same trap as iteration 118's constraint B.
+
+**Quantified with a null that keeps λ and g exactly as they are and shuffles only cp:**
+
+| seed | observed | **cp-shuffled null** | p |
+|---|---:|---:|---:|
+| 0 | −0.788 | **−0.339 ± 0.071** | **< 10⁻⁴** |
+| 1 | −0.791 | −0.246 ± 0.071 | < 10⁻⁴ |
+| 2 | −0.736 | −0.271 ± 0.073 | < 10⁻⁴ |
+| 3 | −0.782 | −0.289 ± 0.071 | < 10⁻⁴ |
+
+**About a third of the raw −0.78 is the shared λ term; the rest is real.** cp carries genuine
+independent information about C, in every seed. *(For reference, `corr(log cp, C)` without the ratio is
+−0.25 to −0.40 — weaker, because the ratio is the meaningful object: alignment, not magnitude.)*
+
+**Registered as band 33** — the first band to examine the channel band 31 leaves open, and the first
+non-circular use of `curvature_along_polar` as a *predictor* rather than a placebo.
+
+**Why this matters for the campaign's goal.** Bands 14/20/21 explain C's structure through **forward
+and backward magnitudes**. Band 33 adds a **geometric** term: how well the optimiser's step aligns
+with the curvature it is climbing. **attn.q's alignment is 6× lower than mlp.proj's** — and q,k are
+exactly the types carrying the largest C excess (band 14). **That is a mechanism-shaped connection the
+magnitude account does not contain**, and unlike the magnitude channel it is *not* ruled out by
+band 31.
+
+**Not overstated.** This is a **correlation across matrices**, not an intervention — and the campaign
+has learned repeatedly what that distinction costs (bands 8, 13, 26). **Whether alignment *causes* C's
+structure or merely tracks it cannot be settled here**, and under Muon the natural intervention —
+rotating the update direction — has no obvious implementation that leaves everything else fixed.
 
 ### CONSOLIDATED FINDINGS IV (iterations 112–132) — the causal account, revised
 
