@@ -29,6 +29,88 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★ THE BOWL LIVES IN λ, NOT IN g (iteration 155) — plus two of my own inferences corrected
+
+*Band 39 pinned the bowl's shape. The mechanism question is **where it comes from**. Since
+`log C = log λ − 2 log g` **exactly**, the bowl must be a bowl in λ, in −2 log g, or both. This is
+arithmetic, not a model. **Non-circularity:** `top_eigenvalue` and `gradient_block_norm` are separate
+measurements and no predictor here is built from the Lanczos tridiagonal.*
+
+**Profiles are block-mean residuals after removing TYPE ONLY** — not gradient, which would absorb the
+very thing being decomposed:
+
+| layer | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **log C** | +0.155 | +0.065 | +0.023 | +0.031 | −0.076 | −0.130 | −0.201 | −0.152 | −0.078 | −0.059 | +0.084 | **+0.337** |
+| **log λ** | +0.120 | −0.092 | +0.037 | +0.138 | +0.018 | −0.111 | −0.183 | −0.162 | −0.093 | −0.135 | +0.002 | **+0.461** |
+| **−2 log g** | +0.035 | +0.156 | −0.013 | −0.106 | −0.094 | −0.019 | −0.018 | +0.010 | +0.015 | +0.076 | +0.081 | −0.124 |
+| *identity check* | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 | −0.000 | 0.000 | −0.000 | 0.000 | 0.000 | 0.000 |
+
+**Variance decomposition of the between-layer profile:**
+
+| term | variance | share of var(log C) |
+|---|---:|---:|
+| var(log C) | 0.02046 | 100% |
+| **var(log λ)** | **0.02955** | **144.4%** |
+| var(−2 log g) | 0.00623 | 30.4% |
+| 2·cov | −0.01670 | **−81.6%** |
+| | | corr = **−0.616** |
+
+> **THE BOWL IS IN λ.** The curvature profile carries **144%** of C's between-layer variance; the
+> gradient term carries **30%** and partially **cancels** it (corr −0.616). C's bowl is what remains
+> after a large λ bowl is partly offset by a smaller opposing gradient profile. **corr(C profile,
+> λ profile) = +0.890; corr(C profile, g profile) = +0.126.**
+
+**⇒ MECHANISM CONSTRAINT — and it is sharp.** Band 31 established that Muon's step is unit-spectral-norm
+× `shape_mult`, **identical for every layer of a given type**. A λ bowl therefore **cannot** come from
+layer-varying step sizes: there are none. **The bowl must be a property of the loss surface itself, not
+of the optimiser.** Combined with band 16 (C is actively restored), the reading is: *the optimiser
+applies the same step everywhere; the surface responds differently by depth, and where it responds most
+stiffly, λ equilibrates highest.*
+
+**⚠️ CORRECTION 1 — an inference I made this iteration and then refuted.** From λ's minimum landing in
+layers 4–8 in only **4/12** fits versus C's **12/12**, I inferred that dividing by g² *stabilises the
+shape* and that C is the better-behaved object. **That was wrong.** Mean pairwise correlation between
+the 12 profiles:
+
+| quantity | mean pairwise profile corr |
+|---|---:|
+| log C | **+0.710** (sd 0.192) |
+| log λ | **+0.714** (sd 0.148) |
+| log g | +0.612 (sd 0.198) |
+
+**λ's shape replicates exactly as well as C's.** The 4/12-vs-12/12 gap was an artifact of using the
+**argmin** — a discrete statistic that jumps when a curve is flat near its bottom. **Band 32 (C more
+seed-stable than λ) is about level, not shape, and this does not contradict it — but "C is smoother"
+must not be extended to shape replication.**
+
+**⚠️ CORRECTION 2 — a near-miss claim, caught by its own check.** λ's swing measured **0.644 dex at all
+three fork states** — identical to three decimals, which looked like a frozen architectural invariant.
+It is **a coincidence of two endpoints**, not a frozen curve. The profiles genuinely differ layer by
+layer:
+
+| comparison | max abs difference | corr |
+|---|---:|---:|
+| 060 vs 100 | 0.0485 dex | +0.991 |
+| 060 vs 170 | **0.1659 dex** | +0.889 |
+| 100 vs 170 | 0.1265 dex | +0.940 |
+
+*(Sanity: median raw λ is 22576 / 12562 / 5494 across the three states — a 4× fall, so these are
+genuinely distinct data, not one checkpoint re-probed.)* **No invariance claim is made.** What is real:
+**the shape is highly stable (corr +0.889 to +0.991) while drifting systematically at the input end**
+(layer 0: +0.052 → +0.091 → **+0.217**) — the same drift band 39 recorded in C, now located in λ.
+
+**PROPOSED n=4 SEED CHECK — band 40 (criterion registered).**
+*Criterion:* on a fresh 4-seed panel, (i) **var(log λ profile) > 1.2 × var(log C profile)** and
+**var(−2 log g profile) < 0.5 ×** it; (ii) **corr(C profile, λ profile) ≥ +0.70** while
+**corr(C profile, g profile) ≤ +0.40**; (iii) **corr(λ profile, −2 log g profile) < 0** (the cancellation).
+*Status:* **satisfied by committed REQ-035 Arm A data** (144.4% / 30.4%; +0.890 vs +0.126; −0.616).
+**No new compute requested; runs under the ≤2-node ceiling.**
+
+**Now open:** why the *surface* is stiffest at both ends and softest at layer 6. Band 31 forecloses any
+optimiser-side explanation, and bands 27/37's audit forecloses reading it off ‖a‖·‖d‖ concentration —
+so the next admissible probe is **structural**, not another correlation on this panel.
+
 ## ★★ THE POSITION FIELD IS AN ASYMMETRIC BOWL (iteration 154) — form identified, between-layer C closed to 0.96× the floor
 
 *Band 38 left the position field's **shape** unidentified (`quad` 67.9% vs `dist` 67.1%, tied). That is
