@@ -1497,7 +1497,14 @@ than averaging it away.
 
 ## REQ-045: crossed global × per-matrix LR — the identifiable partial/total design
 
-- status: **OPEN**
+- status: **DONE 2026-09-04** → `logs/kmaxwell/req045_crossed_global_permatrix_lr/`
+- **RESULT — partial/total reading WITHDRAWN (registered null branch).** Separability corr(own,others'
+  mean) post-FE = +0.722 (PASS <0.9 — crossing identifiable vs REQ-023's -1.0000). beta_own d log λ/d log(own
+  LR) = -1.161 (t=-12.8, strong: band 30 confirmed per-matrix, own LR halves λ per doubling). beta_neighbour
+  d log λ/d log(others' mean LR) = +0.143 (t=+1.14, NULL). Neighbour null → iteration 124's partial/total
+  reading withdrawn: curvature-LR decoupling is a local own-LR effect, not a network channel; band-30 shape
+  disagreement needs another explanation. Base val@2000=3.44369. (cadence fix every=250→ckpt@2750.)
+- (was) status: **OPEN**
 - requested: 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - **node budget: ONE box.** Reuses REQ-023's machinery entirely.
