@@ -534,6 +534,57 @@ curvature equalization.**
 productive path is **arm 4**, then — if the exponent survives — treating C as a measured property to
 respect rather than a target to flatten.
 
+**=== ITERATION 124 (2026-09-03): THE TWO DESIGNS DISAGREE ON SHAPE — and the disagreement is structured ===**
+
+*Iteration 123 confirmed band 30 on two designs but noted they differ in **where** the decoupling
+happens, and declined to resolve it. That is now testable directly: is the difference real, or were
+the CIs simply too wide?*
+
+**REQ-023 (per-matrix perturbation) shows a clear threshold:**
+
+| fork | step 0.6→1.0 | step 1.0→1.7 | **steps different?** |
+|---|---|---|---|
+| 1500 | **−0.0341** [−0.060, −0.010] ✅ | −0.0007 [−0.020, +0.018] ❌ | **−0.0334 [−0.064, −0.006]** ✅ |
+| 2000 | **−0.0363** [−0.064, −0.012] ✅ | −0.0018 [−0.022, +0.016] ❌ | **−0.0344 [−0.064, −0.007]** ✅ |
+
+**The first step is significant, the second is not, and the two differ significantly — in both forks.
+Decoupling saturates by s = 1.0.**
+
+**Arm A (global ladder) shows no threshold:**
+
+| step | value | CI | |
+|---|---:|---|---|
+| 0.6→1.0 | −0.0104 | [−0.0155, −0.0068] | **significant** |
+| 1.0→1.7 | −0.0074 | [−0.0133, −0.0017] | **significant** |
+| **difference** | −0.0030 | **[−0.0129, +0.0059]** | **not distinguishable** |
+
+**Both steps significant, indistinguishable from each other — an even decline across the range.**
+
+> **The two designs genuinely disagree on shape, and this is not a width problem: each is
+> individually decisive and they point different ways.** Band 30's *sign and magnitude* hold on both
+> (iteration 123); its *shape* is design-dependent.
+
+**The disagreement is structured, not random, and the designs differ in exactly one way.** In Arm A
+**every matrix moves together** — the whole network shifts to a new operating point, and the
+surrounding matrices' curvature changes too. In REQ-023 **one matrix is perturbed while the rest stay
+at baseline**, so the perturbed matrix responds against a fixed background. **A threshold in the
+per-matrix design and a smooth decline in the global one is what you would expect if the saturation is
+a property of a matrix in isolation, and the global ladder's extra decline comes from the network-wide
+state change** — the same distinction band 13's re-scoping identified between partial and total
+derivatives (iteration 79).
+
+**Recorded as an observation with a mechanism-shaped reading, not a band.** Registering it would
+require distinguishing the above from simpler explanations — three LR levels cannot resolve a
+saturation curve, and both designs have only one interior point. **A 5-level ladder on either design
+would settle it**, and that is a cheap addition to any future curvature run, but it is not worth a
+request on its own.
+
+**What this changes about band 30's use.** The band supports "raising the LR decouples λ from g" and
+**does not** support "the effect is proportional to the LR change." **Anyone using band 30 to predict
+the effect of a specific LR change should note the size is design-dependent and, on the per-matrix
+evidence, may already be saturated at the baseline LR.** Band 30's wording already claims sign and
+magnitude only; this iteration is the evidence behind that restriction rather than a change to it.
+
 **=== ITERATION 123 (2026-09-03): BAND 30 CONFIRMED ON AN INDEPENDENT DESIGN ===**
 
 *Iteration 122's test of band 30 was invalid because REQ-036's multiplier is a pure function of type.
