@@ -17,6 +17,70 @@ Next request number: **REQ-047**.
 
 ---
 
+**=== ITERATION 130 (2026-09-04): RETRACTING ITERATION 129 — REQ-046 HAS NO FIRST STAGE THAT MATTERS ===**
+
+*Iteration 129 read REQ-046's exponent of +0.009 as overturning band 13's causal reading. **That was
+an over-read, and I am retracting it.** The instrument did not do what a curvature experiment
+requires.*
+
+**What REQ-046 actually moved:**
+
+| quantity | slope vs log(clip) |
+|---|---:|
+| `clipped_gradient_block_norm` | **+1.0028** ✅ *(the registered first-stage check)* |
+| **`gradient_block_norm` (RAW)** | **+0.0028**, CI **[−0.0152, +0.0216]** |
+| `top_eigenvalue` | +0.0089 |
+
+**The clip scaled the gradient it was applied to, and the loss-surface gradient did not move at all.**
+
+**Two readings tested; both wrong, and the third is the answer.** I set out to distinguish *(A) the
+gradient is irrelevant to curvature* from *(B) the network compensated*. **Compensation is excluded** —
+full compensation predicts a raw-gradient slope near −1, and −1 sits far outside the CI. But **(A) is
+not what this shows either.** The mechanism is:
+
+```
+   clip applied to grad_chunk  →  momentum buffer  →  polar_express NORMALISES to unit spectral norm
+   ⟹ the orthogonalised update is unchanged
+   ⟹ the weight trajectory is unchanged
+   ⟹ the raw gradient is unchanged (measured: 0.003)
+   ⟹ curvature is unchanged (measured: 0.009)
+```
+
+**The clip never reached the loss surface.** Band 29 predicted exactly this — Muon's update carries no
+gradient-magnitude information — and I did not apply it to my own instrument design.
+
+> **REQ-046's exponent is 0/0. It is uninformative about curvature–gradient physics, not evidence
+> against it. Band 13's causal reading is UNRESOLVED, not overturned.**
+
+**This is iteration 119's defect 2 reappearing in a new form, and it is my error twice over.** In
+iteration 119 I found that the probe could not *see* the clip and fixed that by adding
+`clipped_gradient_block_norm`. **That fix was necessary but not sufficient:** it made the clip visible
+to the measurement without making it visible to the *network*. Moving the clip pre-momentum (defect 1)
+prevents `polar_express` from cancelling it *within a step*, but the normalisation still removes the
+scale from the update, so the trajectory barely changes. **I made a design decision in-session,
+justified it, and it was incomplete — the deeper problem was one I had already documented as band 29
+and failed to connect.**
+
+**What still stands.** **Iteration 114's detection of the non-gradient channel is unaffected** — it
+compares two functionals of the same Hessian under the same instrument, requires no intervention on
+the gradient, and its differences (+0.241/+0.268, CIs excluding zero) remain the campaign's only
+established evidence on this question. **Every descriptive band is untouched**, none being an IV
+estimate. **REQ-045's result stands** (β_own −1.161 confirming band 30 per-matrix; β_neighbour null,
+withdrawing iteration 124's partial/total reading).
+
+**What a valid instrument would require.** The intervention must change the gradient **as the network
+experiences it**, which under Muon means it cannot act on the gradient's *magnitude* at all — the
+normalisation removes that channel by construction. **The options are to change the loss (per-matrix
+loss weights, which reintroduces the exclusion problem — iteration 119's rejected option 2), or to
+accept that under Muon the question "does gradient magnitude cause curvature" may not be answerable
+by intervention, because the optimiser is invariant to it.** That second possibility is a real
+finding about this optimiser, and it is where band 29 was already pointing.
+
+**Method note.** *Standing rule 7 (iteration 119) said: read the code path an intervention modifies.
+I did — and still missed that a band I had established ten iterations earlier made the intervention
+inert. Extending it: **before designing an intervention, check it against the campaign's own
+findings**, not only against the code.*
+
 **=== ITERATION 129 (2026-09-04): REQ-046 LANDS — BAND 13's CAUSAL READING IS OVERTURNED ===**
 
 **Jerry ran REQ-046 and REQ-045.** I had missed both by checking only the branch tip; they were in the
@@ -409,7 +473,7 @@ measured value so a seed result can be compared directly.
 | **10** | **layer-0 lift** — ❌ **NOT CONFIRMED n=4** | clears its permutation null on λ/g² | p = 0.022 / 0.190 / 0.120 / 0.058 — **1 of 4 seeds**. Lift is consistently positive (+0.25 to +0.50 dex) but under-powered at 6 matrices per layer |
 | **11** | **the assembled model generalises** (iter. 72) | **leave-one-layer-out rmse ≤ 0.20 dex** and **cross-fork rmse ≤ 0.20 dex** for `type + two-slope gradient + layer-0 term`, versus ~0.38 dex for C's own spread | LOLO 0.138 / 0.164; cross-fork 0.165 / 0.140 dex |
 | **12** | **type offsets reduce to three binaries** — ✅ **CONFIRMED n=4** | `q,k + residual-writer + mlp.proj` (5p) within 0.02 dex of six free offsets (7p) | gaps 0.004 / 0.004 / 0.005 / 0.002 dex in the 4 seeds |
-| **13** | **the gradient channel is NOT causal — OVERTURNED by REQ-046** (iter. 76, 114, 129) — ❌ **CAUSAL READING WITHDRAWN** | **clip instrument (LR fixed, gradient moved directly): d log λ / d log(clip) must be ≈ +2 if the channel is causal** | **+0.009** with a validated first stage of **+1.0028**. A causal +2 predicts **1.204 dex** of λ movement across the 0.5→2.0 clip range; observed **0.056 dex (4.6%)**, non-monotone, per-type 3 positive / 3 negative |
+| **13** | **the causal reading is UNRESOLVED — REQ-046 could not test it** (iter. 76, 114, 129–130) — ⚠️ **iteration 129's overturning RETRACTED** | a valid test needs the clip to move the **raw** gradient. REQ-046 moved `g_clipped` by **+1.003** but the raw gradient by **+0.003** — Muon's unit-norm step absorbed it, so the exponent is 0/0 | raw-g slope **+0.0028**, CI **[−0.015, +0.022]**; λ slope +0.0089. **Iteration 114's two-functional detection stands** (+0.241/+0.268) |
 | **14** | **q,k carry a GRADIENT DEFICIT at identical shape** (iter. 77–90) — ✅ **CONFIRMED n=4, size-artifact excluded** | **within the four 768×768 attention matrices only:** Δlog g (q,k − v,attn.proj) ≤ −0.30 dex with p < 0.01, Δlog λ NOT significant, both q,k below both v,attn.proj in ≥10/12 blocks — in ≥3 of 4 seeds | **Δlog g = −0.378/−0.378/−0.356/−0.381, p < 10⁻⁴ all seeds, 48/48 blocks**; Δlog λ p = 0.17/0.85/0.21/0.43 |
 | **17** | **the deficit is a depth-independent constant** (iter. 91) — ✅ **CONFIRMED n=4** | **slope of the q,k gradient deficit vs layer index NOT significant (|t| < 2) across layers 0–11**, in every seed; **final block separately deeper by ≥ 0.10 dex** | slopes t = −0.31/−0.25/+0.50/−0.40; interior −0.361 ± 0.065, **layer 12 −0.508 ± 0.010** |
 | **18** | **q and k are interchangeable** (iter. 92) — ✅ **CONFIRMED n=4** | **|q deficit − k deficit| < 0.05 dex** and **not significant within any single seed** (p > 0.05), in every seed | q −0.380 vs k −0.366, difference **−0.014 dex** (3.8% of the shared deficit), within-seed p = 0.82/0.56/0.67/0.57 |
