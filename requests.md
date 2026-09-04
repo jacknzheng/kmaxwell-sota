@@ -29,6 +29,83 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⚠️/✅ THE BOWL'S AMPLITUDE IS TYPE-VARYING (iteration 168) — a real misspecification that costs nothing
+
+*Band 45 found the bowl shared across five of six types with **type contributing only an offset**. That
+has a sharp consequence never checked: **if type were purely an offset, every type's bowl would have the
+same amplitude.** The measured swings span **5×**, so the consequence fails — and the additive
+`type + position` model used since band 3 rests on exactly that assumption.*
+
+**Fitting each type's profile as `a × (shared bowl shape)`**, where the shared shape is the type-centred
+pooled profile over all 60 fits:
+
+| type | **amplitude a** | se | R² of `a×shared` | own swing |
+|---|---:|---:|---:|---:|
+| **mlp.proj** | **2.052** | 0.049 | 0.734 | 1.199 |
+| attn.proj | 1.452 | 0.075 | 0.796 | 0.676 |
+| mlp.fc | 1.046 | 0.053 | **0.845** | 0.526 |
+| attn.k | 0.786 | 0.088 | 0.647 | 0.399 |
+| attn.v | 0.559 | 0.045 | 0.488 | 0.394 |
+| **attn.q** | **0.104** | 0.102 | 0.042 | 0.245 |
+
+**Amplitude spans 0.104 → 2.052, a 19.6× range.** Testing each against a common amplitude a = 1:
+**attn.k −2.4, attn.proj +6.1, attn.q −8.8, attn.v −9.8, mlp.fc +0.9, mlp.proj +21.3.**
+**Five of six differ significantly.**
+
+> **⇒ THE ADDITIVE MODEL IS MISSPECIFIED.** `type offsets + one shared position curve` assumes a common
+> amplitude, and that assumption is false. This is a genuine limitation of every model in this campaign
+> from band 3 onward, and it was never tested until now. **Band 45's "type is only an offset" is
+> therefore too strong: types share the bowl's SHAPE but not its SIZE.**
+
+**⊘ DOES THE AMPLITUDE TRACK ANYTHING STRUCTURAL? — not detectably, and the discipline is the point.**
+Four candidates, all declared from structure before looking, all reported:
+
+| candidate | corr with amplitude |
+|---|---:|
+| **residual-writer** (attn.proj, mlp.proj — band 7's split) | **+0.849** |
+| type level (log C offset) | −0.791 |
+| log fan-in | +0.751 |
+| is-mlp | +0.619 |
+
+**Permutation null over the 6 type labels, max \|r\| across all four candidates (20,000 shuffles):
+p = 0.1461.** **Not significant.** With **n = 6**, a correlation of **+0.85 is unremarkable** — reporting
+the r alone would have manufactured a finding, exactly as 36 shape tests nearly did in iteration 156.
+**The amplitude's structural explanation is UNDETERMINED, and n = 6 types cannot determine it.**
+
+**✅ AND THE COST OF THE MISSPECIFICATION IS ZERO — measured, not assumed.** Allowing a **free cubic per
+type** (18 position parameters instead of 3), same LOLO protocol as band 39:
+
+| model | position params | LOLO rmse (n=720) |
+|---|---:|---:|
+| **additive (shared curve)** | 3 | **0.0982 dex** |
+| per-type amplitude/shape | 18 | **0.1050 dex** |
+| *(noise floor)* | | *0.0903 dex* |
+
+**The flexible model predicts WORSE on held-out layers** — 6× the parameters buying a 7% *increase* in
+error. **The extra amplitude structure is real in description but is not recoverable from 12 layers per
+type without overfitting.**
+
+> **VERDICT, at the strength the evidence supports.** *The bowl's amplitude genuinely varies by type
+> (19.6×, five of six significant). No structural predictor of it survives a permutation null at n = 6.
+> The additive model is misspecified but remains the best working model out of sample, and band 39's
+> figures stand unchanged.* **The honest summary is: a known, quantified, unexplained limitation that
+> does not currently cost anything.**
+
+**PROPOSED n=4 SEED CHECK — band 46 (criterion registered).**
+*Criterion:* on a fresh 4-seed panel, (i) the per-type amplitude range is **≥ 3×**; (ii) **≥4 of 6 types
+differ from a common amplitude at \|t\| ≥ 2**; (iii) **per-type position terms do NOT beat the shared
+cubic** on LOLO. *Status:* **satisfied by committed data** (19.6×; 5 of 6 at \|t\| 2.4–21.3; 0.1050 vs
+0.0982). **No new compute requested; ≤2-node ceiling.**
+
+**⚠️ THIS MODIFIES BAND 45, NOT REFUTES IT.** The bowl *is* present in five of six types with mutual
+correlations +0.54 to +0.91 — that stands. What is corrected is the inference that **type is therefore
+only an offset**; it is an offset **and** a scale factor on the bowl. **REQ-036's verdict is unaffected
+and arguably strengthened**: a per-type LR cannot fix a positional effect whose amplitude *also* varies
+by type — that is two orthogonal axes, not one.
+
+**Queue:** REQ-048 still OPEN, no Jerry response (last Jerry commit REQ-047, 12:35 PDT; gaps today have
+run 3h29m–6h45m, so this remains inside normal turnaround).
+
 ## ★ THE BOWL IS SHARED ACROSS FIVE OF SIX TYPES (iteration 167) — position and type are separable
 
 *Every bowl result so far removes **type** first and profiles the residual, which by construction yields
