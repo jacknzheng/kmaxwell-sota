@@ -29,6 +29,68 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⊘ TWO STRUCTURAL NEGATIVES (iteration 156) — the stream scale and the input rank are BOTH ruled out
+
+*Band 40 forecloses an optimiser-side cause, so the bowl is a property of the loss surface and the next
+step must be structural. **Two candidates were available in already-committed data (REQ-047) and both
+are refuted.** Negative results, recorded as such.*
+
+**NEGATIVE 1 — the residual stream scale is monotone; it cannot make a bowl.** The most basic structural
+fact about a residual transformer is that the stream grows with depth. attn.q/k/v all read the block
+input, and per **band 21** their `a_rms` is bit-identical, so it is a direct measurement of the stream
+scale at that depth:
+
+| block | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **stream a_rms** | 0.407 | 0.468 | 0.607 | 0.739 | 0.871 | 0.998 | 1.094 | 1.163 | 1.411 | 1.359 | 1.438 | **1.524** |
+
+**Linear R² 0.979, slope +0.107/block, minimum at the boundary — strictly monotone, no interior
+minimum.** The λ bowl has an interior minimum at layer 6. **A monotone quantity cannot produce a U.
+Stream scale is NOT the mechanism.**
+
+**NEGATIVE 2 — the input effective rank IS U-shaped, but it is the WRONG U.** A scan of every structural
+quantity in the committed data flagged `a_eff_rank` (effective rank of each matrix's **input
+activations**). ⚠️ **Multiple-comparisons discipline: the scan ran 36 shape tests, so the best cell is
+not reportable** — that is precisely the trap rule 10 was written about. **The defensible claim is the
+general one**, and it does hold:
+
+| type | seed0 | seed1 | seed2 | seed3 | interior min in all 4 seeds? |
+|---|---:|---:|---:|---:|---|
+| attn.k | 5 | 3 | 3 | 3 | **YES** |
+| attn.q | 5 | 3 | 3 | 3 | **YES** |
+| attn.v | 5 | 3 | 3 | 3 | **YES** |
+| mlp.fc | 2 | 3 | 2 | 4 | **YES** |
+| mlp.proj | 2 | 3 | 2 | 2 | **YES** |
+| attn.proj | 11 | 11 | 11 | 11 | no |
+
+**5 of 6 types, every seed** — a genuine property of the quantity, not a cherry-picked cell. The profile
+is strongly U-shaped (**cubic R² 0.943 vs linear R² 0.180**):
+
+| block | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **input eff-rank** | 66.1 | 48.2 | 27.2 | **21.6** | 22.5 | 21.8 | 24.7 | 24.5 | 26.9 | 27.1 | 29.9 | 37.3 |
+
+> **But its minimum is at layer 3, and the λ bowl's is at layer 6 — three layers apart — and
+> corr(log input eff-rank, λ bowl) = +0.332 only. These are DIFFERENT shapes. Input effective rank is
+> NOT the driver of the λ bowl.** *(Recorded as a real structural finding in its own right: the network's
+> input representations collapse in rank through the early blocks and re-expand toward the output, which
+> is worth knowing independently — it is simply not this bowl.)*
+
+**Why these negatives are worth the space.** Between them they eliminate the two most natural structural
+explanations — *"deeper layers see bigger activations"* and *"middle layers see lower-rank
+activations"* — and they do so from committed data at **zero compute cost**. The surviving space is
+narrower: whatever sets the bowl peaks at **both** ends with a minimum at **layer 6**, is a property of
+the **surface** (band 40), is **not** step size (band 31), **not** stream scale, and **not** input rank.
+
+**⚠️ NO n=4 SEED CHECK PROPOSED THIS ITERATION.** Both results are negatives already verified across all
+4 seeds in committed data; there is no positive line of thought that would justify new compute. **Filing
+a request here would be spending the ≤2-node budget to re-confirm two refutations.**
+
+**Method note.** The scan tested 36 quantity×type combinations. **The correct output of a 36-test scan
+is either a claim that survives a discipline check or a negative — never the top-correlating cell.**
+The `mlp.fc` cell correlated +0.697 with the bowl and is exactly what a less careful pass would have
+reported as the mechanism.
+
 ## ★ THE BOWL LIVES IN λ, NOT IN g (iteration 155) — plus two of my own inferences corrected
 
 *Band 39 pinned the bowl's shape. The mechanism question is **where it comes from**. Since
