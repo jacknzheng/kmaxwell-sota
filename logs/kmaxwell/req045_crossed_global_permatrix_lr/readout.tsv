@@ -1,0 +1,4 @@
+SEPARABILITY	corr_own_vs_othersmean_postFE	+0.722	PASS<0.9
+beta_own	d_log_lambda/d_log_own_mult	-1.1614	SE0.0909	t=-12.78
+beta_neighbour	d_log_lambda/d_log_others_mean	+0.1428	SE0.1258	t=+1.14
+NEIGHBOUR_SIGNIFICANT_t>2	False
