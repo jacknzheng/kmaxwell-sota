@@ -534,6 +534,66 @@ curvature equalization.**
 productive path is **arm 4**, then — if the exponent survives — treating C as a measured property to
 respect rather than a target to flatten.
 
+**=== ITERATION 122 (2026-09-03): AN INVALID TEST OF BAND 30 — the design, not the band, was wrong ===**
+
+*Band 30 came from Arm A's global LR ladder. REQ-036 looked like independent confirmation: five arms,
+per-type multipliers, a different fork and a different perturbation geometry. **The test I ran on it
+was invalid, and the reason is worth recording because it nearly produced a false refutation.***
+
+**What I tested.** Band 30 predicts a higher LR weakens the λ–g coupling, so within each REQ-036 arm,
+matrices given a larger multiplier should contribute *less* covariance. Regressing each matrix's
+covariance contribution on its log multiplier:
+
+| arm | slope | band 30 predicts |
+|---|---:|---|
+| a2_pertype | **+0.0722** | negative |
+| a3_endcap | **+0.0686** | negative |
+| a4_antirule | **+0.0836** | negative |
+| a5_polar | **+0.1503** | negative |
+
+**All four positive — an apparent clean refutation on independent data.**
+
+**It is not, because the regressor is type in disguise.** REQ-036 assigns multipliers **per type**, so
+within any arm the multiplier is **constant within a type** — verified: *one distinct multiplier per
+type in every arm.* Regressing on `log(mult)` across 72 matrices is therefore regressing on **type
+with six distinct values**, and the resulting slope is the type structure — the q,k excess, the mlp
+gap, the offsets — that bands 14, 20 and 26 spent the campaign measuring. **It contains no LR
+information at all.**
+
+> **The +0.07 to +0.15 slopes measure C's type structure, not an LR effect. Band 30 was never testable
+> this way. My test design was wrong; the band is untouched.**
+
+**The valid comparison REQ-036 supports is between arms**, each being a whole run with its own LR
+profile — the same shape as Arm A's ladder:
+
+| arm | corr(log λ, log g) | mean multiplier |
+|---|---:|---:|
+| a5_polar | **0.206** | 1.131 |
+| a3_endcap | 0.320 | 1.403 |
+| a2_pertype | 0.380 | 1.030 |
+| a1_control | 0.413 | 1.000 |
+| **a4_antirule** | **0.680** | 1.171 |
+
+`corr(arm correlation, mean multiplier) = −0.093` — **the right sign but nowhere near significant at
+n=5 arms.** Reported as uninformative, not as support.
+
+**One observation worth keeping.** **a4_antirule has the strongest λ–g coupling (0.680) and is the arm
+that deliberately ANTI-equalises curvature** (spread 0.444 vs control's 0.246, per REQ-036's own
+mechanism check). That is consistent with band 30 read in reverse — spreading curvature strengthens
+the coupling — but with n=1 arm it is an observation, not evidence.
+
+**Why this iteration is a negative worth recording.** A confounded test that *appeared* to refute a
+band on independent data would have been a serious error to publish, and the confound is subtle: the
+multiplier is a legitimate experimental variable, it just happens to be perfectly collinear with type
+**by design**. **This is standing rule 2 in a new guise** — the predictor takes six distinct values
+and each identifies a type, so it is a label, not a dose. *Extending rule 2: check not only how many
+distinct values a predictor takes, but whether those values are in one-to-one correspondence with a
+known grouping.*
+
+**Band 30 stands as filed, on Arm A's ladder alone.** Independent confirmation would need an
+experiment where the LR varies **within** a type — which REQ-023's per-matrix randomisation does
+provide, and which is the natural next test if this line is pursued.
+
 **=== ITERATION 121 (2026-09-03): C's SPREAD EXPANDS WITH THE LR — my prediction was backwards ===**
 
 *Band 29 found λ's spread compresses under a rising LR while g's stays flat. Since `C = λ/g²`, I
