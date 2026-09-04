@@ -29,6 +29,102 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★ THE BETWEEN-LAYER VARIANCE BUDGET (iteration 153) — POSITION is the answer, and the gradient is not
+
+*The rule-10 audit cleared the ground; this is the question it was clearing for. **Of the between-layer
+variance in log C, how much does each surviving mechanism explain, and what is left?** Never asked at
+n=4. Panel: 12 independent fits (4 seeds × 3 fork states) at step 2750, from the REQ-035 Arm A rank
+shards. Between-layer variance ≡ variance of the **block means** of log C (averaging the 6 types within
+a layer) — exactly the quantity the campaign goal names.*
+
+**Between-layer sd(log C) = 0.1806 dex.** Cumulative share explained:
+
+| added term | cumulative between-layer variance explained | sd |
+|---|---:|---:|
+| type offsets only | **−0.0%** | 0.0 |
+| + gradient (log g) | **3.5%** | 6.5 |
+| **+ position (`dist`)** | **68.8%** | 12.6 |
+| | | |
+| **unexplained residual sd** | **0.0947 dex** | 0.0241 |
+
+> **Type explains 0.0% of it — by construction**, since averaging all six types within a layer removes
+> type exactly. **The gradient explains 3.5%.** **Position explains 68.8%.** For the *between-layer*
+> question specifically, **the position field is the mechanism and the gradient law is nearly
+> irrelevant** — the gradient law (bands 2/13) governs variation *within* a layer, across types, which
+> is a different question from the one the campaign goal poses.
+
+**The noise floor, measured on this panel rather than quoted.** For each layer, the spread of the
+block-mean log C across the 4 seeds at fixed fork and step **is** the floor for a block mean:
+
+| fork | per-layer sd across 4 seeds | min | max |
+|---|---:|---:|---:|
+| 060 | 0.0773 | 0.0156 | 0.1923 |
+| 100 | 0.1044 | 0.0144 | 0.2820 |
+| 170 | 0.1060 | 0.0087 | 0.2802 |
+| **pooled** | **0.0959 dex** | | |
+
+**In-sample residual 0.0947 vs floor 0.0959 = 0.99×.** ⚠️ **But that is the in-sample number and it is
+optimistic** — see the guards below.
+
+**Position beats every alternative shape** (share of the *residual* between-layer variance after type +
+gradient, 12 fits):
+
+| term | share | sd |
+|---|---:|---:|
+| quad | **67.9%** | 17.4 |
+| **dist (position)** | **67.1%** | 14.8 |
+| last-block only | 39.2% | 19.9 |
+| **linear depth** | **15.6%** | 15.2 |
+| first-block only | 14.0% | 14.7 |
+
+**A monotone depth trend captures only 15.6%** — consistent with band 3's audit, and the reason this is
+not a rule-10 casualty. `quad` and `dist` remain tied (67.9 vs 67.1), so **the form is still not
+identified.**
+
+**⚠️ GUARD 1 — leave-one-layer-out. The headline must be the out-of-sample number.** Fit on 11 layers,
+predict the held-out layer's block mean (144 held-out fits):
+
+| model | LOLO rmse |
+|---|---:|
+| type + gradient | 0.1948 dex |
+| **type + gradient + position** | **0.1216 dex** |
+| *(noise floor)* | *0.0959 dex* |
+
+**GUARD 2 — cross-fork transfer.** Fit one fork state, predict another, same seed:
+
+| | residual between-layer sd |
+|---|---:|
+| 060 → 100 / 170 | 0.1241 / 0.1195 |
+| 100 → 060 / 170 | 0.1137 / 0.1207 |
+| 170 → 060 / 100 | 0.1156 / 0.1214 |
+
+> **HONEST HEADLINE.** Out of sample the model reaches **0.12 dex against a 0.0959 dex floor — 1.27×,
+> not 0.99×.** The in-sample 0.99× was optimistic by exactly what a fitted parameter buys. **The
+> position field is genuinely predictive** (LOLO 0.122 vs 0.195 without it — a 38% error reduction on
+> held-out layers, and it transfers across fork states unchanged at 0.114–0.124). **But between-layer C
+> is not fully closed: ~1.27× the floor remains, i.e. a small real residual of roughly
+> √(0.1216² − 0.0959²) ≈ 0.075 dex.**
+
+**What this reorders in the account.** The campaign has spent most of its effort on the gradient law and
+on type structure — both real, both well-verified, and **both nearly irrelevant to the between-layer
+question as posed**. Type is removed by the block-mean definition; the gradient contributes 3.5%.
+**The between-layer difference in C is, to ~69%, a function of position in the network** — and, per
+band 3's audit, position acting through a *symmetric* field (not a monotone trend), weighted toward the
+**final** block (+0.361 dex) over the first (+0.211 dex).
+
+**PROPOSED n=4 SEED CHECK — band 38 (registering the criterion before any new run).**
+*Criterion:* on any fresh 4-seed panel, (i) `dist`/`quad` explains **≥ 50%** of the between-layer
+variance of block-mean log C after type + gradient, in **≥10 of 12** seed×fork fits; (ii) **linear depth
+explains < 30%**; (iii) LOLO rmse with position **< 0.75×** the type+gradient LOLO rmse.
+*Status:* **already satisfied by the committed REQ-035 Arm A data** (67.1%, 12/12; linear 15.6%;
+0.1216/0.1948 = 0.62×). **No new compute requested** — this is registered as a standing criterion for
+future panels, and runs entirely under the ≤2-node ceiling.
+
+**Open, and now precisely bounded:** the residual **~0.075 dex** of between-layer structure that
+position does not capture, and the **unidentified functional form** (quad vs dist, tied at 67.9 vs
+67.1). Both are questions about the *shape* of the position field, which is now the campaign's central
+object.
+
 ## ✅ BAND 35 SURVIVES RULE 10 INTACT (iteration 152) — the audit is complete
 
 *Last exposed band, and the highest-risk one: it rests on `quadratic R² > 0.5`, the construction that
