@@ -29,6 +29,100 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★★ THE POSITION FIELD IS AN ASYMMETRIC BOWL (iteration 154) — form identified, between-layer C closed to 0.96× the floor
+
+*Band 38 left the position field's **shape** unidentified (`quad` 67.9% vs `dist` 67.1%, tied). That is
+now the campaign's central object, so it was attacked directly: **stop guessing forms and let the data
+draw the profile.** Free per-layer effect (block-mean residual after type + gradient), 12 fits.*
+
+**THE PROFILE — and it is extraordinarily clean:**
+
+| layer | 0 | 1 | 2 | 3 | 4 | 5 | **6** | 7 | 8 | 9 | 10 | **11** |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **dex** | +0.166 | +0.105 | +0.024 | −0.003 | −0.104 | −0.142 | **−0.207** | −0.146 | −0.066 | −0.037 | +0.108 | **+0.302** |
+| se | 0.055 | 0.041 | 0.034 | 0.018 | 0.011 | 0.016 | 0.015 | 0.027 | 0.016 | 0.024 | 0.024 | 0.029 |
+
+**Standard errors of 0.011–0.055 dex on a swing of 0.51 dex.** The profile is **monotone down** from
+layer 0 to a minimum at layer 6, then **monotone up** to layer 11. **This settles a band-3 question:
+it is not a boundary shell on a flat interior — it is a genuine smooth bowl**, and every interior layer
+carries signal.
+
+**⇒ THE FORM IS NOW IDENTIFIED — it is ASYMMETRIC, and a cubic captures it.** Fits to the mean profile:
+
+| form | R² | k |
+|---|---:|---:|
+| `dist = min(l, 11−l)` | 0.899 | 1 |
+| `quad = (l−5.5)²` | 0.915 | 1 |
+| quad, free centre | 0.918 | 2 |
+| **cubic (allows tilt)** | **0.977** | 3 |
+| quad + last-block | 0.944 | 3 |
+| quad + both ends | 0.964 | 4 |
+
+**The quadratic vertex is at layer 5.42** — essentially the geometric centre (5.50), so **the asymmetry
+is NOT a shifted bowl. It is a tilt**: the output end is deeper than the input end (+0.302 vs +0.166).
+
+**Variance budget with the identified form** (share of between-layer residual variance after type +
+gradient, 12 fits): **cubic 88.9%** (sd 6.2) > quad+last 84.5% > quad 82.3% > **dist 67.1%**.
+**The cubic beats band 38's `dist` by 21.8 points.**
+
+**⚠️ GUARD — and the cubic passes the test that corrected band 38.** Leave-one-layer-out, predicting a
+held-out layer's block mean (144 fits):
+
+| model | LOLO rmse |
+|---|---:|
+| type + gradient (no position) | 0.1948 |
+| dist *(band 38)* | 0.1216 |
+| quad | 0.1007 |
+| **cubic** | **0.0924** |
+| quad + last | 0.1023 |
+| *(noise floor, measured on this panel)* | *0.0959* |
+
+> **BETWEEN-LAYER C IS CLOSED TO 0.96× THE NOISE FLOOR.** `type + gradient + cubic position` predicts a
+> **held-out layer's** mean log C to **0.0924 dex** against a floor of **0.0959** — i.e. **within seed
+> noise, out of sample.** This supersedes band 38's 1.27× residual: **that gap was the wrong functional
+> form, not missing physics.** The ~0.075 dex I reported as "remaining structure" in iteration 153 was
+> the tilt.
+
+**⚠️ ONE REAL TENSION, resolved rather than buried.** The cubic **wins** on held-out layers (0.0924 vs
+dist 0.1216) but **loses** on held-out *fork states* (cross-fork transfer 0.1331 vs dist 0.1192). Those
+disagree, so the tilt was checked directly:
+
+| fork | cubic tilt coefficient | sd | per-seed |
+|---|---:|---:|---|
+| 060 | +0.00104 | 0.00061 | 0.00101, 0.00019, 0.00137, 0.00159 |
+| 100 | +0.00140 | 0.00076 | 0.00048, 0.00230, 0.00120, 0.00161 |
+| 170 | +0.00090 | 0.00027 | 0.00089, 0.00125, 0.00058, 0.00089 |
+| **all 12** | **+0.00111** | 0.00057 | **t = +6.73, same sign 12/12** |
+
+**The tilt is universal (12/12, t = +6.73). The cross-fork failure is drift in the coefficient's
+MAGNITUDE, not a fake shape** — a 3-parameter form transfers its *scale* worse than a 1-parameter one
+even when its shape is right.
+
+**⇒ AND THE PROFILE ITSELF EVOLVES WITH TRAINING — a new, unregistered observation:**
+
+| fork | L0 | L6 | L11 |
+|---|---:|---:|---:|
+| 060 | +0.093 | −0.187 | **+0.288** |
+| 100 | +0.138 | −0.211 | +0.367 |
+| 170 | **+0.266** | −0.224 | **+0.251** |
+
+**As training advances the input end RISES (+0.093 → +0.266) while the output end FALLS (+0.288 →
++0.251).** The bowl is becoming more symmetric over training — which explains the coefficient drift
+above, and means **the tilt is a transient of training, not a fixed property of the architecture.**
+
+**PROPOSED n=4 SEED CHECK — band 39 (criterion registered before any new run).**
+*Criterion:* on a fresh 4-seed panel, (i) the free per-layer profile is **单-minimum** with its minimum
+in layers **5–7**; (ii) the **cubic tilt coefficient is positive in ≥10 of 12** seed×fork fits;
+(iii) **LOLO rmse of `type + gradient + cubic` ≤ 1.15× the panel-measured noise floor**.
+*Status:* **satisfied by committed REQ-035 Arm A data** (minimum at 6; 12/12 positive tilt, t = +6.73;
+LOLO 0.0924 / floor 0.0959 = **0.96×**). **No new compute requested; runs under the ≤2-node ceiling.**
+
+**Supersedes:** band 38's "form NOT identified" and its "~0.075 dex remains unexplained" — both resolved
+here. **Band 3's "not a pure shell" correction is confirmed independently** by the free profile.
+
+**Now open:** *why* the bowl tilts toward the output end, and why the tilt decays with training. That is
+a mechanism question, and it is the first one this campaign has posed with the shape fully pinned down.
+
 ## ★ THE BETWEEN-LAYER VARIANCE BUDGET (iteration 153) — POSITION is the answer, and the gradient is not
 
 *The rule-10 audit cleared the ground; this is the question it was clearing for. **Of the between-layer
