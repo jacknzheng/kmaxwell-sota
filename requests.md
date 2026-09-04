@@ -29,6 +29,67 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⛔ `residual_tail` REJECTED AS CIRCULAR (iteration 161) — the strongest correlate of the bowl is inadmissible
+
+*Band 43 sharpened the question to the **top of the spectrum**, which points straight at
+`residual_tail` — the probe's own measure of how well the Lanczos iteration has converged on the top
+eigenvector. **Checking its provenance before using it is what this iteration is.***
+
+**PROVENANCE — it fails the hard rule at the strongest possible level.** From the probe
+(`measure_per_matrix_curvature.py`, `ebf53cd`), `top_ritz(alphas, offdiags)` — docstring *"(top
+eigenvalue, residual bound) of the Lanczos tridiagonal"* — builds `t` from `alphas`/`offdiags`, calls
+`evals, evecs = torch.linalg.eigh(t)`, and returns `float(evals[-1]), abs(float(evecs[-1, -1]))`.
+
+**`lam_top` and `residual_tail` are the two return values of a single `eigh()` call on a single
+tridiagonal.** `residual_tail` is the last component of that same top eigenvector. The hard rule bars
+predictors built from the same Lanczos tridiagonal as `lam_top`; **this is not merely the same data, it
+is the same matrix factorisation.** **REJECTED — not used as a predictor.**
+
+**⚠️ WHAT THE RULE COST HERE — the number is recorded to price the rule, NOT as evidence.**
+
+| *(forbidden)* | value |
+|---|---:|
+| corr(C profile, log `residual_tail` profile) | **−0.833** (sd 0.092) |
+| \|t\| | **31.43** |
+| same sign | **12/12** |
+| tail profile cubic R² | 0.889 |
+
+> **This is the strongest correlate of the bowl found anywhere in the campaign — stronger than
+> log λ (+0.867) and far stronger than any admissible predictor — and it is worth nothing.** A quantity
+> from the same eigendecomposition as `lam_top` tracks `lam_top`'s structure **for free**. Had it been
+> used, it would have looked like the mechanism and been the campaign's largest error. **This is the
+> clearest demonstration so far that the hard rule is doing real work rather than being a formality.**
+
+**⊘ SECONDARY EXCLUSION — matrix shape cannot contribute to the depth profile.** Checking whether shape
+(which sets the dimension the spectrum lives in) could vary with depth:
+
+| type | shape | distinct shapes across blocks | varies with block? |
+|---|---|---:|---|
+| attn.q / attn.k / attn.v / attn.proj | 768×768 | **1** | **no** |
+| mlp.fc | 3072×768 | **1** | **no** |
+| mlp.proj | 768×3072 | **1** | **no** |
+
+**Every type has exactly one shape at every depth**, so shape is **absorbed entirely by the type
+offsets** present in every model here and **cannot produce a depth profile at all**. Muon's
+`shape_mult = max(1, rows/cols)**0.5` is likewise a per-type constant. **Shape is excluded — and
+band 19's `shape_mult` rival is now doubly excluded** (band 19 already refuted it on log g with
+R² 0.005–0.008; here it is excluded structurally, for the depth question, by construction).
+
+**⚠️ NO n=4 SEED CHECK PROPOSED.** A rejected predictor and a structural exclusion; **new compute would
+test nothing.** Both settled within committed data under the ≤2-node ceiling.
+
+**Standing rule 13.** *Before using any probe field as a predictor, read the function that produced it
+and check whether it shares a factorisation — not merely a data source — with the outcome.* Two fields
+in this probe are forbidden for this reason: `curvature_along_gradient` (≡ `alphas[0]`, an entry of the
+tridiagonal) and `residual_tail` (from `eigh()` of the tridiagonal). **The admissible fields are
+`top_eigenvalue` (as outcome), `gradient_block_norm`, `curvature_along_polar` (a separate HVP), and
+`shape`.** Recording this list explicitly so the question does not have to be re-litigated.
+
+**Search space:** the bowl is a **conditioning property of the top of the spectrum** — peaks at both
+ends, minimum at layer 6 — immune to every scale factor (band 42), **absent from Muon's step direction**
+(band 43), and not step magnitude (band 31), stream scale, input rank (iter. 156), an axis artifact
+(iter. 157), or **matrix shape** (here).
+
 ## ⊘/★ THE BOWL IS SPECIFIC TO THE TOP EIGENDIRECTION (iteration 160) — one withdrawal, one dissociation
 
 *Band 42 says C measures **conditioning**, so this iteration went after the one conditioning quantity
