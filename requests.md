@@ -267,6 +267,7 @@ measured value so a seed result can be compared directly.
 | **18** | **q and k are interchangeable** (iter. 92) — ✅ **CONFIRMED n=4** | **|q deficit − k deficit| < 0.05 dex** and **not significant within any single seed** (p > 0.05), in every seed | q −0.380 vs k −0.366, difference **−0.014 dex** (3.8% of the shared deficit), within-seed p = 0.82/0.56/0.67/0.57 |
 | **19** | **QK-norm beats the Muon-chunking rival** (iter. 93) — ✅ **CONFIRMED n=4** | on log g, **QK-norm indicator R² > 0.5 with |t| > 5**, and **shape_mult alone R² < 0.10**; QK-norm coefficient must not weaken when shape_mult is added | QK alone R² 0.63–0.67, t −10.9 to −11.9; shape_mult alone **R² 0.005–0.008, t +0.6 to +0.7**; both: QK **−0.45, t −11.5 to −12.6** |
 | **20** | **the mlp gradient gap is depth-structured, not a fixed update factor** (iter. 94) — ✅ **CONFIRMED n=4** | **across-layer sd of the mlp.fc−mlp.proj gap > 0.12 dex** (≥2× the noise floor) while the q,k deficit stays ≤0.09; **quadratic-in-depth R² > linear R²**; per-layer pattern reproducing to ≤0.04 dex across seeds | sd **0.151–0.161** vs q,k **0.065–0.089**; quad R² **0.607** vs linear 0.205; across-seed sd **0.018 dex**, structure/noise **8.5×** |
+| **21** | **the q,k deficit is PURELY backward** (iter. 95, REQ-038) — ✅ **CONFIRMED n=1, needs n=4** | **a_rms identical for q, k and v to 4 decimals**, and **d_rms ratio q,k / v ≤ 0.75**; **mlp gap must live in a_rms, not d_rms** | a_rms **1.0036 for all three**; d_rms ratio **0.658**; mlp |a| gap **−0.433 dex** vs |d| gap **+0.050 dex** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -277,6 +278,87 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 95: REQ-038 LANDS — the two-sided prediction is confirmed, with a 30% shortfall recorded ===**
+
+**Jerry delivered REQ-038 and REQ-041.** This is the measurement iterations 89–94 were built around,
+and **iteration 90's two-sided prediction was registered before the data existed.**
+
+**The prediction, and the result:**
+
+> *"If the attenuation reading is right, `|d|` for q,k should be ~0.37 dex below v and attn.proj
+> while `|a|` is equal (all four read the same residual)."* — iteration 90
+
+| quantity | q,k | attn.v | ratio | dex |
+|---|---:|---:|---:|---:|
+| **`a_rms`** (input activation) | **1.0036** | **1.0036** | **1.0000** | **+0.0000** |
+| **`d_rms`** (output gradient) | 0.002623 | 0.003987 | **0.658** | **−0.182** |
+
+**`|a|` is identical to four decimal places; the entire difference is in the backward signal.** The
+*locus* prediction is confirmed exactly — this is not a forward-pass effect, and the shared
+normed-residual input is measurably shared.
+
+**The magnitude falls short, and that is worth stating plainly.** Predicted −0.37 dex, observed
+**−0.18** — a factor of two. The weight gradient is `G = dᵀa` summed over tokens, so its norm depends
+on `|d|`, `|a|`, **and the alignment/rank structure of the sum** — which REQ-038 also measured:
+
+| | q,k | attn.v | ratio | contribution |
+|---|---:|---:|---:|---:|
+| `d_rms` | 0.002623 | 0.003987 | 0.658 | **−0.182 dex** |
+| `d_eff_rank` | 74.3 | 106.2 | 0.699 | **−0.078 dex** (as √R) |
+| | | | **total** | **−0.260 dex** |
+
+**Against the observed −0.373 dex, that leaves +0.113 dex unaccounted — about 30% of the effect.**
+*(An intermediate calculation of mine called this "inside the 0.07 dex noise floor". It is not:
+0.113 is 1.6× the floor. Corrected here.)* The √R scaling is a heuristic for how a rank-R sum of
+outer products accumulates, not a derivation, so the residual may be that approximation rather than a
+missing physical term — **but it is not resolved, and the band records the measured quantities rather
+than the reconstruction.**
+
+**Band 20's prediction is also confirmed, and it discriminates cleanly.** Iteration 94 predicted that
+if the mlp gap is an activation effect it should appear in `|a|`, since fc reads the block input while
+proj reads the ReLU² output:
+
+| | `|a|` gap (fc − proj) | `|d|` gap (fc − proj) |
+|---|---:|---:|
+| mlp pair | **−0.433 dex** | **+0.050 dex** |
+
+**The mlp gap lives entirely in the forward activation; the backward signals are equal.** So the two
+gradient effects in this network are now separated *by measurement*, not just by inference:
+
+> **q,k: purely BACKWARD (`|a|` identical, `|d|` down 34%). MLP: purely FORWARD (`|d|` equal, `|a|`
+> down 0.43 dex).** Two different mechanisms, confirmed by the one probe.
+
+**Registered as band 21 — but note it is n=1.** REQ-038 ran a single forward/backward pass on one
+seed. Every other confirmed band in this campaign is n=4, and this one is not yet. **The natural
+next step is REQ-038's probe on Arm A's other three seeds** — it is one forward+backward pass per
+seed, negligible against the Lanczos probe, and it would put the campaign's central mechanism on the
+same footing as everything else. **Filed as REQ-043.**
+
+## REQ-043: run the REQ-038 activation/backward probe on Arm A's seeds 1–3
+
+- status: **OPEN**
+- requested: 2026-09-03 PDT
+- repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
+
+**Ask:** run the existing `measure_activation_backward.py` probe (REQ-038's deliverable, already
+written and validated) on the **fork-1500 states of seeds 1, 2 and 3** — the same states Arm A
+already regenerates — and commit the per-type `a_rms`, `d_rms`, `a_eff_rank`, `d_eff_rank` and
+`weight_frob` in the same TSV shape as `req038_activation_backward_probe/summary.tsv`.
+
+**Cost:** one forward+backward pass per seed. **Negligible** — REQ-038's own run took a single pass at
+8192 tokens. No new training if Arm A's states can be regenerated or reused; no extra nodes.
+
+**Why:** REQ-038 confirmed at n=1 that the q,k deficit is **purely backward** (`a_rms` identical to 4
+decimals, `d_rms` ratio 0.658) and the mlp gap **purely forward** (`|a|` −0.433 dex, `|d|` +0.050).
+These are the campaign's two central mechanisms and they are the **only** results still at n=1 —
+bands 14, 17, 18, 19 and 20 are all confirmed at n=4. **The registered check is band 21:** `a_rms`
+identical for q, k and v; `d_rms` ratio ≤ 0.75; and the mlp gap in `a_rms` not `d_rms`, in ≥3 of 4
+seeds.
+
+**Also worth capturing if cheap:** the same probe at a second training state (e.g. fork-2000) would
+test whether the backward attenuation is stable in training time, which no measurement currently
+covers.
 
 **=== ITERATION 94: THE mlp GAP IS AN ACTIVATION EFFECT, NOT UPDATE GEOMETRY ===**
 
