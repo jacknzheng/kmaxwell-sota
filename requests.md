@@ -974,7 +974,7 @@ if that is not cheap.
 
 ## REQ-038: per-type activation and backward statistics — the q/k/v probe
 
-- status: **OPEN — fold into REQ-035 Arm A (priority 1); standalone only as a fallback.**
+- status: **DONE (2026-09-03, n=1) — `logs/kmaxwell/req038_activation_backward_probe/`.** The q/k 'excess' is a GRADIENT DEFICIT: q,k output-gradient d_rms=0.00262 vs v=0.00399 (ratio 0.66), with IDENTICAL input activation (a_rms=1.0036 all of q/k/v) -> the difference is PURELY backward, not forward; q,k grads also lower-rank (72/76 vs 106). q,k near-identical (band 18). Attention entropy 1.42 nats, q.k-logit rms 27.2. Confirms bands 14-19 empirically. New reusable activation/backward probe. n=1 (fresh fork-1500 seed0).
   **Cost premise corrected:** this was filed as a probe on "an existing checkpoint", but no `.pt`
   weights are committed anywhere in the repo — REQ-019's boxes were ephemeral and only the derived
   `per_matrix_curvature.json` files landed. A standalone run must therefore regenerate a fork-1500
@@ -1109,7 +1109,7 @@ work begins and preserve the prescribed artifact paths and reporting gates.
 
 ## REQ-041: add per-matrix weight norms to curvature runs
 
-- status: **OPEN**
+- status: **DONE (2026-09-03) — `logs/kmaxwell/req038.../weight_norms.tsv`.** Per-Muon-matrix ||W||_F recorded at fork-1500 in the REQ-023 shape (fork_seed, arm, step, name, weight_frob), folded into the REQ-038 probe. Prior curvature checkpoints were cleaned by re-bootstraps so this is a fresh fork-1500; `measure_activation_backward.py` can ride along on future curvature runs.
 - requested: 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 
