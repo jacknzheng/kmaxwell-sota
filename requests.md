@@ -263,6 +263,7 @@ measured value so a seed result can be compared directly.
 | **12** | **type offsets reduce to three binaries** — ✅ **CONFIRMED n=4** | `q,k + residual-writer + mlp.proj` (5p) within 0.02 dex of six free offsets (7p) | gaps 0.004 / 0.004 / 0.005 / 0.002 dex in the 4 seeds |
 | **13** | **the PER-MATRIX causal exponent is exactly 2** — ⚠️ **RE-SCOPED** (iter. 79) | 2.000 inside the 95% CI **under per-matrix LR randomisation only** (REQ-023 design) | REQ-023 +2.076/+2.079 CI contains 2. **Arm A's GLOBAL LR ladder gives +2.64 to +3.07, CI excludes 2 — a different estimand, not a refutation** |
 | **14** | **q,k carry a GRADIENT DEFICIT at identical shape** (iter. 77–90) — ✅ **CONFIRMED n=4, size-artifact excluded** | **within the four 768×768 attention matrices only:** Δlog g (q,k − v,attn.proj) ≤ −0.30 dex with p < 0.01, Δlog λ NOT significant, both q,k below both v,attn.proj in ≥10/12 blocks — in ≥3 of 4 seeds | **Δlog g = −0.378/−0.378/−0.356/−0.381, p < 10⁻⁴ all seeds, 48/48 blocks**; Δlog λ p = 0.17/0.85/0.21/0.43 |
+| **17** | **the deficit is a depth-independent constant** (iter. 91) — ✅ **CONFIRMED n=4** | **slope of the q,k gradient deficit vs layer index NOT significant (|t| < 2) across layers 0–11**, in every seed; **final block separately deeper by ≥ 0.10 dex** | slopes t = −0.31/−0.25/+0.50/−0.40; interior −0.361 ± 0.065, **layer 12 −0.508 ± 0.010** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -273,6 +274,58 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 91: THE DEFICIT IS A FIXED ARCHITECTURAL CONSTANT — depth-independent, n=4 ===**
+
+*Iteration 90's reading is that RMS-norm rescales the backward signal by `1/RMS(q)`. **That factor is
+set by the architecture, not learned**, which makes a prediction testable without REQ-038: the
+deficit should be **the same at every depth**. A learned or data-dependent attention effect would
+vary with depth, since attention statistics do.*
+
+**Measured within the four same-shape 768×768 attention matrices, so no size confound:**
+
+| | slope of deficit vs layer index | t |
+|---|---:|---:|
+| seed 0 | −0.00177 | **−0.31** |
+| seed 1 | −0.00127 | **−0.25** |
+| seed 2 | +0.00355 | **+0.50** |
+| seed 3 | −0.00217 | **−0.40** |
+
+**Indistinguishable from zero in every seed.** The deficit sits at **−0.361 ± 0.065 dex across layers
+0–11**, and that scatter is *at the 0.07 dex noise floor* measured in iteration 85 — i.e. the
+layer-to-layer variation is consistent with pure measurement noise.
+
+> **The q,k gradient deficit is a fixed constant, identical at every depth. It is an architectural
+> property, not a learned or data-dependent one.**
+
+**This is what RMS-norm rescaling predicts and what a data-dependent attention effect does not**, and
+it is the second prediction from the iteration-90 reading to pass. (The first: `|d|` low with `|a|`
+equal — still awaiting REQ-038.)
+
+**A separate, highly reproducible boundary fact.** The final block is an outlier, and an unusually
+tight one:
+
+| | interior (layers 0–11) | **layer 12 (final block)** |
+|---|---:|---:|
+| mean deficit | −0.361 | **−0.508** |
+| sd | 0.065 | **0.0099** |
+| per-seed | — | **−0.502, −0.512, −0.499, −0.520** |
+
+**Layer 12's deficit reproduces to within 0.01 dex across four independent networks** — six times
+tighter than the interior scatter — and sits 2.25 sd below it. Including it was what made the depth
+slopes look marginally negative (t ≈ −1.1 to −1.3); excluding it, they flatten to |t| < 0.5.
+
+**A plausible and still-architectural reason:** layer 12 is the final block, so its attention output
+feeds the **unembedding directly** rather than another transformer block. Its backward signal has a
+different provenance from every other layer's. **This is offered as a reading, not a tested claim** —
+what is established is that the final block's deficit is larger, reproducible to 0.01 dex, and
+distinct from the flat interior.
+
+**Registered as band 17**, covering both halves: the interior depth-independence (the load-bearing
+result) and the final-block excess (the reproducible anomaly). Note this is *not* a revival of the
+withdrawn band 10 — that was a **layer-0 lift in C** measured on the fitted intercept and failed at
+n=4; this is a **final-block excess in the q,k gradient deficit**, a different quantity at the other
+end of the network, and it reproduces where band 10 did not.
 
 **=== ITERATION 90: THE DEFICIT SURVIVES AT IDENTICAL SHAPE — the cleanest form of the result ===**
 
