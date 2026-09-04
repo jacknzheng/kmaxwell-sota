@@ -797,6 +797,60 @@ obvious**, and applying it turned an apparent mechanism into a registered negati
 apply that same control before reporting it in a new context.* Entropy has now failed the quadratic-depth
 test twice, on two different response variables.
 
+**=== ITERATION 138 (2026-09-04): REGISTERED NEGATIVE — the three U-shapes are not one pattern ===**
+
+*Three depth profiles now sit on the same 13 layers: band 20's mlp gradient gap, band 35's q−k
+alignment gap, and C itself. **If they were one underlying pattern, C's depth structure would be a
+single effect seen in three measurements.** They are not.*
+
+**The raw correlations look compelling — all three significant:**
+
+| pair | correlation | permutation p |
+|---|---:|---:|
+| q−k alignment vs mlp gap | **−0.656** | **0.021** |
+| q−k alignment vs C | **+0.655** | **0.023** |
+| mlp gap vs C | **−0.710** | **0.011** |
+
+**But every smooth U-shape on 13 layers correlates with every other one** — they all project heavily
+onto the same quadratic basis function. **That is a shared *form*, not a shared mechanism**, and
+correlating raw profiles cannot distinguish them. *(Quadratic R²: q−k 0.813, mlp 0.607, C 0.921 — all
+three are mostly quadratic by construction.)*
+
+**Fitting depth + depth² and correlating the RESIDUALS — do they agree beyond the quadratic they
+trivially share?**
+
+| pair | raw | **residual** | p | |
+|---|---:|---:|---:|---|
+| q−k vs mlp | −0.656 | **+0.165** | 0.618 | **gone** |
+| mlp vs C | −0.710 | **−0.226** | 0.488 | **gone** |
+| q−k vs C | +0.655 | **−0.724** | **0.009** | *survives?* |
+
+**Two of three vanish.** They shared only the U-shape that 13 points and a smooth trend produce
+automatically.
+
+**The survivor looked robust — leave-one-layer-out stable at [−0.822, −0.636], negative in all four
+seeds — and it is still an artifact.** `C = log λ − 2 log g` and `alignment = log cp − log λ` **share
+log λ with opposite signs**, which induces exactly this negative correlation (iteration 134's trap).
+**Testing with cp alone, without λ:**
+
+> **residual corr(cp q−k, C) = −0.188** — collapsed from −0.724.
+
+**The survivor was the shared-λ construction, not a mechanism.**
+
+> **Registered as a negative: the three depth profiles share a quadratic form and nothing more. C's
+> depth structure is not a single effect appearing in multiple measurements.**
+
+**Why this needed three separate checks to reach.** The raw correlations pass a permutation test; the
+residual test kills two of three; the third survives leave-one-out and per-seed replication and dies
+only to a construction check. **Each check was necessary and none alone was sufficient** — and the
+campaign has now been caught by the shared-λ artifact twice (iterations 134, 138), the first time
+catching it, the second time only at the last step.
+
+**Standing rule 6 sharpened:** *prefer identities to fits* — extended to: **when two derived quantities
+share a term, test with the raw components before believing any correlation between them, regardless
+of how many robustness checks it survives.** Leave-one-out and cross-seed stability do **not** detect a
+construction artifact; both quantities are equally artifactual in every subsample.
+
 ### CONSOLIDATED FINDINGS IV (iterations 112–132) — the causal account, revised
 
 *Provenance in git history from `ab04e19` onward.*
