@@ -829,8 +829,27 @@ same footing as everything else. **Filed as REQ-043.**
 
 ## REQ-043: run the REQ-038 activation/backward probe on Arm A's seeds 1–3
 
-- status: **BAND-21 DONE (n=4)** — priorities 2 (2nd state) + 3 (alignment ratio) in progress on the 2 warm nodes
-- delivered 2026-09-03 PDT → `logs/kmaxwell/req043_seeds_probe/` (summary.tsv + README + raw JSON seeds 0–3)
+- status: **DONE (all 3 priorities, n=4)** — band 21 + alignment ratio (P3) + second state (P2)
+- delivered 2026-09-03 PDT → `logs/kmaxwell/req043_seeds_probe/` (summary.tsv + alignment.tsv + README + raw JSON seeds 0–3 + seed0 fork-2000)
+
+**P3 RESULT — the alignment ratio IS band-25's missing factor (measured, not inferred).** Since `a_rms` is
+identical for q/k/v (band 21), `align_deficit = grad_deficit − d_deficit` **exactly** (verified numerically to
+<0.0005 dex/seed, `alignment.tsv` `identity_gap`). So the alignment ratio `‖Σₜ dₜaₜᵀ‖_F/(‖d‖_F‖a‖_F)` is
+algebraically band-25's shortfall. **align_deficit (q,k)/v = −0.190 ± 0.006 dex (0.646×), n=4** (per-seed
+−0.185/−0.200/−0.188/−0.186). Measured at a **single consistent state** → no cross-state artifact, hence
+tighter (sd 0.006 vs your reconstruction's 0.041) and smaller than the filed −0.240 (the state mismatch
+inflates it). Mechanism: q/k receive both ~0.67× smaller raw `d` (band 21) **and** 0.65× less token-aligned
+gradient than v; the two multiply to the full ≈0.43× (−0.37 dex) weight-gradient deficit.
+
+**P2 RESULT — the depth slope is genuinely state-dependent (your iter-103 concern confirmed).** Probed seed 0
+at fork-2000: align-deficit depth slope **flattens −0.0091 → −0.0041 dex/layer** from fork-1500→2000 (+0.010
+per 1000 steps). So cross-state comparison DOES manufacture part of band-25's depth trend. Artifact-free
+single-state slope = **−0.0075 dex/layer (n=4, fork-1500)** — real, monotone toward output, but milder than
+the filed −0.0176 and near the low end of your state-corrected CI [−0.0169,−0.0064]. Size is state-stable
+(−0.184 vs −0.191); only the slope drifts.
+
+---
+- (superseded) status: **BAND-21 DONE (n=4)** — priorities 2 + 3 in progress
 
 **RESULT (band 21, the registered check — n=4):** the q/k output-gradient deficit is seed-reproducible.
 `(q,k)/v d_rms = 0.667 ± 0.011` across seeds 0–3 (range [0.655, 0.682]); log₁₀(q/v) = −0.183 dex, t = −41.9;

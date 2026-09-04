@@ -60,9 +60,16 @@ def main():
     # per-matrix stats
     out={"model":a.model,"tokens":ntok,"loss":float(loss.item()),"matrices":{}}
     for name in mods:
-        rec={"weight_frob":frob(mods[name].weight)}
+        w=mods[name].weight
+        rec={"weight_frob":frob(w)}
         if name in acts: rec["a_rms"]=rms(acts[name]); rec["a_frob"]=frob(acts[name]); rec["a_eff_rank"]=eff_rank(acts[name])
         if name in grads: rec["d_rms"]=rms(grads[name]); rec["d_frob"]=frob(grads[name]); rec["d_eff_rank"]=eff_rank(grads[name])
+        # REQ-043 priority 3: alignment ratio ||Sum_t d_t a_t^T||_F / (||d||_F ||a||_F).
+        # For a Linear y=a@W^T (no bias) the weight-gradient IS Sum_t d_t a_t^T, so ||.||_F = ||W.grad||_F exactly.
+        if w.grad is not None and name in acts and name in grads:
+            gW=frob(w.grad); denom=rec["d_frob"]*rec["a_frob"]
+            rec["grad_frob"]=gW
+            rec["align_ratio"]=(gW/denom) if denom>0 else float("nan")
         out["matrices"][name]=rec
     # attention logits + entropy per block
     H=model.blocks[0].attn.num_heads if hasattr(model.blocks[0].attn,"num_heads") else 6
