@@ -17,6 +17,63 @@ Next request number: **REQ-047**.
 
 ---
 
+**=== ITERATION 132 (2026-09-04): BAND 31 QUESTIONS THE CAMPAIGN'S OWN DEFINITION — and it survives ===**
+
+*Band 31 established that Muon cannot see gradient magnitude. That raises a question about the
+campaign's central definition: **if the optimiser ignores g, does dividing by g² remove a nuisance or
+import variance the architecture does not control?** 100+ iterations rest on C = λ/g², and this had
+never been checked.*
+
+**Tested on the campaign's own standard — seed-independence**, the criterion Arm A used to establish
+that C is architecture-determined:
+
+| quantity | median \|Δ\| across seed pairs | architecture-to-seed-noise ratio |
+|---|---:|---:|
+| **log C = λ/g²** | **0.0776 dex** | **15.7×** |
+| log λ | 0.1235 dex | 8.0× |
+| log g | 0.0332 dex | 31.3× |
+
+**C is markedly more seed-stable than λ and has twice its architecture-to-noise ratio.** Dividing by
+g² **removes** the seed-dependent part of λ rather than importing noise. **The definition is
+vindicated on the campaign's own criterion.**
+
+**A complication I had to resolve: log g scores highest of the three.** On ratio alone the campaign
+should have studied the *gradient*. Two reasons it should not, one of them testable:
+
+**The testable one — a high ratio can come from a small denominator rather than a large numerator:**
+
+| quantity | between-matrix spread | seed noise | resolvable levels |
+|---|---:|---:|---:|
+| **log C** | **0.4617 dex** | 0.1165 | **4** |
+| log λ | 0.3831 | 0.1356 | 3 |
+| log g | **0.2429** | **0.0434** | 6 |
+
+**log g has the *smallest* architectural spread — it wins on ratio only because its noise is 3× lower,
+not because it varies more across matrices.** It resolves finely but has little to resolve. **C has the
+largest architectural signal of the three.**
+
+**The untestable one, stated as such:** the campaign's question is about **curvature** — the
+equilibrium a network settles into and what an optimiser must respect. **A high reproducibility ratio
+measures how cleanly a quantity is determined, not whether it is the quantity of interest.** log g
+being well-determined is not an argument for studying it.
+
+> **Registered as band 32. C = λ/g² carries more architectural signal than λ or g, at lower seed noise
+> than λ. The g² division is a noise-removing transformation, not a distortion — even though the
+> optimiser is blind to g.**
+
+**Two corrections to my own analysis, recorded.** The script's closing text claimed "~16 resolvable
+levels" for C and quoted noise figures of 0.0117/0.0136 — **those were variances from an earlier
+block, not the standard deviations it had just printed.** The correct counts are **4 / 3 / 6** and C's
+noise sd is **0.117**, not 0.0117. **The verdict is unchanged** — C still has the largest spread and
+beats λ on both axes — but the supporting numbers in that paragraph were wrong by a factor of ten and
+would have misrepresented the resolution by 4×.
+
+**Why this closes a real gap rather than restating a known result.** Band 31 is a *theorem about the
+optimiser*; the campaign's definition is a *choice of statistic*. It was entirely possible for the
+theorem to invalidate the choice — if the optimiser cannot see g, `λ/g²` could have been an arbitrary
+rescaling. **It is not: g² is the component of λ that varies with the seed, and removing it leaves
+what the architecture fixes.**
+
 **=== ITERATION 131 (2026-09-04): THE INVARIANCE IS A THEOREM — REQ-046 WAS IMPOSSIBLE, NOT BOTCHED ===**
 
 *Iteration 130 asserted that under Muon the question "does gradient magnitude cause curvature" may be
@@ -548,6 +605,7 @@ measured value so a seed result can be compared directly.
 | **28** | **C's depth structure is carried by λ, not g** (iter. 117) — ✅ **CONFIRMED n=4** | **sd(log λ) / sd(log g) across depth > 1.5 in every matrix type**, every seed — the consistency requirement linking bands 27 and 10/25 | ratios **2.03 / 2.76 / 2.85 / 2.93 / 4.19 / 4.32**, mean **3.2×**; λ variance share 0.51–1.76 |
 | **29** | **the λ–g relation WEAKENS as the LR rises** (iter. 120) — ✅ **CONFIRMED n=4** | **cross-sectional slope falls monotonically across s = 0.6 → 1.7**, seed-clustered CI on the spread excluding 0; **sd(log g) flat** (rules out range compression) while **sd(log λ) compresses** | slopes **0.916 / 0.742 / 0.636**, spread CI **[0.208, 0.365]**; sd(log g) **0.246/0.246/0.242**, sd(log λ) **0.429/0.395/0.367**; corr 0.534/0.497/0.453 |
 | **31** | **Muon's gradient-magnitude invariance is a THEOREM, not an approximation** (iter. 131) | the update `X = g/(‖g‖·1.02 + 1e-6)` is exactly scale-free wherever the epsilon is negligible; **deviation < 1e-4 for ‖g‖ ≥ 1e-2**, and REQ-046's matrices sit at ‖g‖ ≈ 10³·⁸. Momentum adds a transient of ~1/(1−m) steps only | epsilon deviation at ‖g‖=10: **5e-8**; transient ≈ 20 steps of 750 |
+| **32** | **C = λ/g² is the right object — the g² division REMOVES noise** (iter. 132) — ✅ **CONFIRMED n=4** | **C must be more seed-stable than λ** (median |Δ| across seed pairs) **and have a larger architecture-to-seed-noise ratio** | C **0.0776 dex** vs λ **0.1235**; ratio C **15.7×** vs λ **8.0×**; architectural spread C **0.462 dex** vs λ **0.383** |
 | **30** | **a higher LR DECOUPLES curvature from the gradient** (iter. 121, 123) — ✅ **CONFIRMED on TWO INDEPENDENT DESIGNS** | **cov(log λ, log g) falls as the LR rises**, seed/matrix-clustered CI excluding 0, on **both** the global ladder and REQ-023's per-matrix randomisation. *Shape not resolved — the two designs differ in where the drop occurs* | Arm A **0.0552/0.0448/0.0371**; REQ-023 **0.0766/0.0425/0.0418** (f1500) and **0.0784/0.0421/0.0402** (f2000), endpoint CIs **[−0.071,−0.002]** and **[−0.077,−0.005]** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
