@@ -325,6 +325,7 @@ measured value so a seed result can be compared directly.
 | **32** | **C = λ/g² is the right object — the g² division REMOVES noise** (iter. 132) — ✅ **CONFIRMED n=4** | **C must be more seed-stable than λ** (median |Δ| across seed pairs) **and have a larger architecture-to-seed-noise ratio** | C **0.0776 dex** vs λ **0.1235**; ratio C **15.7×** vs λ **8.0×**; architectural spread C **0.462 dex** vs λ **0.383** |
 | **33** | **Muon steps nearly ORTHOGONAL to peak curvature, and that alignment predicts C** (iter. 134) — ✅ **CONFIRMED n=4** | **cp/λ < 0.02 in every type** (the step sees <2% of peak curvature); **corr(log(cp/λ), log C) ≤ −0.60** and must **clear a cp-shuffled null** in every seed | ratio **0.001–0.006** (overall **0.4%**); corr **−0.788/−0.791/−0.736/−0.782** vs null **−0.34/−0.25/−0.27/−0.29 ± 0.07**, **p < 10⁻⁴ all seeds** |
 | **34** | **alignment and the q,k excess are LARGELY SEPARATE effects** (iter. 135) — ✅ **CONFIRMED n=4** | **controlling for alignment shrinks the q,k C-coefficient by < 35%**, and **both terms stay significant** (|t| > 4), in every seed | shrinkage **22 / 19 / 16 / 20 %**; q,k coef **+0.699/+0.629/+0.694/+0.680** (t = 10.4–18.4); align coef **−0.616/−0.604/−0.582/−0.584** (t = −5.6 to −10.0) |
+| **35** | **q and k differ in step ALIGNMENT though identical in gradient** (iter. 136) — ✅ **CONFIRMED n=4** | **|alignment(q) − alignment(k)| ≥ 0.15 dex with the same sign in every seed** — despite band 18's 0.014 dex gradient equality and identical 128×768 chunk geometry | **−0.329/−0.295/−0.340/−0.258 dex** (mean **−0.306**, sd **0.037**, 4/4 same sign); q,k-vs-v gap for comparison ≈ −0.27 |
 | **30** | **a higher LR DECOUPLES curvature from the gradient** (iter. 121, 123) — ✅ **CONFIRMED on TWO INDEPENDENT DESIGNS** | **cov(log λ, log g) falls as the LR rises**, seed/matrix-clustered CI excluding 0, on **both** the global ladder and REQ-023's per-matrix randomisation. *Shape not resolved — the two designs differ in where the drop occurs* | Arm A **0.0552/0.0448/0.0371**; REQ-023 **0.0766/0.0425/0.0418** (f1500) and **0.0784/0.0421/0.0402** (f2000), endpoint CIs **[−0.071,−0.002]** and **[−0.077,−0.005]** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
@@ -691,6 +692,59 @@ automatically one effect.
 **geometric** alignment deficit in the step direction (−0.24 to −0.32 dex, band 34) — **three distinct
 asymmetries on the same two matrices**, of which the first two sum to the gradient deficit exactly
 (iteration 107) and the third is separate.
+
+**=== ITERATION 136 (2026-09-04): CHUNK GEOMETRY REFUTED — and q ≠ k after all, in alignment ===**
+
+*Band 34 left the step-alignment deficit unexplained. Muon orthogonalises q,k per head-pair
+(**128×768**) versus 768×768 for v/attn.proj, and **alignment is a geometric quantity** — so chunk
+narrowness was the natural candidate. **Iteration 93 excluded chunk geometry for the *gradient*
+deficit; I did not assume that negative transfers to a different quantity.***
+
+**The correlational test is inconclusive, as the standing rules predict for 6 points:**
+
+| | value |
+|---|---:|
+| corr(log chunk aspect, alignment) | **+0.476** |
+| permutation null | **−0.003 ± 0.450** |
+| **p** | **0.334** |
+| leave-one-type-out range | **+0.208 to +0.760** |
+
+Entirely within chance, and unstable to dropping any single type. **No evidence — but also no
+refutation from this test alone.**
+
+**The direct refutation is decisive, and it comes from within the pair.** `attn.q` and `attn.k` sit in
+the **same `qk_bank`**, orthogonalised at **identical 128×768 chunks**. Chunk geometry treats them
+identically, so it cannot produce any difference between them:
+
+| seed | attn.q | attn.k | **difference** |
+|---|---:|---:|---:|
+| 0 | −2.889 | −2.560 | **−0.329 dex (0.47×)** |
+| 1 | −2.806 | −2.511 | −0.295 dex (0.51×) |
+| 2 | −2.840 | −2.501 | −0.340 dex (0.46×) |
+| 3 | −2.821 | −2.563 | −0.258 dex (0.55×) |
+
+**Mean −0.306 dex, sd 0.037, same sign in 4/4 seeds** — and that is **larger than the −0.27 dex q,k-vs-v
+gap band 34 attributed to the pair as a group.**
+
+> **Chunk geometry is refuted: it cannot explain a 0.31 dex difference between two matrices it
+> processes identically.**
+
+**The finding this produced is bigger than the negative it was looking for.** Band 18 established that
+**q and k are interchangeable in the gradient deficit — 0.014 dex apart**, and iteration 92 registered
+that as evidence the effect tracks the shared RMS-norm rather than the query/key asymmetry. **In step
+alignment they are not interchangeable at all: 0.306 dex apart, twenty times the gradient difference,
+consistent in every seed.**
+
+**Registered as band 35.** It also **revises band 34's framing**: treating "q,k" as a unit is correct
+for the gradient (band 18) and **wrong for alignment**. The q,k-vs-v alignment gap is substantially an
+**attn.q** effect — attn.k sits close to attn.v (−2.560 vs −2.563 in seed 0).
+
+**What distinguishes q from k, and what it points at.** Under causal masking a **query attends once**
+while a **key is attended by a growing suffix** — the asymmetry iteration 92 tested and found *absent*
+in the gradient. **Finding it present in the step geometry, at 20× the magnitude, is consistent with
+that asymmetry being real but expressed in direction rather than magnitude** — which is exactly the
+channel band 31 leaves open. *Offered as a reading, not a tested claim; the campaign has no
+intervention on step direction.*
 
 ### CONSOLIDATED FINDINGS IV (iterations 112–132) — the causal account, revised
 
