@@ -1,0 +1,12 @@
+# REQ-038 per-type activation/backward statistics at fork-1500 (seed 0, s=1.00), one forward+backward pass, tokens=8192 (loss/token=3.5753). SHA ebf53cd. n=1.
+# a=input activation, d=output-gradient (backward tensor); eff_rank=participation ratio of the sigma^2 spectrum. d_rms is a SUMMED-loss gradient (global scale; RATIOS across types are scale-invariant).
+type	a_rms	d_rms	a_eff_rank	d_eff_rank	weight_frob
+attn.q	1.0036	0.002581	30.17	72.50	54.41
+attn.k	1.0036	0.002665	30.17	76.05	54.61
+attn.v	1.0036	0.003987	30.17	106.21	63.06
+attn.proj	1.1202	0.003955	58.64	388.95	58.62
+mlp.fc	0.6087	0.003875	20.04	901.59	127.27
+mlp.proj	1.6491	0.003452	161.02	359.28	65.14
+# KEY: q/k output-gradient (d_rms) = 0.002623 vs v = 0.003987 -> ratio 0.658. The q,k 'excess' is a GRADIENT DEFICIT: q,k receive ~0.66x v's output-gradient,
+#   with IDENTICAL input activation (all a_rms=1.0036, shared normed-residual input) -> the q/k<->v difference is PURELY in the backward signal, not the forward. q,k grads are also lower-rank (72/76 vs 106).
+# attention (12 blocks): mean prob-entropy=1.417 nats, mean q.k-logit rms=27.189.
