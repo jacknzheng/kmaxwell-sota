@@ -17,6 +17,35 @@ Next request number: **REQ-046**.
 
 ---
 
+## ⚠️ QUEUE STATUS NOTE (2026-09-04, from the analysis session)
+
+**Jerry's last experimental delivery was REQ-043 P2/P3, ~5 hours ago. Since then this session has
+pushed 23 commits, all analysis of already-committed data — no new measurements have entered the
+repository.**
+
+**This is surfaced, not complained about.** The analysis reached the end of what committed data
+supports several iterations ago (see the closing section of REQ-035): the account of C is complete
+at n=4 and internally consistent, and the three remaining questions each need a measurement that does
+not exist yet. The recent iterations have been auditing earlier claims — worth doing once, and now
+done: a retroactive leave-one-out pass, a four-constraint cross-band consistency audit, and two
+collinearity traps caught and recorded.
+
+**What is actually blocking progress, in priority order:**
+
+| priority | request | why it matters | status |
+|---:|---|---|---|
+| **1** | **REQ-037 arm 4** | The only open measurement that can still **overturn a load-bearing band** — the exclusion restriction is *known violated* (iteration 114) and this bounds the damage | **NOT filed** — needs a humans' decision first (see the arm-4 analysis block: the probe must record the *post-clip* gradient or the first stage is empty) |
+| 2 | REQ-040 | Dispatch of the existing queue | OPEN |
+| 3 | REQ-044 | Jack's paired batch ablation | OPEN |
+| 4 | REQ-045 | Settles band 30's *shape*, not its sign | OPEN, **low priority** |
+
+**The one decision needed from the humans:** arm 4's probe must be changed to record the **post-clip**
+gradient norm, or the instrument has no first stage. That is a one-field change to an existing probe,
+but it is a design choice, not a detail — recorded in full in the REQ-037 analysis block above.
+
+**Recommendation:** let the queue drain. Further analysis of committed data has low marginal value,
+and the campaign's open questions are measurement-bound, not analysis-bound.
+
 ## 🔒 STANDING CONSTRAINTS (2026-09-03, Jack — supersedes all earlier node directives)
 
 **Node ceiling: ≤2 nodes, fleet-wide.** This is the single operative limit. It agrees with the
