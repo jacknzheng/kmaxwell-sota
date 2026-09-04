@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-047**.
+Next request number: **REQ-048**.
 
 ---
 
@@ -1531,6 +1531,60 @@ bound is one-sided twice over, since a channel acting equally on both functional
   causal;
 - **result near +1 or below, with a monotone reduced form** → ~52% of the LR effect bypasses the
   gradient, and **band 13 becomes a statement about LR response, not curvature-gradient physics.**
+
+
+## REQ-047: per-token backward statistics — the two open alignment questions
+
+- status: **OPEN**
+- requested: 2026-09-04 PDT
+- repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
+- **node budget: ONE box, one forward+backward pass per seed.** Same cost as REQ-038/043.
+- **This is an INCREMENT to an existing, validated probe — not new instrumentation.**
+
+**What to add.** `measure_activation_backward.py` already captures the per-token tensors in `acts`
+and `grads` (lines 43–45) and reduces them to `rms`, `frob` and `eff_rank`. **The per-token
+information is already in memory and is being discarded.** Add four reductions per matrix:
+
+1. **`d_token_norms`** — the distribution of ‖dₜ‖ across tokens: record mean, sd, and the
+   participation ratio (how many tokens carry the backward signal).
+2. **`a_token_norms`** — the same for ‖aₜ‖.
+3. **`da_cos_mean`** — mean cosine between `dₜ` and `dₜ₊₁` across adjacent tokens. **This is the
+   direct measure of the token-wise coherence that band 25's alignment ratio quantifies only in
+   aggregate.**
+4. **`grad_rank1_frac`** — `σ₁²/Σσᵢ²` of the accumulated `Σₜ dₜaₜᵀ`: how close the weight gradient is
+   to rank-1, i.e. how coherently the outer products add.
+
+**Run on:** Arm A's four fork-1500 seeds (as REQ-043 did), so every result is n=4 immediately.
+
+**The two questions this settles, both currently measurement-bound:**
+
+**(a) Why does the softmax Jacobian's output align less well across tokens?** Band 25 established the
+alignment deficit is **−0.190 ± 0.007 dex** and iteration 105 showed it *is* the shortfall, measured
+rather than inferred. **What is unknown is its origin.** `da_cos_mean` and `grad_rank1_frac` locate it:
+if q,k's backward vectors are less coherent token-to-token, the deficit is a property of the softmax
+Jacobian's *token structure*; if their per-token norms are more concentrated, it is a *sparsity* effect.
+
+**(b) Why do ‖a‖ and ‖d‖ trade off across depth?** Band 27 measured `corr(log‖a‖, log‖d‖) = −0.87 to
+−0.99` with the product 2–4× flatter than either factor, and iteration 111 established this explains
+the gradient's depth-flatness. **The mechanism is unexamined.** Per-token norm distributions
+distinguish a *scale* trade-off (both tensors rescale) from a *support* trade-off (the same total
+signal spread over more or fewer tokens).
+
+**Registered checks (n=4):**
+- **`da_cos_mean` for q,k must be lower than for v/attn.proj** — same four same-shape matrices as
+  band 14 — in ≥3 of 4 seeds, if the alignment deficit is token-coherence;
+- **`grad_rank1_frac` must correlate with the per-matrix alignment ratio** at |r| > 0.5, since both
+  measure how coherently outer products accumulate;
+- **within a type across depth, `corr(a_token_participation, d_token_participation)` distinguishes
+  the two readings of band 27**: strongly negative → support trade-off; near zero → scale trade-off.
+
+**Honest scoping.** Iteration 141 showed the *aggregate* alignment ratio adds nothing to a predictive
+model of C once its shared-λ component is removed. **This request is not an attempt to revive it as a
+predictor** — it targets the two mechanism questions the campaign has repeatedly identified as
+measurement-bound, and its value does not depend on band 33.
+
+**Priority: below REQ-044 and REQ-045.** Neither open question blocks the account of C, which is
+complete at n=4. **File it as a background run.**
 
 
 ## REQ-044: fully paired Muon / bi-Maxwell / K-Maxwell batch ablation
