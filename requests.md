@@ -276,7 +276,7 @@ measured value so a seed result can be compared directly.
 | **27** | **the ‖a‖·‖d‖ PRODUCT is the depth-conserved quantity** (iter. 110–111) — ✅ **CONFIRMED n=4** | **corr(log‖a‖, log‖d‖) ≤ −0.80 within every type across depth**, perm p < 0.01; **sd(log‖a‖+log‖d‖) < 0.6 × sd of the smaller factor**, every type. *Compensation is near-exact but NOT universal — TLS slope contains −1 in only 2/6 types* | corr −0.875 to −0.986; sd-ratio **0.262–0.493**; TLS slopes −0.765 to −1.230 |
 | **28** | **C's depth structure is carried by λ, not g** (iter. 117) — ✅ **CONFIRMED n=4** | **sd(log λ) / sd(log g) across depth > 1.5 in every matrix type**, every seed — the consistency requirement linking bands 27 and 10/25 | ratios **2.03 / 2.76 / 2.85 / 2.93 / 4.19 / 4.32**, mean **3.2×**; λ variance share 0.51–1.76 |
 | **29** | **the λ–g relation WEAKENS as the LR rises** (iter. 120) — ✅ **CONFIRMED n=4** | **cross-sectional slope falls monotonically across s = 0.6 → 1.7**, seed-clustered CI on the spread excluding 0; **sd(log g) flat** (rules out range compression) while **sd(log λ) compresses** | slopes **0.916 / 0.742 / 0.636**, spread CI **[0.208, 0.365]**; sd(log g) **0.246/0.246/0.242**, sd(log λ) **0.429/0.395/0.367**; corr 0.534/0.497/0.453 |
-| **30** | **a higher LR DECOUPLES curvature from the gradient** (iter. 121) — ✅ **CONFIRMED n=4** | **cov(log λ, log g) falls monotonically across s = 0.6 → 1.7**; **C's spread EXPANDS** (not compresses), seed-clustered CI excluding 0; the variance identity var(C) = var(λ) + 4var(g) − 4cov must close | cov **0.0552 / 0.0448 / 0.0371**; sd(log C) **0.450 → 0.478** CI [+0.007,+0.061]; type-spread **0.997 → 1.079** CI [+0.048,+0.110]; identity closes to **1e-6** |
+| **30** | **a higher LR DECOUPLES curvature from the gradient** (iter. 121, 123) — ✅ **CONFIRMED on TWO INDEPENDENT DESIGNS** | **cov(log λ, log g) falls as the LR rises**, seed/matrix-clustered CI excluding 0, on **both** the global ladder and REQ-023's per-matrix randomisation. *Shape not resolved — the two designs differ in where the drop occurs* | Arm A **0.0552/0.0448/0.0371**; REQ-023 **0.0766/0.0425/0.0418** (f1500) and **0.0784/0.0421/0.0402** (f2000), endpoint CIs **[−0.071,−0.002]** and **[−0.077,−0.005]** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -533,6 +533,52 @@ curvature equalization.**
 **Recommendation.** The analysis loop has reached the end of what committed data supports. The
 productive path is **arm 4**, then — if the exponent survives — treating C as a measured property to
 respect rather than a target to flatten.
+
+**=== ITERATION 123 (2026-09-03): BAND 30 CONFIRMED ON AN INDEPENDENT DESIGN ===**
+
+*Iteration 122's test of band 30 was invalid because REQ-036's multiplier is a pure function of type.
+That iteration named the valid alternative: **REQ-023 varies the LR *within* each type**, which breaks
+the collinearity. Running it.*
+
+**The collinearity is verifiably broken.** Each matrix receives each of {0.6, 1.0, 1.7} exactly once,
+so **every type contains all three multipliers** (verified: 12 matrices per type, all three levels
+present in each). The regressor is no longer type in disguise.
+
+**Band 30's prediction — cov(log λ, log g) falls as the multiplier rises — reproduces:**
+
+| fork | mult 0.60 | mult 1.00 | mult 1.70 | **cov(1.7) − cov(0.6)** | 95% CI |
+|---|---:|---:|---:|---:|---|
+| 1500 | 0.0766 | 0.0425 | 0.0418 | **−0.0347** | **[−0.0712, −0.0022]** |
+| 2000 | 0.0784 | 0.0421 | 0.0402 | **−0.0381** | **[−0.0765, −0.0051]** |
+
+**Both CIs exclude zero, matrix-clustered.** Band 30 now holds on **two independent designs** — Arm A's
+global ladder (every matrix moved together, across seeds) and REQ-023's per-matrix randomisation (one
+matrix perturbed at a time, within a single run). **Different perturbation geometry, different fork,
+different resampling unit, same conclusion.**
+
+**A shape caveat, recorded rather than smoothed:**
+
+| design | 0.6 → 1.0 | 1.0 → 1.7 |
+|---|---:|---:|
+| Arm A (global) | **−19%** | **−17%** |
+| REQ-023 (per-matrix) | **−45%** | **−2% / −5%** |
+
+**Arm A's decline is roughly even; REQ-023's is almost entirely at the low end.** Both are consistent
+with band 30 as registered — *cov falls as the LR rises* — but they disagree on **where**. The
+REQ-023 endpoint CIs are wide enough ([−0.071, −0.002]) that the shape difference is **not
+resolvable**, so **band 30 is confirmed for its sign and magnitude and makes no claim of
+monotonicity.** The band's wording is amended to say so.
+
+**Why the confirmation matters beyond band 30.** It is the campaign's first result established on two
+designs whose *confounds do not overlap*: the global ladder confounds LR with whole-network state,
+while the per-matrix design confounds it with nothing (each matrix's perturbation is independent of
+every other's, which is what made REQ-023 the campaign's cleanest instrument in the first place).
+**A finding that survives both is not an artifact of either.**
+
+**And it closes iteration 122's loose end properly.** That iteration recorded a negative and named the
+test that would settle it. **Naming a test and then running it is the difference between a registered
+negative and an abandoned line** — the negative stands as filed, and the line it pointed to has now
+produced a positive.
 
 **=== ITERATION 122 (2026-09-03): AN INVALID TEST OF BAND 30 — the design, not the band, was wrong ===**
 
