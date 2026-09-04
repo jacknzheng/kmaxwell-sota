@@ -429,6 +429,66 @@ a free per-layer knob without changing the kernel. Filing a momentum rule now wo
 inventing a mapping rather than deriving one. The prerequisite is a registered experiment
 asking whether mu does anything LR cannot at fixed `s_eff`; that is REQ-037 if wanted.
 
+**=== ITERATION 118 ANALYSIS (2026-09-03): a systematic cross-band consistency audit ===**
+
+*Iteration 117 tested one constraint implied by three bands and it held. **Three more constraints are
+implied by band pairs and had never been checked** — each would falsify a pair if violated. Testing
+them all, once, rather than discovering a contradiction later.*
+
+**CONSTRAINT A — bands 21 + 26.** Band 21 says `a_rms` is *identical* for q, k and v; band 26 says C's
+structure is three-term with the forward term contributing. **Together they require the forward term
+to contribute exactly zero among those three types.**
+
+| seed | `a_frob` spread across q, k, v |
+|---|---:|
+| 0–3 | **0.000000 (0.0000%)** |
+
+**Exactly zero in all four seeds.** ✅
+
+**CONSTRAINT C — bands 14 + 28.** Band 14 says the q,k deficit is in the *gradient*, with λ not
+significantly different; band 28 says λ varies 3.2× more than g across depth. **Together they require
+the q,k λ-equality to hold despite λ being the more variable quantity.**
+
+| seed | \|Δ log λ (q,k vs v,proj)\| | within-type depth sd | ratio |
+|---|---:|---:|---:|
+| 0 | 0.138 | 0.255 | **0.54** |
+| 1 | 0.018 | 0.236 | **0.08** |
+| 2 | 0.115 | 0.245 | **0.47** |
+| 3 | 0.086 | 0.264 | **0.32** |
+
+**The q,k λ difference is consistently smaller than λ's own depth spread.** ✅
+
+**CONSTRAINT B — bands 16 + 23. This one needed care, and my framing of it was wrong.** I stated it as
+"C must be flat under the LR ladder." **C's level shifts −0.127 to −0.211 dex across s = 0.6→1.7**,
+which looks like a contradiction with band 16's "actively restored."
+
+**It is not, because band 16 never claimed the level is invariant — only the pattern.** But my
+script's follow-up verdict was also too generous: it proposed the shift is uniform, and **it is not**:
+
+| seed | mean shift | sd(shift) across matrices | ratio | **corr(C@0.6, C@1.7)** |
+|---|---:|---:|---:|---:|
+| 0 | −0.174 | 0.178 | 1.03 | **0.927** |
+| 1 | −0.211 | 0.114 | 0.54 | **0.968** |
+| 2 | −0.204 | 0.184 | 0.90 | **0.921** |
+| 3 | −0.127 | 0.258 | **2.03** | **0.870** |
+
+**The shift is non-uniform — its spread across matrices is comparable to or larger than its mean.**
+Yet the **pattern correlation is +0.87 to +0.97**, which is exactly what band 16 registered (> 0.80),
+and it passes in every seed. **Both facts hold: matrices move by different amounts, and the ordering
+survives anyway.** That is a stronger statement about restoration than a uniform shift would be.
+
+> **All three constraints pass. Band 16 is amended in wording only: it claims C's PATTERN is restored,
+> not its level — the level shifts ~0.17 dex under a 2.8× LR change, non-uniformly.**
+
+**Two corrections recorded from this iteration.** My initial statement of constraint B misread band 16
+as a claim about level; and my script's rescue of it ("uniform shift") was wrong in the opposite
+direction. **The passing verdict is correct; both routes I first took to it were not.**
+
+**The audit is now complete.** Four implied constraints across bands 10, 14, 16, 21, 23, 25, 26, 27
+and 28 have been tested and all hold. **Fourteen bands describing the same 72 matrices are mutually
+consistent** — which is a different and stronger claim than each being individually validated, and it
+is the last structural check available on committed data.
+
 **=== ITERATION 117 ANALYSIS (2026-09-03): a consistency requirement between bands 27 and 10/25 ===**
 
 *Band 27 says the gradient is **flat in depth** because the `‖a‖·‖d‖` product it is built from is
