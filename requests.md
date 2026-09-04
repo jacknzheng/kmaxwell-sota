@@ -29,6 +29,86 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⚖️ THE PANEL'S POWER, MEASURED (iteration 166) — which claims are sound and which are merely unrefuted
+
+*Iteration 165 flagged that at n = 4 clusters a "not significant" result is **consistent with zero, not
+proven zero**. That bound governs every remaining claim the committed data can support, so it is
+quantified here once — from the panel's **own measured seed-to-seed noise**, not a textbook formula.*
+
+**THE PANEL'S NOISE AND THE BOWL'S MARGIN.**
+
+| quantity | value |
+|---|---:|
+| measured seed-to-seed sd of the C profile, per layer | **0.0623 dex** |
+| the bowl's own swing | **0.5377 dex** |
+| **signal-to-seed-noise** | **8.6×** |
+
+**That 8.6× is why the bowl was detectable at all**, and it is the reason the positive findings are
+robust while the nulls are not.
+
+**⚠️ POWER FOR A CLUSTERED CORRELATION TEST (two-sided α = 0.05, simulated on the panel's noise):**
+
+| true ρ | **n=4** | n=8 | n=12 | n=16 |
+|---:|---:|---:|---:|---:|
+| 0.30 | **14%** | 42% | 84% | 99% |
+| 0.50 | **23%** | 86% | 100% | 100% |
+| 0.70 | **40%** | 100% | 100% | 100% |
+| 0.80 | **54%** | 100% | 100% | 100% |
+
+> **At n = 4, a true correlation of 0.80 is detected only 54% of the time — a coin flip. At ρ = 0.5 it is
+> 23%.** Every clustered null this panel can produce is therefore near-uninformative on its own.
+
+**⇒ CLASSIFYING THE CAMPAIGN'S RECENT CLAIMS BY WHETHER POWER SUPPORTS THEM.**
+
+**✅ SOUND — shape and consistency claims.** Power comes from the **12-layer axis** (12 points per seed,
+8.6× margin); seeds only need to supply *agreement*, which is a much cheaper requirement:
+
+| claim | evidence |
+|---|---|
+| band 39 — bowl exists, cubic form, argmin L6 | argmin L6 in **5/5 steps, 12/12 fits** |
+| band 42 — bowl present in every fork state | R² 0.90–0.98, argmin L6 in **all 3** |
+| band 43 — C_polar monotone, slope negative | **4/4 seeds same sign**, \|t\| 4.91 |
+| band 40 — corr(C profile, λ profile) = +0.866 | \|t\| **26.0**, far above the n=4 threshold |
+| iter. 163 — bowl is time-stationary | profile corr **+0.974** across 5 steps |
+
+**⚠️ MERELY UNREFUTED — null claims at n = 4.** These are **weak evidence and must not be cited as
+established absences**:
+
+| claim | statistic | the problem |
+|---|---:|---|
+| band 40 — "corr(C, g) not significant" | \|t\| 1.39 | a true ρ = 0.5 would be **missed 77% of the time** |
+| band 43 — "corr(C, C_polar) low" | \|t\| 0.66 | same limitation |
+| iter. 158 — "C blind to the `post_lambda` channel" | \|t\| 1.36 | same limitation |
+
+**This is a correction to how I have been reporting these.** All three were stated as findings; they are
+**failures to detect**, and the distinction is material. *(Note: iteration 158's `post_lambda` result has
+a second, independent leg that does **not** depend on this — the **algebraic** cancellation in
+`log C = log λ − 2 log g` is exact and needs no statistics. **The derivation stands; only the empirical
+corroboration is weak.** Likewise band 43's positive half — C_polar's monotone decline at 4/4 — is sound;
+only the "and it is uncorrelated with C" half is underpowered.)*
+
+**✅ AND THIS VINDICATES BAND 44's DESIGN — REQ-048's criterion is achievable.** Band 44 was specified
+with a **sign-count** criterion ("same sign in ≥10 of 12 fits") rather than a clustered t-test. That was
+the right choice by a wide margin:
+
+| true \|ρ\| | P(≥10 of 12 same sign) | P(4/4 same sign) | *(clustered t at n=4)* |
+|---:|---:|---:|---:|
+| 0.40 | **89%** | 65% | *18%* |
+| 0.50 | **98%** | 82% | *23%* |
+| 0.60 | **100%** | 93% | *32%* |
+
+**A sign criterion computes each fit's correlation over 12 layers, so the layer axis supplies the power
+and the seed axis only supplies consistency. At ρ = 0.5 it has 98% power where a clustered t-test has
+23%.** REQ-048 will be able to give a decisive answer, either way, at n = 4.
+
+**⚠️ NO NEW COMPUTE REQUESTED.** This is an analysis of the existing panel's limits. **REQ-048 remains the
+only outstanding request** (still OPEN, no Jerry response), unchanged: ≤2 nodes, no training.
+
+**Standing rule 16.** *State power before stating a null. A "not significant" from n = 4 clusters is a
+failure to detect, not an absence — and should be written that way. Where a null matters, prefer a
+criterion whose power comes from a within-unit axis (here, 12 layers per seed) over one that spends all
+its power on the between-unit axis.*
+
 ## ✅ RULE-15 AUDIT OF THE RECENT BANDS (iteration 165) — all survive seed-clustering, and it is now clear *why*
 
 *Rule 15 was written last iteration after pseudo-replication cost a claim. **Its first duty is to be
