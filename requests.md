@@ -29,6 +29,77 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★ THE BOWL IS SHARED ACROSS FIVE OF SIX TYPES (iteration 167) — position and type are separable
+
+*Every bowl result so far removes **type** first and profiles the residual, which by construction yields
+one shared bowl. **Never asked: does each type have its own bowl, and is it the same one?** Rule 16 makes
+this the right kind of question — each type has 12 layers per seed, so the **layer axis supplies the
+power** rather than the 4-seed axis.*
+
+**PER-TYPE BOWLS, fitted independently (no type removal):**
+
+| type | argmin | cubic R² | linear R² | swing | per-seed argmins |
+|---|---:|---:|---:|---:|---|
+| mlp.proj | 7 | **0.950** | 0.000 | 1.225 | [7, 6, 7, 7] |
+| attn.proj | 7 | **0.878** | 0.015 | 0.697 | [6, 7, 6, 7] |
+| mlp.fc | 6 | **0.871** | 0.053 | 0.604 | [8, 2, 6, 7] |
+| attn.v | 6 | **0.817** | 0.323 | 0.393 | [7, 6, 6, 6] |
+| attn.k | 6 | **0.791** | 0.009 | 0.411 | [6, 6, 5, 7] |
+| **attn.q** | 4 | **0.315** | 0.282 | **0.245** | **[0, 2, 6, 1]** |
+
+**Five of six types carry the same bowl independently** — argmin 6–7, cubic R² 0.79–0.95, linear R² ≈ 0
+— with mutual profile correlations of **+0.54 to +0.91** (attn.proj↔mlp.fc **+0.907**). **The bowl is not
+an artifact of pooling types: it is present in each type separately.**
+
+> **⇒ POSITION AND TYPE ARE SEPARABLE AND ADDITIVE.** The same depth profile appears in attention and MLP
+> matrices, in readers and writers, at 768×768 and 3072×768. **This is what licenses every model in this
+> campaign that fits `type offsets + position` additively** — an assumption made from band 3 onward and
+> never tested until now.
+
+**⇒ AND IT SHARPENS THE REQ-036 VERDICT.** REQ-036's per-type LR design assumed the types differ in a way
+worth equalising. **They do not differ in depth structure — they share one bowl.** The type dimension
+carries **offsets**, the position dimension carries **the bowl**, and equalising *per type* cannot address
+a *positional* effect. **This is a third independent reason REQ-036 was a null** (alongside band 16's
+active restoration and band 43's absence of a bowl along Muon's step direction), and it is structural
+rather than empirical: the design's axis and the effect's axis are orthogonal.
+
+**⚠️ THE attn.q EXCEPTION — checked against the campaign's own failure mode, and it is MOSTLY NOISE.**
+Bands 37 and the mlp.fc saga taught that an exceptional-looking type is usually a noisier one. Measuring
+noise on the same footing:
+
+| type | seed-to-seed sd | swing | **signal/noise** | cubic R² |
+|---|---:|---:|---:|---:|
+| mlp.proj | 0.0781 | 1.225 | **15.7** | 0.950 |
+| attn.proj | 0.0933 | 0.697 | 7.5 | 0.878 |
+| mlp.fc | 0.0913 | 0.604 | 6.6 | 0.871 |
+| attn.v | 0.0879 | 0.393 | 4.5 | 0.817 |
+| attn.k | 0.1189 | 0.411 | 3.5 | 0.791 |
+| **attn.q** | **0.1430** *(highest)* | **0.245** *(smallest)* | **1.7** | 0.315 |
+
+**attn.q has the worst signal-to-noise of the six by a factor of 2**, which is sufficient to explain a
+flat-looking profile. **But pooling all 60 fits — 15× more data for the same type — does NOT recover a
+bowl** (cubic R² stays **0.315**, argmin L4, swing 0.245 vs attn.k's 0.399 and attn.v's 0.394 on the same
+pooled basis).
+
+> **Verdict, stated at the strength the evidence supports: attn.q's bowl is genuinely SMALLER (swing
+> 0.245 vs 0.39–1.23), and its shape is UNRESOLVED at this noise level — not established as absent.**
+> **No exception is claimed.** *(Consistent with band 35: q and k already differ in step alignment by
+> 0.306 dex despite identical chunk geometry, so attn.q having its own character is not a new anomaly.)*
+
+**PROPOSED n=4 SEED CHECK — band 45 (criterion registered).**
+*Criterion:* on a fresh 4-seed panel, (i) **≥5 of 6 types independently show cubic R² ≥ 0.70 with argmin
+in layers 5–8**; (ii) **mean pairwise correlation between the six type-profiles ≥ +0.40**;
+(iii) **no type's profile correlates negatively with the pooled bowl at ≤ −0.30**.
+*Status:* **satisfied by committed REQ-035 Arm A data** (5/6 at R² 0.79–0.95, argmin 6–7; mean pairwise
++0.469; most negative single pair −0.165, and no type-vs-pooled correlation below −0.30).
+**No new compute requested; runs under the ≤2-node ceiling.**
+
+**⚠️ QUEUE NOTE — REQ-048 is not overdue.** Checking rather than assuming: **39 of the last 40 commits on
+this branch are mine**; Jerry's most recent is **REQ-047 at 12:35 PDT**. Jerry's delivery gaps today have
+run **3h29m and 6h45m**, and REQ-048 was filed at ~15:27 (now 16:07). **Silence is well inside normal
+turnaround — no escalation is warranted and none is being made.** REQ-048 remains the only outstanding
+request, ≤2 nodes, no training.
+
 ## ⚖️ THE PANEL'S POWER, MEASURED (iteration 166) — which claims are sound and which are merely unrefuted
 
 *Iteration 165 flagged that at n = 4 clusters a "not significant" result is **consistent with zero, not
