@@ -1,5 +1,6 @@
 EXPONENT	d_log_lambda/d_log_clip	+0.0089
 FIRST_STAGE	d_log_gclipped/d_log_clip	+1.0028	(must be ~1)
+RAW_FIRST_STAGE	d_log_g_raw/d_log_clip	+0.0028	SE0.0087	CI[-0.0143,+0.0200]	(the REAL first stage; ~0 => instrument inert, exponent is 0/0)
 MONOTONE	mean_log10_lambda_by_clip	0.5:+4.1030 1.0:+4.1589 2.0:+4.1083
 MONOTONE_PASS	False
 TYPE	attn.k	+0.1038
@@ -9,3 +10,4 @@ TYPE	attn.v	-0.0891
 TYPE	mlp.fc	-0.0595
 TYPE	mlp.proj	-0.0168
 PERTYPE_ALL_POSITIVE	False
+# CORRECTION (iter 130): exponent is 0/0. clipped_gradient_block_norm moved (+1.003) but RAW gradient did not (+0.003, CI incl 0). Muon normalises the scale away (band 29). Band 13 UNRESOLVED, not overturned.
