@@ -17,6 +17,67 @@ Next request number: **REQ-047**.
 
 ---
 
+**=== ITERATION 129 (2026-09-04): REQ-046 LANDS — BAND 13's CAUSAL READING IS OVERTURNED ===**
+
+**Jerry ran REQ-046 and REQ-045.** I had missed both by checking only the branch tip; they were in the
+log. **REQ-046 is the measurement this campaign has been building toward, and it overturns a
+load-bearing band.**
+
+**The instrument is validated.** `PerMatrixClipMuon` clips pre-momentum (fixing iteration 119's defect
+1) and the probe gained `clipped_gradient_block_norm` (fixing defect 2). **First stage = +1.0028** —
+the clip moves the measured gradient exactly as designed, which is what REQ-037's batch instrument
+could never achieve.
+
+**The result:**
+
+| quantity | value |
+|---|---:|
+| **exponent `d log λ / d log(clip)`** | **+0.0089** |
+| first stage `d log g_clipped / d log(clip)` | **+1.0028** ✅ |
+| λ movement predicted if the exponent were 2 | **1.204 dex** |
+| **λ movement observed across the 0.5→2.0 clip range** | **0.056 dex (4.6%)** |
+
+**Per-type: +0.104, +0.109, +0.006, −0.089, −0.060, −0.017 — three positive, three negative, mean
++0.009.** Scatter about zero, not a weak positive trend.
+
+> **Changing gradient magnitude alone, at fixed learning rate, does not move equilibrium curvature.
+> Band 13's +2.07 is the LEARNING-RATE channel, not curvature–gradient physics.**
+
+**Reading the registered checks correctly — they fail for the opposite reason to the one they guard
+against.** I registered "monotone reduced form" and "every per-type ratio positive" to prevent
+accepting a **spurious positive** exponent — the two properties the broken batch instrument lacked.
+Both report FAIL here, but **because the exponent is zero**: there is no trend to be monotone, and
+per-type values scatter around zero by construction. **The checks did their job; the outcome is
+stronger than either branch they anticipated.**
+
+**This confirms band 29 and completes the picture it opened.** Iteration 120 established that Muon
+normalises the gradient to unit spectral norm, so the update magnitude carries no gradient
+information, and concluded the λ ∝ g² relation must be **equilibrium selection rather than a
+Gauss-Newton identity**. **REQ-046 is the direct test of that conclusion and confirms it:** move the
+gradient without moving the LR and curvature does not follow.
+
+**What survives, and what does not:**
+- ❌ **Band 13's causal reading.** The exponent ~2 measured under LR perturbation is a **response
+  ratio**, exactly as the standing IV caveat said since iteration 76 — now demonstrated by direct
+  intervention, not inferred. **The Gauss-Newton derivation remains valid as theory about the loss
+  surface; it is not what the LR instrument was measuring.**
+- ✅ **Every descriptive band.** Bands 6, 12, 14, 16–21, 24–30 are statements about *what C is* and
+  *how it varies*, none of them IV estimates. **The q,k deficit, the mlp ReLU² gap, the conserved
+  `‖a‖·‖d‖` product, C's restoration — all unaffected.**
+- ✅ **Bands 8 and 29** are strengthened: band 8 said the cross-section is ~75% omitted-variable bias;
+  band 29 said the relation weakens with the LR; **REQ-046 says the residual causal part is ~zero.**
+
+**REQ-045 also landed, and withdraws iteration 124's reading.** Separability was achieved as designed
+(`corr(own, others') = +0.722` post-FE, versus REQ-023's −1.000). **`β_own = −1.161 (t = −12.8)`
+confirms band 30 per-matrix; `β_neighbour = +0.143 (t = +1.14)` is NULL.** So the LR–curvature
+decoupling is a **local own-LR effect, not a network channel** — iteration 124's partial/total reading
+is **withdrawn**, and the design disagreement it tried to explain needs another explanation.
+
+**Net effect on the campaign's goal.** The account of *what C is* stands entirely. **What changes is
+the account of what the g² law means**: it is a cross-sectional and equilibrium regularity, not a
+causal mechanism — and the campaign now has direct interventional evidence for that, which is a
+stronger position than the descriptive account alone.
+
 **=== ITERATION 128 (2026-09-04): A THIRD DETECTION OF THE NON-GRADIENT CHANNEL — WITHDRAWN ===**
 
 *REQ-046 will remove the LR channel outright. Meanwhile I tried a third bound on committed data,
@@ -348,7 +409,7 @@ measured value so a seed result can be compared directly.
 | **10** | **layer-0 lift** — ❌ **NOT CONFIRMED n=4** | clears its permutation null on λ/g² | p = 0.022 / 0.190 / 0.120 / 0.058 — **1 of 4 seeds**. Lift is consistently positive (+0.25 to +0.50 dex) but under-powered at 6 matrices per layer |
 | **11** | **the assembled model generalises** (iter. 72) | **leave-one-layer-out rmse ≤ 0.20 dex** and **cross-fork rmse ≤ 0.20 dex** for `type + two-slope gradient + layer-0 term`, versus ~0.38 dex for C's own spread | LOLO 0.138 / 0.164; cross-fork 0.165 / 0.140 dex |
 | **12** | **type offsets reduce to three binaries** — ✅ **CONFIRMED n=4** | `q,k + residual-writer + mlp.proj` (5p) within 0.02 dex of six free offsets (7p) | gaps 0.004 / 0.004 / 0.005 / 0.002 dex in the 4 seeds |
-| **13** | **the PER-MATRIX response ratio is 2, but the exclusion restriction is VIOLATED** (iter. 76, 114) — ⚠️ **band holds, interpretation qualified** | **2.000 inside the 95% CI** by OLS-with-matrix-FE and the IV Wald ratio, every seed. **AND:** two Hessian functionals under the same instrument must give the SAME exponent — they do not | top_eigenvalue **+2.13/+2.10** vs curvature_along_polar **+1.89/+1.83**; difference **+0.241/+0.268**, CIs **[+0.033,+0.443]/[+0.068,+0.465]**, both exclude 0 |
+| **13** | **the gradient channel is NOT causal — OVERTURNED by REQ-046** (iter. 76, 114, 129) — ❌ **CAUSAL READING WITHDRAWN** | **clip instrument (LR fixed, gradient moved directly): d log λ / d log(clip) must be ≈ +2 if the channel is causal** | **+0.009** with a validated first stage of **+1.0028**. A causal +2 predicts **1.204 dex** of λ movement across the 0.5→2.0 clip range; observed **0.056 dex (4.6%)**, non-monotone, per-type 3 positive / 3 negative |
 | **14** | **q,k carry a GRADIENT DEFICIT at identical shape** (iter. 77–90) — ✅ **CONFIRMED n=4, size-artifact excluded** | **within the four 768×768 attention matrices only:** Δlog g (q,k − v,attn.proj) ≤ −0.30 dex with p < 0.01, Δlog λ NOT significant, both q,k below both v,attn.proj in ≥10/12 blocks — in ≥3 of 4 seeds | **Δlog g = −0.378/−0.378/−0.356/−0.381, p < 10⁻⁴ all seeds, 48/48 blocks**; Δlog λ p = 0.17/0.85/0.21/0.43 |
 | **17** | **the deficit is a depth-independent constant** (iter. 91) — ✅ **CONFIRMED n=4** | **slope of the q,k gradient deficit vs layer index NOT significant (|t| < 2) across layers 0–11**, in every seed; **final block separately deeper by ≥ 0.10 dex** | slopes t = −0.31/−0.25/+0.50/−0.40; interior −0.361 ± 0.065, **layer 12 −0.508 ± 0.010** |
 | **18** | **q and k are interchangeable** (iter. 92) — ✅ **CONFIRMED n=4** | **|q deficit − k deficit| < 0.05 dex** and **not significant within any single seed** (p > 0.05), in every seed | q −0.380 vs k −0.366, difference **−0.014 dex** (3.8% of the shared deficit), within-seed p = 0.82/0.56/0.67/0.57 |
