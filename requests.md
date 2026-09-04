@@ -29,6 +29,66 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⊘ THE DEPTH AXIS IS CORRECT — an architectural hypothesis of mine, raised and killed (iteration 157)
+
+*Reading `train_gpt.py` for a structural cause turned up line 1268: **"Attention is skipped in layer 6
+by @YouJiacheng"**, with `num_attn_layers = num_layers - 1`. **The λ bowl's minimum is at layer 6.**
+That coincidence would have been a complete mechanism — the bowl bottoming out exactly at the
+architecture's discontinuity — and it would also have meant **every band on the depth axis was indexed
+wrong.** It is false, and the check that killed it is recorded here.*
+
+**The concern was real, not hypothetical.** The attention banks are indexed by `_num_attn_layers` (12),
+skipping physical block 6, while `mlp_bank` covers all 13 blocks (`qk_all = self.qk_bank[...].view(
+self._num_attn_layers, ...)`, line 1523). If the probe's `blocks.N` names followed the **bank** layout,
+an attention matrix at index 6 would physically sit at block 7, and the attn and mlp profiles would be
+**on different axes** — silently misaligning every depth result in the campaign.
+
+**First check — the data itself.** If the names followed the module tree of a 13-block model, the
+attention-free block would have **no attn matrices**:
+
+| block | attn.k | attn.proj | attn.q | attn.v | mlp.fc | mlp.proj |
+|---|---:|---:|---:|---:|---:|---:|
+| **0–11 (all)** | 12 | 12 | 12 | 12 | 12 | 12 |
+
+**Every block 0–11 carries all six types with no gap**, and the panel has exactly 12 blocks. So the
+probe is not exposing a 13-block tree with a hole in it.
+
+**Decisive check — does remapping improve or destroy coherence?** Two readings had to be separated
+rather than assumed: **(A)** the index is the attention-layer index, so attn matrices at index ≥ 6 sit
+one physical block later than mlp matrices at the same index; **(B)** the index is already a consistent
+physical axis. Under **(A)**, shifting attn by +1 for index ≥ 6 must **improve** the agreement between
+the attn and mlp λ profiles; under **(B)** it must **worsen** it:
+
+| | corr(attn λ profile, mlp λ profile) |
+|---|---:|
+| **as-is, no remap** | **+0.661** (12 shared positions) |
+| remapped, attn +1 for idx ≥ 6 | **+0.338** (11 shared positions) |
+
+> **Remapping HALVES the agreement. Reading (B) holds: the depth axis as used throughout this campaign
+> is correct, the attn and mlp profiles are already on the same axis, and the layer-6 minimum is NOT
+> adjacent to an architectural discontinuity.** The hypothesis is dead and **no band needs reindexing** —
+> bands 3, 27, 28, 35, 37, 38, 39 and 40 all stand on their existing axis.
+
+**Why this is worth a full entry despite being a negative.** Had I recorded the coincidence without
+testing it, the campaign would have gained a false mechanism *and* a false correction to eight bands at
+once. **The coincidence is genuine — the bowl really does bottom out at index 6, and the architecture
+really does skip attention at block 6 — but the two facts are unrelated**, because the probe's index is
+not the bank index. **A structural coincidence between a finding and a code comment is a hypothesis, not
+a mechanism, and the data can usually adjudicate it directly.**
+
+**Standing rule 12.** *Before accepting that an index in probe output means what its name suggests,
+count the cells: a missing (block, type) combination, or a block count that disagrees with the model
+config, is the cheap check that catches an axis error.* Here the count (12 blocks × 6 types, no gaps)
+answered it in one query.
+
+**⚠️ NO n=4 SEED CHECK PROPOSED.** This is a refuted hypothesis about indexing, settled entirely within
+committed data. **New compute would test nothing.**
+
+**Search space after this iteration (unchanged, but now on a verified axis):** the cause peaks at both
+ends with a minimum at layer 6, is a property of the **loss surface** (band 40), and is **not** step
+size (band 31), **not** stream scale, **not** input rank (iteration 156), and **not** an artifact of the
+depth axis (here).
+
 ## ⊘ TWO STRUCTURAL NEGATIVES (iteration 156) — the stream scale and the input rank are BOTH ruled out
 
 *Band 40 forecloses an optimiser-side cause, so the bowl is a property of the loss surface and the next
