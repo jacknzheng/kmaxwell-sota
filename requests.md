@@ -262,8 +262,8 @@ measured value so a seed result can be compared directly.
 | **11** | **the assembled model generalises** (iter. 72) | **leave-one-layer-out rmse ≤ 0.20 dex** and **cross-fork rmse ≤ 0.20 dex** for `type + two-slope gradient + layer-0 term`, versus ~0.38 dex for C's own spread | LOLO 0.138 / 0.164; cross-fork 0.165 / 0.140 dex |
 | **12** | **type offsets reduce to three binaries** — ✅ **CONFIRMED n=4** | `q,k + residual-writer + mlp.proj` (5p) within 0.02 dex of six free offsets (7p) | gaps 0.004 / 0.004 / 0.005 / 0.002 dex in the 4 seeds |
 | **13** | **the PER-MATRIX causal exponent is exactly 2** — ⚠️ **RE-SCOPED** (iter. 79) | 2.000 inside the 95% CI **under per-matrix LR randomisation only** (REQ-023 design) | REQ-023 +2.076/+2.079 CI contains 2. **Arm A's GLOBAL LR ladder gives +2.64 to +3.07, CI excludes 2 — a different estimand, not a refutation** |
-| **14** | **q,k carry a large C excess in λ/g²** — ✅ **CONFIRMED n=4** | gap ≥ +0.6 dex and both q,k above all four others in ≥10/12 blocks | **+0.888 / +0.774 / +0.833 / +0.834 dex** (mean +0.832, sd 0.041), p < 10⁻⁵, **12/12 blocks in every seed** |
-| **15** | **the q,k excess is QK-norm scale invariance** (iter. 80, 87, 88) — ⚠️ **BOTH ALTERNATIVES ELIMINATED n=4; invariance test still blocked** | **(a) v-discriminator — CONFIRMED n=4:** v with the non-qk types, below both q and k in ≥10/12 blocks/seed. **(b) bilinear pairing — REJECTED n=4:** corr(q,k) must exceed the within-block pair distribution AND sd(logC_q+logC_k) < independence. **(c) invariance test — needs REQ-041** | (a) v−others +0.103 vs v−qk −0.755 dex, **48/48**; (b) q-k rank **2 of 15**, +1.31 sd, trade-off ratio **1.20–1.38 (wrong sign)**; (c) +0.049 CI [−0.261, +0.381] |
+| **14** | **q,k carry a GRADIENT DEFICIT, not a curvature excess** (iter. 77–89) — ✅ **CONFIRMED n=4** | **Δlog g (q,k − others) ≤ −0.30 dex, p < 0.01**, and **Δlog λ NOT significant (p > 0.05)**, in ≥3 of 4 seeds; C excess ≥ +0.6 dex follows arithmetically | Δlog g = −0.419/−0.421/−0.408/−0.420, **p < 10⁻⁴ all seeds**; Δlog λ = +0.050/−0.069/+0.016/−0.006, **p = 0.62/0.50/0.87/0.95** |
+| **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
 **Band 6 is the newest and it sharpens the campaign's central claim.** The cross-sectional gradient
@@ -273,6 +273,69 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 89: THE EXCESS IS A GRADIENT DEFICIT — band 14 reframed, band 15's magnitude test FAILS ===**
+
+*QK-norm survived iterations 87–88 by elimination. Elimination is weak evidence — it says the
+alternatives are worse, not that this one is right. **A mechanism should predict the magnitude.**
+Testing that breaks the account open.*
+
+**The decomposition, which is exact by definition** (`log C = log λ − 2 log g`):
+
+| seed | **Δ log λ** | **Δ log g** | −2·Δ log g | = C excess |
+|---|---:|---:|---:|---:|
+| 0 | +0.050 | **−0.419** | +0.838 | +0.888 |
+| 1 | −0.069 | **−0.421** | +0.843 | +0.774 |
+| 2 | +0.016 | **−0.408** | +0.817 | +0.833 |
+| 3 | −0.006 | **−0.420** | +0.841 | +0.834 |
+
+**Against permutation nulls, all four seeds:**
+
+| quantity | Δ | p-values across seeds |
+|---|---:|---|
+| **log λ** (curvature) | +0.05 to −0.07 | **0.62 / 0.50 / 0.87 / 0.95 — never significant** |
+| **log g** (gradient) | **≈ −0.42** | **< 10⁻⁴ in every seed** |
+
+> **q,k's curvature is statistically indistinguishable from every other matrix type. Their gradient
+> is ~0.42 dex smaller. The entire +0.83 dex "C excess" is that gradient deficit, doubled by the g²
+> law.**
+
+**Band 14 is reframed, not withdrawn** — the effect is as real and as reproducible as ever, but its
+content is the opposite of how it has been described for twelve iterations. The question **"why do
+q,k have high C?"** is really **"why is q,k's gradient 0.42 dex smaller at equal curvature?"**
+
+**And that question kills band 15's magnitude test.** Scale invariance says `g ∝ 1/‖W‖`, so a gradient
+deficit requires a **weight-norm excess** of the same size:
+
+| | predicted Δ log g | observed |
+|---|---:|---:|
+| from `Δ log g = −Δ log‖W‖` | **+0.130** | **−0.417** |
+
+**Wrong sign and 3× the magnitude.** The reason is visible directly — q,k are *not* unusual in weight
+norm, sitting mid-pack (q +1.755, k +1.756, against proj +1.778, v +1.809, mlp.proj +1.832, mlp.fc
++2.124). **The scale-invariance mechanism cannot produce a 0.42 dex gradient deficit from a 0.13 dex
+weight-norm difference in the wrong direction.**
+
+**What survives of band 15.** The invariance *result* — `d log C/d log‖W‖ ≈ 0` for q,k and clearly
+non-zero for the others (+0.049 CI [−0.261, +0.381]; −0.062 CI [−0.329, +0.226]) — is unaffected and
+still reproduces. **QK-norm does make q,k's C insensitive to their weight norm.** What fails is the
+claim that this *explains the gap*: being insensitive to ‖W‖ says nothing about why the gradient is
+small. **Band 15 is demoted from "the mechanism" to "a true property of q,k that does not account for
+band 14."**
+
+**Where this leaves the campaign.** All three readings of the q,k gap have now failed a test:
+attention-input-projection eliminated (iter. 87), bilinear pairing rejected (iter. 88), and
+scale-invariance magnitude failed (here). **The open question is sharper and better posed than the one
+this campaign started with:**
+
+> **Why is the gradient on the QK-normed matrices ~0.42 dex smaller than on every other matrix type,
+> while their curvature is identical?**
+
+**REQ-038's `|a|`/`|d|` fields address exactly this** — a gradient is `|d|·|a|`-scaled, so the deficit
+must live in one of those two factors, and REQ-038 measures both per matrix. **Its target changes from
+0.832 dex (the C excess) to 0.42 dex (the gradient deficit)**, which is the quantity that actually
+needs explaining. REQ-041 remains worth having for band 15's seed check, but it is no longer the
+critical path — **REQ-038 is.**
 
 **=== ITERATION 88: BILINEAR PAIRING REJECTED — QK-norm is the last alternative standing ===**
 
