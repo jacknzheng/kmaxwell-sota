@@ -325,7 +325,7 @@ measured value so a seed result can be compared directly.
 | **32** | **C = λ/g² is the right object — the g² division REMOVES noise** (iter. 132) — ✅ **CONFIRMED n=4** | **C must be more seed-stable than λ** (median |Δ| across seed pairs) **and have a larger architecture-to-seed-noise ratio** | C **0.0776 dex** vs λ **0.1235**; ratio C **15.7×** vs λ **8.0×**; architectural spread C **0.462 dex** vs λ **0.383** |
 | **33** | **Muon steps nearly ORTHOGONAL to peak curvature, and that alignment predicts C** (iter. 134) — ✅ **CONFIRMED n=4** | **cp/λ < 0.02 in every type** (the step sees <2% of peak curvature); **corr(log(cp/λ), log C) ≤ −0.60** and must **clear a cp-shuffled null** in every seed | ratio **0.001–0.006** (overall **0.4%**); corr **−0.788/−0.791/−0.736/−0.782** vs null **−0.34/−0.25/−0.27/−0.29 ± 0.07**, **p < 10⁻⁴ all seeds** |
 | **34** | **alignment and the q,k excess are LARGELY SEPARATE effects** (iter. 135) — ✅ **CONFIRMED n=4** | **controlling for alignment shrinks the q,k C-coefficient by < 35%**, and **both terms stay significant** (|t| > 4), in every seed | shrinkage **22 / 19 / 16 / 20 %**; q,k coef **+0.699/+0.629/+0.694/+0.680** (t = 10.4–18.4); align coef **−0.616/−0.604/−0.582/−0.584** (t = −5.6 to −10.0) |
-| **35** | **q and k differ in step ALIGNMENT though identical in gradient** (iter. 136) — ✅ **CONFIRMED n=4** | **|alignment(q) − alignment(k)| ≥ 0.15 dex with the same sign in every seed** — despite band 18's 0.014 dex gradient equality and identical 128×768 chunk geometry | **−0.329/−0.295/−0.340/−0.258 dex** (mean **−0.306**, sd **0.037**, 4/4 same sign); q,k-vs-v gap for comparison ≈ −0.27 |
+| **35** | **q and k differ in step ALIGNMENT, and the gap is DEPTH-STRUCTURED** (iter. 136–137) — ✅ **CONFIRMED n=4** | **|alignment(q) − alignment(k)| ≥ 0.15 dex, same sign every seed** (band 18's gradient equality is 0.014 dex); **gap deepens with depth then recovers — quadratic R² > 0.5**. *Attention entropy does NOT explain it* | mean **−0.306 dex** (sd 0.037, 4/4); L0 **−0.134** → L8 **−0.474** → L12 −0.327; quadratic R² **0.563**; entropy t **+5.03 → +0.26** under quadratic depth |
 | **30** | **a higher LR DECOUPLES curvature from the gradient** (iter. 121, 123) — ✅ **CONFIRMED on TWO INDEPENDENT DESIGNS** | **cov(log λ, log g) falls as the LR rises**, seed/matrix-clustered CI excluding 0, on **both** the global ladder and REQ-023's per-matrix randomisation. *Shape not resolved — the two designs differ in where the drop occurs* | Arm A **0.0552/0.0448/0.0371**; REQ-023 **0.0766/0.0425/0.0418** (f1500) and **0.0784/0.0421/0.0402** (f2000), endpoint CIs **[−0.071,−0.002]** and **[−0.077,−0.005]** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
@@ -745,6 +745,57 @@ in the gradient. **Finding it present in the step geometry, at 20× the magnitud
 that asymmetry being real but expressed in direction rather than magnitude** — which is exactly the
 channel band 31 leaves open. *Offered as a reading, not a tested claim; the campaign has no
 intervention on step direction.*
+
+**=== ITERATION 137 (2026-09-04): THE CAUSAL-MASKING READING FAILS ITS OWN TEST — but the gap has structure ===**
+
+*Band 35 offered a reading: the q−k alignment gap is the causal-masking asymmetry (a query attends
+once; a key is attended by a growing suffix). **That reading predicts the gap should track how peaked
+attention is** — entropy falls 4.91 → 0.25 nats across depth. Testing it.*
+
+**The gap is strongly depth-structured, and reproducibly so:**
+
+```
+ layer:   0      1      2      3      4      5      7      8      9     10     11     12
+  gap: -.134  -.063  -.198  -.305  -.334  -.438  -.414  -.474  -.394  -.295  -.289  -.327
+```
+
+**Deepens to −0.474 dex around layer 8, then recovers** — across-layer sd **0.123** against an
+across-seed sd of **0.082** (structure/noise 1.5×), quadratic **R² 0.563** versus linear 0.233.
+
+**And entropy correlates strongly — until the lethal check.** `corr(gap, entropy) = +0.683` pooled, and
+**+0.600 after partialling out depth linearly** — far better than iteration 106's −0.379. But
+iteration 106 was killed by a **quadratic** depth term, not a linear one:
+
+| model | R² | entropy coefficient |
+|---|---:|---|
+| depth linear | 0.233 | — |
+| depth linear **+ entropy** | 0.509 | **+0.1002 (t = +5.03)** |
+| **depth quadratic** | **0.563** | — |
+| **depth quadratic + entropy** | **0.563** | **+0.0111 (t = +0.26)** |
+| depth cubic + entropy | 0.566 | +0.0496 (t = +0.59) |
+
+**Entropy collapses from t = +5.03 to t = +0.26, and the R² is identical with and without it (0.563).**
+Seed-clustered CI on the entropy coefficient under quadratic depth: **[−0.070, +0.057] — includes
+zero.** **Entropy adds nothing once depth is allowed to curve.**
+
+> **The causal-masking reading loses its support. Attention entropy does not explain the q−k alignment
+> gap — this is iteration 106's failure mode reproducing exactly, on a different quantity.**
+
+**What survives, and it is worth registering.** The gap's **depth structure is real and independent of
+entropy**: a U-shape reaching −0.474 dex at layer 8, reproducing across four seeds at 1.5× the noise.
+**Band 35 is amended to include it**, since a bare "q ≠ k by 0.306 dex" understates what the data
+shows.
+
+**Why running this check mattered.** The linear partial correlation of **+0.600** was the strongest
+entropy result in the campaign and would have been easy to report as confirming the causal-masking
+mechanism. **Iteration 106 had already established that a linear depth control is insufficient for
+this exact predictor** — entropy is 0.86-collinear with depth, so it will absorb any leftover depth
+curvature a linear term misses. **The campaign's own prior negative is what made the correct test
+obvious**, and applying it turned an apparent mechanism into a registered negative.
+
+**Standing rule reinforced, not extended:** *when a predictor has previously failed a specific control,
+apply that same control before reporting it in a new context.* Entropy has now failed the quadratic-depth
+test twice, on two different response variables.
 
 ### CONSOLIDATED FINDINGS IV (iterations 112–132) — the causal account, revised
 
