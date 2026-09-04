@@ -532,6 +532,68 @@ curvature equalization.**
 productive path is **arm 4**, then — if the exponent survives — treating C as a measured property to
 respect rather than a target to flatten.
 
+**=== ITERATION 119 (2026-09-03): ARM 4's SPEC IS BROKEN AS WRITTEN — corrected before filing ===**
+
+*I was about to file arm 4 as a formal request. **Reading the actual code first found two defects that
+would have made the arm a silent no-op.** Both are recorded, because a spec that returns the control
+result while appearing to run is worse than no spec.*
+
+**DEFECT 1 — a clip inside `polar_express` is cancelled exactly.** `train_gpt.py:177` reads:
+
+```python
+    momentum_buffer.lerp_(grad_chunk, 1 - momentum)   # momentum update
+    g = grad_chunk.lerp_(momentum_buffer, momentum)   # Nesterov
+    X = g.bfloat16()
+    X = X / (X.norm(dim=(-2,-1), keepdim=True) * (1 + 2e-2) + 1e-6)   # spectral normalisation
+```
+
+**That last line divides X by its own norm.** Scaling the gradient by *c* gives
+`(c·g)/‖c·g‖ = (c·g)/(c·‖g‖) = g/‖g‖` — **c cancels exactly.** Verified numerically: clips of 0.5,
+1.0 and 2.0 produce **identical** normalised values (0.794719 in all three).
+
+**Iteration 113 specified "clip before `shape_mult` and Newton-Schulz."** That is *inside* the
+normalised region, so **the arm would have had no effect on the update and would have silently
+returned the control result three times.**
+
+**The correct insertion point is BEFORE the momentum buffer update** — the buffer *accumulates* the
+clipped gradient, and its altered trajectory is not normalised away. Concretely: clip `grad_chunk` on
+entry to `polar_express`, ahead of `momentum_buffer.lerp_`, or at the reduce-scatter site
+(`train_gpt.py:604–619`) where `grad_chunk` is produced.
+
+**DEFECT 2 — the instrument has no measurable first stage, and this is the serious one.** The probe
+records `gradient_block_norm = ‖param.grad‖` — the **raw gradient, before the optimiser touches it**.
+A clip applied inside the optimiser **does not change `param.grad`**, so:
+
+> **`d log g / d log clip` ≈ 0 — the first stage is empty and the Wald ratio is undefined.**
+
+This is not a coding detail; it is a **flaw in arm 4 as conceived**, mine as much as REQ-037's.
+The clip changes the *update*, not the *measured gradient*, so it cannot instrument
+`d log λ / d log g` in the form the campaign has been estimating.
+
+**What would actually work — two options, both stated so the humans can choose:**
+
+1. **Clip and measure the same object.** Have the probe record the **post-clip** gradient norm
+   alongside `param.grad`. Then the first stage is mechanical (`d log g_clipped/d log clip = 1` by
+   construction) and the Wald ratio becomes `d log λ / d log clip` directly — a clean reduced form
+   needing no ratio at all. **This is the cheaper fix: one extra field in the existing probe.**
+2. **Scale the loss per matrix instead of clipping.** A per-matrix loss weight changes `param.grad`
+   itself, so the existing probe measures the first stage with no new field. But it also changes what
+   is optimised, which reintroduces an exclusion problem of its own.
+
+**Recommendation: option 1.** It keeps the intervention where REQ-037 wanted it (in the update, not
+the objective) and moves the measurement to match, rather than the reverse.
+
+**Status: arm 4 is NOT filed as a request.** Its premise needs the above decision from the humans
+first — filing a spec that cannot produce a first stage would waste a run and, worse, produce a
+confident-looking null. **REQ-037 remains DEFERRED with its reason now precisely stated** rather than
+"needs a new hook."
+
+**Method note.** Iteration 113 specified this arm from the *description* of Muon's update path
+without reading `polar_express`. **Two iterations of analysis rested on a spec that would not have
+run**, and the error surfaced only when I went to file it. *Standing rule 7: before specifying an
+intervention, read the code path it modifies — a spec derived from a description of the algorithm is
+not a spec.*
+
 ## REQ-037: a NON-learning-rate instrument for the curvature-gradient exponent
 
 - status: **arms 1-3 DONE (2026-09-03) — `logs/kmaxwell/req037_nonlr_instrument/`.** Batch instrument at fixed LR: curvature responds only WEAKLY to moving the gradient via batch — per-matrix elasticity dlog(curv)/dlog(batch) median 0.075 (mean 0.062, spread [-0.25,0.36]); geomean curvature non-monotonic. Suggests the gradient channel is NOT dominant for the LR->curvature effect (exclusion restriction questionable). **CAVEAT:** batch confounds g-noise with tokens-seen (val monotonic: 0.5x 3.626/1x 3.512/2x 3.421); the CLEAN instrument is **arm 4 (per-matrix grad clip), which is DEFERRED — no clip hook in ebf53cd, needs a new hook.** n=1/arm, noisy. arm2(0.5x) ran eager (mbs<64 compile bug). Read arms 1-3 as a confounded first look; arm 4 is the right test.
