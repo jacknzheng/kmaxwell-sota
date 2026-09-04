@@ -29,6 +29,65 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅ RULE-15 AUDIT OF THE RECENT BANDS (iteration 165) — all survive seed-clustering, and it is now clear *why*
+
+*Rule 15 was written last iteration after pseudo-replication cost a claim. **Its first duty is to be
+turned on the campaign's own recent bands**, several of which report "12/12" or "11/12" — where those 12
+are **4 seeds × 3 fork states of the same 4 networks**, not 12 independent draws. Every headline was
+recomputed with the **seed** as the independent unit (fork states averaged within seed first, n = 4).*
+
+**RESULT — the recent bands hold.**
+
+| claim | as reported (n=12) | **clustered on seed (n=4)** | retained |
+|---|---:|---:|---:|
+| **band 43** — C_polar slope | −0.0266, \|t\| **5.38**, 11/12 | −0.0266, \|t\| **4.91**, **4/4** | **91%** |
+| **band 40** — corr(C, λ) | +0.867, \|t\| **42.68** | +0.866, \|t\| **26.02**, **4/4** | 61% |
+| **band 40** — corr(C, g) *(the null half)* | +0.096, \|t\| 1.36 | +0.130, \|t\| **1.39**, 3/4 | 102% |
+| band 43 — C's own slope *(the null half)* | \|t\| 0.46 | \|t\| **0.45** | — |
+| band 43 — corr(C, C_polar) | +0.152, \|t\| 1.33 | +0.112, \|t\| **0.66** | — |
+| *(for contrast)* **iter-163 residual at L6 — RETRACTED** | \|t\| **5.87** | \|t\| **1.88** | **32%** |
+
+**Band 40's central contrast is intact under the correct clustering:** corr(C, λ) = **+0.866 (\|t\| 26.0,
+4/4)** versus corr(C, g) = **+0.130 (\|t\| 1.39)**. **Band 43's dissociation is intact:** C_polar declines
+at **\|t\| 4.91 with the same sign in all 4 seeds**, while C's own linear slope stays null at \|t\| 0.45.
+
+**⇒ AND THE ASYMMETRY IS EXPLAINED, NOT JUST OBSERVED.** Why did clustering destroy the residual claim
+(32% retained) but barely touch band 43 (91%)? It is a measurable property of each quantity — how much
+of its variance is **reproducible across seeds** versus **within-seed wobble across fork states**:
+
+| profile | reproducible across seeds | within-seed (fork) wobble |
+|---|---:|---:|
+| **C profile (the bowl)** | **80.4%** | 19.6% |
+| C_polar profile | **67.3%** | 32.7% |
+
+> **The bowl is 80% reproducible across independent networks.** Averaging fork states within a seed
+> therefore discards almost nothing, and the clustered t stays high. **The retracted residual was, by
+> construction, the leftover *after* the reproducible part had been modelled** — so it was mostly
+> within-seed wobble, and clustering was fatal to it. **The two outcomes were not luck; they follow from
+> where each quantity's variance lives.**
+
+**What this settles.** Rule 15 is **not** a general deflator of this campaign's results. It bites
+precisely on **residual-type quantities** — anything defined as *what is left after the reproducible
+structure is removed* — and leaves **structural** quantities almost untouched. **Bands 40, 42 and 43
+stand as written; band 39's magnitude correction stands; only the iteration-163 localisation claim was
+lost, and it was the one quantity of residual type.**
+
+**⚠️ A LIMIT WORTH STATING.** At n = 4 clusters the tests above have real power only for large effects.
+**corr(C, g) at \|t\| 1.39 and corr(C, C_polar) at \|t\| 0.66 are reported as "not significant", not as
+"zero"** — with 3 degrees of freedom, a moderate correlation would not be detectable. **The null halves
+of bands 40 and 43 are consistent with the data, not proven by it.** This is a limitation of n = 4 seeds,
+and no analysis of the committed data can remove it.
+
+**⚠️ NO n=4 SEED CHECK PROPOSED.** This iteration *is* an n=4 check — of the campaign's own recent
+claims, at the correct clustering. **REQ-048 remains the only outstanding request** (still OPEN, no Jerry
+response), unchanged in scope: ≤2 nodes, no training.
+
+**Standing rule 15, amended with its scope.** *Cluster on the independent unit — and expect the cost to
+scale with how much of the quantity's variance is within-cluster. Structural profiles (reproducible
+across seeds) survive clustering nearly intact; residual quantities (defined as the leftover after
+structure is removed) rarely do. Compute the reproducible share to predict which kind you have, before
+trusting a per-cell statistic.*
+
 ## ⛔ THE "LOCALISED RESIDUAL" WAS PSEUDO-REPLICATION (iteration 164) — my own iteration-163 claim, retracted
 
 *Iteration 163 reported the residual as **systematic and localised to layers 2, 3, 6, 8** (|t| 3.9–5.9)
