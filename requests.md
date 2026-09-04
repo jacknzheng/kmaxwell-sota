@@ -284,6 +284,60 @@ correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
 
+**=== ITERATION 109: REGISTERED NEGATIVE — the three-term cancellation is NOT a constraint ===**
+
+*Band 26 left a genuine puzzle: the three gradient terms have spreads of 1.35, 1.02 and 0.64 dex
+across types, yet C's spread is only 1.04. They must be partly cancelling. If that cancellation were
+**systematic**, it would mean the network holds the gradient in a narrower range than its parts — a
+constraint, and the deepest result available from this data.*
+
+**The raw numbers look compelling, and consistently so:**
+
+| seed | corr(‖a‖,‖d‖) | observed / independent variance ratio |
+|---|---:|---:|
+| 0 | −0.455 | **0.593** |
+| 1 | −0.472 | **0.600** |
+| 2 | −0.452 | **0.571** |
+| 3 | −0.461 | **0.616** |
+
+**The gradient varies at 0.59× what independent terms would produce, and `corr(‖a‖,‖d‖) ≈ −0.46` in
+every seed.** Four-for-four consistency, a clean effect size — this looked like a constraint.
+
+**The permutation null rejects it.** Shuffling type labels independently within each term destroys
+cross-term pairing while preserving each term's own spread — which asks exactly the right question:
+*given these three sets of six numbers, how often does a random pairing cancel this much?*
+
+| seed | observed | **null** | **p** |
+|---|---:|---:|---:|
+| 0 | 0.593 | 1.003 ± 0.492 | **0.214** |
+| 1 | 0.600 | 0.996 ± 0.496 | **0.230** |
+| 2 | 0.571 | 0.998 ± 0.484 | **0.189** |
+| 3 | 0.616 | 0.995 ± 0.489 | **0.247** |
+
+**With six types, a variance ratio of 0.59 arises by chance roughly one time in five.** The null's own
+standard deviation is 0.49, so the observed value sits **less than one sd below it**. The `corr(‖a‖,‖d‖)
+= −0.46` figure fares no better: **p = 0.087–0.092**, not significant in any seed.
+
+**And the across-seed consistency — the thing that made this look strong — is not evidence.** All four
+seeds contain **the same six matrix types**, so they are not independent tests of the *pairing*
+between terms. They confirm the terms are measured stably; they say nothing about whether the pairing
+is structural. **Treating 4/4 consistency as replication here would have been a category error**, and
+it is exactly the trap the campaign's own permutation rule exists to catch.
+
+> **The apparent cancellation among the three gradient terms is consistent with chance. There is no
+> evidence the network constrains the gradient to vary less than its components.**
+
+**Registered as a negative.** Band 26 stands unchanged — the three terms *are* comparable in size and
+they *do* partly offset in this data — but **the offsetting is not shown to be systematic**, and
+iteration 108's phrasing ("three comparably-sized effects that partly cancel") should be read as a
+description of the arithmetic, not a claim about network behaviour.
+
+**What would settle it:** more matrix types. Six points cannot resolve a variance ratio of 0.6 from
+1.0 — the null is simply too wide. A wider architecture (more distinct matrix roles) or per-head
+decomposition would give the resolution, and neither is available here. **Not filing a request**: this
+is a limitation of the architecture's type count, not of the measurements, and no probe Jerry could
+run on this model would fix it.
+
 **=== ITERATION 108: THE WHOLE-ACCOUNT TEST — and it qualifies what iteration 107 claimed ===**
 
 *Bands 21/25 closed q,k; band 20 closed the mlp pair. But those are **four of six types**, chosen
