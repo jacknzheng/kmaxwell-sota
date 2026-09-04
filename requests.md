@@ -261,7 +261,7 @@ measured value so a seed result can be compared directly.
 | **10** | **layer-0 lift** — ❌ **NOT CONFIRMED n=4** | clears its permutation null on λ/g² | p = 0.022 / 0.190 / 0.120 / 0.058 — **1 of 4 seeds**. Lift is consistently positive (+0.25 to +0.50 dex) but under-powered at 6 matrices per layer |
 | **11** | **the assembled model generalises** (iter. 72) | **leave-one-layer-out rmse ≤ 0.20 dex** and **cross-fork rmse ≤ 0.20 dex** for `type + two-slope gradient + layer-0 term`, versus ~0.38 dex for C's own spread | LOLO 0.138 / 0.164; cross-fork 0.165 / 0.140 dex |
 | **12** | **type offsets reduce to three binaries** — ✅ **CONFIRMED n=4** | `q,k + residual-writer + mlp.proj` (5p) within 0.02 dex of six free offsets (7p) | gaps 0.004 / 0.004 / 0.005 / 0.002 dex in the 4 seeds |
-| **13** | **the PER-MATRIX causal exponent is exactly 2** — ⚠️ **RE-SCOPED** (iter. 79) | 2.000 inside the 95% CI **under per-matrix LR randomisation only** (REQ-023 design) | REQ-023 +2.076/+2.079 CI contains 2. **Arm A's GLOBAL LR ladder gives +2.64 to +3.07, CI excludes 2 — a different estimand, not a refutation** |
+| **13** | **the PER-MATRIX response ratio is 2, but the exclusion restriction is VIOLATED** (iter. 76, 114) — ⚠️ **band holds, interpretation qualified** | **2.000 inside the 95% CI** by OLS-with-matrix-FE and the IV Wald ratio, every seed. **AND:** two Hessian functionals under the same instrument must give the SAME exponent — they do not | top_eigenvalue **+2.13/+2.10** vs curvature_along_polar **+1.89/+1.83**; difference **+0.241/+0.268**, CIs **[+0.033,+0.443]/[+0.068,+0.465]**, both exclude 0 |
 | **14** | **q,k carry a GRADIENT DEFICIT at identical shape** (iter. 77–90) — ✅ **CONFIRMED n=4, size-artifact excluded** | **within the four 768×768 attention matrices only:** Δlog g (q,k − v,attn.proj) ≤ −0.30 dex with p < 0.01, Δlog λ NOT significant, both q,k below both v,attn.proj in ≥10/12 blocks — in ≥3 of 4 seeds | **Δlog g = −0.378/−0.378/−0.356/−0.381, p < 10⁻⁴ all seeds, 48/48 blocks**; Δlog λ p = 0.17/0.85/0.21/0.43 |
 | **17** | **the deficit is a depth-independent constant** (iter. 91) — ✅ **CONFIRMED n=4** | **slope of the q,k gradient deficit vs layer index NOT significant (|t| < 2) across layers 0–11**, in every seed; **final block separately deeper by ≥ 0.10 dex** | slopes t = −0.31/−0.25/+0.50/−0.40; interior −0.361 ± 0.065, **layer 12 −0.508 ± 0.010** |
 | **18** | **q and k are interchangeable** (iter. 92) — ✅ **CONFIRMED n=4** | **|q deficit − k deficit| < 0.05 dex** and **not significant within any single seed** (p > 0.05), in every seed | q −0.380 vs k −0.366, difference **−0.014 dex** (3.8% of the shared deficit), within-seed p = 0.82/0.56/0.67/0.57 |
@@ -427,6 +427,54 @@ never measured. Muon here also carries momentum internally (`m_fast`/`m_slow`), 
 a free per-layer knob without changing the kernel. Filing a momentum rule now would be
 inventing a mapping rather than deriving one. The prerequisite is a registered experiment
 asking whether mu does anything LR cannot at fixed `s_eff`; that is REQ-037 if wanted.
+
+**=== ITERATION 114 ANALYSIS (2026-09-03): the exclusion restriction is VIOLATED — shown on committed data ===**
+
+*Iteration 113 concluded the exclusion restriction "remains untested" and that arm 4 was the only way
+to test it. **That was wrong** — committed data tests it, one-sidedly, and it fails.*
+
+**The logic.** If the LR moves curvature **only** through the gradient, then **every functional of the
+Hessian must respond with the same exponent** — they all inherit the same single channel. Different
+exponents prove a second channel exists. *(One-sided: agreement would be consistent with exclusion
+but not prove it; disagreement disproves it.)*
+
+**REQ-023 recorded two admissible functionals.** *(A third, `curvature_along_gradient`, is α₁ from the
+same tridiagonal — circular by the standing rule and excluded.)*
+
+| fork | top_eigenvalue | curvature_along_polar | **difference** | 95% CI |
+|---|---:|---:|---:|---|
+| 1500 | +2.1302 [1.96, 2.31] | +1.8890 [1.79, 1.98] | **+0.2413** | **[+0.033, +0.443]** |
+| 2000 | +2.0967 [1.92, 2.26] | +1.8284 [1.70, 1.96] | **+0.2683** | **[+0.068, +0.465]** |
+
+**Both differences exclude zero, in both forks.** Two functionals of the same Hessian, under the same
+instrument, respond differently. **A pure gradient channel cannot produce that.**
+
+> **The exclusion restriction is violated. REQ-035's +2.07 is not a clean causal exponent — it is a
+> response ratio contaminated by at least one non-gradient channel.**
+
+**How much damage — stated carefully, because the bound is one-sided in a second way.** The 0.255 dex
+discrepancy bounds only the part of the LR effect that acts **differently** on the two functionals. A
+channel acting **equally** on both — a uniform rescaling of the whole Hessian — moves both exponents
+together and is **invisible to this test**. So **0.25 dex is a lower bound on the non-gradient
+channel, not an estimate of it.**
+
+**Consequence for band 13 — the registered check is unaffected, the reading is not.** Band 13 asks
+whether 2.000 sits inside the CI. It does, for both estimators and both forks, so **the band holds as
+written.** What changes: its agreement with 2.000 is now known to be *partly* luck — the contamination
+is small relative to the interval width rather than absent. **The IV caveat carried since iteration 76
+("this is a response ratio, not a structural parameter; the exclusion restriction is an assumption")
+is now demonstrated rather than hypothesised**, and band 13 is amended to say so.
+
+**What survives untouched.** The Gauss-Newton *derivation* of exponent 2 is theory, not an estimate —
+it never depended on the instrument. Both functionals land within 0.25 of 2.0, so the derivation
+remains consistent with everything measured. **Bands 6, 12, 14, 16–27 are unaffected**: none is an IV
+estimate.
+
+**And this sharpens arm 4's value.** Iteration 113 justified it as testing an untested assumption.
+**The assumption is now known to be false**, so arm 4's job changes: not "does a non-gradient channel
+exist" — it does — but **"how large is it once the LR channel is removed entirely."** The registered
+check stands (monotone reduced form, all per-type ratios positive); the interpretation of a result
+near +2 becomes *"the non-gradient channel is small"* rather than *"exclusion holds."*
 
 **=== ITERATION 113 ANALYSIS (2026-09-03): the batch arms bound the exclusion restriction — badly ===**
 
