@@ -275,6 +275,7 @@ measured value so a seed result can be compared directly.
 | **26** | **C's six-type structure is genuinely THREE-term** (iter. 108) — ✅ **CONFIRMED n=4** | **the identity log g = log‖a‖_F + log‖d‖_F + log(align) holds exactly**; across the six types **no term correlates with C above 0.55**, and **each term's spread exceeds C's own** (offsetting) | identity exact to **1e-6 dex**; corr(C, −2‖a‖) +0.36–0.39, (C, −2‖d‖) +0.44–0.49, (C, −2align) +0.38–0.40; term spreads 1.35 / 1.02 / 0.64 vs C's **1.04** |
 | **27** | **the ‖a‖·‖d‖ PRODUCT is the depth-conserved quantity** (iter. 110–111) — ✅ **CONFIRMED n=4** | **corr(log‖a‖, log‖d‖) ≤ −0.80 within every type across depth**, perm p < 0.01; **sd(log‖a‖+log‖d‖) < 0.6 × sd of the smaller factor**, every type. *Compensation is near-exact but NOT universal — TLS slope contains −1 in only 2/6 types* | corr −0.875 to −0.986; sd-ratio **0.262–0.493**; TLS slopes −0.765 to −1.230 |
 | **28** | **C's depth structure is carried by λ, not g** (iter. 117) — ✅ **CONFIRMED n=4** | **sd(log λ) / sd(log g) across depth > 1.5 in every matrix type**, every seed — the consistency requirement linking bands 27 and 10/25 | ratios **2.03 / 2.76 / 2.85 / 2.93 / 4.19 / 4.32**, mean **3.2×**; λ variance share 0.51–1.76 |
+| **29** | **the λ–g relation WEAKENS as the LR rises** (iter. 120) — ✅ **CONFIRMED n=4** | **cross-sectional slope falls monotonically across s = 0.6 → 1.7**, seed-clustered CI on the spread excluding 0; **sd(log g) flat** (rules out range compression) while **sd(log λ) compresses** | slopes **0.916 / 0.742 / 0.636**, spread CI **[0.208, 0.365]**; sd(log g) **0.246/0.246/0.242**, sd(log λ) **0.429/0.395/0.367**; corr 0.534/0.497/0.453 |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -531,6 +532,66 @@ curvature equalization.**
 **Recommendation.** The analysis loop has reached the end of what committed data supports. The
 productive path is **arm 4**, then — if the exponent survives — treating C as a measured property to
 respect rather than a target to flatten.
+
+**=== ITERATION 120 (2026-09-03): MUON'S UPDATE IS GRADIENT-SCALE-INVARIANT — what λ ∝ C·g² can mean ===**
+
+*Iteration 119's defect 1 was found while checking a spec, but it has a consequence for the campaign's
+central law that is larger than the spec it came from.*
+
+**The structural fact.** `polar_express` normalises to unit spectral norm *before* Newton-Schulz, and
+everything after operates on that unit-norm matrix. The full path is
+**momentum → normalise → Newton-Schulz → scale by LR.** So **Muon's update magnitude is set by the
+learning rate alone and carries no gradient information** — only the update's *direction* depends on
+the gradient.
+
+**That removes the obvious reading of λ ∝ C·g².** Under plain SGD the law has a natural dynamical
+story: larger gradients take larger steps into higher-curvature regions. **Under Muon that story is
+unavailable by construction.** Two readings remain:
+
+- **(A) equilibrium selection** — the matrix settles where curvature balances a *fixed* step size, so
+  the relation is a property of the landscape *as sampled by this optimiser*, and should **weaken when
+  the step size changes**;
+- **(B) a Gauss-Newton identity** — `H ≈ JᵀJ`, `g = Jᵀr` make it a statement about the loss surface
+  alone, **invariant to the optimiser**.
+
+**Both predict the same exponent; only (A) predicts LR-dependence. The ladder discriminates:**
+
+| s (LR multiplier) | cross-sectional slope | corr(λ, g) |
+|---:|---:|---:|
+| 0.60 | **0.916** | 0.534 |
+| 1.00 | **0.742** | 0.497 |
+| 1.70 | **0.636** | 0.453 |
+
+**Monotone decline, spread 0.281, seed-clustered 95% CI [0.208, 0.365] — excludes zero.** Reading (A).
+
+**Range compression ruled out — the obvious artifact, checked.** A flatter fit can arise mechanically
+if the predictor's spread shrinks. It does not:
+
+| s | **sd(log g)** | sd(log λ) |
+|---:|---:|---:|
+| 0.60 | **0.246** | 0.429 |
+| 1.00 | **0.246** | 0.395 |
+| 1.70 | **0.242** | 0.367 |
+
+**The gradient's spread is flat to 0.004 dex across a 2.8× LR change**, while **λ's spread compresses
+by 14%.** The slope falls because the *response* compresses, not because the predictor narrows. **This
+is a real effect on λ, not a fitting artifact.**
+
+> **Registered as band 29. The λ–g relation is not an optimiser-independent identity: raising the
+> learning rate compresses curvature's spread while leaving the gradient's untouched, weakening the
+> relation. Reading (A) — equilibrium selection — is supported; reading (B) is not.**
+
+**What this does and does not touch.** Band 13's *derivation* of exponent 2 from Gauss-Newton is
+unaffected as **theory**; what iteration 120 shows is that the *measured* relation carries an
+optimiser-dependent component the derivation does not predict. **This is a second, independent line
+pointing the same way as iteration 114's exclusion violation** — both say the measured exponent is not
+a clean structural constant. They arrive from different directions: 114 from two functionals
+disagreeing, 120 from the relation weakening under the LR.
+
+**Consistency with band 16, checked.** Band 16 says C's *pattern* is restored under the ladder
+(corr +0.87–0.97) while its *level* shifts. Band 29 adds that the λ–g *relation* also weakens. These
+are compatible: a compressing λ spread with a fixed g spread moves the level and the slope while
+leaving the ordering intact — which is exactly what bands 16 and 29 measure separately.
 
 **=== ITERATION 119 (2026-09-03): ARM 4's SPEC IS BROKEN AS WRITTEN — corrected before filing ===**
 
