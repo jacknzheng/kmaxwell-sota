@@ -428,6 +428,64 @@ a free per-layer knob without changing the kernel. Filing a momentum rule now wo
 inventing a mapping rather than deriving one. The prerequisite is a registered experiment
 asking whether mu does anything LR cannot at fixed `s_eff`; that is REQ-037 if wanted.
 
+**=== ITERATION 115 ANALYSIS (2026-09-03): the contamination's per-type structure is UNRESOLVABLE ===**
+
+*Iteration 114 proved a non-gradient channel exists. Whether that damages the campaign's other bands
+depends on its **structure**: a uniform channel shifts every matrix equally and **cancels in every
+type/depth contrast** (bands 14, 17, 18, 20, 26, 27 are all contrasts); a structured one biases them.*
+
+**Per-type exponent differences (top_eigenvalue − curvature_along_polar):**
+
+| type | fork-1500 | fork-2000 | 95% CI (f1500) |
+|---|---:|---:|---|
+| attn.k | +0.236 | **+0.003** | [−0.009, +0.544] |
+| attn.proj | +0.318 | +0.302 | [−0.120, +0.734] |
+| attn.q | **−0.275** | **+0.466** | [−0.672, +0.132] |
+| attn.v | −0.269 | −0.268 | [−0.640, −0.043] |
+| mlp.fc | +0.026 | −0.075 | [−0.154, +0.193] |
+| **mlp.proj** | **+0.796** | **+0.736** | **[+0.293, +1.205]** |
+
+**A correction to my own analysis.** My script computed the cross-fork correlation as **+0.609** and
+printed "reproduces" against a threshold. **That verdict was wrong.** Dropping a single type collapses
+it:
+
+| drop | corr |
+|---|---:|
+| attn.q | +0.972 |
+| *(none)* | +0.609 |
+| **mlp.proj** | **+0.109** |
+
+**The apparent reproducibility rests entirely on mlp.proj.** And **attn.q flips sign** (−0.275 →
++0.466) between forks — something a structured contamination cannot do, since the two forks are the
+same network 500 steps apart and every genuine type-level quantity here reproduces at corr ≈ +0.99
+(band 14's C ordering, per-type gradients).
+
+**The CIs explain why: 4 of 6 include zero, with widths of 0.35–0.91 dex** — far too wide to resolve
+differences of the size observed. Only attn.v (negative) and mlp.proj (positive) exclude zero, and
+they point opposite ways.
+
+> **Iteration 114's violation is established in the POOLED estimate, where the CI is narrow
+> ([+0.033, +0.443]). Its per-type structure cannot be resolved from this data at all.**
+
+**What that means for the other bands, stated symmetrically.** The contamination **cannot be shown to
+bias** the type-level bands — and **equally cannot be shown not to**. The honest position is
+*unresolved*, not *harmless*. **The one exception is mlp.proj**, whose +0.80/+0.74 difference
+reproduces across forks with a CI excluding zero; **bands involving mlp.proj carry a plausible
+contamination that the others do not.** Bands 12 and 20 both give mlp.proj its own term, and band 27's
+weakest compensation (TLS −0.994, widest sd-ratio 0.493) is also mlp.proj — **worth flagging, not
+withdrawing.**
+
+**Why no further analysis will settle this.** The per-type CIs are set by having 12 matrices × 3 LR
+levels per type. Narrowing them needs more matrices per type or more LR levels — **neither exists in
+committed data, and neither is what arm 4 provides** (arm 4 removes the LR channel; it does not
+subdivide the contamination by type). **Registered as a limitation of the design, not a gap in the
+analysis.**
+
+**Method note.** I let a threshold in my own script produce a verdict ("corr +0.609 → reproduces")
+before checking whether one point drove it. **That is the same failure the standing permutation rule
+exists to prevent, applied to a correlation rather than a group summary.** Extending rule 1: *before
+accepting a correlation across a handful of groups, drop each group in turn.*
+
 **=== ITERATION 114 ANALYSIS (2026-09-03): the exclusion restriction is VIOLATED — shown on committed data ===**
 
 *Iteration 113 concluded the exclusion restriction "remains untested" and that arm 4 was the only way
