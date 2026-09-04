@@ -17,6 +17,65 @@ Next request number: **REQ-047**.
 
 ---
 
+**=== ITERATION 131 (2026-09-04): THE INVARIANCE IS A THEOREM — REQ-046 WAS IMPOSSIBLE, NOT BOTCHED ===**
+
+*Iteration 130 asserted that under Muon the question "does gradient magnitude cause curvature" may be
+unanswerable by intervention, because the optimiser is invariant to magnitude **by construction**.
+**That was stated, not proved.** Proving it changes what REQ-046's null means.*
+
+**Jerry reached the same retraction independently**, and the two analyses agree numerically: raw-gradient
+slope **+0.0028**, CI **[−0.0143, +0.0200]** (Jerry) vs **[−0.0152, +0.0216]** (mine), with the same root
+cause identified — band 29. **Two separate analyses, same conclusion, same diagnosis.**
+
+**Where invariance could break, and whether it does:**
+
+**1. The epsilon.** `X = c·g / (‖c·g‖·1.02 + 1e-6)` is exactly scale-free only if `1e-6 ≪ ‖c·g‖`:
+
+| ‖g‖ | deviation from exact invariance |
+|---:|---:|
+| 10⁻³ | 1e-3 |
+| 10⁻² | **1e-4** |
+| 1 | 1e-6 |
+| 10 | **5e-8** |
+
+**REQ-046's matrices sit at ‖g‖ ≈ 10³·⁸.** The epsilon channel is dead — invariance is exact to float
+precision.
+
+**2. The momentum buffer** — the one that could have mattered, since it is *stateful*. Scaling the
+gradient by *c* gives `buffer_c = m·buffer_old + (1−m)·c·grad`, and `buffer_old` is not scaled at the
+moment the clip changes. But once the buffer reaches its scaled steady state, `buffer_c = c·buffer`
+exactly and the normalisation removes *c*. **The transient decays as `m^t`**; at m = 0.95 that is ~20
+steps per time constant, and **750 steps is ~37 time constants.** *(Correcting my own arithmetic: the
+printed 6-step ratios converge more slowly than "within a few steps" suggested — 0.95⁶ ≈ 0.74. The
+transient is real; it is simply negligible over 750 steps.)*
+
+**3. bfloat16 casting** happens *before* normalisation and is a relative operation — it does not
+introduce scale dependence.
+
+> **Registered as band 31. Muon's invariance to gradient magnitude is a property of the update rule,
+> exact up to a negligible epsilon and a transient lasting <3% of training. It is a theorem, not an
+> empirical regularity.**
+
+**The consequence, and it is the real finding.** **No intervention that scales the gradient can move
+this optimiser's trajectory.** REQ-046 was not a flawed execution of a workable design — **the design
+was impossible**, and iteration 119's "defect 2" fix could never have rescued it. Adding
+`clipped_gradient_block_norm` made the clip visible to the *measurement*; nothing could have made it
+visible to the *network*.
+
+**What this means for band 13, stated precisely.** The causal question is not merely *unresolved* — it
+is **unanswerable by gradient-scaling intervention under Muon**. Any future attempt must either change
+the **loss** (per-matrix loss weights — iteration 119's rejected option 2, which reintroduces the
+exclusion problem), change the **gradient's direction** rather than magnitude, or use a **different
+optimiser**. **This forecloses a whole class of experiments**, which is worth more than another
+inconclusive run.
+
+**And it explains band 29 mechanistically.** Band 29 observed that the λ–g relation *weakens* as the LR
+rises; band 31 says the optimiser cannot see gradient magnitude at all. **Together: the LR is the only
+channel by which the optimiser acts, so a relation measured under LR perturbation is a relation
+between λ and the LR — with g as a correlate, not an intermediary.** That is consistent with band 8
+(the cross-section is ~75% omitted-variable bias) and with iteration 114's exclusion violation, and it
+is now derived rather than inferred.
+
 **=== ITERATION 130 (2026-09-04): RETRACTING ITERATION 129 — REQ-046 HAS NO FIRST STAGE THAT MATTERS ===**
 
 *Iteration 129 read REQ-046's exponent of +0.009 as overturning band 13's causal reading. **That was
@@ -488,6 +547,7 @@ measured value so a seed result can be compared directly.
 | **27** | **the ‖a‖·‖d‖ PRODUCT is the depth-conserved quantity** (iter. 110–111) — ✅ **CONFIRMED n=4** | **corr(log‖a‖, log‖d‖) ≤ −0.80 within every type across depth**, perm p < 0.01; **sd(log‖a‖+log‖d‖) < 0.6 × sd of the smaller factor**, every type. *Compensation is near-exact but NOT universal — TLS slope contains −1 in only 2/6 types* | corr −0.875 to −0.986; sd-ratio **0.262–0.493**; TLS slopes −0.765 to −1.230 |
 | **28** | **C's depth structure is carried by λ, not g** (iter. 117) — ✅ **CONFIRMED n=4** | **sd(log λ) / sd(log g) across depth > 1.5 in every matrix type**, every seed — the consistency requirement linking bands 27 and 10/25 | ratios **2.03 / 2.76 / 2.85 / 2.93 / 4.19 / 4.32**, mean **3.2×**; λ variance share 0.51–1.76 |
 | **29** | **the λ–g relation WEAKENS as the LR rises** (iter. 120) — ✅ **CONFIRMED n=4** | **cross-sectional slope falls monotonically across s = 0.6 → 1.7**, seed-clustered CI on the spread excluding 0; **sd(log g) flat** (rules out range compression) while **sd(log λ) compresses** | slopes **0.916 / 0.742 / 0.636**, spread CI **[0.208, 0.365]**; sd(log g) **0.246/0.246/0.242**, sd(log λ) **0.429/0.395/0.367**; corr 0.534/0.497/0.453 |
+| **31** | **Muon's gradient-magnitude invariance is a THEOREM, not an approximation** (iter. 131) | the update `X = g/(‖g‖·1.02 + 1e-6)` is exactly scale-free wherever the epsilon is negligible; **deviation < 1e-4 for ‖g‖ ≥ 1e-2**, and REQ-046's matrices sit at ‖g‖ ≈ 10³·⁸. Momentum adds a transient of ~1/(1−m) steps only | epsilon deviation at ‖g‖=10: **5e-8**; transient ≈ 20 steps of 750 |
 | **30** | **a higher LR DECOUPLES curvature from the gradient** (iter. 121, 123) — ✅ **CONFIRMED on TWO INDEPENDENT DESIGNS** | **cov(log λ, log g) falls as the LR rises**, seed/matrix-clustered CI excluding 0, on **both** the global ladder and REQ-023's per-matrix randomisation. *Shape not resolved — the two designs differ in where the drop occurs* | Arm A **0.0552/0.0448/0.0371**; REQ-023 **0.0766/0.0425/0.0418** (f1500) and **0.0784/0.0421/0.0402** (f2000), endpoint CIs **[−0.071,−0.002]** and **[−0.077,−0.005]** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
