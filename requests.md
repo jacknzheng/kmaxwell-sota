@@ -266,6 +266,7 @@ measured value so a seed result can be compared directly.
 | **17** | **the deficit is a depth-independent constant** (iter. 91) — ✅ **CONFIRMED n=4** | **slope of the q,k gradient deficit vs layer index NOT significant (|t| < 2) across layers 0–11**, in every seed; **final block separately deeper by ≥ 0.10 dex** | slopes t = −0.31/−0.25/+0.50/−0.40; interior −0.361 ± 0.065, **layer 12 −0.508 ± 0.010** |
 | **18** | **q and k are interchangeable** (iter. 92) — ✅ **CONFIRMED n=4** | **|q deficit − k deficit| < 0.05 dex** and **not significant within any single seed** (p > 0.05), in every seed | q −0.380 vs k −0.366, difference **−0.014 dex** (3.8% of the shared deficit), within-seed p = 0.82/0.56/0.67/0.57 |
 | **19** | **QK-norm beats the Muon-chunking rival** (iter. 93) — ✅ **CONFIRMED n=4** | on log g, **QK-norm indicator R² > 0.5 with |t| > 5**, and **shape_mult alone R² < 0.10**; QK-norm coefficient must not weaken when shape_mult is added | QK alone R² 0.63–0.67, t −10.9 to −11.9; shape_mult alone **R² 0.005–0.008, t +0.6 to +0.7**; both: QK **−0.45, t −11.5 to −12.6** |
+| **20** | **the mlp gradient gap is depth-structured, not a fixed update factor** (iter. 94) — ✅ **CONFIRMED n=4** | **across-layer sd of the mlp.fc−mlp.proj gap > 0.12 dex** (≥2× the noise floor) while the q,k deficit stays ≤0.09; **quadratic-in-depth R² > linear R²**; per-layer pattern reproducing to ≤0.04 dex across seeds | sd **0.151–0.161** vs q,k **0.065–0.089**; quad R² **0.607** vs linear 0.205; across-seed sd **0.018 dex**, structure/noise **8.5×** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -276,6 +277,64 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 94: THE mlp GAP IS AN ACTIVATION EFFECT, NOT UPDATE GEOMETRY ===**
+
+*Iteration 93 surfaced a 0.28 dex gradient gap between `mlp.fc` and `mlp.proj` — 75% the size of the
+q,k effect, with no RMS-norm involved — and left two readings the data could not then separate:*
+**(A)** *`shape_mult` acting only where the aspect ratio differs from 1 (an update-geometry effect,
+and the reading favoured by a striking numerical match: shape_mult 2.0 vs 1.0 = 0.301 dex against an
+observed 0.28); or* **(B)** *a separate mlp effect, e.g. the ReLU² nonlinearity between them.*
+
+**They differ in one testable way, and it is decisive.** `shape_mult` is a **constant** fixed by the
+architecture, so under (A) the gap must be **depth-flat** — exactly as the q,k deficit is (band 17,
+across-layer sd 0.065–0.089, at the noise floor). Under (B) it tracks activation statistics, which
+change with depth.
+
+| | mlp gap | q,k deficit (band 17) |
+|---|---:|---:|
+| across-layer sd | **0.151–0.161 dex** | 0.065–0.089 dex |
+| vs ~0.07 dex noise floor | **> 2×** | at the floor |
+
+**The mlp gap varies with depth by more than twice the noise floor. Reading (A) is rejected** — a
+constant cannot produce depth structure, and the 0.301-dex numerical match was a coincidence, as
+iteration 93 suspected when it declined to promote it.
+
+**The depth structure is real and extremely reproducible:**
+
+| | value |
+|---|---:|
+| median across-**seed** sd at fixed layer | **0.0182 dex** |
+| across-**layer** sd of the seed means | **0.1547 dex** |
+| **structure / noise** | **8.5×** |
+
+**And the profile is a boundary pattern, not a trend** — quadratic R² **0.607** against linear 0.205:
+
+```
+ layer:    0      1      2      3      4      5      7      8      9     10     11     12
+  gap:  -.488  -.284  -.574  -.380  -.249  -.136  -.130  -.130  -.141  -.166  -.245  -.431
+        ^^^^^^^^^^^ deep at the entrance ^^^^   flat interior −.13 to −.17   ^^^ deep at exit
+```
+
+That is why iteration 93's linear slope was only t ≈ 1.5 despite obvious structure — **the pattern is
+U-shaped, and a linear test is the wrong instrument for it.**
+
+> **The mlp.fc / mlp.proj gradient gap is an activation effect that varies with depth, flat through
+> the interior and roughly 3× deeper at both network boundaries. It is not update geometry.**
+
+**Registered as band 20.** Note this is a *second* boundary phenomenon in this campaign, and unlike
+the withdrawn band 10 it is measured on a **raw gradient ratio** — no fitted intercept, no derived C
+— and it reproduces across four seeds at 0.018 dex. **Band 10 failed because it was defined on a
+fitted quantity; this one is defined on a direct measurement, which is why it survives where band 10
+did not.**
+
+**What it means for the account.** The gradient structure has **two distinct components**: a
+**depth-flat architectural attenuation** on the QK-normed matrices (bands 14/17/18/19, ~0.37 dex), and
+a **depth-structured activation effect** in the MLP pair (this band, 0.13→0.57 dex). They are
+different in size, in depth profile, and now in kind. **REQ-038 discriminates both at once** — the
+q,k effect should appear in `|d|` with `|a|` equal, while a ReLU²-driven mlp effect should appear in
+`|a|`, since fc and proj read *different* activations (fc reads the block input, proj reads the ReLU²
+output).
 
 **=== ITERATION 93: EXCLUDING THE CHUNKING RIVAL — and an unexplained mlp gap found in the process ===**
 
