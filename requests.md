@@ -17,6 +17,60 @@ Next request number: **REQ-047**.
 
 ---
 
+**=== ITERATION 128 (2026-09-04): A THIRD DETECTION OF THE NON-GRADIENT CHANNEL — WITHDRAWN ===**
+
+*REQ-046 will remove the LR channel outright. Meanwhile I tried a third bound on committed data,
+independent of iteration 114's two-functional test. **It produced a significant-looking result that
+does not survive its own validity check, and is withdrawn.***
+
+**The logic.** Under exclusion, a matrix whose **gradient** barely responds to the LR must show a
+correspondingly weak **curvature** response — the two are locked. So regressing each matrix's reduced
+form (`d log λ/d log s`) on its first stage (`d log g/d log s`) must pass through the **origin**. A
+non-zero intercept means λ responds where g does not.
+
+**The result looked strong, and survived an errors-in-variables correction that made it *larger*:**
+
+| fork | OLS intercept | **TLS (errors-in-variables)** | 95% CI |
+|---|---:|---:|---|
+| 1500 | +0.409 | **+0.806** | **[+0.504, +1.208]** |
+| 2000 | +0.474 | **+1.068** | **[+0.660, +1.808]** |
+
+Both CIs exclude zero. Correcting for attenuation in the first stage (a fitted slope from 3 points)
+**increased** the intercept rather than explaining it away — the opposite of the iteration-63
+attenuation trap, and superficially convincing.
+
+**The validity check kills it. Zero is outside the observed range of the regressor:**
+
+| fork | first-stage range | matrices with \|first stage\| < 0.15 | matrices with first stage > 0 |
+|---|---|---:|---:|
+| 1500 | **[−1.516, −0.034]** | **1 / 72** | **0 / 72** |
+| 2000 | **[−1.555, −0.141]** | **1 / 72** | **0 / 72** |
+
+**Every one of 144 matrix-forks has a negative first stage.** The intercept sits at `first stage = 0`,
+which **no matrix approaches** — it is a **pure extrapolation beyond the data**, and its confidence
+interval describes the fit's behaviour outside the sampled region, not any measured quantity.
+
+**The direct version of the test, which needs no extrapolation, disagrees with it.** The one matrix
+per fork with a near-zero first stage has a reduced form of **−0.062 and −0.097** — close to zero, as
+exclusion predicts, and nowhere near the +0.81/+1.07 the extrapolation asserted. **n=1 per fork, so
+that is not evidence *for* exclusion either — it is simply the only relevant data, and it does not
+support the claim.**
+
+> **Withdrawn. The intercept test cannot bound the non-gradient channel with this design, because
+> REQ-023's LR perturbation moves every matrix's gradient substantially — by construction, there are
+> no weak-first-stage matrices to anchor the intercept.**
+
+**Iteration 114's detection is unaffected** and remains the campaign's only established evidence for
+the channel: it compares **two functionals of the same Hessian under the same instrument**, needs no
+extrapolation, and its differences (+0.241/+0.268, CIs excluding zero) are measured where the data
+actually is.
+
+**Method note — the fourth trap of this kind in this session.** Iterations 122 and 125 died on
+collinearity; iteration 126's pre-flight check caught a design that would have repeated it; this one
+died on **extrapolation beyond the regressor's support**. The common failure is **reading a
+coefficient without first checking where the data lives.** *Extending the standing rule once more:
+before interpreting an intercept, confirm the regressor actually reaches zero.*
+
 ## ⚠️ QUEUE STATUS NOTE (2026-09-04, from the analysis session)
 
 **Jerry's last experimental delivery was REQ-043 P2/P3, ~5 hours ago. Since then this session has
