@@ -265,6 +265,7 @@ measured value so a seed result can be compared directly.
 | **14** | **q,k carry a GRADIENT DEFICIT at identical shape** (iter. 77–90) — ✅ **CONFIRMED n=4, size-artifact excluded** | **within the four 768×768 attention matrices only:** Δlog g (q,k − v,attn.proj) ≤ −0.30 dex with p < 0.01, Δlog λ NOT significant, both q,k below both v,attn.proj in ≥10/12 blocks — in ≥3 of 4 seeds | **Δlog g = −0.378/−0.378/−0.356/−0.381, p < 10⁻⁴ all seeds, 48/48 blocks**; Δlog λ p = 0.17/0.85/0.21/0.43 |
 | **17** | **the deficit is a depth-independent constant** (iter. 91) — ✅ **CONFIRMED n=4** | **slope of the q,k gradient deficit vs layer index NOT significant (|t| < 2) across layers 0–11**, in every seed; **final block separately deeper by ≥ 0.10 dex** | slopes t = −0.31/−0.25/+0.50/−0.40; interior −0.361 ± 0.065, **layer 12 −0.508 ± 0.010** |
 | **18** | **q and k are interchangeable** (iter. 92) — ✅ **CONFIRMED n=4** | **|q deficit − k deficit| < 0.05 dex** and **not significant within any single seed** (p > 0.05), in every seed | q −0.380 vs k −0.366, difference **−0.014 dex** (3.8% of the shared deficit), within-seed p = 0.82/0.56/0.67/0.57 |
+| **19** | **QK-norm beats the Muon-chunking rival** (iter. 93) — ✅ **CONFIRMED n=4** | on log g, **QK-norm indicator R² > 0.5 with |t| > 5**, and **shape_mult alone R² < 0.10**; QK-norm coefficient must not weaken when shape_mult is added | QK alone R² 0.63–0.67, t −10.9 to −11.9; shape_mult alone **R² 0.005–0.008, t +0.6 to +0.7**; both: QK **−0.45, t −11.5 to −12.6** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -275,6 +276,63 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 93: EXCLUDING THE CHUNKING RIVAL — and an unexplained mlp gap found in the process ===**
+
+*The RMS-norm reading has passed three predictions, but **all three are consistency checks**. A rival
+that makes the same three predictions is untouched by any of them, and there is one.*
+
+**The rival.** From the recovered architecture, `qk_bank` is **(64, 128, 768)** — Muon orthogonalises
+q and k **per head-pair at 128×768** — while `vo_bank` is (24, 768, 768). Muon scales updates by
+`shape_mult = max(1, rows/cols)**0.5` (`train_gpt.py:510`), so q,k are updated with a different
+chunk geometry than v and attn.proj. **This rival predicts all three passed observations**: it
+survives at identical parameter count, it is fixed by the architecture (hence depth-independent), and
+q = k (both live in the same bank with the same chunk shape). **The three passes do not discriminate.**
+
+**The horse race settles it. On log g, per seed:**
+
+| model | R² | coefficient (t) |
+|---|---:|---|
+| **shape_mult only** | **0.005–0.008** | **+0.15 to +0.19 (t = +0.6 to +0.7)** |
+| **QK-norm only** | **0.63–0.67** | −0.408 to −0.421 (**t = −10.9 to −11.9**) |
+| both | 0.66–0.70 | shape_mult −0.39 to −0.45 (t ≈ −2.7); **QK-norm −0.44 to −0.46 (t = −11.5 to −12.6)** |
+
+**Muon's chunk geometry explains essentially none of the gradient variation on its own (R² < 0.01),
+and the QK-norm coefficient does not weaken when it is added — it strengthens.** The chunking rival
+is excluded. **Registered as band 19.**
+
+**But the test surfaced something I was not looking for, and it does not fit either account.**
+The discriminating comparison used the mlp pair — `mlp.fc` (3072,768) and `mlp.proj` (768,3072),
+identical parameter counts, opposite aspect ratios, **neither QK-normed**:
+
+| seed | log g mlp.fc | log g mlp.proj | difference | p |
+|---|---:|---:|---:|---:|
+| 0 | 3.856 | 4.133 | **−0.277** | **< 10⁻⁴** |
+| 1 | 3.866 | 4.142 | **−0.276** | **< 10⁻⁴** |
+| 2 | 3.846 | 4.128 | **−0.282** | **< 10⁻⁴** |
+| 3 | 3.855 | 4.139 | **−0.283** | **< 10⁻⁴** |
+
+**A 0.28 dex gradient gap — 75% the size of the q,k effect — between two matrices with no RMS-norm
+anywhere.** Reproducible to 0.007 dex across four seeds.
+
+**And a numerical coincidence worth flagging rather than believing.** `mlp.fc` has `shape_mult` 2.0
+against `mlp.proj`'s 1.0 — a factor of 2, or **0.301 dex** — against an observed gap of **0.28 dex**.
+That is a close match. **But the horse race says shape_mult has no explanatory power across the full
+set of six types (R² < 0.01, wrong sign),** so this cannot be promoted to a mechanism on the strength
+of one pair matching. Two readings are consistent with the data — shape_mult acting *only* where the
+aspect ratio actually differs from 1 (true only for mlp.fc), or a genuinely separate mlp effect —
+**and this data cannot separate them.**
+
+**Recorded as an open anomaly, not a finding.** It does not touch bands 14/17/18/19, which are
+defined on the four same-shape attention matrices where no aspect ratio differs. **It does mean the
+account of the gradient structure is incomplete**: there is a second, comparably-sized gradient effect
+in the mlp pair with no current explanation, and it was invisible until the chunking rival forced a
+comparison I had not previously run.
+
+**Status of the RMS-norm reading: four predictions, four passes, one live rival excluded.** REQ-038's
+`|d|`/`|a|` split remains the only outstanding direct test — and it now has a second target: whether
+the mlp gap also lives in `|d|` (a backward effect) or in `|a|` (a forward one), which would
+discriminate the two readings above at no extra cost.
 
 **=== ITERATION 92: q AND k ARE INTERCHANGEABLE — the RMS-norm reading's third prediction ===**
 
