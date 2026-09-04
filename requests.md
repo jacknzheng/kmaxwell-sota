@@ -29,6 +29,71 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## 🔧 BAND 39 CORRECTED AT 5× THE EVIDENCE (iteration 163) — the bowl is stationary, and the residual is REAL and LOCALISED
+
+*REQ-048 is filed and OPEN with no Jerry response. Rather than idle, this iteration uses a resource the
+campaign has left untouched: **every profile result so far used step 2750 alone, but the panel holds
+five checkpoints (2250–2750) per seed × fork — 60 independent fits, not 12.***
+
+**★ FIRST — THE BOWL IS TIME-STATIONARY, which licenses using all of them.** Band 24 established C's
+*level* is time-invariant on an equilibrated window; the depth profile's **shape** had never been checked:
+
+| step | cubic R² | linear R² | argmin | swing |
+|---|---:|---:|---:|---:|
+| 2250 | 0.952 | 0.003 | **L6** | 0.559 |
+| 2375 | 0.887 | 0.028 | **L6** | 0.457 |
+| 2500 | 0.894 | 0.000 | **L6** | 0.501 |
+| 2625 | 0.912 | 0.000 | **L6** | 0.501 |
+| 2750 | 0.961 | 0.004 | **L6** | 0.538 |
+
+**Argmin at layer 6 in all five; linear R² ≈ 0 throughout; mean pairwise correlation between the five
+step-profiles = +0.974 (min +0.942).** The bowl is a stationary feature of the equilibrated window, so
+**every result built on step 2750 generalises** — and the evidence base is 5× larger at zero compute.
+
+**⚠️ SECOND — BAND 39'S HEADLINE IS CORRECTED.** Band 39 reported that `type + gradient + cubic position`
+predicts a held-out layer's mean log C to **0.0924 dex against a 0.0959 floor = 0.96×**, i.e. *"between-
+layer C is closed to within seed noise."* Re-run on all **720 held-out layer-fits**:
+
+| model | LOLO rmse (n=720) |
+|---|---:|
+| type + gradient (no position) | 0.1939 |
+| + dist | 0.1279 |
+| + quad | 0.1016 |
+| **+ cubic** | **0.0982** |
+| *(noise floor, measured on 60 fits)* | ***0.0903*** |
+
+> **The ratio is 1.09×, not 0.96×.** The cubic LOLO is slightly worse (0.0982 vs 0.0924) and the floor
+> slightly **tighter** (0.0903 vs 0.0959) with 5× the data. **The model ordering and every structural
+> claim in band 39 hold exactly** — cubic best, monotone worthless, position essential (0.1939 → 0.0982,
+> a 49% error reduction) — **but "closed to within seed noise" was optimistic and is withdrawn.**
+
+**⇒ THE RESIDUAL IS REAL, AND IT IS SMALL AND SHARP.** `√(LOLO² − floor²)` = **0.0387 dex**, about
+**7% of the bowl's own 0.52 dex swing**. **And it is NOT noise — it is systematic by layer:**
+
+| block | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **bias (dex)** | −0.018 | +0.018 | **−0.052** | **+0.061** | −0.015 | +0.017 | **−0.046** | +0.001 | **+0.035** | −0.003 | −0.011 | +0.039 |
+| sem | 0.022 | 0.013 | 0.013 | 0.011 | 0.009 | 0.007 | 0.008 | 0.011 | 0.008 | 0.006 | 0.009 | 0.018 |
+| **t** | −0.80 | +1.42 | **−3.87** | **+5.54** | −1.64 | +2.49 | **−5.87** | +0.13 | **+4.39** | −0.39 | −1.30 | +2.19 |
+
+**Layers 2, 3, 6 and 8 are systematically mispredicted (|t| = 3.9–5.9), with alternating signs.** A
+smooth cubic cannot represent a localised oscillation of this kind. **This is a sharper target than
+"residual variance": the missing structure is specific, localised, and worth ~0.039 dex.**
+
+**Why this matters for REQ-048.** The residual's size (**0.039 dex**) is precisely what the spectral
+participation ratio is being asked to explain, and **band 44's registered criterion is unaffected** — it
+tests PR's *correlation and shape* against the C profile, not the residual's magnitude. **REQ-048 now has
+a quantitative target to hit rather than an open-ended one.**
+
+**⚠️ NO NEW COMPUTE REQUESTED.** All of this comes from checkpoints already in the committed data.
+REQ-048 remains the only outstanding request, still scoped to ≤2 nodes.
+
+**Method note — and a correction to my own practice.** Band 39's 0.96× was computed on 12 fits when 60
+were available in the same files. **The error was not in the analysis but in not asking how much data the
+panel actually held.** The corrected figure is less flattering and better supported. *Standing rule 14:
+before reporting a headline ratio against a noise floor, confirm the panel has been used at full extent —
+an under-used panel inflates the floor and flatters the model at the same time.*
+
 ## ⛔ `residual_tail` REJECTED AS CIRCULAR (iteration 161) — the strongest correlate of the bowl is inadmissible
 
 *Band 43 sharpened the question to the **top of the spectrum**, which points straight at
