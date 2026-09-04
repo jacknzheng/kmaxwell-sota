@@ -29,6 +29,94 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⊘/★ THE BOWL IS SPECIFIC TO THE TOP EIGENDIRECTION (iteration 160) — one withdrawal, one dissociation
+
+*Band 42 says C measures **conditioning**, so this iteration went after the one conditioning quantity
+already in the committed probe: `curvature_along_polar` (cp), the curvature along **the direction Muon
+actually steps**. **Circularity check first:** cp is a **separate HVP**, not an entry of the Lanczos
+tridiagonal that produces `lam_top` — unlike `curvature_along_gradient` (≡ `alphas[0]`), which is
+forbidden. cp is admissible, on the same basis band 35 already uses it.*
+
+**⚠️ FIRST RESULT — WITHDRAWN under standing rule 6.** The alignment profile
+`log align = log cp − log λ` correlates with the C profile at **−0.801** (per-fit mean −0.749, |t| =
+17.82, **12/12 same sign**) — a near-mirror of the bowl, and it looked like a strong finding. **But
+`log C = log λ − 2 log g` and `log align = log cp − log λ` share `log λ` with opposite signs, so a large
+negative correlation is partly guaranteed by construction.** Refitting with raw components:
+
+| relationship | mean corr | \|t\| | same sign |
+|---|---:|---:|---:|
+| C profile vs **align** profile *(shared λ — suspect)* | **−0.749** | 17.82 | 12/12 |
+| C profile vs **log cp** profile *(raw, no shared term)* | **+0.211** | 2.29 | 8/12 |
+| C profile vs log λ profile | +0.867 | 42.68 | 12/12 |
+| C profile vs log g profile | +0.096 | 1.36 | 8/12 |
+
+**The −0.80 collapses to +0.21 once the shared `log λ` is removed. Most of it was construction. The
+finding as first framed is withdrawn.**
+
+**⇒ A DEEPER PROBLEM THE CHECK EXPOSED — and the fix.** `log C` is an **exact** function of `log λ` and
+`log g`, so *"what predicts C"* is **ill-posed**: nothing can add to its own two components (verified —
+incremental variance from cp given λ and g is **−0.00% ± 0.00**, pure numerical noise). **The right move
+is not to predict C but to build an INDEPENDENT quantity of the same kind and ask whether it has the
+bowl:**
+
+```
+C_polar  =  cp / g²        (log: log cp − 2 log g)
+```
+
+**It is the same gauge-invariant construction as C** (cp scales as c², g as c ⇒ every scale factor
+cancels, band 42), **contains no `lam_top` and no tridiagonal quantity** (fully admissible), and
+measures curvature along **Muon's actual step direction** rather than the top eigendirection.
+
+**★ THE RESULT — C_polar does NOT have the bowl. It is monotone.**
+
+| block | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **C** | +0.155 | +0.065 | +0.023 | +0.031 | −0.076 | −0.130 | **−0.201** | −0.152 | −0.078 | −0.059 | +0.084 | **+0.337** |
+| **C_polar** | **+0.172** | +0.115 | +0.105 | +0.074 | +0.007 | +0.034 | −0.051 | −0.048 | −0.063 | −0.134 | **−0.135** | −0.077 |
+
+| | cubic R² | **linear R²** | argmin | swing |
+|---|---:|---:|---:|---:|
+| C | 0.961 | **0.004** | **L6** | 0.538 dex |
+| C_polar | 0.946 | **0.905** | L10 | 0.307 dex |
+
+**corr(C profile, C_polar profile) = +0.152 only** (|t| 1.33, 7/12); C_polar's argmin is interior in
+just **2/12** fits, scattered across 0–11.
+
+**⚠️ POWER CHECK on the negative** — a null claim needs one:
+
+| | mean pairwise profile corr (replication) | linear slope/block | \|t\| | same sign |
+|---|---:|---:|---:|---:|
+| C | +0.710 | **+0.0027** | **0.46** | 8/12 |
+| C_polar | +0.460 | **−0.0266** | **5.38** | **11/12** |
+
+**C_polar's decline is real and consistently signed; C's linear slope is indistinguishable from zero.
+This is not a noisy measurement failing to show a bowl — it is a genuine dissociation.**
+
+> **⇒ THE BOWL IS SPECIFIC TO THE TOP EIGENDIRECTION.** Two gauge-invariant conditioning measures on
+> the *same matrices* have **different depth structure**: conditioning along the **top eigendirection**
+> is **U-shaped** (minimum at layer 6), while conditioning along **Muon's actual step direction**
+> **declines monotonically** with depth. **Whatever creates the bowl acts on the top of the spectrum,
+> not on the subspace Muon moves in.**
+
+**Why that matters for the REQ-036 design question.** Muon steps along the polar direction, and along
+*that* direction there is **no bowl to equalise** — the profile is monotone. **This is an independent
+mechanical reason why REQ-036's per-type LR equalization failed** (null, harm monotone in equalization,
+Spearman −1.000): the campaign was equalising a curvature the optimiser does not step along. Band 33
+already showed Muon's step sees only ~0.4% of peak curvature; **this adds that the depth structure of
+what it does see is a different shape entirely.**
+
+**PROPOSED n=4 SEED CHECK — band 43 (criterion registered).**
+*Criterion:* on a fresh 4-seed panel, (i) **C_polar's linear R² > its cubic-minus-linear gain**, i.e. it
+is monotone, with slope **negative in ≥10 of 12** fits; (ii) **C's linear slope not significant**
+(|t| < 2); (iii) **corr(C profile, C_polar profile) < +0.50**.
+*Status:* **satisfied by committed REQ-035 Arm A data** (linear R² 0.905, slope −0.0266, 11/12, |t| 5.38;
+C slope |t| 0.46; corr +0.152). **No new compute requested; runs under the ≤2-node ceiling.**
+
+**Search space:** the bowl is a **conditioning property of the top of the spectrum**, peaks at both ends
+with a minimum at layer 6, is immune to every scale factor (band 42), and is **absent from the step
+direction** (here) — plus not Muon's step magnitude (band 31), stream scale, input rank (iter. 156), or
+an axis artifact (iter. 157).
+
 ## ★★ THE GAUGE THEOREM (iteration 159) — C is invariant to EVERY scale factor, so the bowl is a SHAPE property
 
 *Band 41 showed C cancels `post_lambda`. **The same line of code carries a second scalar,
