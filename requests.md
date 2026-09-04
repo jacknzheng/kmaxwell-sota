@@ -3017,6 +3017,92 @@ fresh bi-Maxwell curve again reaches zero; and whether K-Maxwell remains materia
 at 8×/16× in every independent paired replicate. Report disagreement across seeds rather
 than averaging it away.
 
+## REQ-048: spectral participation ratio — the one measurement the committed data cannot supply
+
+- status: **OPEN — filed 2026-09-04 (iteration 162). Runs entirely under the ≤2-node ceiling; no training.**
+- priority: **high — this is the only outstanding measurement blocking the campaign's stated goal.**
+
+**WHY THIS IS BEING ASKED FOR NOW, AND NOT EARLIER.** Iterations 156–161 exhausted the committed data
+deliberately, and the limit is now quantified rather than asserted. Standing rule 13 leaves exactly four
+admissible probe fields — `top_eigenvalue` (outcome only), `gradient_block_norm`, `curvature_along_polar`,
+`shape` — and `shape` is **constant across depth** (iter. 161), so the entire admissible predictor set for
+the depth question is **two numbers per matrix**. Fitting the C bowl on both:
+
+| | variance of the C bowl explained by ALL admissible predictors |
+|---|---:|
+| per-fit mean | 27.3% (**sd 26.1**, range 0.5–83.2 — i.e. noise) |
+| **on the 12-fit mean profile** | **4.3%** |
+
+**The cause of the bowl is not in this probe's output.** That is a measurement gap, not an analysis
+failure, and it is what justifies spending compute.
+
+**WHAT TO MEASURE, AND WHY EXACTLY THIS.** Band 43 established the bowl is present along the **top
+eigendirection** and **absent along Muon's step direction** (C_polar is monotone, |t| 5.38, 11/12).
+Whatever causes it therefore concerns **how curvature is distributed across directions** — not its value
+along any one direction. The scalar that measures precisely that is the spectrum's **participation
+ratio**:
+
+```
+PR = (trace H)² / (n · trace H²)        ∈ [1/n, 1]
+```
+
+**PR ≈ 1** = curvature spread evenly over all directions; **PR ≈ 1/n** = concentrated in one. **The
+hypothesis this tests: the bowl is a PR profile — the spectrum is most concentrated at the ends of the
+network and most spread in the middle.**
+
+**ADMISSIBILITY (the hard rule).** PR is built from **Hutchinson probes with fresh random vectors**,
+independent of any Lanczos state. It contains **no `alphas`, no `offdiags`, no tridiagonal
+eigendecomposition** — unlike `residual_tail`, rejected in iteration 161 precisely for coming from the
+same `eigh()` as `lam_top`. **Admissible under rule 13.**
+
+**EXACT SPECIFICATION.** Per Muon matrix, at each existing curvature checkpoint, with **m = 16** fresh
+Rademacher or Gaussian probe vectors `v`:
+
+1. `t1 = mean_v [ vᵀHv ]` → estimates `trace(H)`
+2. `t2 = mean_v [ ‖Hv‖² ]` → estimates `trace(H²)`
+3. record **`trace_est = t1`**, **`trace_sq_est = t2`**, **`n = rows·cols`**, and the **per-probe values**
+   (so the estimator's own variance is measurable post hoc rather than assumed)
+
+Also record, as cheap and independently useful diagnostics — **one HVP each**:
+
+4. **`curvature_along_weight`** = `Ŵᵀ H Ŵ` with `Ŵ = W/‖W‖_F` — the self-similarity/Gauss-Newton check
+5. **`curvature_along_random`** = a single fixed-seed random direction, for a spectrum reference point
+
+**PRE-FLIGHT — m = 16 is not a guess.** Following this campaign's standing practice (iteration 126,
+where simulating a proposed design caught a fatal collinearity before filing), the estimator was
+simulated on three realistic spectra (a few large eigenvalues over a near-zero bulk, n = 768, 200 trials):
+
+| spectrum | PR_true | m=1 rel.err | m=4 | **m=16** | m=64 |
+|---|---:|---:|---:|---:|---:|
+| concentrated | 0.00309 | 42.8% | 9.3% | **1.4%** | 1.3% |
+| intermediate | 0.01013 | **145.3%** | 22.0% | **3.7%** | 1.0% |
+| spread | 0.45532 | 7.2% | 3.7% | **0.1%** | 0.3% |
+
+**m = 1 and m = 4 are unusable** (bias to 145%). **m = 16 gives ≤3.7% bias with 7–17% relative sd**,
+comfortably inside what is needed: the C bowl's swing is **0.538 dex = 3.45×**, so PR differences of
+tens of percent are the target. **m = 64 buys little; m = 16 is the recommendation.**
+
+**COST.** The probe already performs 8 Lanczos iterations plus a polar HVP per matrix. This adds
+**m + 1 + 1 = 18 HVPs**, i.e. roughly **+2× probe time and NO training**. `measure_per_matrix_curvature.py`
+runs `--no_dist` and shards by rank, so it parallelises freely. **Requested scope: the 4 existing Arm A
+seeds at the existing fork states — 2 nodes, no new training runs.** If even that is too much, **a single
+seed at one fork state is enough to falsify the hypothesis** and should be run first.
+
+**N=4 SEED CHECK — BAND 44, CRITERION REGISTERED IN ADVANCE (before any data exists).**
+*Criterion:* (i) **corr(log PR profile, C profile) ≤ −0.60** with the **same sign in ≥10 of 12** seed×fork
+fits; (ii) the **log PR profile is bowl-shaped with cubic R² ≥ 0.70 and argmin in layers 4–8**;
+(iii) **log PR retains |t| ≥ 3 for the depth profile after controlling for log g and log cp**.
+*Falsification:* if **|corr| < 0.30**, or the PR profile is **monotone** (linear R² exceeding its cubic
+gain, as C_polar's was), **the spectral-concentration hypothesis is dead and should be recorded as a
+negative** — the bowl would then not be a spectrum-shape effect at all.
+
+**Registering the criterion now, before the measurement exists, is deliberate:** every band in this
+campaign that was fitted first and criterion-ed afterwards (37, and the correlation half of 27) failed
+its audit.
+
+- requester: analysis loop, iteration 162
+- constraint acknowledged: **≤2 nodes**, no assertion of any higher authority.
+
 ## REQ-045: crossed global × per-matrix LR — the identifiable partial/total design
 
 - status: **DONE 2026-09-04** → `logs/kmaxwell/req045_crossed_global_permatrix_lr/`
