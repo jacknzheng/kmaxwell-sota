@@ -324,6 +324,7 @@ measured value so a seed result can be compared directly.
 | **31** | **Muon's gradient-magnitude invariance is a THEOREM, not an approximation** (iter. 131) | the update `X = g/(‖g‖·1.02 + 1e-6)` is exactly scale-free wherever the epsilon is negligible; **deviation < 1e-4 for ‖g‖ ≥ 1e-2**, and REQ-046's matrices sit at ‖g‖ ≈ 10³·⁸. Momentum adds a transient of ~1/(1−m) steps only | epsilon deviation at ‖g‖=10: **5e-8**; transient ≈ 20 steps of 750 |
 | **32** | **C = λ/g² is the right object — the g² division REMOVES noise** (iter. 132) — ✅ **CONFIRMED n=4** | **C must be more seed-stable than λ** (median |Δ| across seed pairs) **and have a larger architecture-to-seed-noise ratio** | C **0.0776 dex** vs λ **0.1235**; ratio C **15.7×** vs λ **8.0×**; architectural spread C **0.462 dex** vs λ **0.383** |
 | **33** | **Muon steps nearly ORTHOGONAL to peak curvature, and that alignment predicts C** (iter. 134) — ✅ **CONFIRMED n=4** | **cp/λ < 0.02 in every type** (the step sees <2% of peak curvature); **corr(log(cp/λ), log C) ≤ −0.60** and must **clear a cp-shuffled null** in every seed | ratio **0.001–0.006** (overall **0.4%**); corr **−0.788/−0.791/−0.736/−0.782** vs null **−0.34/−0.25/−0.27/−0.29 ± 0.07**, **p < 10⁻⁴ all seeds** |
+| **34** | **alignment and the q,k excess are LARGELY SEPARATE effects** (iter. 135) — ✅ **CONFIRMED n=4** | **controlling for alignment shrinks the q,k C-coefficient by < 35%**, and **both terms stay significant** (|t| > 4), in every seed | shrinkage **22 / 19 / 16 / 20 %**; q,k coef **+0.699/+0.629/+0.694/+0.680** (t = 10.4–18.4); align coef **−0.616/−0.604/−0.582/−0.584** (t = −5.6 to −10.0) |
 | **30** | **a higher LR DECOUPLES curvature from the gradient** (iter. 121, 123) — ✅ **CONFIRMED on TWO INDEPENDENT DESIGNS** | **cov(log λ, log g) falls as the LR rises**, seed/matrix-clustered CI excluding 0, on **both** the global ladder and REQ-023's per-matrix randomisation. *Shape not resolved — the two designs differ in where the drop occurs* | Arm A **0.0552/0.0448/0.0371**; REQ-023 **0.0766/0.0425/0.0418** (f1500) and **0.0784/0.0421/0.0402** (f2000), endpoint CIs **[−0.071,−0.002]** and **[−0.077,−0.005]** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
@@ -640,6 +641,56 @@ band 31.
 has learned repeatedly what that distinction costs (bands 8, 13, 26). **Whether alignment *causes* C's
 structure or merely tracks it cannot be settled here**, and under Muon the natural intervention —
 rotating the update direction — has no obvious implementation that leaves everything else fixed.
+
+**=== ITERATION 135 (2026-09-04): ALIGNMENT DOES NOT EXPLAIN THE q,k GAP — two effects, not one ===**
+
+*Band 33 flagged a connection without testing it: **attn.q has the lowest step–curvature alignment
+(6× below mlp.proj) and q,k carry the largest C excess.** That looked mechanism-shaped. Testing it
+properly — on band 14's clean four-same-shape comparison, so no size confound — shows the two are
+largely independent.*
+
+**Mediation test.** If alignment explains the q,k gap, controlling for it should collapse the q,k
+coefficient:
+
+| seed | q,k coef alone | **with alignment** | shrinkage | alignment coef |
+|---|---:|---:|---:|---:|
+| 0 | +0.893 | **+0.699** (t +10.4) | **22%** | −0.616 (t −5.9) |
+| 1 | +0.774 | **+0.629** (t +18.4) | **19%** | −0.604 (t −10.0) |
+| 2 | +0.827 | **+0.694** (t +13.2) | **16%** | −0.582 (t −5.6) |
+| 3 | +0.848 | **+0.680** (t +13.5) | **20%** | −0.584 (t −7.0) |
+
+**Alignment mediates only 16–22% of the gap.** The q,k coefficient stays large and highly significant
+after the control, and alignment retains a substantial independent effect. **Both terms survive
+together in every seed.**
+
+> **Registered as band 34: the step–curvature alignment and the q,k C-excess are largely separate
+> effects that co-occur, not one mechanism seen twice.**
+
+**And q,k's low alignment is itself a finding, not just a covariate.** On the same clean comparison:
+
+| seed | alignment q,k | v, attn.proj | difference |
+|---|---:|---:|---:|
+| 0 | −2.725 | −2.409 | **−0.316 dex (0.48×)** |
+| 1 | −2.658 | −2.418 | −0.240 dex (0.58×) |
+| 2 | −2.671 | −2.443 | −0.228 dex (0.59×) |
+| 3 | −2.692 | −2.403 | −0.288 dex (0.52×) |
+
+**q,k's step direction sees about half the peak curvature that v and attn.proj's does**, at identical
+shape and sub-block. **That is a second architectural asymmetry on the same matrices** — distinct from
+the backward attenuation of bands 21/25, and consistent in all four seeds.
+
+**Why the negative matters.** Band 33 offered the alignment–excess link as "a mechanism-shaped
+connection the magnitude account does not contain." **It is a connection, but not a mechanism for band
+14** — 80% of the q,k excess remains unexplained by it. **Recording this prevents the campaign from
+absorbing band 14 into band 33 on the strength of a suggestive co-occurrence**, which is exactly the
+error pattern the standing rules exist to catch: two effects on the same matrices are not
+automatically one effect.
+
+**What the account now contains for q,k, at n=4:** a **backward** attenuation (softmax Jacobian,
+−0.18), an **alignment** deficit in the gradient's token-wise accumulation (−0.19, band 25), and now a
+**geometric** alignment deficit in the step direction (−0.24 to −0.32 dex, band 34) — **three distinct
+asymmetries on the same two matrices**, of which the first two sum to the gradient deficit exactly
+(iteration 107) and the third is separate.
 
 ### CONSOLIDATED FINDINGS IV (iterations 112–132) — the causal account, revised
 
