@@ -276,6 +276,7 @@ measured value so a seed result can be compared directly.
 | **27** | **the ‖a‖·‖d‖ PRODUCT is the depth-conserved quantity** (iter. 110–111) — ✅ **CONFIRMED n=4** | **corr(log‖a‖, log‖d‖) ≤ −0.80 within every type across depth**, perm p < 0.01; **sd(log‖a‖+log‖d‖) < 0.6 × sd of the smaller factor**, every type. *Compensation is near-exact but NOT universal — TLS slope contains −1 in only 2/6 types* | corr −0.875 to −0.986; sd-ratio **0.262–0.493**; TLS slopes −0.765 to −1.230 |
 | **28** | **C's depth structure is carried by λ, not g** (iter. 117) — ✅ **CONFIRMED n=4** | **sd(log λ) / sd(log g) across depth > 1.5 in every matrix type**, every seed — the consistency requirement linking bands 27 and 10/25 | ratios **2.03 / 2.76 / 2.85 / 2.93 / 4.19 / 4.32**, mean **3.2×**; λ variance share 0.51–1.76 |
 | **29** | **the λ–g relation WEAKENS as the LR rises** (iter. 120) — ✅ **CONFIRMED n=4** | **cross-sectional slope falls monotonically across s = 0.6 → 1.7**, seed-clustered CI on the spread excluding 0; **sd(log g) flat** (rules out range compression) while **sd(log λ) compresses** | slopes **0.916 / 0.742 / 0.636**, spread CI **[0.208, 0.365]**; sd(log g) **0.246/0.246/0.242**, sd(log λ) **0.429/0.395/0.367**; corr 0.534/0.497/0.453 |
+| **30** | **a higher LR DECOUPLES curvature from the gradient** (iter. 121) — ✅ **CONFIRMED n=4** | **cov(log λ, log g) falls monotonically across s = 0.6 → 1.7**; **C's spread EXPANDS** (not compresses), seed-clustered CI excluding 0; the variance identity var(C) = var(λ) + 4var(g) − 4cov must close | cov **0.0552 / 0.0448 / 0.0371**; sd(log C) **0.450 → 0.478** CI [+0.007,+0.061]; type-spread **0.997 → 1.079** CI [+0.048,+0.110]; identity closes to **1e-6** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -532,6 +533,67 @@ curvature equalization.**
 **Recommendation.** The analysis loop has reached the end of what committed data supports. The
 productive path is **arm 4**, then — if the exponent survives — treating C as a measured property to
 respect rather than a target to flatten.
+
+**=== ITERATION 121 (2026-09-03): C's SPREAD EXPANDS WITH THE LR — my prediction was backwards ===**
+
+*Band 29 found λ's spread compresses under a rising LR while g's stays flat. Since `C = λ/g²`, I
+predicted **C's spread must compress too** — which would have meant the campaign's type structure is
+itself LR-dependent and every effect size is quoted at one learning rate.*
+
+**The prediction was wrong, and in the informative direction:**
+
+| s | sd(log λ) | sd(log g) | **sd(log C)** | **type-spread of C** |
+|---:|---:|---:|---:|---:|
+| 0.60 | 0.427 | 0.246 | **0.450** | **0.997** |
+| 1.00 | 0.401 | 0.246 | 0.471 | 1.056 |
+| 1.70 | 0.379 | 0.242 | **0.478** | **1.079** |
+
+**C's spread EXPANDS: +6.2%, CI [+0.007, +0.061]; type-spread +8.2%, CI [+0.048, +0.110].** Both
+exclude zero. λ compresses, g is flat, and C widens anyway.
+
+**The variance identity explains it exactly, and closes to 1×10⁻⁶:**
+
+```
+   var(log C) = var(log λ) + 4·var(log g) − 4·cov(log λ, log g)
+```
+
+| s | var(log λ) | 4·var(log g) | **−4·cov** | = var(log C) |
+|---:|---:|---:|---:|---:|
+| 0.60 | 0.1825 | 0.2413 | **−0.2209** | 0.2029 |
+| 1.00 | 0.1607 | 0.2414 | **−0.1791** | 0.2230 |
+| 1.70 | 0.1440 | 0.2338 | **−0.1483** | 0.2295 |
+
+**The covariance term shrinks faster than λ's variance falls**, so C widens. Reading the mechanism
+directly:
+
+| s | **cov(log λ, log g)** | corr |
+|---:|---:|---:|
+| 0.60 | **0.0552** | 0.526 |
+| 1.00 | **0.0448** | 0.455 |
+| 1.70 | **0.0371** | 0.406 |
+
+> **Registered as band 30. A higher learning rate DECOUPLES curvature from the gradient. Band 29's
+> flattening slope and band 30's widening C-spread are the same fact seen twice** — the slope is
+> `cov/var(g)` and C's variance contains `−4·cov`, so a falling covariance flattens one and widens the
+> other simultaneously.
+
+**A caveat this establishes for every band, stated plainly.** C's type structure is **~8% narrower at
+s = 1.0 than at s = 1.7**. Every effect size the campaign quotes — the q,k excess, the mlp gap, the
+type offsets — is measured at s = 1.0 and carries that sensitivity. **They are not
+architecture-only constants; they are architecture-at-a-given-learning-rate.** The dependence is
+modest (~8% per 2.8× LR) and does not threaten any band's sign or significance, but it belongs in the
+record.
+
+**Consistency with band 16, checked and holding.** Band 16 says C's *pattern* is restored under the
+ladder (corr +0.87–0.97) while its level shifts. Band 30 adds that its *spread* also widens. All three
+are compatible: the ordering of matrices survives while their level and dispersion both move — which
+is precisely why band 16's registered check is a **correlation**, not a variance.
+
+**Method note.** I predicted compression from a two-term intuition (λ down, g flat ⇒ C down) and the
+third term — the covariance — reversed it. **`C = λ/g²` is not a two-variable relation when both are
+random;** the covariance is a first-class term and I treated it as absent. *This is the same class of
+error as iteration 118's constraint-B framing: reasoning about a derived quantity without writing out
+its full decomposition.*
 
 **=== ITERATION 120 (2026-09-03): MUON'S UPDATE IS GRADIENT-SCALE-INVARIANT — what λ ∝ C·g² can mean ===**
 
