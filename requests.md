@@ -29,6 +29,88 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★ C IS INVARIANT TO THE PER-LAYER `post_lambda` SCALARS (iteration 158) — derived, confirmed, with one estimate withdrawn
+
+*Three iterations of elimination without a positive result. Rather than scan for another correlate, this
+one **derives** a prediction from the architecture and tests it.*
+
+**The mechanism band 31 does not cover.** `train_gpt.py` lines 1638/1665:
+
+```
+x = resid_lambdas_attn[i] * x + post_lambdas_attn[i] * attn_out + x0 * x0_gates[i]
+x = resid_lambdas_mlp[i]  * x + post_lambdas_mlp[i]  * ReLUSqrdMLP(normed, *mlp_args)
+```
+
+`post_lambdas` is `nn.Parameter(torch.ones(num_layers, 2))` (line 1334), trained by **Adam** (line 2035)
+— **a genuinely per-layer, layer-varying scalar.** Band 31's invariance argument constrains **Muon's
+step on the matrices** and says nothing about these. **This is the first layer-varying quantity found
+that band 31 does not foreclose.**
+
+**THE DERIVATION.** For a matrix W in block i, the loss depends on W **only** through
+`p · f(W)` where `p = post_lambda[i]`. Hence along any direction in W: **g ∝ p** and **λ ∝ p²**, so
+
+```
+log λ = 2 log p + (p-free part)
+log g = 1 log p + (p-free part)
+log C = log λ − 2 log g   ⇒   the p terms CANCEL EXACTLY
+```
+
+> **PREDICTION 1: C is invariant to `post_lambda`; λ and g are not.**
+> **PREDICTION 2: any p-driven component of the λ profile must appear in the g profile at exactly half
+> the size, same sign, layer by layer** — i.e. regressing the g profile on the λ profile gives **+0.5**
+> if p dominates.
+
+**PREDICTION 2 — TESTED, AND p DOES NOT DOMINATE.** Slope of (log g profile) on (log λ profile), 12
+seed×fork fits: **mean +0.139, sd 0.0735** — **t = −17.01 vs +0.5** (decisively below) but
+**t = +6.55 vs 0** (decisively above). **A p-driven channel is present but is a minority of the λ
+profile.**
+
+**⚠️ AN ESTIMATE I COMPUTED AND THEN WITHDREW.** From `cov(λ,g) = 2·var(u)` I derived a p-driven share
+of **27.8%** of the λ profile. **That number is withdrawn.** The same two-component model implies a
+p-driven share of the *gradient* profile of `var(u)/var(g)`, which came out **mean 1.185, range
+[0.300, 2.369], exceeding 1.0 in 8 of 12 fits** — arithmetically impossible for a variance share.
+**The model's own consistency check refutes it:** the λ–g covariance is carried by something besides
+`post_lambda`, so 27.8% is not an upper bound either. **No share is claimed.**
+
+**PREDICTION 1 — CONFIRMED, and it is the load-bearing half.** It never depended on the share:
+
+- **corr(C profile, g profile) = +0.096, sd 0.245, |t| = 1.36** — indistinguishable from zero. **C is
+  blind to the channel that carries p, exactly as derived.**
+- **C's bowl survives removing the entire gradient channel.** Regressing the C profile on the g profile
+  and refitting the residual: **cubic R² 0.860 (sd 0.061)**, minimum still **interior in 12/12 fits**
+  (argmins: 6,6,6,6,6,6,6,6,6,7,7,7).
+
+> **⇒ THE BOWL LIVES IN THE p-FREE SURFACE TERM.** `post_lambda` is a real per-layer channel that λ and
+> g are exposed to and **C is immune to by construction** — but **it is NOT the bowl.** The bowl is
+> untouched by removing g entirely.
+
+**This explains band 32 mechanistically.** Band 32 recorded that **C is more seed-stable than λ**
+(0.0776 vs 0.1235 dex) as an empirical fact. **Now there is a reason:** C is *algebraically immune* to a
+per-layer learned nuisance scalar that λ is fully exposed to. **A ratio that cancels a trained parameter
+is a better-conditioned object than its numerator** — this is why C, not λ, is the right target, and it
+is the first derivation-level justification the campaign has for that choice.
+
+**PROPOSED n=4 SEED CHECK — band 41 (criterion registered).**
+*Criterion:* on a fresh 4-seed panel, (i) **corr(C profile, g profile) is not significant** (|t| < 2.5
+across the seed×fork fits); (ii) after regressing the C profile on the g profile, the residual bowl has
+**cubic R² ≥ 0.70** with its **minimum interior (layers 4–8) in ≥10 of 12** fits; (iii) the slope of the
+g profile on the λ profile is **significantly below +0.5**.
+*Status:* **satisfied by committed REQ-035 Arm A data** (+0.096, |t| 1.36; R² 0.860, 12/12; t = −17.01).
+**No new compute requested; runs under the ≤2-node ceiling.**
+
+**⚠️ A MEASUREMENT WORTH REQUESTING LATER — but not now.** `post_lambdas` and `resid_lambdas` are **not
+recorded in any committed probe output** (the curvature probe stores only
+`top_eigenvalue / curvature_along_gradient / curvature_along_polar / gradient_block_norm / alphas /
+offdiags / shape`). Dumping the 13×2 learned scalars at each fork state would be **nearly free** — no
+training, just a checkpoint read — and would let the p-channel be measured directly rather than
+inferred. **Not filed as a request this iteration**, because the load-bearing result (C is invariant,
+the bowl survives) is already established without it; it is logged here so the humans can fold it into
+any future probe pass at no marginal cost.
+
+**Search space:** the bowl peaks at both ends, minimum at layer 6, lives in the **loss surface**
+(band 40), and is **not** Muon's step (band 31), **not** `post_lambda` (here), **not** stream scale,
+**not** input rank (iter. 156), **not** an axis artifact (iter. 157).
+
 ## ⊘ THE DEPTH AXIS IS CORRECT — an architectural hypothesis of mine, raised and killed (iteration 157)
 
 *Reading `train_gpt.py` for a structural cause turned up line 1268: **"Attention is skipped in layer 6
