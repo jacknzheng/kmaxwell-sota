@@ -279,6 +279,67 @@ correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
 
+**=== ITERATION 97: REGISTERED NEGATIVE — REQ-038's fields cannot reconstruct the deficit's size ===**
+
+*Iteration 96 left the q,k deficit's magnitude unexplained. Two of REQ-038's fields were still
+unused. Both are now tested, and both fail — which closes this route on committed data and says
+precisely what a new measurement must look like.*
+
+**Route 1: the Frobenius fields.** The gradient is `G = dᵀa`, so `‖G‖_F ≤ ‖d‖_F‖a‖_F` — the
+Frobenius norms, not the RMS values, are the right scale. But they turn out **exactly proportional**
+to the RMS fields:
+
+| field | q,k | v | ratio |
+|---|---:|---:|---:|
+| `a_rms` / `a_frob` | 1.00364 / 2517.4 | 1.00364 / 2517.4 | **1.0000** (both) |
+| `d_rms` / `d_frob` | 0.00262 / 6.580 | 0.00399 / 10.000 | **0.6580** (both) |
+
+**Identical ratios — the Frobenius fields carry no information the RMS fields did not.** Same
+−0.182 dex, same shortfall. Route closed.
+
+**Route 2: the rank asymmetry.** One genuine asymmetry remains — `a_eff_rank` is **identical** (30.17
+for q, k and v alike, as the shared input requires) while `d_eff_rank` differs (74.3 vs 106.2). Since
+`G = Σₜ dₜaₜᵀ`, how the outer products accumulate should matter. Testing `|d| + p·log(d_eff_rank)`
+per layer, for several powers p:
+
+| model | mean | **corr with gradient deficit** | depth slope t |
+|---|---:|---:|---:|
+| `\|d\|` only | −0.168 | +0.351 | +3.46 |
+| `\|d\|` + 0.5·log(rank) | −0.194 | **+0.047** | +4.09 |
+| `\|d\|` + 1.0·log(rank) | −0.220 | **+0.006** | +3.83 |
+| `\|d\|` − 0.5·log(rank) | −0.142 | +0.169 | −2.54 |
+| **observed deficit** | **−0.487** | 1.000 | **−0.12** |
+
+**Adding the rank term makes the fit worse, not better** — correlation with the target falls from
++0.351 to +0.006 — and no power fixes the depth slope. The observed deficit is depth-flat (t = −0.12,
+per band 17) while every `|d|`-based model trends strongly (t ≈ +3.5 to +4.1). **A rank term would
+have to carry a depth trend that exactly cancels `|d|`'s, and it does not have one.**
+
+**What the missing factor must look like — the useful output of this iteration:**
+
+| property | value |
+|---|---:|
+| size | **−0.319 dex** (a factor of **0.48×**) |
+| depth behaviour | **grows with depth**, slope t = −2.09 |
+| correlation with `d_eff_rank` | **−0.490** (wrong sign to help) |
+
+**REQ-038 measured nothing with that shape.** The deficit's size is set by something the probe does
+not capture — most plausibly the **token-wise alignment** between `d` and `a`, which determines how
+`Σₜ dₜaₜᵀ` accumulates and is *not* recoverable from per-tensor norms or spectra. **That is a
+measurable quantity** — e.g. `‖Σₜ dₜaₜᵀ‖_F / (‖d‖_F‖a‖_F)`, the alignment ratio — and it is a single
+extra scalar per matrix in a probe that already exists.
+
+**Registered as a negative, and REQ-043 amended a second time.** The request now asks for three
+things, in priority order: **(1)** the existing probe on seeds 1–3 (band 21 at n=4); **(2)** the
+probe at a second training state (iteration 96's caveat); **(3)** **the alignment ratio
+`‖Σₜ dₜaₜᵀ‖_F / (‖d‖_F‖a‖_F)` per matrix** — the one quantity that could close the magnitude gap, and
+the direct output of iteration 97's negative.
+
+**Campaign status.** The locus of the q,k effect is settled beyond doubt (`|a|` identical at all 12
+layers; the effect is purely backward). **Its magnitude is unexplained by every quantity currently
+measured**, and this iteration establishes that as a property of the *data*, not of the analysis —
+three independent reconstructions have now failed, each for a different reason.
+
 **=== ITERATION 96: THE PER-MATRIX DATA BREAKS THE RECONCILIATION — d_rms does not track the deficit ===**
 
 *Iteration 95 used REQ-038's **type means** and reconstructed the gradient deficit as `|d|` (−0.182)
@@ -416,7 +477,9 @@ bands 14, 17, 18, 19 and 20 are all confirmed at n=4. **The registered check is 
 identical for q, k and v; `d_rms` ratio ≤ 0.75; and the mlp gap in `a_rms` not `d_rms`, in ≥3 of 4
 seeds.
 
-**Second training state — now a substantive part of this request, not an optional extra.** Iteration
+**Priority 3 — the alignment ratio (added iteration 97).** Record, per matrix, **`‖Σₜ dₜaₜᵀ‖_F / (‖d‖_F · ‖a‖_F)`** — how aligned the backward and forward tensors are across tokens. Iteration 97 showed that `d_rms`, `d_frob` and `d_eff_rank` **cannot** reconstruct the 0.373 dex gradient deficit: the missing factor is 0.48×, grows with depth, and correlates −0.490 with the rank term. Alignment is the one unmeasured quantity with the right shape, and it is a single extra scalar in a probe that already computes both tensors.
+
+**Priority 2 — second training state.** Iteration
 96 found that `d_rms`'s q,k deficit shrinks with depth (slope t = +6.65) while the gradient deficit
 does not (t = −1.18), and that the two are **uncorrelated layer-by-layer (corr = −0.012)**. One
 candidate explanation is that the two are measured at different states — REQ-038 probes fork-1500,
