@@ -271,7 +271,7 @@ measured value so a seed result can be compared directly.
 | **22** | **the q,k deficit SHRINKS during training** (iter. 98) — ✅ **CONFIRMED n=4** | **drift of the deficit vs step is POSITIVE (less negative) with a seed-clustered 95% CI excluding 0**, and **same sign in all three LR arms** | pooled **+0.058 dex/1000 steps, CI [+0.032, +0.085]**; per-arm +0.029 / +0.092 / +0.054 |
 | **23** | **the g² law is CROSS-SECTIONAL/CAUSAL ONLY — it does not hold in TIME** (iter. 99) | **slope of λ-drift on g-drift across matrices must be < 1.5** (attenuation-corrected), i.e. NOT 2; **C's drift CI must include 0** and **step must explain < 1% of C's variance** | slope **+0.634**, CI [0.329, 0.982], corrected **0.860**; reliability 0.738 so a true 2 would read 1.476. C drift CI [−0.055, +0.049]; step **0.2–0.4%** of variance vs LR 2.0–3.5% |
 | **24** | **the measurement window IS equilibrated** (iter. 100) — ✅ **CONFIRMED n=4** | **autocorrelation of successive Δlog λ negative with seed-clustered CI excluding 0** (mean-reverting, not drifting), **and strictly above −0.5** (real dynamics, not white noise); **change magnitude ratio second/first half ≈ 1** | AC **−0.228, CI [−0.437, −0.117]**, implied AR(1) ρ = **0.54**; ratio **0.898** |
-| **25** | **the magnitude shortfall is a REAL reproducible term, LINEAR in depth** (iter. 101–102) — ✅ **CONFIRMED n=4** | **across-seed sd < 0.05 dex**; **linear-in-depth R² > 0.6** with slope t < −3; **trend survives excluding the final layer** | **−0.240 dex mean** (0.575×), L0 −0.146 → L12 −0.432; **linear R² 0.763**, slope −0.0176 dex/layer **t = −5.67**; excluding L12 **t = −5.71**; across-seed sd **0.041** |
+| **25** | **the shortfall is REAL and reproducible; its depth trend is PARTLY a state artifact** (iter. 101–103) — ⚠️ **size confirmed n=4, slope qualified** | **SIZE (unaffected):** across-seed sd < 0.05 dex, mean ≤ −0.15 dex. **SLOPE (qualified):** ~34% attributable to the fork-1500 vs 2250–2750 state mismatch — **needs the probe at a second state to state correctly** | mean **−0.240 dex** (0.575×), across-seed sd **0.041**; raw slope −0.0176 (t = −5.67), **state-corrected −0.0117** (CI −0.0064 to −0.0169) |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -282,6 +282,63 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 103: QUALIFYING BAND 25's DEPTH TREND — the state confound's untested half ===**
+
+*Iteration 98 tested whether the fork-1500 vs 2250–2750 state mismatch explains the shortfall's
+**size**. It does not — it widens the gap. But the shortfall's most distinctive feature is its
+**depth trend**, and that was never tested against the same confound. It should have been.*
+
+**The test.** The shortfall is `(Arm A gradient deficit at 2250–2750) − (REQ-043 |d| deficit at 1500)`.
+If the gradient deficit's **depth profile** evolves between those states, comparing across them
+manufactures a depth trend. Arm A's five steps let this be measured directly — 60 (seed, arm, step)
+cells, each giving a depth slope:
+
+| step | mean depth slope of the gradient deficit |
+|---:|---:|
+| 2250 | −0.00237 |
+| 2375 | −0.00569 |
+| 2500 | −0.00538 |
+| 2625 | −0.00453 |
+| 2750 | −0.00666 |
+
+**The depth slope drifts: −0.00593 dex/layer per 1000 steps, seed-clustered 95% CI [−0.01119,
+−0.00071] — excludes zero.**
+
+**Quantifying the damage:**
+
+| | dex/layer |
+|---|---:|
+| shortfall depth slope (band 25 as filed) | **−0.0176** |
+| attributable to the state mismatch (1000-step gap) | **−0.0059** (CI −0.0007 to −0.0112) |
+| **remaining after correction** | **−0.0117** (CI −0.0064 to −0.0169) |
+| **share that is a state artifact** | **~34%** (CI 4% to 64%) |
+
+**About a third of band 25's depth trend may be an artifact of comparing two training states**, with
+wide uncertainty. **The remaining −0.0117 dex/layer is not attributable to it** — the trend is real
+but smaller than filed.
+
+**What is unaffected.** The shortfall's **size** (−0.240 dex, across-seed sd 0.041) stands: iteration
+98 established the state mismatch *widens* that gap rather than creating it. Only the **slope** is
+qualified. Band 25 is amended to separate the two claims explicitly, since they have different
+evidential status.
+
+**Why this matters for the specification.** Iteration 102 handed the alignment ratio a precise target
+including `−0.0176 dex/layer`. **That target was overstated.** The corrected target is **−0.0117
+dex/layer**, and the honest position is that the campaign **cannot pin the depth slope more tightly
+than [−0.0064, −0.0169] from committed data**. Handing a candidate mechanism a spuriously precise
+number to hit would have been a way to reject it wrongly.
+
+**This raises REQ-043 priority 2 from "resolves a caveat" to "required".** The probe at a second
+training state is no longer a nice-to-have that settles an aside — **it is needed to state band 25
+correctly.** Without it, the depth trend carries a 4%–64% uncertainty that no amount of further
+analysis on committed data can reduce, because both quantities are measured at fixed, different
+states.
+
+**Method note worth keeping.** Iteration 98 tested the state confound against the shortfall's *size*
+and cleared it, and I treated that as clearing the confound generally. It did not — a confound can be
+harmless for one statistic and material for another, and each statistic derived from a mismatched
+comparison needs its own check. **Added to the standing rules.**
 
 **=== ITERATION 102: SPECIFYING THE MISSING FACTOR — and re-rejecting d_eff_rank at n=4 ===**
 
