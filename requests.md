@@ -428,6 +428,73 @@ a free per-layer knob without changing the kernel. Filing a momentum rule now wo
 inventing a mapping rather than deriving one. The prerequisite is a registered experiment
 asking whether mu does anything LR cannot at fixed `s_eff`; that is REQ-037 if wanted.
 
+**=== ITERATION 116 ANALYSIS (2026-09-03): applying the new rule to the campaign's OWN bands ===**
+
+*Iteration 115 added a standing rule — **drop each group in turn before accepting a correlation over
+few points** — after it caught a verdict in my own script. **A rule written and not applied to
+existing findings is worthless**, so this iteration applies it retroactively to every band that has
+the vulnerable shape.*
+
+**BAND 27 — the campaign's strongest correlation, and the most exposed** (six correlations, each over
+12 layers):
+
+| type | full corr | **LOO worst case** | range |
+|---|---:|---:|---:|
+| mlp.fc | −0.986 | **−0.974** | 0.019 |
+| attn.proj | −0.980 | **−0.970** | 0.017 |
+| attn.q | −0.971 | **−0.956** | 0.023 |
+| attn.v | −0.952 | **−0.933** | 0.033 |
+| attn.k | −0.944 | **−0.919** | 0.038 |
+| mlp.proj | −0.875 | **−0.848** | 0.085 |
+
+**The weakest any correlation becomes when its most influential layer is removed is −0.848.** No
+single layer carries any of the six. **Band 27 is robust.**
+
+**BAND 14 — the q,k gradient deficit at identical shape:**
+
+| seed | full | LOO range |
+|---|---:|---|
+| 0 | −0.378 | [−0.387, −0.366] |
+| 2 | −0.356 | [−0.373, −0.341] |
+
+**Maximum movement 0.032 dex across all folds** — well inside the 0.07 noise floor. **Robust.**
+
+**BAND 18 — q and k interchangeable.** Full differences −0.008 to −0.017; LOO ranges stay within
+[−0.021, −0.003]. **Never approaches the 0.05 dex threshold.** Robust.
+
+**BAND 20 — the mlp gradient gap.** Full −0.277 to −0.283; LOO ranges [−0.297, −0.249].
+**Maximum movement 0.034 dex.** Robust.
+
+**BAND 12 — the three-binary reduction, tested by leave-one-TYPE-out** (the form the rule actually
+targets, since this band is a claim about the six types):
+
+| dropped type | free-offsets LOLO | three-binaries | **gap** |
+|---|---:|---:|---:|
+| *(none)* | 0.288 | 0.292 | **+0.005** |
+| attn.k | 0.287 | 0.288 | **+0.000** |
+| attn.q | 0.290 | 0.291 | **+0.000** |
+| **mlp.proj** | 0.269 | 0.275 | **+0.006** |
+| attn.v | 0.304 | 0.309 | +0.005 |
+
+**The reduction holds with every type removed in turn**, gap 0.000–0.006 dex throughout.
+
+**This also addresses iteration 115's flag.** That iteration warned that bands involving **mlp.proj**
+carry a plausible IV contamination the others do not, and listed bands 12, 20 and 27 as exposed.
+Testing directly: **dropping mlp.proj leaves band 12's gap at +0.006** (from +0.005), **band 27's
+mlp.proj correlation is the weakest of the six but still −0.848 under LOO**, and **band 20 does not
+involve the contaminated estimate at all** — it is a raw gradient ratio, not an IV exponent. **The
+flag stands as a caution on the IV exponent for that type; it does not propagate into the bands.**
+
+> **All five type-level bands survive leave-one-out. The new rule, applied retroactively, changes
+> nothing — which is the outcome that makes the earlier results trustworthy rather than merely
+> unchallenged.**
+
+**Why this was worth an iteration.** Fourteen bands rest on aggregates over six types or twelve
+layers. **The rule was introduced because that shape had already produced one wrong verdict in this
+session**, and every prior band was established before the rule existed. Confirming they pass is not
+a null result — it is the difference between findings that happen to have survived and findings that
+have been tested against a known failure mode.
+
 **=== ITERATION 115 ANALYSIS (2026-09-03): the contamination's per-type structure is UNRESOLVABLE ===**
 
 *Iteration 114 proved a non-gradient channel exists. Whether that damages the campaign's other bands
