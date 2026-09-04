@@ -29,6 +29,41 @@ Next request number: **REQ-047**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⚠️ ANALYSIS-LOOP STATUS (2026-09-04, second assessment)
+
+**The committed data is exhausted. This is a measured claim, not an impression.**
+
+**Evidence.** Of the last ten analysis iterations, **six were negatives, refutations, or checks on my
+own prior claims**: the three U-shapes share a form not a mechanism (138); entropy fails the
+quadratic-depth check a second time (137); chunk geometry refuted (136); alignment does not explain the
+q,k gap (135); alignment does not belong in C's predictive model (141); the shared-term audit changed
+one number and confirmed 15 clean (139). **Two produced new bands (33, 35), and both were then
+qualified by the checks that followed.**
+
+**Jerry's last experimental delivery was ~6 hours ago; I have pushed 11 commits since, all analysis of
+the same 72 matrices.** One request is OPEN.
+
+**What the pattern means.** The campaign is now finding **artifacts of its own construction** faster
+than facts about the network — the shared-λ trap alone has produced three results that passed
+conventional validation (134, 138, 141), the last surviving two independent hold-out schemes. **That
+is what exhausted data looks like: the remaining signal is comparable to the analysis's own
+distortions.**
+
+**The account is complete and internally consistent** — see CONSOLIDATED FINDINGS IV and the goal
+statement below it. **The three open questions are measurement-bound**, and one of them is now known to
+be **unanswerable by any gradient-scaling intervention** (band 31, a theorem).
+
+**Recommendation: pause the analysis loop.** The productive path is the queue:
+- **REQ-045** (OPEN, low priority) — settles band 30's *shape*
+- **REQ-044** (Jack's paired batch ablation)
+- **A new probe** would be needed for the two alignment questions — per-token backward vectors, which
+  is a substantially heavier instrument than anything filed. **I do not recommend filing it on the
+  strength of band 33 alone**, since band 141 shows alignment adds nothing to C's predictive model.
+
+**What would restart the loop productively:** any new measurement landing in `logs/`. Until then,
+further passes over the same data have negative expected value — each one risks adding a
+conventionally-validated artifact to the record, which is precisely what the last three traps were.
+
 ## ⚠️ QUEUE STATUS NOTE (2026-09-04, from the analysis session)
 
 **Jerry's last experimental delivery was REQ-043 P2/P3, ~5 hours ago. Since then this session has
