@@ -29,6 +29,81 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⛔ BAND 37 DOWNGRADED (iteration 149) — its correlations are DEPTH correlations, and the "exception" is not one
+
+*Iteration 148 narrowed band 37's exception and asked the tighter question it left: **why does mlp.fc
+differ from attn.proj and attn.q specifically**, when all three share a U-shaped `d_cv`. Answering it
+undermined band 37's framing rather than the exception.*
+
+**Step 1 — the turning points coincide, and only for mlp.fc.** Correlating two depth series depends on
+where each turns. Per seed, `log‖d‖` bottoms at **layer 12 in every seed for five types**, but at
+**layer 10 in every seed for mlp.fc** (zero seed variance — structural, not statistical):
+
+| type | d_cv argmin / log‖d‖ argmin (per seed) | mean \|gap\| |
+|---|---|---:|
+| **mlp.fc** | 4/10, 5/10, 8/10, 8/10 | **3.75** ← turns together |
+| attn.q | 5/12, 4/12, 4/12, 4/12 | 7.75 |
+| attn.proj | 4/12 ×4 | 8.00 |
+| mlp.proj | 3/12 ×4 | 9.00 |
+| attn.v | 1/12, 2/12, 2/12, 2/12 | 10.25 |
+| attn.k | 1/12 ×4 | 11.00 |
+
+**mlp.fc is the only type whose two series turn together**, in all four seeds. Its +0.867 follows
+arithmetically. **That alone would have explained the exception with no new physics.**
+
+**Step 2 — removing the depth trend, and the result that changes the framing.** Regressing both series
+on a within-seed quadratic in layer and correlating residuals:
+
+| type | raw | residual |
+|---|---:|---:|
+| attn.k | −0.799 | **+0.403** |
+| attn.proj | −0.599 | **+0.637** |
+| attn.q | −0.431 | **+0.194** |
+| attn.v | −0.858 | **+0.543** |
+| mlp.fc | +0.864 | +0.379 |
+| mlp.proj | −0.823 | +0.077 |
+
+**All six go positive, and mlp.fc becomes unremarkable — mid-pack, below attn.proj and attn.v.** The
+five negative values were carried entirely by the shared depth trend.
+
+**Step 3 — and that residual result does not survive either.** A fitted quadratic is a model I chose,
+and it can manufacture a sign. The assumption-free version holds **layer fixed** and correlates across
+the 4 seeds, where depth cannot contribute anything (Fisher-z over 12 layers):
+
+| type | raw | resid | **within-layer** | sd | t |
+|---|---:|---:|---:|---:|---:|
+| attn.k | −0.799 | +0.403 | **+0.489** | 0.421 | **+4.40** |
+| attn.proj | −0.599 | +0.637 | −0.269 | 1.168 | −0.82 |
+| attn.q | −0.431 | +0.194 | +0.184 | 0.956 | +0.68 |
+| attn.v | −0.858 | +0.543 | −0.055 | 0.806 | −0.24 |
+| mlp.fc | +0.864 | +0.379 | −0.296 | 0.621 | −1.70 |
+| mlp.proj | −0.823 | +0.077 | +0.004 | 1.275 | +0.01 |
+
+**Five of six are indistinguishable from zero (|t| ≤ 1.70), signs scatter both ways, sds are 0.42–1.28.
+Only attn.k is significant.** So step 2's uniformly-positive residuals were an artifact of my quadratic
+— the exact risk flagged when running it — and **n=4 has no power at the matrix level.**
+
+> **CONCLUSION — band 37 is downgraded to a depth statement.** What band 37 measured is how ‖d‖ and its
+> concentration co-vary **across depth**, which is a real and reproducible description of the depth
+> profile. It is **not** evidence of a matrix-level concentration mechanism, and **"5 of 6 types trade
+> off, mlp.fc reverses" is not a fact about matrix types** — it is a fact about where each type's depth
+> curves turn. **The mlp.fc "exception" is withdrawn**: it needs no explanation, and the two mechanisms
+> refuted for it in iterations 147–148 were explaining something that was not there.
+
+**Band 27 is untouched** — it is a ‖a‖–‖d‖ statement verified separately (iteration 148: mlp.fc −0.986,
+strongest of six), and does not rest on any of this.
+
+**New standing rule (10).** *A per-type correlation computed across layers is a depth correlation.
+Before reading it as a property of the type, remove depth and check whether it survives — and if the
+only depth-free test available is underpowered, report that the question is open rather than reporting
+the depth number.* Three iterations (147, 148, 149) were spent explaining a sign that was a depth
+artifact; the first two hypotheses were refuted on their merits, but the target itself was not real.
+
+**Cost of the error, stated plainly.** Band 37 was recorded from a 6-row table of across-layer
+correlations without a depth control. Nothing downstream depends on it, so the damage is confined to
+three iterations of my own effort — but it is the second time this campaign (after the shared-term
+alignment issue behind rule 6) that a constructed aggregate was read as a mechanism.
+
 ## ✅ BAND 27 SURVIVES THE mlp.fc EXCEPTION (iteration 148) — the trade-off is intact everywhere
 
 *Band 37 left mlp.fc reversing the concentration signature at +0.867. **The load-bearing question was
