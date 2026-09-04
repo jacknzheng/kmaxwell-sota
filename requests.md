@@ -323,7 +323,7 @@ measured value so a seed result can be compared directly.
 | **29** | **the λ–g relation WEAKENS as the LR rises** (iter. 120) — ✅ **CONFIRMED n=4** | **cross-sectional slope falls monotonically across s = 0.6 → 1.7**, seed-clustered CI on the spread excluding 0; **sd(log g) flat** (rules out range compression) while **sd(log λ) compresses** | slopes **0.916 / 0.742 / 0.636**, spread CI **[0.208, 0.365]**; sd(log g) **0.246/0.246/0.242**, sd(log λ) **0.429/0.395/0.367**; corr 0.534/0.497/0.453 |
 | **31** | **Muon's gradient-magnitude invariance is a THEOREM, not an approximation** (iter. 131) | the update `X = g/(‖g‖·1.02 + 1e-6)` is exactly scale-free wherever the epsilon is negligible; **deviation < 1e-4 for ‖g‖ ≥ 1e-2**, and REQ-046's matrices sit at ‖g‖ ≈ 10³·⁸. Momentum adds a transient of ~1/(1−m) steps only | epsilon deviation at ‖g‖=10: **5e-8**; transient ≈ 20 steps of 750 |
 | **32** | **C = λ/g² is the right object — the g² division REMOVES noise** (iter. 132) — ✅ **CONFIRMED n=4** | **C must be more seed-stable than λ** (median |Δ| across seed pairs) **and have a larger architecture-to-seed-noise ratio** | C **0.0776 dex** vs λ **0.1235**; ratio C **15.7×** vs λ **8.0×**; architectural spread C **0.462 dex** vs λ **0.383** |
-| **33** | **Muon steps nearly ORTHOGONAL to peak curvature, and that alignment predicts C** (iter. 134) — ✅ **CONFIRMED n=4** | **cp/λ < 0.02 in every type** (the step sees <2% of peak curvature); **corr(log(cp/λ), log C) ≤ −0.60** and must **clear a cp-shuffled null** in every seed | ratio **0.001–0.006** (overall **0.4%**); corr **−0.788/−0.791/−0.736/−0.782** vs null **−0.34/−0.25/−0.27/−0.29 ± 0.07**, **p < 10⁻⁴ all seeds** |
+| **33** | **Muon steps nearly ORTHOGONAL to peak curvature, and the RATIO predicts C** (iter. 134, 140) — ✅ **CONFIRMED n=4, ratio verified by free coefficients** | **cp/λ < 0.02 every type**; and in `C ~ a·log λ + b·log cp` with **free** coefficients, **b/a ≈ −1** (the ratio the data prefers unprompted) with **|t(b)| > 5** | ratio **0.001–0.006**; **b/a = −1.045/−1.301/−1.082/−1.193**, t(b) = **−8.8 to −11.0**; λ-only RSS **~2× worse** |
 | **34** | **alignment and the q,k excess are SEPARATE effects** (iter. 135, 139) — ✅ **CONFIRMED n=4, raw-component checked** | **controlling for step-curvature shrinks the q,k C-coefficient by < 35%** — and **by ≤ 0% when the control uses raw `log cp`** (no shared λ) | shrinkage with alignment **22/19/16/20 %**; with `log cp` **−5/−7/−3/−9 %**; `log cp` net of q,k only t = **1.6–2.9** |
 | **35** | **q and k differ in step ALIGNMENT, and the gap is DEPTH-STRUCTURED** (iter. 136–137) — ✅ **CONFIRMED n=4** | **|alignment(q) − alignment(k)| ≥ 0.15 dex, same sign every seed** (band 18's gradient equality is 0.014 dex); **gap deepens with depth then recovers — quadratic R² > 0.5**. *Attention entropy does NOT explain it* | mean **−0.306 dex** (sd 0.037, 4/4); L0 **−0.134** → L8 **−0.474** → L12 −0.327; quadratic R² **0.563**; entropy t **+5.03 → +0.26** under quadratic depth |
 | **30** | **a higher LR DECOUPLES curvature from the gradient** (iter. 121, 123) — ✅ **CONFIRMED on TWO INDEPENDENT DESIGNS** | **cov(log λ, log g) falls as the LR rises**, seed/matrix-clustered CI excluding 0, on **both** the global ladder and REQ-023's per-matrix randomisation. *Shape not resolved — the two designs differ in where the drop occurs* | Arm A **0.0552/0.0448/0.0371**; REQ-023 **0.0766/0.0425/0.0418** (f1500) and **0.0784/0.0421/0.0402** (f2000), endpoint CIs **[−0.071,−0.002]** and **[−0.077,−0.005]** |
@@ -895,6 +895,56 @@ discovering later that a band's headline shrinkage was an artifact — is the fa
 within one check of committing. **Screening the whole set once is cheaper than rediscovering the same
 trap band by band**, and the 15 clean cases are now documented as clean rather than merely
 unchallenged.
+
+**=== ITERATION 140 (2026-09-04): BAND 33 IS GEOMETRY, NOT CONSTRUCTION — the data recovers the ratio unprompted ===**
+
+*Iteration 139 left an apparent contradiction: band 33's **ratio** `log cp − log λ` predicts C at
+−0.78, but `log cp` **alone** predicts it only weakly (t = 1.6–2.9). Those are consistent only if the
+content lives in cp **relative to** λ — or if the ratio was carrying λ all along, in which case band 33
+is another construction effect.*
+
+**The decisive test: give λ and cp free, separate coefficients.** The alignment predictor *imposes*
+`b = −a` by construction. If the data prefers that constraint on its own, the ratio is the right
+object:
+
+| seed | a (log λ) | b (log cp) | **b/a** |
+|---|---:|---:|---:|
+| 0 | +1.114 (t +9.9) | **−1.164 (t −8.8)** | **−1.045** |
+| 1 | +0.998 (t +10.4) | **−1.298 (t −11.0)** | **−1.301** |
+| 2 | +1.116 (t +8.6) | **−1.207 (t −8.0)** | **−1.082** |
+| 3 | +1.043 (t +9.9) | **−1.245 (t −9.6)** | **−1.193** |
+
+**The data recovers `b/a ≈ −1` without being told** — the constraint the ratio imposes, arrived at
+independently in all four seeds. **And `log cp` is strongly significant here (|t| = 8.0–11.0)**, which
+resolves iteration 139's puzzle: **cp matters conditional on λ, not marginally.** A weak marginal
+t-statistic said nothing about its conditional contribution.
+
+**Model comparison agrees:**
+
+| seed | free(λ, cp) RSS | ratio-only RSS | **λ-only RSS** |
+|---|---:|---:|---:|
+| 0 | 7.082 | 7.101 | **14.995** |
+| 1 | 4.456 | 5.088 | **12.211** |
+| 2 | 7.005 | 7.067 | **13.438** |
+| 3 | 5.759 | 6.062 | **13.459** |
+
+**Imposing the ratio costs almost nothing (RSS +0.3% to +14%), while dropping cp entirely doubles the
+error.** AIC prefers ratio-only in 2 seeds and free in 2 — i.e. the one-parameter ratio is as good as
+the two-parameter fit.
+
+> **Band 33 is geometry. The step–curvature alignment carries genuine predictive content about C, and
+> the ratio form is what the data itself selects — not an artifact of how it was constructed.**
+
+**Why this needed doing after iteration 139.** That iteration correctly flagged `log cp`'s weak
+marginal significance and correctly concluded the ratio was the meaningful object — **but it did not
+establish *why*, and "the ratio works but its component doesn't" is exactly the shape of a construction
+artifact** (iteration 138 died of precisely that). **The free-coefficient test distinguishes them: an
+artifact would show `b ≈ 0`; geometry shows `b ≈ −a`.** It shows `b ≈ −a`.
+
+**Standing rule 6 extended once more:** *when a ratio predicts and its numerator does not, fit the
+components with free coefficients before concluding either way — a data-preferred ratio constraint is
+evidence FOR the ratio; a null numerator coefficient is evidence against it.* **The marginal
+significance of a component is not the relevant test.**
 
 ### CONSOLIDATED FINDINGS IV (iterations 112–132) — the causal account, revised
 
