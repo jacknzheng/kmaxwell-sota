@@ -267,7 +267,7 @@ measured value so a seed result can be compared directly.
 | **18** | **q and k are interchangeable** (iter. 92) — ✅ **CONFIRMED n=4** | **|q deficit − k deficit| < 0.05 dex** and **not significant within any single seed** (p > 0.05), in every seed | q −0.380 vs k −0.366, difference **−0.014 dex** (3.8% of the shared deficit), within-seed p = 0.82/0.56/0.67/0.57 |
 | **19** | **QK-norm beats the Muon-chunking rival** (iter. 93) — ✅ **CONFIRMED n=4** | on log g, **QK-norm indicator R² > 0.5 with |t| > 5**, and **shape_mult alone R² < 0.10**; QK-norm coefficient must not weaken when shape_mult is added | QK alone R² 0.63–0.67, t −10.9 to −11.9; shape_mult alone **R² 0.005–0.008, t +0.6 to +0.7**; both: QK **−0.45, t −11.5 to −12.6** |
 | **20** | **the mlp gradient gap is depth-structured, not a fixed update factor** (iter. 94) — ✅ **CONFIRMED n=4** | **across-layer sd of the mlp.fc−mlp.proj gap > 0.12 dex** (≥2× the noise floor) while the q,k deficit stays ≤0.09; **quadratic-in-depth R² > linear R²**; per-layer pattern reproducing to ≤0.04 dex across seeds | sd **0.151–0.161** vs q,k **0.065–0.089**; quad R² **0.607** vs linear 0.205; across-seed sd **0.018 dex**, structure/noise **8.5×** |
-| **21** | **the q,k deficit is PURELY backward** (iter. 95, REQ-038) — ✅ **CONFIRMED n=1, needs n=4** | **a_rms identical for q, k and v to 4 decimals**, and **d_rms ratio q,k / v ≤ 0.75**; **mlp gap must live in a_rms, not d_rms** | a_rms **1.0036 for all three**; d_rms ratio **0.658**; mlp |a| gap **−0.433 dex** vs |d| gap **+0.050 dex** |
+| **21** | **the q,k deficit is PURELY backward in LOCUS; d_rms does NOT track it per-layer** (iter. 95–96) — ⚠️ **n=1, locus confirmed / reconstruction fails** | **a_rms identical for q,k,v at EVERY layer** (0.000 dex, 12/12); **d_rms ratio ≤ 0.75**; **but corr(gradient deficit, d_rms deficit) across layers must exceed 0.5 — it does not** | a_rms **0.000 dex at all 12 layers**; d_rms ratio 0.658; **corr = −0.012**, slopes t = −1.18 (gradient) vs **+6.65** (d_rms) |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -278,6 +278,66 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 96: THE PER-MATRIX DATA BREAKS THE RECONCILIATION — d_rms does not track the deficit ===**
+
+*Iteration 95 used REQ-038's **type means** and reconstructed the gradient deficit as `|d|` (−0.182)
+plus a rank term (−0.078) = −0.260 against an observed −0.373, leaving ~30% unexplained. REQ-038's
+JSON has **per-matrix** data. Using it breaks the reconstruction rather than completing it.*
+
+**First, a result that strengthens band 21's locus claim.** `a_rms` for q, k and v is not merely
+equal on average — it is **identical at every one of the 12 layers**:
+
+```
+  a_rms deficit (q,k vs v), by layer:
+  L0 +0.000  L1 +0.000  L2 +0.000  L3 +0.000  L4 +0.000  L5 +0.000
+  L7 +0.000  L8 +0.000  L9 +0.000  L10 +0.000  L11 +0.000  L12 +0.000
+```
+
+**12/12 layers, exactly zero.** The shared normed-residual input is shared exactly, everywhere. The
+q,k effect is purely backward — that part of band 21 is stronger than the type means showed.
+
+**Now the problem.** `d_rms`'s deficit is **not depth-flat**, while the gradient deficit is:
+
+| | mean | depth slope | t |
+|---|---:|---:|---:|
+| gradient deficit (Arm A, seed 0) | −0.397 | −0.00583 | **−1.18** (flat, per band 17) |
+| **`d_rms` deficit (REQ-038, seed 0)** | −0.156 | +0.01174 | **+6.65** (strong trend) |
+
+**And layer-by-layer they are uncorrelated: corr = −0.012.**
+
+| layer | gradient deficit | d_rms deficit | difference |
+|---:|---:|---:|---:|
+| 0 | −0.354 | −0.230 | −0.124 |
+| 5 | −0.478 | −0.173 | −0.305 |
+| 12 | −0.508 | −0.091 | **−0.417** |
+
+**`d_rms` shrinks steadily with depth while the gradient deficit does not — the unexplained residual
+grows from 0.12 dex at layer 0 to 0.42 dex at layer 12.** Iteration 95's reconciliation held only at
+the level of type means, where two opposite depth trends averaged into a plausible-looking number.
+**It does not survive disaggregation, and it is withdrawn.**
+
+**What is and is not established.** The **locus** claim is confirmed twice over: `|a|` is identical at
+every layer, so the q,k effect is entirely in the backward pass. The **magnitude** claim — that
+`|d|` plus a rank term accounts for the gradient deficit — **fails**. `d_rms` explains 40% of the
+deficit on average and its layer-wise pattern is orthogonal to the deficit's.
+
+**Two caveats that could explain part of the mismatch, stated rather than assumed away:**
+1. **Different states.** REQ-038 probes fork-1500 directly; Arm A measures at steps 2250–2750 after
+   forking. These are not the same point in training, and the campaign has no measurement of how
+   `d_rms` evolves over 750–1250 steps.
+2. **Different objects.** `d_rms` is the backward tensor's RMS; the gradient is `dᵀa` summed over
+   tokens. Their relationship depends on token-wise alignment, which is not measured.
+
+**Neither caveat is testable with committed data, and both are cheap to settle** — which is why
+REQ-043 (the probe on seeds 1–3) is now worth extending. **Amended: REQ-043 should also run the probe
+at a second training state on at least one seed**, which converts caveat 1 from a speculation into a
+measurement. That was already flagged as "worth capturing if cheap"; iteration 96 makes it the
+substantive part of the request.
+
+**Net position.** Band 21 is amended to record locus-confirmed / reconstruction-failed. **This is the
+campaign's central mechanism and its magnitude is now openly unexplained** — the honest state is that
+we know *where* the q,k deficit lives (backward, exactly), and we do not know *what sets its size*.
 
 **=== ITERATION 95: REQ-038 LANDS — the two-sided prediction is confirmed, with a 30% shortfall recorded ===**
 
@@ -356,9 +416,13 @@ bands 14, 17, 18, 19 and 20 are all confirmed at n=4. **The registered check is 
 identical for q, k and v; `d_rms` ratio ≤ 0.75; and the mlp gap in `a_rms` not `d_rms`, in ≥3 of 4
 seeds.
 
-**Also worth capturing if cheap:** the same probe at a second training state (e.g. fork-2000) would
-test whether the backward attenuation is stable in training time, which no measurement currently
-covers.
+**Second training state — now a substantive part of this request, not an optional extra.** Iteration
+96 found that `d_rms`'s q,k deficit shrinks with depth (slope t = +6.65) while the gradient deficit
+does not (t = −1.18), and that the two are **uncorrelated layer-by-layer (corr = −0.012)**. One
+candidate explanation is that the two are measured at different states — REQ-038 probes fork-1500,
+Arm A measures at steps 2250–2750. **Running the probe at a second state (e.g. fork-2000, or at step
+2250 on a fork) on at least one seed turns that speculation into a measurement** and is the single
+most informative addition available.
 
 **=== ITERATION 94: THE mlp GAP IS AN ACTIVATION EFFECT, NOT UPDATE GEOMETRY ===**
 
