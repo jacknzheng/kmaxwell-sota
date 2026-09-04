@@ -274,6 +274,7 @@ measured value so a seed result can be compared directly.
 | **25** | **the shortfall = the token-wise ALIGNMENT deficit** (iter. 101–105, REQ-043 P2/P3) — ✅ **RESOLVED n=4** | **align_deficit measured at a single state ≤ −0.15 dex with across-seed sd < 0.02**; **identity align_deficit = grad_deficit − d_deficit holds to < 0.001 dex**; **depth slope state-dependent** | **−0.1896 ± 0.0068 dex** (0.646×), identity gap **< 0.0005 dex/seed**; artifact-free slope **−0.0075 dex/layer**; state drift +0.0101 dex/layer per 1000 steps |
 | **26** | **C's six-type structure is genuinely THREE-term** (iter. 108) — ✅ **CONFIRMED n=4** | **the identity log g = log‖a‖_F + log‖d‖_F + log(align) holds exactly**; across the six types **no term correlates with C above 0.55**, and **each term's spread exceeds C's own** (offsetting) | identity exact to **1e-6 dex**; corr(C, −2‖a‖) +0.36–0.39, (C, −2‖d‖) +0.44–0.49, (C, −2align) +0.38–0.40; term spreads 1.35 / 1.02 / 0.64 vs C's **1.04** |
 | **27** | **the ‖a‖·‖d‖ PRODUCT is the depth-conserved quantity** (iter. 110–111) — ✅ **CONFIRMED n=4** | **corr(log‖a‖, log‖d‖) ≤ −0.80 within every type across depth**, perm p < 0.01; **sd(log‖a‖+log‖d‖) < 0.6 × sd of the smaller factor**, every type. *Compensation is near-exact but NOT universal — TLS slope contains −1 in only 2/6 types* | corr −0.875 to −0.986; sd-ratio **0.262–0.493**; TLS slopes −0.765 to −1.230 |
+| **28** | **C's depth structure is carried by λ, not g** (iter. 117) — ✅ **CONFIRMED n=4** | **sd(log λ) / sd(log g) across depth > 1.5 in every matrix type**, every seed — the consistency requirement linking bands 27 and 10/25 | ratios **2.03 / 2.76 / 2.85 / 2.93 / 4.19 / 4.32**, mean **3.2×**; λ variance share 0.51–1.76 |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -427,6 +428,57 @@ never measured. Muon here also carries momentum internally (`m_fast`/`m_slow`), 
 a free per-layer knob without changing the kernel. Filing a momentum rule now would be
 inventing a mapping rather than deriving one. The prerequisite is a registered experiment
 asking whether mu does anything LR cannot at fixed `s_eff`; that is REQ-037 if wanted.
+
+**=== ITERATION 117 ANALYSIS (2026-09-03): a consistency requirement between bands 27 and 10/25 ===**
+
+*Band 27 says the gradient is **flat in depth** because the `‖a‖·‖d‖` product it is built from is
+conserved. Bands 10 and 25 found **depth structure in C**. Since `C = λ/g²` identically, both can only
+hold if **λ carries that structure**. **That requirement links three bands and had never been
+checked** — if it failed, one of them would be wrong.*
+
+**It passes, in every type and every seed:**
+
+| type | sd(log λ) | sd(log g) | **ratio** |
+|---|---:|---:|---:|
+| attn.v | 0.1872 | 0.0922 | **2.03 ± 0.13** |
+| attn.q | 0.2069 | 0.0777 | **2.76 ± 0.60** |
+| attn.k | 0.2091 | 0.0760 | **2.85 ± 0.63** |
+| mlp.fc | 0.2108 | 0.0724 | **2.93 ± 0.51** |
+| mlp.proj | 0.6520 | 0.1558 | **4.19 ± 0.17** |
+| attn.proj | 0.3973 | 0.0924 | **4.32 ± 0.29** |
+
+**Curvature varies ~3.2× more than the gradient across depth, in all six types.** The bands are
+mutually consistent: C's depth structure is a curvature phenomenon, and the gradient's flatness —
+band 27's conserved product — is what makes it visible rather than swamped.
+
+**A second result the decomposition surfaced.** The λ variance shares exceed 1 for **attn.proj
+(1.40)** and **mlp.proj (1.76)**, which means λ and g **move together** across depth there, so
+subtracting `2·log g` *removes* variance rather than adding it. Checking the correlation directly:
+
+| type | corr(log λ, log g) across depth |
+|---|---:|
+| **mlp.proj** | **+0.964** |
+| **attn.proj** | **+0.828** |
+| attn.v | +0.693 |
+| attn.q | +0.513 |
+| mlp.fc | +0.417 |
+| attn.k | +0.253 |
+
+**The two residual writers have by far the strongest λ–g coupling across depth** — which is **band 6
+reappearing in a different domain.** Band 6 established that residual writers have a steep
+*cross-sectional* gradient slope (+2.5 vs +0.3), meaning their curvature tracks their gradient. Here
+the same two types show the same coupling *across depth*, at +0.83 and +0.96. **Two independent
+measurements of the same architectural fact**, and band 6 was never tested this way.
+
+**Registered as band 28.** Its check is deliberately the *consistency requirement* rather than a new
+effect: `sd(log λ)/sd(log g) > 1.5` in every type. **If a seed violated it, bands 27 and 10/25 could
+not both be true**, so this is a cross-band falsifier rather than a standalone claim — the first the
+campaign has registered.
+
+**Why consistency checks earn their place.** Fourteen bands now describe overlapping aspects of the
+same 72 matrices. **Individually validated bands can still be jointly impossible**, and nothing in the
+campaign's method until now would have caught that. This iteration tests three bands against each
+other rather than against data, and they agree.
 
 **=== ITERATION 116 ANALYSIS (2026-09-03): applying the new rule to the campaign's OWN bands ===**
 
