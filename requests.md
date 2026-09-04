@@ -29,6 +29,77 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅ BAND 3 SURVIVES RULE 10 — but its "pure boundary" reading is CORRECTED (iteration 151)
+
+*Continuing the rule-10 audit. Band 3 is the most structurally exposed band — `d_edge =
+min(layer, maxlayer−layer)` is a deterministic function of layer index, correlated against a residual
+that is itself indexed by layer. **It survives, and it is the first audited band that does.***
+
+**Why it survives where 27 and 37 did not.** Band 3 is not a bare correlation: it is a model comparison
+claiming the effect is **specifically a boundary shape**, not merely *some* depth trend. Rebuilt at
+**n=4 seeds × 3 fork states = 12 independent fits** (`logC ~ type offsets + log g`, then one added term;
+panel 4,320 rows from the REQ-035 Arm A rank shards, zero duplicates):
+
+| added term | mean AIC | mean t | \|t\|>2 in | mean coef |
+|---|---:|---:|---:|---:|
+| *(baseline)* | −198.88 | | | |
+| **quad (smooth U)** | **−230.02** | **+6.03** | **12/12** | +0.0133 |
+| **logdist** | **−230.02** | **−6.03** | **12/12** | −0.2307 |
+| **dist (band 3)** | −228.96 | **−5.92** | **12/12** | −0.0813 |
+| edge1 (end shell) | −214.82 | +4.11 | 11/12 | +0.2855 |
+| **linear depth** | −203.29 | **+0.56** | **6/12** | +0.0014 |
+
+> **The decisive line is `linear`.** A monotone depth trend is worth almost nothing (t = +0.56, barely
+> better than baseline AIC). **The confound that killed bands 27 and 37 — two series both sliding with
+> depth — cannot produce this.** The effect requires a *symmetric* shape, and that is a real structural
+> statement about position in the network. **Band 3 is CONFIRMED at n=4** (12/12, mean t −5.92).
+
+**⚠️ But the "pure boundary shell" reading is CORRECTED.** The original seed-0 analysis reported the
+effect collapsing when end layers are dropped (F 28.98 → 4.65) and concluded it "lives at the BOUNDARY,
+not in smooth curvature." **At n=4 it does not collapse — it weakens and survives:**
+
+| interior kept | mean t(quad) | \|t\|>2 in |
+|---|---:|---:|
+| blocks 0–11 (all 12) | +6.03 | 12/12 |
+| blocks 1–10 (10 layers) | +4.07 | 12/12 |
+| **blocks 2–9 (8 layers, both shells removed)** | **+2.85** | **9/12** |
+
+**With both boundary shells deleted the curvature is still there in 9 of 12 fits.** The seed-0 F-test
+was **underpowered, not decisive** — a single fork state on 40 interior matrices. **The truth is both:
+a genuine smooth U across the interior PLUS extra weight at the ends.** `quad` and `logdist` tie on AIC
+(−230.02) and `dist` is within 1.1, so **the functional form is NOT pinned** — do not treat `dist` as
+the identified form.
+
+**⚠️ The two edges are NOT equal — and this reconciles band 10.** Fitting first- and last-block
+indicators separately:
+
+| edge | coef | mean t | \|t\|>2 in |
+|---|---:|---:|---:|
+| **first block (L=0)** | +0.211 dex | +2.14 | **6/12** |
+| **last block (L=11)** | **+0.361 dex** | **+4.09** | **11/12** |
+
+**The last block carries the boundary effect; layer 0 is marginal.** This independently explains
+**band 10** ("layer-0 lift — ❌ NOT CONFIRMED n=4, 1 of 4 seeds, consistently positive but
+under-powered"): the layer-0 lift is real but roughly **half the size** of the final-block effect, which
+is why it keeps missing significance at 6 matrices per layer. **Band 3 and band 10 are consistent; the
+symmetric `d_edge` form averages two unequal edges.**
+
+**REVISED BAND 3 STATEMENT.** *C carries a symmetric position field that a linear depth trend cannot
+explain (t +0.56 vs −5.92), confirmed 12/12 at n=4. It is **both** a smooth interior U (surviving both
+shells' removal, 9/12) **and** an end-block excess concentrated at the **final** block (+0.361 dex,
+11/12) more than the first (+0.211 dex, 6/12). The functional form is not identified — quad, logdist
+and dist are within 1.1 AIC.*
+
+**Rule 10 audit status: bands 27 (restated), 37 (downgraded), 3 (confirmed + corrected) done. Band 35
+remains** (quadratic-in-depth q/k alignment gap — same `quadratic R² > 0.5` construction that just
+proved underpowered here, so it is the priority). Band 28 is depth-by-construction; band 17 asserts a
+depth slope is *absent*, so depth is its subject rather than a confound.
+
+**Method note — the audit is paying for itself in both directions.** Two bands lost content (37, 27),
+one **gained** it: band 3 is now stronger (12/12 at n=4, linear ruled out) *and* more accurate (not a
+pure shell; asymmetric edges), and it resolved band 10's standing failure as a power problem rather than
+a contradiction. **Rule 10 is not a demolition tool — it is a re-derivation at correct power.**
+
 ## 🔧 BAND 27 RESTATED (iteration 150) — the correlation half is depth; the CONSERVATION half is real
 
 *Rule 10 was written in iteration 149 from a costly error. Its first duty was to be applied to the
