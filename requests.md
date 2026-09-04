@@ -273,7 +273,7 @@ measured value so a seed result can be compared directly.
 | **24** | **the measurement window IS equilibrated** (iter. 100) — ✅ **CONFIRMED n=4** | **autocorrelation of successive Δlog λ negative with seed-clustered CI excluding 0** (mean-reverting, not drifting), **and strictly above −0.5** (real dynamics, not white noise); **change magnitude ratio second/first half ≈ 1** | AC **−0.228, CI [−0.437, −0.117]**, implied AR(1) ρ = **0.54**; ratio **0.898** |
 | **25** | **the shortfall = the token-wise ALIGNMENT deficit** (iter. 101–105, REQ-043 P2/P3) — ✅ **RESOLVED n=4** | **align_deficit measured at a single state ≤ −0.15 dex with across-seed sd < 0.02**; **identity align_deficit = grad_deficit − d_deficit holds to < 0.001 dex**; **depth slope state-dependent** | **−0.1896 ± 0.0068 dex** (0.646×), identity gap **< 0.0005 dex/seed**; artifact-free slope **−0.0075 dex/layer**; state drift +0.0101 dex/layer per 1000 steps |
 | **26** | **C's six-type structure is genuinely THREE-term** (iter. 108) — ✅ **CONFIRMED n=4** | **the identity log g = log‖a‖_F + log‖d‖_F + log(align) holds exactly**; across the six types **no term correlates with C above 0.55**, and **each term's spread exceeds C's own** (offsetting) | identity exact to **1e-6 dex**; corr(C, −2‖a‖) +0.36–0.39, (C, −2‖d‖) +0.44–0.49, (C, −2align) +0.38–0.40; term spreads 1.35 / 1.02 / 0.64 vs C's **1.04** |
-| **27** | **forward and backward magnitudes trade off across DEPTH** (iter. 110) — ✅ **CONFIRMED n=4** | **corr(log‖a‖_F, log‖d‖_F) ≤ −0.80 within every matrix type across the 12 depths**, permutation p < 0.01, in every seed; **var(log‖a‖+log‖d‖) / (var‖a‖+var‖d‖) < 0.20** | corr **−0.944 / −0.980 / −0.971 / −0.952 / −0.986 / −0.875** (p ≤ 0.0002); variance ratio **0.045–0.080** |
+| **27** | **the ‖a‖·‖d‖ PRODUCT is the depth-conserved quantity** (iter. 110–111) — ✅ **CONFIRMED n=4** | **corr(log‖a‖, log‖d‖) ≤ −0.80 within every type across depth**, perm p < 0.01; **sd(log‖a‖+log‖d‖) < 0.6 × sd of the smaller factor**, every type. *Compensation is near-exact but NOT universal — TLS slope contains −1 in only 2/6 types* | corr −0.875 to −0.986; sd-ratio **0.262–0.493**; TLS slopes −0.765 to −1.230 |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -284,6 +284,64 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 111: WHAT EXACTLY IS CONSERVED — the product, not the slope ===**
+
+*Band 27 recorded the forward/backward trade-off as a relationship. The natural sharpening is that it
+is **exactly compensating** — a regression slope of −1 would mean the product `‖a‖·‖d‖` is conserved
+across depth, which would be a genuine invariant and the explanation for why the gradient is flat.*
+
+**Tested with total least squares, since both axes are measured with error and OLS would be
+attenuated:**
+
+| type | OLS slope | **TLS slope** | seed-clustered 95% CI | contains −1? |
+|---|---:|---:|---|:---:|
+| attn.k | −0.978 | **−1.039** | [−1.091, −0.969] | **yes** |
+| mlp.proj | −0.869 | **−0.994** | [−1.022, −0.953] | **yes** |
+| attn.q | −1.036 | −1.070 | [−1.119, −1.006] | no |
+| attn.proj | −1.151 | −1.179 | [−1.219, −1.125] | no |
+| attn.v | −1.159 | −1.230 | [−1.279, −1.174] | no |
+| mlp.fc | −0.757 | −0.765 | [−0.788, −0.728] | no |
+
+**Only 2 of 6 types contain −1.000.** Compensation is *near*-exact — slopes cluster around −1 with a
+range of −0.77 to −1.23 — but it is **not a universal conservation law**, and claiming one would
+overstate what four of the six types show.
+
+**The claim that does survive is specification-free, and it is the one that matters.** Regardless of
+any fitted slope, the product varies far less across depth than either factor:
+
+| type | sd(log‖a‖+log‖d‖) | sd(log‖a‖) | sd(log‖d‖) | **ratio to the smaller factor** |
+|---|---:|---:|---:|---:|
+| attn.q | 0.0514 | 0.1964 | 0.2096 | **0.262** |
+| attn.proj | 0.0641 | 0.2329 | 0.2732 | **0.275** |
+| attn.k | 0.0679 | 0.1964 | 0.2034 | **0.346** |
+| mlp.fc | 0.0376 | 0.1376 | 0.1056 | **0.356** |
+| attn.v | 0.0791 | 0.1964 | 0.2389 | **0.403** |
+| mlp.proj | 0.1247 | 0.2545 | 0.2528 | **0.493** |
+
+**In every type the product is 2–4× flatter than either factor alone** — the signature of a conserved
+quantity, and it needs no fitted parameter to state.
+
+**And it accounts for the gradient's flatness, which bands 17 and 22 observed without explaining:**
+
+| type | sd(product) | sd(log g) |
+|---|---:|---:|
+| mlp.fc | 0.0376 | 0.0724 |
+| attn.q | 0.0514 | 0.0777 |
+| attn.k | 0.0679 | 0.0760 |
+| mlp.proj | 0.1247 | 0.1558 |
+
+**sd(log g) tracks sd(product) closely across all six types**, with the alignment term supplying the
+modest remainder. **The gradient is flat in depth because the product it is built from is flat.**
+
+> **Band 27 restated: `‖a‖·‖d‖` is the depth-conserved quantity, 2–4× flatter than either factor in
+> every matrix type. The compensation producing it is near-exact but not a universal −1 law.**
+
+**What this closes and what it does not.** It explains the *flatness* — bands 17's depth-independent
+q,k deficit and 22's small drift both follow from a product that barely moves with depth. **It does
+not explain why the two factors trade off**, which remains the observation of iteration 110, and the
+2/6 slope result argues against a single clean conservation principle. **Recorded as a measured
+regularity with its exceptions stated, not a law.**
 
 **=== ITERATION 110: THE CANCELLATION IS REAL — but across DEPTH, not across type ===**
 
