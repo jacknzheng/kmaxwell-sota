@@ -29,6 +29,89 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## 🔧 BAND 27 RESTATED (iteration 150) — the correlation half is depth; the CONSERVATION half is real
+
+*Rule 10 was written in iteration 149 from a costly error. Its first duty was to be applied to the
+campaign's own bands. **Five live bands rest on across-layer correlations (3, 17, 27, 28, 35); band 27
+is the load-bearing one** — it underpins band 28 and the depth-flatness account. Audited first.*
+
+**The correlation half does NOT survive rule 10.** Band 27's stated criterion is
+`corr(log‖a‖, log‖d‖) ≤ −0.80 within every type across depth` — the same construction band 37 was
+downgraded for. Removing depth (within-seed quadratic), then the assumption-free within-layer test:
+
+| type | raw | residual | within-layer | t |
+|---|---:|---:|---:|---:|
+| attn.k | −0.942 | **+0.065** | +0.130 | +0.73 |
+| attn.proj | −0.980 | −0.716 | −0.280 | −1.56 |
+| attn.q | −0.970 | **−0.184** | +0.019 | +0.08 |
+| attn.v | −0.953 | **−0.137** | +0.264 | +1.92 |
+| mlp.fc | −0.984 | −0.780 | −0.241 | −0.65 |
+| mlp.proj | −0.885 | **−0.143** | −0.677 | −2.29 |
+
+**Four of six collapse toward zero once depth is removed; nothing is significant within-layer.** So
+`corr ≤ −0.80` is **not** evidence of matrix-by-matrix compensation, exactly as with band 37.
+
+**What that correlation actually encodes — two opposite, near-perfectly linear depth trends:**
+
+| type | slope log‖a‖/layer | slope log‖d‖/layer | R² a | R² d |
+|---|---:|---:|---:|---:|
+| attn.k | +0.0461 | −0.0492 | 0.926 | 0.979 |
+| attn.proj | +0.0554 | −0.0664 | 0.952 | 0.975 |
+| attn.q | +0.0461 | −0.0504 | 0.926 | 0.964 |
+| attn.v | +0.0461 | −0.0573 | 0.926 | 0.977 |
+| mlp.fc | +0.0309 | −0.0233 | 0.837 | 0.795 |
+| mlp.proj | +0.0555 | −0.0618 | 0.852 | 0.987 |
+
+**‖a‖ rises with depth, ‖d‖ falls, both nearly linearly (R² 0.80–0.99), in all six types.**
+
+**⇒ But the CONSERVATION half survives, and it is the real content.** Band 27's second criterion —
+`sd(log‖a‖+log‖d‖) < 0.6 × sd(smaller factor)` — is **not** reducible to "two opposite trends," because
+two opposite trends of *unequal* size would leave a large residual sum. Against the independence null
+`sd = √(sd_a² + sd_d²)`:
+
+| type | sd(la) | sd(ld) | **sd(sum)** | indep. null | **ratio vs null** |
+|---|---:|---:|---:|---:|---:|
+| attn.k | 0.195 | 0.202 | **0.055** | 0.281 | **0.197** |
+| attn.proj | 0.231 | 0.274 | **0.060** | 0.358 | **0.167** |
+| attn.q | 0.195 | 0.209 | **0.038** | 0.286 | **0.132** |
+| attn.v | 0.195 | 0.236 | **0.066** | 0.306 | **0.215** |
+| mlp.fc | 0.137 | 0.106 | **0.036** | 0.174 | **0.208** |
+| mlp.proj | 0.245 | 0.253 | **0.110** | 0.352 | **0.313** |
+
+**The product's spread is 0.13–0.31× what independence would give — cancellation far beyond chance.**
+
+**The mechanism, stated exactly: the two depth slopes match in magnitude.** Per type and per seed, the
+ratio `−slope(log‖d‖) / slope(log‖a‖)`:
+
+| type | s0 | s1 | s2 | s3 | mean | sd | residual sum-slope |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| attn.k | 1.076 | 1.154 | 1.082 | 0.959 | 1.068 | 0.081 | −0.0030 |
+| attn.proj | 1.190 | 1.224 | 1.257 | 1.131 | **1.201** | 0.054 | −0.0110 |
+| attn.q | 1.104 | 1.153 | 1.127 | 0.992 | 1.094 | 0.071 | −0.0042 |
+| attn.v | 1.239 | 1.305 | 1.307 | 1.126 | **1.244** | 0.085 | −0.0111 |
+| **mlp.fc** | 0.783 | 0.790 | 0.765 | 0.681 | **0.755** | 0.050 | **+0.0076** |
+| mlp.proj | 1.165 | 1.079 | 1.158 | 1.060 | 1.116 | 0.054 | −0.0063 |
+
+**All 24 type-seed ratios: mean 1.079, sd 0.172, range [0.681, 1.307].** The slopes cancel to ~8%,
+leaving residual product drift of only **−0.011 to +0.008 dex/layer**. The cancellation is **slightly
+over-complete** (t = +2.27 vs 1.0): ‖d‖ falls marginally faster than ‖a‖ rises. **mlp.fc is again the
+lone under-compensator (0.755)** — the same type that stood out in band 37, and here the deviation is
+consistent across all 4 seeds (sd 0.050), so unlike band 37's artifact this one is a real per-type
+difference.
+
+> **BAND 27 RESTATED.** *Not* "‖a‖ and ‖d‖ trade off matrix-by-matrix." **Rather: within each type,
+> log‖a‖ rises and log‖d‖ falls near-linearly with depth at slopes that cancel to ~8%, so the product
+> ‖a‖·‖d‖ is conserved across depth to 0.13–0.31× the independence null.** The conservation is real and
+> n=4-stable; the matrix-level trade-off is not established and **n=4 has no power to test it.**
+
+**Band 28 is unaffected** — it compares `sd(log λ)/sd(log g)` across depth and is a depth statement by
+construction, which is what it claims to be.
+
+**Rule 10 audit status.** Band 27 done (restated). **Bands 3, 17, 35 remain to audit**; band 17's
+exposure is mild (it asserts a depth slope is *absent*, so depth is the subject, not a confound) and
+band 28 is depth-by-construction. **Band 3 (`corr(d_edge, block-mean residual) = −0.91`) and band 35
+(quadratic-in-depth alignment gap) are the two genuinely exposed ones and are next.**
+
 ## ⛔ BAND 37 DOWNGRADED (iteration 149) — its correlations are DEPTH correlations, and the "exception" is not one
 
 *Iteration 148 narrowed band 37's exception and asked the tighter question it left: **why does mlp.fc
