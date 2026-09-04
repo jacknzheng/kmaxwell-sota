@@ -283,6 +283,53 @@ correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
 
+**=== ITERATION 104: AUDITING EVERY BAND AGAINST THE NEW RULE — and verifying REQ-043's seeds are real ===**
+
+*Iteration 103 added a standing rule after band 25 was caught by it: **a confound cleared for one
+statistic is not cleared generally.** A rule is only worth adding if it is then applied, so this
+iteration applies it to all thirteen live bands.*
+
+**Exposure audit.** The two data sources sit at different states — the REQ-038/043 probe at
+fork-1500, Arm A's curvature at steps 2250–2750. A band is exposed **only if it combines quantities
+from both**:
+
+| band | claim | source | exposed? |
+|---:|---|---|---|
+| 6, 12, 14, 17, 18, 19, 20, 22, 23, 24 | *(ten bands)* | **Arm A only** | no |
+| 16 | C actively restored | Arm A + REQ-036 | no — both measure curvature the same way |
+| 21 | deficit purely backward | **REQ-043 only** | no |
+| **25** | the magnitude shortfall | **Arm A + REQ-043** | **EXPOSED** |
+
+**Band 25 is the only exposed band, and it is already amended.** Band 21 in particular is
+self-contained: `a_rms` and `d_rms` come from the *same* forward/backward pass, so its comparison is
+q,k versus v **within** one measurement and no cross-state term can enter. **The rule does not bite
+elsewhere — now verified rather than assumed.**
+
+**A second check the audit surfaced, and it was worth running.** The audit printed **identical model
+paths** for all four REQ-043 seeds (`eos_shared_state/train_state_model_step001500.pt`, no seed in
+the name) and **near-identical losses** — 29288.9 / 29262.7 / 29207.2 / 29262.8, a spread of 0.28%.
+Independent networks should differ more than that. **If REQ-043 had probed one network four times,
+band 21's n=4 would be n=1 dressed up**, and iteration 101's headline would be wrong.
+
+**They are genuinely distinct networks:**
+
+| check | result |
+|---|---|
+| `weight_frob` of `blocks.0.attn.q.weight` | 56.870 / 57.834 / 57.512 / 57.358 |
+| `d_rms` of the same matrix | 0.005742 / 0.006217 / 0.005666 / 0.005208 |
+| **matrices with identical `weight_frob` between any seed pair** | **0 / 72, all six pairs** |
+
+**Not one of 72 matrices shares a weight norm between any two seeds.** The shared path is a naming
+convention (each seed's run writing to its own directory), and the tight loss spread reflects a
+training recipe that converges reliably — which is itself consistent with Arm A's central finding
+that C is seed-independent. **Band 21's n=4 stands.**
+
+**Why this iteration was worth spending on verification rather than a new hypothesis.** Two of the
+campaign's most-cited results — band 21's n=4 confirmation and the ten Arm A-only bands' immunity to
+the state confound — rested on assumptions that had never been checked. Both hold. **The cost of
+checking was one iteration; the cost of not checking would have been a headline claim of n=4
+replication that was actually a single network measured four times.**
+
 **=== ITERATION 103: QUALIFYING BAND 25's DEPTH TREND — the state confound's untested half ===**
 
 *Iteration 98 tested whether the fork-1500 vs 2250–2750 state mismatch explains the shortfall's
