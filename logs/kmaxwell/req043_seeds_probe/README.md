@@ -73,3 +73,57 @@ tokens, same batch across seeds. Per-type numbers average over the type's 12 per
 - `raw_json/req043_seed{0..3}.json` — raw per-matrix a/d stats (source of truth). seed0 = REQ-038's JSON.
 
 No secrets/weights/tensor checkpoints committed. Ran under the ≤2 ceiling.
+
+---
+
+## Priority 3 — the alignment ratio IS band-25's missing factor (n=4) + Priority 2 — second state
+
+**SHA `ebf53cd`, same 2 nodes (wxyg00q + qekdm1q), extended probe.** The probe now also emits, per matrix,
+the **alignment ratio** `‖Σₜ dₜaₜᵀ‖_F / (‖d‖_F·‖a‖_F)` — how aligned the forward activation `a` and the
+output-gradient `d` are across tokens. Because for a bias-free Linear the weight gradient *is* `Σₜ dₜaₜᵀ`,
+this equals `‖W.grad‖_F / (‖d‖_F·‖a‖_F)` exactly (one extra scalar, no new pass). See `alignment.tsv`.
+
+### The identity that closes iteration 97 / band 25
+
+`a_rms` is identical for q/k/v (band 21), so **`align_deficit = grad_deficit − d_deficit` exactly** — the
+alignment ratio is, algebraically, band-25's "shortfall" (the part of the q/k weight-gradient deficit that
+`|d|`, `‖d‖_F`, `d_eff_rank` cannot reconstruct). The probe confirms the identity numerically to <0.0005 dex
+per seed (`identity_gap` column). **So the missing 0.6× factor the campaign has been hunting since iteration
+97 is the token-wise q/k gradient-alignment deficit — and it is now measured, not inferred.**
+
+| | value |
+|:--|--:|
+| **align_deficit (q,k)/v, n=4** | **−0.190 ± 0.006 dex (0.646×)** |
+| per-seed (0/1/2/3) | −0.185 / −0.200 / −0.188 / −0.186 |
+| across-seed sd | **0.0059** (band-25's cross-state reconstruction: −0.240 ± 0.041) |
+
+**Measured at a single consistent state** (both `grad` and `d` at fork-1500), so unlike band 25's
+`grad(2250–2750) − d(1500)` construction it carries **no cross-state artifact**. That is why it is both
+tighter (sd 0.006 vs 0.041) and smaller in magnitude than the filed −0.240 — the state mismatch inflates the
+reconstruction. **q and k receive a gradient that is not only ~0.67× smaller in raw `d` (band 21) but a
+further 0.65× less token-aligned than v's — the two factors multiply to the full ≈0.43× (−0.37 dex)
+weight-gradient deficit.**
+
+### Priority 2 — the depth slope is genuinely state-dependent (the now-*required* test)
+
+Iteration 103 raised P2 to *required*: is band-25's depth *trend* partly an artifact of comparing fork-1500
+`d` against 2250–2750 `grad`? Probing seed 0 at a **second state (fork-2000)** answers it directly:
+
+| state | align_deficit mean | depth slope (dex/layer) |
+|:------|-------------------:|------------------------:|
+| fork-1500 | −0.184 | **−0.0091** |
+| fork-2000 | −0.191 | **−0.0041** |
+
+**The alignment-deficit depth slope flattens with training** (−0.0091 → −0.0041 over 500 steps, a drift of
++0.010 dex/layer per 1000 steps). So the slope *is* state-dependent — **band 25's ~34% state-artifact
+concern is confirmed**: a cross-state comparison manufactures part of the depth trend. The **artifact-free,
+single-state depth slope is −0.0075 dex/layer (n=4, fork-1500)** — real and monotone toward the output, but
+milder than the filed −0.0176 and near the low end of the client's state-corrected CI [−0.0169, −0.0064].
+The magnitude (size) of the deficit is stable across the two states (−0.184 vs −0.191); only the slope drifts.
+
+### Files (priority 2/3)
+
+- `alignment.tsv` — per-seed align_deficit + identity check + n=4 stats + depth profile + fork-1500/2000 slopes.
+- `raw_json/req043_align_seed{0..3}.json` — extended probe (adds `align_ratio`, `grad_frob`) at fork-1500.
+- `raw_json/req043_align_seed0_step2000.json` — seed 0 at fork-2000 (priority 2).
+- `measure_activation_backward.py` — updated to emit `align_ratio` + `grad_frob`.
