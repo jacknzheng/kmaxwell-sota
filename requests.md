@@ -29,6 +29,80 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅ BAND 35 SURVIVES RULE 10 INTACT (iteration 152) — the audit is complete
+
+*Last exposed band, and the highest-risk one: it rests on `quadratic R² > 0.5`, the construction that
+just proved underpowered in band 3. **It survives without correction — the only band to do so.***
+
+**⚠️ FIRST, MY OWN ERROR — the iteration-145 trap, a second time.** My first pass tested the q−k gap
+using REQ-047's `align_ratio = ‖∇W‖_F / (‖d‖_F·‖a‖_F)` and got **+0.011 dex** — wrong sign, 28× too
+small — which looked like a flat refutation of band 35's −0.306. It was not. **Band 35's "alignment" is
+a different quantity: `log(curvature_along_polar) − log(λ_top)` from the curvature probe.** Two distinct
+measurements share the word "alignment". Retested on band 35's own definition:
+
+| seed | mean gap | sd | t | n |
+|---|---:|---:|---:|---:|
+| 0 | **−0.3386** | 0.172 | −26.46 | 180 |
+| 1 | −0.2874 | 0.260 | −14.83 | 180 |
+| 2 | −0.3350 | 0.244 | −18.39 | 180 |
+| 3 | −0.2705 | 0.201 | −18.07 | 180 |
+| **pooled** | **−0.3079** | | | **720** |
+
+**Band 35 claims −0.306; measured −0.3079, same sign in 4/4 seeds, |t| = 14.8–26.5.** Exact replication.
+*(Circularity check: `curvature_along_polar` is a **separate HVP**, not from the lam_top tridiagonal —
+admissible under the hard rule. λ_top enters only as the normaliser.)*
+
+**Claim (a) is not rule-10 exposed at all** — it is a *mean difference between two types*, not a
+correlation across layers. Rule 10 never applied to it.
+
+**Claim (b) — the depth structure — survives on its own definition.** Twelve independent curves
+(4 seeds × 3 fork states):
+
+| | quad R² | linear R² | gain |
+|---|---:|---:|---:|
+| **mean of 12** | **0.636** (sd 0.121) | 0.359 | +0.277 |
+| **quad > 0.5** | **10/12** | | |
+| pooled curve | **0.873** | 0.524 | +0.349 |
+
+**Permutation null (20k shuffles of block labels): observed 0.873 vs null mean 0.182, 95th pct 0.491 —
+p = 0.0004.** The gap deepens then recovers: L0 −0.087 → L6 **−0.441** → L10 −0.323.
+
+**⚠️ One honest caveat, and it is the band-3 lesson applied.** Unlike band 3 — where the linear term was
+worthless (t = +0.56) and that is *why* the symmetric shape was safe — **here the linear term carries
+real weight (mean R² 0.359)**, and in **seed2/fork170 the quadratic adds exactly nothing** (0.635 vs
+0.635; seed2/fork060 adds +0.013). **So the depth structure is real (p = 0.0004) but is part monotone,
+part curved — "deepens then recovers" overstates how much of it is the recovery.** The band text's
+`quadratic R² > 0.5` criterion is met (10/12), but it should not be read as "the curvature is the whole
+effect."
+
+> **BAND 35 CONFIRMED n=4, no correction needed.** Gap −0.3079 dex (4/4 same sign, |t| ≥ 14.8);
+> depth structure real at p = 0.0004, quad R² 0.636 ± 0.121, 10/12 — **with the caveat that ~57% of the
+> depth R² is available to a straight line.**
+
+---
+
+## 📋 RULE-10 AUDIT COMPLETE — scorecard across all five exposed bands
+
+| band | claim | verdict |
+|---|---|---|
+| **37** | ‖a‖–‖d‖ concentration, 5 of 6 types, mlp.fc reverses | ⛔ **DOWNGRADED** — depth artifact; the mlp.fc "exception" **withdrawn**, two hypotheses were explaining nothing |
+| **27** | ‖a‖·‖d‖ product depth-conserved | 🔧 **HALF WITHDRAWN, HALF SHARPENED** — `corr ≤ −0.80` is depth (4/6 collapse); **conservation is real**, slopes cancel to ~8%, product spread 0.13–0.31× the independence null |
+| **3** | boundary field in C | ✅ **CONFIRMED + CORRECTED** — linear depth ruled out (t +0.56 vs −5.92, 12/12); **not a pure shell** (interior U survives, 9/12); edges **unequal** (last +0.361 vs first +0.211) — **resolves band 10 as underpower** |
+| **35** | q/k alignment gap, depth-structured | ✅ **CONFIRMED INTACT** — −0.3079 dex 4/4; depth p = 0.0004; caveat: part monotone |
+| **17, 28** | *(assessed, not exposed)* | band 28 is depth **by construction**; band 17 asserts a depth slope is **absent**, so depth is its subject, not a confound |
+
+**What the audit cost and bought.** Two bands lost content, one was sharpened, one gained strength, one
+was untouched. **No band was lost that anything downstream depended on** — the mlp.fc exception was the
+only line of active investigation killed, and it was investigating an artifact. **Band 3's audit was net
+positive**: it is now stronger *and* it dissolved band 10's standing failure.
+
+**Standing rule 11 (from this iteration's error).** *Before testing a band, open the script that
+produced it and confirm which measured quantity its terms name.* Two distinct quantities in this
+campaign are both called "alignment" (`curvature_along_polar/λ_top` from the curvature probe;
+`‖∇W‖/(‖d‖‖a‖)` from REQ-047). **This is the second time (iteration 145 was the first) that a
+name collision produced a false refutation of my own work.** Reading the delivery is not enough —
+read the *definition*.
+
 ## ✅ BAND 3 SURVIVES RULE 10 — but its "pure boundary" reading is CORRECTED (iteration 151)
 
 *Continuing the rule-10 audit. Band 3 is the most structurally exposed band — `d_edge =
