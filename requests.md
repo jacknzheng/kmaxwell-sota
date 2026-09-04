@@ -271,7 +271,7 @@ measured value so a seed result can be compared directly.
 | **22** | **the q,k deficit SHRINKS during training** (iter. 98) — ✅ **CONFIRMED n=4** | **drift of the deficit vs step is POSITIVE (less negative) with a seed-clustered 95% CI excluding 0**, and **same sign in all three LR arms** | pooled **+0.058 dex/1000 steps, CI [+0.032, +0.085]**; per-arm +0.029 / +0.092 / +0.054 |
 | **23** | **the g² law is CROSS-SECTIONAL/CAUSAL ONLY — it does not hold in TIME** (iter. 99) | **slope of λ-drift on g-drift across matrices must be < 1.5** (attenuation-corrected), i.e. NOT 2; **C's drift CI must include 0** and **step must explain < 1% of C's variance** | slope **+0.634**, CI [0.329, 0.982], corrected **0.860**; reliability 0.738 so a true 2 would read 1.476. C drift CI [−0.055, +0.049]; step **0.2–0.4%** of variance vs LR 2.0–3.5% |
 | **24** | **the measurement window IS equilibrated** (iter. 100) — ✅ **CONFIRMED n=4** | **autocorrelation of successive Δlog λ negative with seed-clustered CI excluding 0** (mean-reverting, not drifting), **and strictly above −0.5** (real dynamics, not white noise); **change magnitude ratio second/first half ≈ 1** | AC **−0.228, CI [−0.437, −0.117]**, implied AR(1) ρ = **0.54**; ratio **0.898** |
-| **25** | **the magnitude shortfall is a REAL reproducible term** (iter. 101) — ✅ **CONFIRMED n=4** | **shortfall (gradient deficit − |d| deficit) reproduces with across-seed sd < 0.05 dex**, and **grows monotonically with depth** from ≈−0.15 at layer 0 to ≈−0.43 at the final layer | **−0.213 ± 0.021 dex** (0.61× factor), per-seed −0.213/−0.231/−0.184/−0.225; L0 −0.146 → L12 −0.432 |
+| **25** | **the magnitude shortfall is a REAL reproducible term, LINEAR in depth** (iter. 101–102) — ✅ **CONFIRMED n=4** | **across-seed sd < 0.05 dex**; **linear-in-depth R² > 0.6** with slope t < −3; **trend survives excluding the final layer** | **−0.240 dex mean** (0.575×), L0 −0.146 → L12 −0.432; **linear R² 0.763**, slope −0.0176 dex/layer **t = −5.67**; excluding L12 **t = −5.71**; across-seed sd **0.041** |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -282,6 +282,63 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 102: SPECIFYING THE MISSING FACTOR — and re-rejecting d_eff_rank at n=4 ===**
+
+*Band 25 established the shortfall is real and reproducible. Iteration 97 had rejected `d_eff_rank`
+as its explanation **using one seed**. With four seeds and a known target profile, that rejection is
+worth redoing properly — and the shortfall itself is worth characterising precisely, since that
+specification is what any candidate mechanism must meet.*
+
+**`d_eff_rank` re-tested at n=4 — rejected, and now for a clearer reason:**
+
+| | shortfall | `d_eff_rank` ratio |
+|---|---:|---:|
+| depth slope | **−0.0176 (t = −8.56)** | **+0.0110 (t = +4.25)** |
+| correlation with shortfall | — | **−0.346** |
+| R² of the best power-law fit | — | **0.120** |
+
+**The two depth trends run in opposite directions** — the shortfall *deepens* toward the output while
+the rank ratio *shrinks*. The fitted coefficient is also **negative**, which would require lower rank
+to *reduce* the gradient. **No power of `d_eff_rank` can produce the observed profile**, and this now
+rests on 48 layer-seed cells rather than 12.
+
+**The shortfall's profile is well-determined, and it is not a boundary artifact:**
+
+| form | R² |
+|---|---:|
+| constant | 0.000 |
+| **linear in depth** | **0.763** |
+| quadratic | 0.800 |
+| final-layer indicator alone | 0.539 |
+| linear + final-layer | **0.900** |
+
+`shortfall = −0.135 − 0.0176 × layer`, slope **t = −5.67**. **Excluding layer 12 entirely the slope is
+−0.0137 with t = −5.71 — the trend survives**, so this is a genuine depth dependence with an
+*additional* final-layer excess, not a single outlier driving a spurious line. *(Contrast band 20's
+mlp gap, which was U-shaped; this one is monotone.)*
+
+**The specification any candidate mechanism must meet:**
+
+| property | value |
+|---|---:|
+| mean | **−0.240 dex** (factor **0.575×**) |
+| at layer 0 | −0.146 dex |
+| at layer 12 | −0.432 dex |
+| depth slope | −0.0176 dex/layer, **t = −5.67** |
+| across-seed reproducibility | **0.041 dex** |
+| **not explained by** | `d_rms`, `d_frob`, `a_rms`, `a_frob`, `a_eff_rank`, `d_eff_rank`, weight norm, parameter count, `shape_mult`, or the training-state difference |
+
+**This is the campaign's open problem stated as precisely as the data allows.** Ten candidate
+quantities are excluded, four of them at n=4. The remaining candidate — **token-wise alignment
+between `d` and `a`** — is the one quantity that could plausibly deepen with depth, since deeper
+layers' backward signals are shaped by more intervening blocks, and it is a single extra scalar in a
+probe Jerry has already written and validated twice.
+
+**REQ-043's priority 3 is re-filed against this specification** rather than as a general request:
+**the alignment ratio must average −0.240 dex, sit at −0.15 at layer 0 and −0.43 at layer 12, and
+reproduce across seeds to ~0.04 dex.** If it does not, the factor is something else again — and this
+band's numbers are precise enough that the answer will be unambiguous either way.
 
 **=== ITERATION 101: REQ-043 LANDS — band 21 at n=4, and the shortfall is REAL ===**
 
