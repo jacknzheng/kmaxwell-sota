@@ -269,6 +269,7 @@ measured value so a seed result can be compared directly.
 | **20** | **the mlp gradient gap is depth-structured, not a fixed update factor** (iter. 94) — ✅ **CONFIRMED n=4** | **across-layer sd of the mlp.fc−mlp.proj gap > 0.12 dex** (≥2× the noise floor) while the q,k deficit stays ≤0.09; **quadratic-in-depth R² > linear R²**; per-layer pattern reproducing to ≤0.04 dex across seeds | sd **0.151–0.161** vs q,k **0.065–0.089**; quad R² **0.607** vs linear 0.205; across-seed sd **0.018 dex**, structure/noise **8.5×** |
 | **21** | **the q,k deficit is PURELY backward in LOCUS; d_rms does NOT track it per-layer** (iter. 95–96) — ⚠️ **n=1, locus confirmed / reconstruction fails** | **a_rms identical for q,k,v at EVERY layer** (0.000 dex, 12/12); **d_rms ratio ≤ 0.75**; **but corr(gradient deficit, d_rms deficit) across layers must exceed 0.5 — it does not** | a_rms **0.000 dex at all 12 layers**; d_rms ratio 0.658; **corr = −0.012**, slopes t = −1.18 (gradient) vs **+6.65** (d_rms) |
 | **22** | **the q,k deficit SHRINKS during training** (iter. 98) — ✅ **CONFIRMED n=4** | **drift of the deficit vs step is POSITIVE (less negative) with a seed-clustered 95% CI excluding 0**, and **same sign in all three LR arms** | pooled **+0.058 dex/1000 steps, CI [+0.032, +0.085]**; per-arm +0.029 / +0.092 / +0.054 |
+| **23** | **the g² law is CROSS-SECTIONAL/CAUSAL ONLY — it does not hold in TIME** (iter. 99) | **slope of λ-drift on g-drift across matrices must be < 1.5** (attenuation-corrected), i.e. NOT 2; **C's drift CI must include 0** and **step must explain < 1% of C's variance** | slope **+0.634**, CI [0.329, 0.982], corrected **0.860**; reliability 0.738 so a true 2 would read 1.476. C drift CI [−0.055, +0.049]; step **0.2–0.4%** of variance vs LR 2.0–3.5% |
 | **15** | **QK-norm scale invariance** (iter. 80, 87–89) — ❌ **QUANTITATIVE PREDICTION FAILS** | predicts **Δlog g = −Δlog‖W‖**. Observed: predicted **+0.130**, actual **−0.417** — wrong sign, 3× the size. q,k sit mid-pack in ‖W‖. The `d log C/d log‖W‖ = 0` result stands but no longer explains the gap | ‖W‖: q +1.755, k +1.756 vs proj +1.778, v +1.809, mlp.proj +1.832, fc +2.124 |
 | **16** | **C is an ACTIVELY RESTORED invariant** (iter. 82–83) — ✅ **CONFIRMED n=4 + targeted test** | **global ladder:** matrix identity > 85% of log C's variance, LR < 10%, corr > 0.80. **targeted per-type perturbation:** **slope of Δlog C on log10(multiplier) ≈ 0** while Δlog λ tracks EoS | identity 93.2–94.8%; corr +0.87 to +0.97; **a5 λ-slope −1.153 vs C-slope −0.054** |
 
@@ -279,6 +280,68 @@ This is not attenuation: measured error in log g is sd 0.0131 dex, reliability 0
 correcting for it moves each slope by 1–4% and leaves the spread intact (1.35 → 1.24 / 1.54 → 1.42).
 **Falsifier:** if attenuation-corrected slopes converge to ~2 across seeds, iteration 63 is wrong
 and the law is universal after all.
+
+**=== ITERATION 99: BAND 16 SURVIVES A TIME TEST — but the g² law does NOT ===**
+
+*Band 22 found the q,k gradient deficit drifts during training. That raised a question about band 16:
+its homeostasis claim was tested against the **learning rate**, never against **time**. If C drifts
+within the equilibrium window, "invariant" needs qualifying.*
+
+**Band 16 survives cleanly.** Adding `step` to the variance decomposition:
+
+| seed | matrix identity | learning rate | **step** |
+|---|---:|---:|---:|
+| 0 | 88.3% | 2.5% | **0.4%** |
+| 1 | 90.1% | 3.5% | **0.2%** |
+| 2 | 86.7% | 3.0% | **0.2%** |
+| 3 | 84.3% | 2.0% | **0.3%** |
+
+**Training time explains an order of magnitude less of C's variance than the learning rate does**, and
+the pooled per-matrix drift is **−0.013 dex/1000 steps, 95% CI [−0.055, +0.049]** — includes zero.
+Over the 500-step window Arm A measures, C moves **0.007 dex** against a 0.07 dex floor. **C is
+invariant in training time as well as in learning rate.**
+
+**But that creates a sharp problem, and the answer is a genuine negative.** Since `C = λ/g²`
+identically, if **g drifts** (band 22, CI excludes zero) and **C does not**, then **λ must drift at
+exactly twice g's rate**. That is band 13's g² law asserting itself in a domain no previous test has
+used. It fails:
+
+| | value |
+|---|---:|
+| slope of λ-drift on g-drift, 864 matrices | **+0.634 ± 0.110** |
+| seed-clustered 95% CI | **[0.329, 0.982]** — **2.000 outside** |
+| correlation | +0.192 |
+
+**And this is not an under-powered test — I checked before concluding.** Each drift is fitted from 5
+points, so regressing one noisy estimate on another attenuates the slope. Decomposing:
+
+| | |
+|---|---:|
+| g-drift estimate variance | 0.0126 = **0.0093 true** + 0.0033 measurement |
+| **reliability ratio** | **0.738** |
+| a true slope of 2.000 would be observed as | **1.476** |
+| **observed** | **0.634** |
+| attenuation-corrected | **0.860** |
+
+**A true exponent of 2 would have shown up as 1.476, more than double what was observed**, and the
+corrected estimate is 0.860. **The g² law does not hold in the time domain.**
+
+> **λ ∝ C·g² holds cross-sectionally and causally (bands 13, 8) but NOT as training proceeds. Within a
+> matrix over time, curvature and gradient move nearly independently (corr +0.19), and C stays
+> constant because both drifts are small — not because they are locked in a 2:1 ratio.**
+
+**Registered as band 23.** This sharpens what the campaign's central law actually claims. It is a
+statement about **equilibrium states** — where a matrix settles under a given learning rate — not a
+dynamical law governing the path between them. **The distinction was never tested before this
+iteration**, and every earlier statement of the law should be read with it: bands 13 and 8 are
+untouched in their own domains, but "λ = C·g²" is not a constraint the network obeys moment to
+moment.
+
+**A caution on interpretation.** Both drifts are small (mean +0.0055 and −0.0019 dex/1000 steps), so
+this is a test of *how* two small quantities co-move, not of a large effect. The reliability
+calculation is what makes it admissible — without it, the observed 0.634 would be uninterpretable.
+**The finding is that the co-movement is weak (corr +0.19), not that λ moves in some contrary
+direction.**
 
 **=== ITERATION 98: THE STATE CONFOUND IS ELIMINATED — and it makes the shortfall worse ===**
 
