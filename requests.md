@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-043**.
+Next request number: **REQ-044**.
 
 ---
 
@@ -1117,6 +1117,123 @@ Interpret absolute differences below roughly `±2e-4` as the established single-
 Plot these as a **new matched high-batch series**; do not draw one continuous line through the old
 fork-2000 bi-Maxwell points or fork-1000 K-Maxwell points. Report whether each kernel remains
 beneficial, is indistinguishable from control, or is worse at 32× and 64×.
+
+## REQ-043: fully paired Muon / bi-Maxwell / K-Maxwell batch ablation
+
+- status: **OPEN**
+- requested: Jack / 2026-09-03 PDT
+- repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
+- pinned SHA: `365c392d695f95dc9a4fb89095e85a6a7b5d551e`
+- node budget: **≤2 nodes fleet-wide.** Run sequentially or two-at-a-time without
+  displacing the standing higher-priority queue.
+
+### Goal
+
+Re-run the complete 1×–16× batch ladder as one matched experiment so every reported
+difference uses a **fresh control from the same base state and campaign**. This audits two
+assumptions behind the current plot:
+
+1. Does ordinary single-EMA Muon (`mu=0.95`) remain indistinguishable from no-momentum
+   Muon (`mu=0.0`) at 16×? It was directly checked only at 1×, 4×, and 8×.
+2. Does K-Maxwell retain its 8×/16× gain when it and bi-Maxwell are paired against fresh
+   controls, rather than comparing K-Maxwell to stored REQ-026/028/029 controls with the
+   documented 0.00088 base offset?
+
+### Design — 60 continuations from three independent bases
+
+Use batches `{1×, 2×, 4×, 8×, 16×}` × four block-matrix optimizers × base seeds
+`{0, 1, 2}`:
+
+| arm | optimizer | purpose |
+|---|---|---|
+| no-momentum control | `muon{mu: 0.0}` | isolates the value of temporal gradient memory while retaining Muon's matrix update |
+| ordinary Muon | `muon{mu: 0.95}` | tests whether the single EMA differs from `mu=0`, including the missing 16× ablation |
+| bi-Maxwell | REQ-026/029 `bimaxwell_muon` record | fresh reproduction of the frozen two-rate curve |
+| K-Maxwell | REQ-034 `annealed_weights_muon` schedule | fresh reproduction of the annealed curve |
+
+For each seed, train a genuinely independent base state to step 2000; **do not** implement
+seeds 1/2 by loading the seed-0 fork, because REQ-027 showed that this overwrites the seeded
+initialization and measures only accelerator nondeterminism. Fork all 20 continuations for a
+seed from that seed's exact serialized state. Record the state hash and base validation loss.
+
+Within each `(seed, batch)` quartet, use the identical ordered data stream, data cursor,
+validation tokens, learning-rate schedule, and all non-block optimizers. If data order is not
+seed-dependent, say so plainly: the three bases still test different initialized/trained
+networks, but not data-order robustness.
+
+### Exact shared protocol
+
+Follow REQ-034's fork@2000 protocol exactly:
+
+| batch | `batch_tokens` | `microbatch_sequences` | `skip_batches` |
+|---|---:|---:|---:|
+| 1× | 524288 | 64 | 2000 |
+| 2× | 1048576 | 64 | 1000 |
+| 4× | 2097152 | 64 | 500 |
+| 8× | 4194304 | 64 | 250 |
+| 16× | 8388608 | 64 | 125 |
+
+Use `start_step: 2000`, `stop_after_step: 2750`, `lr: 0.025`,
+`weight_decay: 0.05`, `cool_down_learning_rate cooldown_frac: 0.7`, the same fixed
+validation set (`val_tokens: 10485760`), and the same AdamW settings for embeddings,
+projection, and remaining parameters. Keep microbatch sequences at 64 and scale only
+gradient accumulation. Use the verified REQ-029 usable-batch calculation and at least the
+86-shard provision required by 16×; never cycle or silently reuse exhausted data.
+
+Use the exact existing kernel parameters from REQ-026/029 and REQ-034. K-Maxwell must
+switch at the fork and complete the full start-to-end weight anneal during the 750-step
+window, exactly as REQ-034 did. Do not retune any kernel by batch size.
+
+### Pairing and readout
+
+For every seed and batch, report these paired differences at step 2750:
+
+```text
+ordinary_muon_minus_mu0 = final_val(mu95)  - final_val(mu0)
+bimax_minus_mu0         = final_val(bimax) - final_val(mu0)
+kmax_minus_mu0          = final_val(kmax)  - final_val(mu0)
+kmax_minus_bimax        = final_val(kmax)  - final_val(bimax)
+```
+
+Negative means the first optimizer has lower validation loss. Preserve each seed's values;
+then report mean, standard deviation, and range across the three paired replicates. Do not
+use a pooled or historical control. Do not call the old ±2e-4 heuristic a confidence
+interval: estimate run-to-run variation from this experiment and keep the raw paired values
+visible.
+
+### Gates
+
+1. Tests green at the pinned SHA.
+2. Three independently trained step-2000 bases verified by seed, state hash, and finite base
+   validation loss.
+3. Machine-readable check that all four arms in each `(seed, batch)` cell load the same base
+   state and start at the same data cursor.
+4. Usable-batch budget assertion and a 20-step finite-loss smoke test for every config before
+   its full continuation.
+5. If the four arms in a cell do not share the same state/data provenance, reject that cell
+   rather than comparing it.
+
+### Success criteria and artifacts
+
+Commit code, configs, logs, and derived tables only—never weights or optimizer tensors—to:
+
+`logs/kmaxwell/req043_paired_kernel_batch_ablation/`
+
+Required files:
+
+- `README.md`: method, provenance audit, results, caveats, and direct comparison with the old
+  REQ-026/028/029/034 conclusions;
+- `manifest.tsv`: seed, batch, arm, state hash, data cursor, node, config, and exit status;
+- `summary.tsv`: base and final validation losses for all 60 arms;
+- `readout.tsv`: all four paired differences per seed plus mean/std/range;
+- config generator, committed configs, validation trajectories, and concise raw logs;
+- one plot showing per-seed points and aggregate curves for all four optimizers. Old campaign
+  curves may appear only as clearly labeled context and must not be joined to the new series.
+
+The load-bearing decisions are: whether `mu95-mu0` is still noise-sized at 16×; whether the
+fresh bi-Maxwell curve again reaches zero; and whether K-Maxwell remains materially negative
+at 8×/16× in every independent paired replicate. Report disagreement across seeds rather
+than averaging it away.
 
 ## Template
 
