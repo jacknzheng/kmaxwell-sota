@@ -946,6 +946,59 @@ components with free coefficients before concluding either way — a data-prefer
 evidence FOR the ratio; a null numerator coefficient is evidence against it.* **The marginal
 significance of a component is not the relevant test.**
 
+**=== ITERATION 141 (2026-09-04): ALIGNMENT DOES NOT BELONG IN C's PREDICTIVE MODEL ===**
+
+*Band 33 is established as geometry (iter. 140). Band 12's reduction predates it, so alignment had
+never been tested as a predictor alongside the structural binaries. **It appears to help enormously,
+and most of that is the shared-λ term.***
+
+**The apparent gain, on the campaign's leave-one-layer-out standard:**
+
+| seed | band-12 model | **+ alignment** | gain |
+|---|---:|---:|---:|
+| 0 | 0.292 | **0.213** | 27% |
+| 1 | 0.235 | **0.141** | **40%** |
+| 2 | 0.249 | 0.187 | 25% |
+| 3 | 0.243 | 0.172 | 29% |
+
+**23–40% improvement on held-out layers, every seed** — and the three binaries explain only **28–35%**
+of alignment, so it looked like largely independent information.
+
+**Rule 6 applied: replace alignment with raw `log cp`, which contains no λ.**
+
+| seed | band-12 | + alignment | **+ log cp (raw)** |
+|---|---:|---:|---:|
+| 0 | 0.292 | 0.213 (27%) | **0.290 (1%)** |
+| 1 | 0.235 | 0.141 (40%) | **0.224 (5%)** |
+| 2 | 0.249 | 0.187 (25%) | **0.232 (7%)** |
+| 3 | 0.243 | 0.172 (29%) | **0.227 (6%)** |
+
+**The gain collapses from 23–40% to 1–7%.** **Reproduced on the stricter held-out-SEED test**
+(alignment 31–41%, raw cp 3–8%).
+
+> **The gap between the two is the shared-λ term. Alignment's predictive power over C is largely the
+> model reconstructing C's own λ component — not new information about C.**
+
+**Band 33 is unaffected and band 12 is unchanged.** Iteration 140's free-coefficient test asked
+whether the data prefers the **ratio form** — it does, `b/a ≈ −1` recovered unprompted — and that is a
+question about *geometry*, not about predictive content. **Both can be true: the step–curvature
+alignment is a real architectural property, and it does not improve a model of C.**
+
+**Registered as a negative on the predictive question.** *No band changes*, which is the point worth
+recording: a 40% out-of-sample improvement, replicated across seeds and on two hold-out schemes, is
+exactly the result that would normally justify adding a term to the model. **It survives every
+robustness check the campaign applies except the one that matters here.**
+
+**This is the third time the shared-λ construction has produced a result that passes conventional
+validation** (iterations 134, 138, 141). In 134 the null caught it immediately; in 138 it survived
+leave-one-out and cross-seed replication and died to the raw-component check; here it survived
+**two independent hold-out schemes**. **Cross-validation does not detect a shared-term artifact** —
+held-out data is equally contaminated, because the contamination is in the *definitions*, not the
+sample.
+
+**Rule 6, final form:** *when a predictor and an outcome share a term, no amount of out-of-sample
+validation licenses the predictor. Refit with the raw components; the difference is the artifact.*
+
 ### CONSOLIDATED FINDINGS IV (iterations 112–132) — the causal account, revised
 
 *Provenance in git history from `ab04e19` onward.*
