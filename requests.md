@@ -1495,7 +1495,15 @@ bound is one-sided twice over, since a channel acting equally on both functional
 
 ## REQ-044: fully paired Muon / bi-Maxwell / K-Maxwell batch ablation
 
-- status: **OPEN**
+- status: **DONE 2026-09-04** → `logs/kmaxwell/req043_paired_kernel_batch_ablation/` (n=3, 60/60 finite)
+- **RESULT — all 3 load-bearing questions answered, reproduce across 3 independent seeds.** (1) mu95≈mu0
+  at EVERY batch incl 16× (mean +0.0003, |mean|<5e-4 all batches) — single-EMA momentum buys nothing in
+  Muon. (2) bimax−mu0 decays to ~zero by 16× (−0.0105→+0.0006) — denoiser edge batch-absorbed. (3) K-Maxwell
+  keeps a material gain at 8×/16× in ALL seeds: kmax−mu0 −0.0063/−0.0047, kmax−bimax −0.0043/−0.0052 (all
+  3 seeds negative, ~20× sd) — K-Maxwell is the ONLY kernel retaining its large-batch edge and it beats
+  bi-Maxwell there. 3 independent bases (hashes differ, val@2000≈3.44367). Fresh paired controls remove the
+  0.00088 offset; confirms REQ-026/029/034 reads + new kmax−bimax within-cell contrast.
+- (was) status: **OPEN**
 - requested: Jack / 2026-09-03 PDT
 - repo: https://github.com/jacknzheng/kmaxwell-sota (branch `jerry-agent`)
 - pinned SHA: `365c392d695f95dc9a4fb89095e85a6a7b5d551e`
