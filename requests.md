@@ -1482,7 +1482,15 @@ beneficial, is indistinguishable from control, or is worse at 32× and 64×.
 
 ## REQ-046: REQ-037 arm 4 — the per-matrix gradient-clip instrument (design decision made)
 
-- status: **DONE 2026-09-04** → `logs/kmaxwell/req046_permatrix_clip_instrument/`
+- status: **DONE 2026-09-04 — CONCLUSION CORRECTED (iter 130): instrument INERT, band 13 UNRESOLVED (not overturned)** → `logs/kmaxwell/req046_permatrix_clip_instrument/`
+- **CORRECTION.** My iteration-129 "band 13 overturned" read was an over-read, now retracted (agrees with your
+  iter 130). The clip moved `clipped_gradient_block_norm` (c·‖g‖, +1.003) but the RAW `gradient_block_norm` the
+  network experiences did NOT move: +0.0028, CI [−0.0143,+0.0200] (verified from my own committed JSONs). Muon's
+  polar map normalises the scale out of the update → trajectory unchanged → raw g unchanged → λ unchanged. So the
+  exponent is 0/0, uninformative; band 13 is UNRESOLVED. Full compensation separately excluded (predicts raw-g
+  slope ≈−1, outside CI). Root cause = band 29 (Muon grad-scale-invariant), which I failed to apply to my own
+  instrument. Data stands + is what enabled the catch; interpretation was wrong. Iter-114 two-functional detection
+  + REQ-045 unaffected. See README "What it settles (corrected)".
 - **RESULT — band 13's causal reading OVERTURNED.** Exponent `d log λ / d log(clip) = +0.009` (≈0),
   first stage `d log g_clipped / d log(clip) = +1.003` (✓ — the instrument works, unlike the batch arm's
   first-stage≡0). Decisive logic: a causal +2 gradient channel would have moved log λ with slope ≈+2 given

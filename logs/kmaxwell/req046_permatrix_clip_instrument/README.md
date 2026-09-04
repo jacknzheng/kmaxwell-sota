@@ -1,4 +1,15 @@
-# REQ-046 — per-matrix gradient-clip instrument (REQ-037 arm 4) — **band 13's causal reading OVERTURNED**
+# REQ-046 — per-matrix gradient-clip instrument (REQ-037 arm 4) — **INSTRUMENT INERT; band 13 UNRESOLVED**
+
+> **⚠️ CORRECTION (2026-09-04, after client iteration 130).** The original conclusion here — "band 13's
+> causal reading overturned" — was an **over-read and is retracted.** The clip scaled `clipped_gradient_block_norm`
+> (`c·‖g‖`, slope +1.003) but the **raw** `gradient_block_norm` the network actually experiences did **not**
+> move: slope **+0.0028, CI [−0.0143, +0.0200]** (verified from this deliverable's own JSONs). Muon's
+> polar map normalises the scale out of the update, so the clip never reached the loss surface — exactly
+> **band 29** (Muon's update is gradient-scale-invariant), which I failed to apply to my own instrument
+> design. **The exponent is therefore 0/0 — uninformative about curvature–gradient physics, not evidence
+> against it. Band 13's causal reading is UNRESOLVED, not overturned.** The data below is correct and
+> complete (it is what made the correction possible); only the interpretation was wrong. The corrected
+> reading is in "## What it settles (corrected)" below.
 
 **SHA `25d3208` + the instrument patch (`req046_instrument.patch`), 1 node (wlkmo03, 8×H100),
 venv019 torch 2.10.0+cu128.** 3 balanced arms, per-matrix clip multiplier ∈ {0.5, 1.0, 2.0} (each
@@ -22,22 +33,45 @@ the property the REQ-037 *batch* instrument fatally lacked (its first stage was 
 the reduced form is **flat**: `d log λ / d log(clip) = +0.009`, essentially zero, non-monotone, with
 per-type slopes scattered symmetrically around zero (noise, not signal).
 
-## What it settles — band 13 is an LR-response statement, not curvature-gradient physics
+## What it settles (corrected) — nothing about band 13; the instrument is inert under Muon
 
-The logic is decisive and does not depend on the (failed) monotonicity check:
+The original claim assumed the clip changed *the gradient the network experiences*. It did not. The
+decisive quantity is the **raw** gradient block norm, and it did not move:
 
-> **If the gradient-magnitude channel were causal at band-13's exponent (≈ +2), then — since the clip
-> moves the gradient with coefficient exactly 1.003 — the clip would have moved `log λ` with slope
-> ≈ +2. It moved it with slope +0.009.** So changing *only* the gradient magnitude (holding the LR
-> path fixed) does **not** move the equilibrium curvature.
+| quantity | slope vs log(clip) | CI |
+|:---------|-------------------:|:---|
+| `clipped_gradient_block_norm` (`c·‖g‖`) | **+1.003** | — (registered "first stage", but *mechanical*) |
+| **`gradient_block_norm` (RAW, what the network sees)** | **+0.0028** | **[−0.014, +0.020]** (includes 0) |
+| `top_eigenvalue` (λ) | +0.009 | — |
 
-This is the request's *"result near +1 or below → band 13 becomes a statement about LR response"*
-outcome, in its strongest form (≈ 0). Band 13's observed λ–gradient exponent is **confounded**: in the
-observational designs (REQ-023) LR and gradient magnitude co-vary, and the ≈ +2 slope is carried by the
-**LR channel**, not by gradient magnitude. The mechanism is exactly **band 29** (Muon's update is
-gradient-scale-invariant): the polar map normalises the update to unit spectral norm, so at equilibrium
-the weights — and hence λ — are insensitive to a per-matrix gradient rescale. **The causal
-curvature-gradient reading of band 13 does not survive.**
+The causal chain (client iteration 130, confirmed on this data):
+
+```
+clip on grad_chunk → momentum buffer → polar_express normalises to unit spectral norm
+  ⟹ orthogonalised update unchanged ⟹ weight trajectory unchanged
+  ⟹ raw gradient unchanged (+0.003) ⟹ curvature unchanged (+0.009)
+```
+
+**The clip never reached the loss surface.** So the exponent `d log λ / d log(clip) = +0.009` is **0/0**:
+both the numerator (λ response) and the *real* denominator (raw-gradient response) are zero. It is
+**uninformative about curvature–gradient physics, not evidence against it.** Band 13's causal reading is
+**UNRESOLVED, not overturned.** Full network compensation is separately excluded (it predicts a raw-gradient
+slope near −1, far outside the CI) — so the finding is specifically "the intervention was inert," which is
+exactly **band 29** (Muon's update carries no gradient-magnitude information): moving the clip pre-momentum
+(defect 1) stops `polar_express` cancelling it *within a step*, but the normalisation still removes the scale
+from the update, so the trajectory barely changes.
+
+**Why the original read was wrong.** I treated the +1.003 `clipped_gradient_block_norm` slope as "the first
+stage," but that field is `c·‖g‖` by construction — it measures that the probe *sees* the clip, not that the
+*network* does. The load-bearing first stage is the raw-gradient slope (+0.003 ≈ 0). A valid instrument must
+move the raw gradient; under Muon a magnitude intervention cannot (the normalisation removes that channel by
+construction), so the question "does gradient magnitude cause curvature" may be **unanswerable by
+intervention under this optimiser** — itself a real finding, and where band 29 already pointed. The remaining
+options (per-matrix loss weights) reintroduce iteration 119's exclusion problem.
+
+**Lesson (recorded):** adversarially validate an intervention against the campaign's *own established
+findings*, not only against the code path it edits — band 29 was ten iterations old and made this instrument
+inert; I did not connect it. (Consistent with [[adversarial-validate-every-lead]].)
 
 ## The instrument (`req046_instrument.patch`, +96 lines over `25d3208`)
 
