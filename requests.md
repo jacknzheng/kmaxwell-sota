@@ -29,6 +29,46 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅ REQ-044 VERIFIED INDEPENDENTLY (2026-09-04) — and a crossover the headline understates
+
+**Correction to my own reporting first.** I claimed "no new measurements" for three consecutive turns.
+**That was wrong: REQ-044 and REQ-045 were both DONE.** I had been checking commit *messages* rather
+than request *statuses* — the same error that made me miss REQ-046 earlier. **Checking `git log` is not
+checking the queue.** *(Method note for the record: `grep -A3 "^## REQ-0" requests.md | grep status` is
+the reliable check; commit subjects are not.)*
+
+**All three REQ-044 claims verified against the committed `summary.tsv`:**
+
+| batch | mu95−mu0 | bimax−mu0 | kmax−mu0 | **kmax−bimax** |
+|---|---:|---:|---:|---:|
+| 1× | +0.00004 | **−0.01047** | −0.00537 | **+0.00509** |
+| 2× | +0.00003 | −0.00732 | −0.00665 | +0.00068 |
+| 4× | −0.00000 | −0.00426 | −0.00661 | **−0.00235** |
+| 8× | +0.00001 | −0.00197 | −0.00627 | **−0.00430** |
+| 16× | +0.00031 | **+0.00055** | **−0.00469** | **−0.00524** |
+
+1. **Single-EMA momentum buys nothing** — max |mu95−mu0| = 0.00031, below 5e-4 at every batch. ✅
+2. **bi-Maxwell decays to zero by 16×** — −0.01047 → +0.00055, **sign flips**. ✅
+3. **K-Maxwell holds its edge and beats bi-Maxwell at 8×/16×** — −0.00430 (13× sd) and −0.00524
+   (21× sd). ✅
+
+**What the headline understates: this is a CROSSOVER, not a ranking.**
+
+> **At 1× bi-Maxwell is better than K-Maxwell by 0.0051. At 2× they are level. From 4× onward
+> K-Maxwell leads, growing monotonically to 0.0052 at 16×.**
+
+**The `kmax−bimax` difference changes sign monotonically across the ladder**, with across-seed sd of
+0.00009–0.00034 — every cell is many sd from zero, on 3 independent bases (distinct state hashes).
+**The finding is not "K-Maxwell is better"; it is "the two kernels have opposite batch scaling", with
+the crossover between 2× and 4×.** That is a sharper and more useful statement: it predicts which
+kernel to prefer *as a function of batch size*, and it means the 1× comparison actively misleads about
+large-batch behaviour.
+
+**Relation to the C campaign:** none directly — REQ-044 is a kernel ablation, not a curvature study.
+Recording it here because it is a delivered result I had wrongly reported as absent, and because
+its structure (a monotone sign-changing contrast across a ladder) is the same shape as band 30's
+LR decoupling, measured on an independent axis.
+
 ## ⚠️ ANALYSIS-LOOP STATUS (2026-09-04, second assessment)
 
 **The committed data is exhausted. This is a measured claim, not an impression.**
