@@ -29,6 +29,82 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⛔ THE "LOCALISED RESIDUAL" WAS PSEUDO-REPLICATION (iteration 164) — my own iteration-163 claim, retracted
+
+*Iteration 163 reported the residual as **systematic and localised to layers 2, 3, 6, 8** (|t| 3.9–5.9)
+and called it "a sharper target than residual variance". **Chasing that target destroyed it.** Two
+candidate explanations were tested and refuted, and the third check showed the target was never there.*
+
+**⊘ REFUTATION 1 — architecture does not explain it.** `train_gpt.py` carries exactly the kind of
+per-layer set structure that could produce a localised residual, all declared **before** fitting (read
+from source, not chosen after seeing the data):
+
+| indicator | coef (dex) | t | weighted R² |
+|---|---:|---:|---:|
+| `cache_layers` [3,7] | +0.0329 | **+1.26** | 0.137 |
+| `attn_gate_layers` [3,10] | +0.0183 | +0.73 | 0.051 |
+| `xsa_layers` [1,3,4,7] | +0.0149 | +0.72 | 0.050 |
+| `ve present` [1,2,9,10,11] | −0.0106 | −0.56 | 0.031 |
+| `dc_layers` [10] | −0.0144 | −0.46 | 0.020 |
+| `paired_head_layers` [0,2,5,9] | −0.0033 | −0.17 | 0.003 |
+
+**Permutation null over layer labels, taking the max |t| across all six** (20,000 shuffles) — pricing
+**the selection**, not a single test: **p = 0.8149.** Nothing.
+
+**⊘ REFUTATION 2 — it is not periodic either.** The alternating signs suggested periodicity; every
+period the 12-layer axis supports was tested, all reported:
+
+| period | amplitude (dex) | F |
+|---|---:|---:|
+| 4 | 0.0241 | **2.09** |
+| 3 | 0.0149 | 0.67 |
+| 6 | 0.0125 | 0.47 |
+| 12 | 0.0051 | 0.05 |
+| 2 | *(singular — Nyquist limit, amplitude is a numerical artifact, not a result)* | 1.39 |
+
+**Permutation null, max F across all five periods: p = 0.8234.** Nothing.
+
+**⛔ REFUTATION 3 — AND THIS ONE RETRACTS MY OWN CLAIM.** Before concluding "localised but unexplained",
+I checked whether the localisation was ever real. **It was not.** Iteration 163's |t| values treated all
+**60 fits as independent — but the 5 checkpoints within a seed × fork are the SAME NETWORK.** Across the
+genuinely independent axis the residual barely replicates: **mean pairwise correlation across the 4 seeds
+= +0.220, with one pair NEGATIVE (−0.34)** (across fork states, +0.466).
+
+Re-testing with the correct clustering unit:
+
+| | L0 | L1 | **L2** | **L3** | L4 | L5 | **L6** | L7 | **L8** | L9 | L10 | L11 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **\|t\|, naive (iter. 163, n=60 as if independent)** | 0.80 | 1.42 | **3.87** | **5.54** | 1.64 | 2.49 | **5.87** | 0.13 | **4.39** | 0.39 | 1.30 | 2.19 |
+| **\|t\|, clustered by seed (n=4 independent networks)** | 1.49 | 1.23 | 2.14 | **3.28** | 0.60 | 1.00 | 1.88 | 0.03 | 1.43 | 0.22 | 0.63 | 1.17 |
+
+> **The four spikes collapse to 1.4–3.3; only layer 3 survives at |t| 3.28, and that is one marginal
+> result out of twelve tested.** Counting 5 correlated checkpoints as 5 independent observations
+> inflated every t by roughly **√5 ≈ 2.2**. **Iteration 163's "systematic residual localised to layers
+> 2, 3, 6, 8" is RETRACTED. There is no localisation to explain, and the two refutations above were
+> chasing an artifact.**
+
+**✅ WHAT SURVIVES — the magnitude, unchanged.** LOLO **0.0982** vs floor **0.0903** = **1.09×**, excess
+**0.0387 dex**. **Band 39's correction stands in full: it never depended on localisation**, only on the
+aggregate error against the aggregate floor, and both are computed the same way on the same 60 fits.
+**The residual is real in size and structureless in this data.**
+
+**⚠️ THE IRONY, STATED PLAINLY.** Iteration 163 introduced **standing rule 14** — *use the panel at full
+extent* — after finding 60 fits where 12 had been used. **Using all 60 was correct for the LOLO ratio and
+wrong for the per-layer t-tests**, because the extra fits are repeated measurements of the same networks.
+**More data improved the aggregate estimate and simultaneously invalidated the per-layer inference drawn
+from it.**
+
+**Standing rule 15.** *Expanding a panel changes what each row is. Before computing any per-cell
+statistic, state the independent unit and cluster on it — the same expansion that tightens an aggregate
+can manufacture significance in a disaggregate.* The independent unit here is the **seed** (4), not the
+seed × fork × step fit (60).
+
+**⚠️ NO n=4 SEED CHECK PROPOSED.** Three refutations and a retraction, all settled within committed data.
+**REQ-048 remains the only outstanding request** (still OPEN, no Jerry response), and this iteration
+**sharpens its target**: the residual it must explain is **0.0387 dex of unlocalised between-layer
+structure**, not a layer-specific pattern. **Band 44's registered criterion is unaffected** — it tests
+PR's correlation and shape against the C profile, neither of which depends on this.
+
 ## 🔧 BAND 39 CORRECTED AT 5× THE EVIDENCE (iteration 163) — the bowl is stationary, and the residual is REAL and LOCALISED
 
 *REQ-048 is filed and OPEN with no Jerry response. Rather than idle, this iteration uses a resource the
