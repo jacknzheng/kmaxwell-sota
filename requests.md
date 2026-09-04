@@ -29,6 +29,76 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ◐ THE AMPLITUDE TRACKS λ's DEPTH RANGE (iteration 170) — survives circularity checks, then largely deflates itself
+
+*Band 46 left the 19.6× type-varying amplitude **unexplained**: four architectural candidates, best
+r +0.849 but permutation **p 0.146** at n=6. **All four were architectural.** A **measured** candidate was
+never tried, and it follows directly from band 40 (the bowl lives in λ): **if a type's λ simply varies
+more across depth, the same positional forcing produces a bigger C bowl** — no special property required.*
+
+**THE PRE-DECLARED HYPOTHESIS AND ITS RESULT.** One hypothesis, one directional prediction, so **no
+multiplicity correction is owed** — unlike band 46's, which had to price a search over four:
+
+| type | amplitude | sd(log λ profile) | range(log λ) |
+|---|---:|---:|---:|
+| mlp.proj | 2.052 | **0.629** | 1.968 |
+| attn.proj | 1.452 | 0.370 | 1.338 |
+| mlp.fc | 1.046 | 0.204 | 0.845 |
+| attn.k | 0.786 | 0.107 | 0.346 |
+| attn.v | 0.559 | 0.143 | 0.415 |
+| attn.q | 0.104 | 0.148 | 0.528 |
+
+**corr(amplitude, sd_λ) = +0.901; permutation null over the 6 type labels: p = 0.0108.** It survives
+where band 46's four candidates failed.
+
+**⚠️ RULE 6 CHECK — and it passes, which is the strongest part of this iteration.** The amplitude is
+fitted on the **C** profile and `log C = log λ − 2 log g`, so predictor and outcome **share log λ** —
+precisely the trap that killed the −0.801 `align` result in iteration 160. **Split-sample test:
+amplitude from seeds {0,1}, sd_λ from seeds {2,3}.** Sharing a term across **different networks** cannot
+manufacture a correlation:
+
+> **r = +0.865, permutation p = 0.0197.** **The relationship replicates across independent networks — it
+> is a genuine property of the type, not a shared-term artifact.**
+
+**◐ BUT THE SAME CHECKS LARGELY DEFLATE IT, and this is the honest headline.** Two findings from the
+follow-through:
+
+| diagnostic | value | reading |
+|---|---:|---|
+| **corr(amplitude, sd of the C profile)** | **+0.986** | **the amplitude IS essentially sd(C profile) rescaled** |
+| corr(amplitude, sd_g) | +0.817 | the g component correlates nearly as well |
+| corr(sd_λ, sd_g) | +0.935 | the two components are barely separable at n=6 |
+| regress sd_C on both: sd_λ | +0.502, **t +2.12** | λ wins, but marginally (3 dof) |
+| regress sd_C on both: sd_g | −0.205, t −0.15 | g contributes nothing |
+
+> **VERDICT, at the strength the evidence supports.** *"Amplitude tracks λ's depth range" is **close to a
+> restatement**: amplitude and sd(C profile) correlate at **+0.986**, so the claim reduces largely to
+> "types whose C profile varies more have larger amplitude" — **true by construction**. The
+> **non-tautological** residue is that sd_C is driven by **λ rather than g** (t +2.12 vs −0.15), which is
+> **band 40's finding re-derived per type, not a new mechanism.*** **Band 46's "amplitude is
+> unexplained" stands, only slightly narrowed: no INDEPENDENT driver has been found.**
+
+**Why record a deflated result at all.** The split-sample p = 0.0197 is real and the tautology check is
+what makes the result interpretable. **Without the corr(amp, sd_C) = +0.986 diagnostic this would have
+been written up as "the amplitude's cause is found" — a significant p, a clean split-sample replication,
+and a mechanism story from band 40.** It is the third time in this campaign that a quantity survived
+every significance and replication test and still failed on construction (iteration 160's `align`,
+iteration 161's `residual_tail`, this).
+
+**Standing rule 17.** *Before crediting a predictor of a fitted parameter, correlate that parameter with
+the raw spread of the thing it was fitted to. If they agree at r ≈ 1, the predictor explains the
+construction, not the phenomenon — significance and out-of-sample replication cannot distinguish these.*
+
+**⚠️ NO n=4 SEED CHECK PROPOSED.** The split-sample test **is** the seed check (amplitude and predictor
+from disjoint seed pairs), and the finding is deflated rather than promoted, so registering a band would
+overstate it. **Band 46 is left as written.**
+
+**Queue:** REQ-048 still **OPEN**, no Jerry response. It remains the only outstanding request and the only
+path to the central question from new measurement; ≤2 nodes, no training.
+
+**⚠️ Run-length, restated:** the loop was specified as **8 hours from 2026-09-03 ~00:45 PDT** and has now
+run **~15.8 hours**. Still flagged for the operator to stop or explicitly extend.
+
 ## ✅ END-TO-END CONSISTENCY CHECK + CONSOLIDATED STATE (iteration 169)
 
 *46 bands, six audits, five retractions. **Never checked end-to-end: do the surviving load-bearing claims
