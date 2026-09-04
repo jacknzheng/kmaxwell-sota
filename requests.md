@@ -29,6 +29,63 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅ REQ-047 DELIVERED (2026-09-04) — question (a) answered, and a probe disagreement recorded
+
+**REQ-047 ran and its status line still reads OPEN**, which is why I nearly missed it again — found by
+inventorying `logs/` for raw data rather than by reading statuses. *(Third distinct way a delivery has
+been missed today; the reliable check is the directory listing.)*
+
+**The probe was built as specified**, including the sequence-axis correctness note from iteration 143:
+`measure_activation_backward_v2.py`, four seeds, 288 matrix-observations, with `da_cos_mean`,
+`align_ratio`, `grad_rank1_frac` and per-token participation all present.
+
+**CHECK 1 — verified independently against the raw JSON:**
+
+| seed | da_cos q,k | v, attn.proj | ratio |
+|---|---:|---:|---:|
+| 0 | +0.0203 | +0.2498 | **0.081** |
+| 1 | +0.0234 | +0.2529 | 0.093 |
+| 2 | +0.0190 | +0.2479 | 0.077 |
+| 3 | +0.0204 | +0.2515 | 0.081 |
+
+**q,k's adjacent-token backward coherence is 8–9% of v/attn.proj's** — a 12× gap, all four seeds.
+
+**And it MEDIATES the alignment deficit completely.** Regressing `log align_ratio` on a q,k indicator,
+then adding `da_cos_mean`:
+
+| seed | q,k coef alone | **+ da_cos** | **shrinkage** | da_cos t |
+|---|---:|---:|---:|---:|
+| 0 | −0.0614 | **+0.0008** | **101%** | +12.4 |
+| 1 | −0.0456 | +0.0130 | **128%** | +12.6 |
+| 2 | −0.0558 | +0.0015 | 103% | +11.3 |
+| 3 | −0.0581 | +0.0021 | 104% | +11.5 |
+
+**The q,k coefficient goes to zero.** `corr(da_cos, log align) = +0.83 to +0.86`.
+
+> **Registered as band 36. Question (a) is answered: the q,k alignment deficit IS token incoherence —
+> their backward vectors point in different directions from one token to the next, so the outer
+> products accumulate destructively. Not a sparsity effect (`a_participation` is identical for q, k and
+> v at 8137.8).**
+
+**CHECK 2 passed** — `corr(align_ratio, grad_rank1_frac) = +0.656` over 288 observations, confirming
+alignment and rank-1 concentration measure the same accumulation coherence.
+
+**A PROBE DISAGREEMENT, recorded rather than smoothed.** Band 25 measured the alignment deficit as
+**−0.190 ± 0.007 dex** from REQ-043's fields. REQ-047's `align_ratio` gives **−0.116** against
+v/attn.proj and **−0.055** against all four other types. **Neither reference group reproduces −0.190** —
+I checked both, expecting one to reconcile them, and it does not. **The two probes disagree on the
+deficit's magnitude by roughly 1.6×**, and this is unresolved.
+
+**What that does and does not touch.** Band 36's mediation is computed **entirely within REQ-047's own
+fields**, so it is unaffected by the disagreement — the shrinkage is a within-probe result. **Band 25's
+magnitude should be treated as probe-dependent until the discrepancy is understood**, and its role in
+iteration 107's arithmetic (backward −0.18 + alignment −0.19 = the gradient deficit) rests on REQ-043's
+numbers, which remain internally consistent.
+
+**CHECK 3 is inconclusive**, and I am not reading it either way: `corr(a_part, d_part)` across depth is
++0.588, +0.216, −0.358, +0.322, +0.300, +0.114 — **no consistent sign across types**, so it
+distinguishes neither the support nor the scale reading of band 27. **Question (b) remains open.**
+
 ## ✅ REQ-045 RE-ANALYSED (2026-09-04) — a third LR design, and a rate that transfers
 
 **REQ-045's committed raw curvature JSON had not been used.** Its headline (β_neighbour null →
@@ -436,6 +493,7 @@ measured value so a seed result can be compared directly.
 | **23** | **the g² law is CROSS-SECTIONAL/CAUSAL ONLY — it does not hold in TIME** (iter. 99) | **slope of λ-drift on g-drift across matrices must be < 1.5** (attenuation-corrected), i.e. NOT 2; **C's drift CI must include 0** and **step must explain < 1% of C's variance** | slope **+0.634**, CI [0.329, 0.982], corrected **0.860**; reliability 0.738 so a true 2 would read 1.476. C drift CI [−0.055, +0.049]; step **0.2–0.4%** of variance vs LR 2.0–3.5% |
 | **24** | **the measurement window IS equilibrated** (iter. 100) — ✅ **CONFIRMED n=4** | **autocorrelation of successive Δlog λ negative with seed-clustered CI excluding 0** (mean-reverting, not drifting), **and strictly above −0.5** (real dynamics, not white noise); **change magnitude ratio second/first half ≈ 1** | AC **−0.228, CI [−0.437, −0.117]**, implied AR(1) ρ = **0.54**; ratio **0.898** |
 | **25** | **the shortfall = the token-wise ALIGNMENT deficit** (iter. 101–105, REQ-043 P2/P3) — ✅ **RESOLVED n=4** | **align_deficit measured at a single state ≤ −0.15 dex with across-seed sd < 0.02**; **identity align_deficit = grad_deficit − d_deficit holds to < 0.001 dex**; **depth slope state-dependent** | **−0.1896 ± 0.0068 dex** (0.646×), identity gap **< 0.0005 dex/seed**; artifact-free slope **−0.0075 dex/layer**; state drift +0.0101 dex/layer per 1000 steps |
+| **36** | **the q,k alignment deficit IS token incoherence — complete mediation** (iter. 145, REQ-047) — ✅ **CONFIRMED n=4** | **q,k adjacent-token backward coherence < 20% of v/attn.proj's**, every seed; and **controlling for `da_cos_mean` drives the q,k alignment coefficient to ZERO** (shrinkage ≥ 90%) | da_cos **+0.020 vs +0.250** (8–9%, 4/4); mediation shrinkage **101/128/103/104 %**, da_cos t = **+11.3 to +12.6**; corr(da_cos, log align) **+0.83 to +0.86** |
 | **26** | **C's six-type structure is genuinely THREE-term** (iter. 108) — ✅ **CONFIRMED n=4** | **the identity log g = log‖a‖_F + log‖d‖_F + log(align) holds exactly**; across the six types **no term correlates with C above 0.55**, and **each term's spread exceeds C's own** (offsetting) | identity exact to **1e-6 dex**; corr(C, −2‖a‖) +0.36–0.39, (C, −2‖d‖) +0.44–0.49, (C, −2align) +0.38–0.40; term spreads 1.35 / 1.02 / 0.64 vs C's **1.04** |
 | **27** | **the ‖a‖·‖d‖ PRODUCT is the depth-conserved quantity** (iter. 110–111) — ✅ **CONFIRMED n=4** | **corr(log‖a‖, log‖d‖) ≤ −0.80 within every type across depth**, perm p < 0.01; **sd(log‖a‖+log‖d‖) < 0.6 × sd of the smaller factor**, every type. *Compensation is near-exact but NOT universal — TLS slope contains −1 in only 2/6 types* | corr −0.875 to −0.986; sd-ratio **0.262–0.493**; TLS slopes −0.765 to −1.230 |
 | **28** | **C's depth structure is carried by λ, not g** (iter. 117) — ✅ **CONFIRMED n=4** | **sd(log λ) / sd(log g) across depth > 1.5 in every matrix type**, every seed — the consistency requirement linking bands 27 and 10/25 | ratios **2.03 / 2.76 / 2.85 / 2.93 / 4.19 / 4.32**, mean **3.2×**; λ variance share 0.51–1.76 |
