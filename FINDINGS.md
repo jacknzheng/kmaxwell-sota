@@ -1066,6 +1066,70 @@ is robustness to initialisation rather than four independent tests.
 What changed is that the cancellation is now supported by a test of the pairing rather than by a
 correlation that any decomposition would have produced.
 
+## Rule 35 sweep: the g-family withdrawal was right, but its sign was never explained (2026-09-05)
+
+Rule 35 (do not treat a relationship between a quantity and its own residual as evidence) was applied
+to every surviving claim in this file. **One structural class is affected, and it was already
+withdrawn** — but the sweep found something the withdrawal missed.
+
+**The sweep.** Rule 35 fires only when the tested quantity is a component of the residual. REQ-047's
+fields (`d_frob`, `d_cv`, `d_eff_rank`, `da_cos_mean`, `grad_rank1_frac`) come from a different
+archive and are external to `log C`; rule 35 does not fire on them. The one class where it does is
+the **components of `g`**, since `log C = log lam − 2 log g` and
+`log g = log|a|_F + log|d|_F + log(align_ratio)` exactly. Simulating a null in which curvature is
+**completely independent** of the g-components, and correlating `log|a|_F` with the C residual, gives
+**−0.551** — a strong correlation from construction alone. Iteration 214 already withdrew this
+family on the equivalent ground ("no decomposition of `g` can serve as an independent predictor of a
+residual defined using `g`"), so no standing claim needs revising. Rule 35 is the general form of a
+defect this campaign had already identified.
+
+**What the withdrawal never explained: the sign.** Construction predicts **−0.55**; the recorded
+values are **positive** (`d_frob` +0.224, `a_frob` +0.116). A sign opposite to the artifact is
+informative — it means something real is present and is *fighting* the construction term.
+
+The algebra says where the crossing is. With `log lam = k·log|d|_F + noise`, the residual's
+dependence on `log|d|_F` is `(k − 2)`, so the correlation is positive **only if k > 2**. Simulation
+confirms the zero-crossing lands at exactly k = 2, and reproduces the observed +0.224 at k ≈ 2.6.
+
+## C rises with g: the between-matrix variation is not a gauge rescaling (2026-09-05)
+
+That prediction is directly measurable from REQ-048 alone — no join, no REQ-047, no g-decomposition —
+as `k = d(log lam)/d(log g)`, saturated in type and block, cluster-robust by block.
+
+| specification | k | per seed | t vs k = 2 |
+|---|---|---|---|
+| type + block | **3.173** | 3.28, 3.27, 2.99, 3.15 | **+17.13** |
+| type + block + `log n_eff_bulk` (lam-free) | **2.569** | 2.55, 2.82, 2.64, 2.26 | **+4.88** |
+
+Both are above 2, and the concentration-controlled value (2.57) matches the k ≈ 2.6 that the observed
++0.224 correlation independently implies. Two routes agree.
+
+**Why k = 2 is the meaningful reference.** The campaign's gauge theorem says any scalar multiplying a
+matrix's whole contribution cancels exactly in `lam/g²`: rescale a gradient by c and `lam` moves by
+c², `g` by c, leaving C invariant — which is **k = 2 exactly**. The measured k > 2 therefore says the
+between-matrix variation in this network is **not** a pure gauge rescaling. There is real shape
+variation, and it shows up as C co-varying with g:
+
+| specification | d(log C)/d(log g) | robust se | t |
+|---|---|---|---|
+| type + block | **+1.173** | 0.216 | +17.13 |
+| type + block + `n_eff_bulk` | **+0.569** | 0.391 | +4.88 |
+
+The effect is substantial: residual sd(`log g`) is ~0.08 dex, giving a C swing of **0.17–0.21 dex**
+across ±1 sd, with **partial R² 0.30–0.39** per seed at fixed type and depth.
+
+**The limit, stated plainly.** `g` is not exogenous. It is measured at the same step as `lam`, and
+both respond to the same training dynamics; this says equilibrium C and gradient norm **co-vary
+across matrices**, not that raising `g` would raise C. It also does not resurrect any g-derived
+predictor — the artifact and the signal remain superimposed in the same number, which is exactly why
+`d_frob` and its relatives stay withdrawn. Separating them needs an experiment that varies the
+gradient side causally, which is **REQ-051**.
+
+**This sharpens REQ-051's value.** That request was previously justified as removing a join. It now
+has a specific quantitative target: measure whether the causal elasticity of `lam` to `g` is also
+above 2, or whether the observational k > 2 is confounded by the joint response of both quantities to
+training dynamics.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1099,3 +1163,6 @@ Never treat a relationship between a quantity and its own residual as evidence: 
 A minus C, then corr(C, B) is mechanically negative and corr on an OLS residual is exactly zero.
 Test the claim on the composed quantity against a null that breaks only the hypothesised link.
 An exact algebraic identity closing to machine precision confirms arithmetic, never a hypothesis.
+When a correlation has the OPPOSITE sign to what its construction artifact predicts, the artifact
+is not the whole story: compute the artifact's expected value and treat the gap as a measurable
+quantity rather than dismissing the correlation.
