@@ -29,6 +29,70 @@ Next request number: **REQ-053**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## 🔧 BAND 73 CORRECTED ON THE MATRIX AXIS (iteration 205) — `d_eff_rank` REVERSES SIGN when separated
+
+*Band 73 could not separate `da_cos_mean` from `d_eff_rank`: on **12 block means** they correlate at
+**+0.705**. But both are measured **per matrix**, and so is C. **Checking the collinearity on the matrix
+axis first (rule 9) — before fitting anything — changes everything.***
+
+**① THE COLLINEARITY IS AN AGGREGATION ARTIFACT.** After removing type and block, per matrix:
+
+| seed | corr(`da_cos_mean`, `d_eff_rank`) |
+|---|---:|
+| 0 | **−0.114** |
+| 1 | −0.065 |
+| 2 | −0.095 |
+| 3 | −0.097 |
+
+**≈ −0.09 on the matrix axis versus +0.705 on block means.** **Block-averaging created the collinearity
+that blocked band 73's separation** — the two quantities are essentially **orthogonal** once
+within-block variation is retained.
+
+**② SEPARATED, THE ANSWER CHANGES.** Fitting `log C ~ type + block + log n_eff + da_cos_mean +
+log d_eff_rank` per seed — **saturated in type and block, so this uses only within-block variation**, a
+stricter test than band 73's:
+
+| predictor | mean coefficient | sd | t (n=4 seeds) | same-sign | per-seed t range |
+|---|---:|---:|---:|---:|---|
+| **log n_eff** | **−0.378** | 0.024 | **−31.43** | 4/4 | −5.16 to −8.40 |
+| **log d_eff_rank** | **+0.322** | 0.061 | **+10.53** | 4/4 | **+2.02 to +2.96** |
+| `da_cos_mean` | −0.180 | 0.117 | −3.08 | 4/4 | **−0.08 to −0.69 (n.s. in every seed)** |
+
+> **🔧 `d_eff_rank` REVERSES SIGN — band 73 reported −0.659; separated it is +0.322 (t +10.5).** That is
+> a textbook aggregation reversal: at block level it inherited `da_cos_mean`'s negative association;
+> freed of that, its own relationship with C is **positive**.
+> **And `da_cos_mean` weakens to −0.180 and is NOT significant within any single seed** (|t| ≤ 0.69) —
+> it survives only as a cross-seed mean, which four points cannot support strongly.
+
+**⇒ WHAT SURVIVES BAND 73, AND WHAT DOES NOT.** **Survives:** the second component is **backward-side**
+— both surviving predictors are output-gradient properties, and the forward-side candidates remain weak.
+**Does not survive:** the specific attribution to **token coherence**, and the **sign** of the
+`d_eff_rank` association. **Band 73's "token coherence, not separably" is corrected to: separable after
+all, and the separation favours `d_eff_rank` with the opposite sign.**
+
+**⚠️ AND `log n_eff` IS UNSHAKEN.** At **−0.378, t = −31.4**, significant in every seed
+(−5.2 to −8.4), it remains by far the strongest predictor **even with block dummies absorbing all
+positional variation** — i.e. concentration predicts C **within** blocks, not merely across them. **That
+is a stronger statement about band 44 than anything recorded so far**, and it was not the target of this
+iteration.
+
+**PROPOSED n=4 SEED CHECK — band 74 (criterion registered).**
+*Criterion:* fitting `log C ~ type + block + log n_eff + da_cos_mean + log d_eff_rank` per seed on the
+**matrix axis**: (i) **`log n_eff` is negative with |t| ≥ 3 in every seed**; (ii) **`log d_eff_rank` is
+POSITIVE in ≥3 of 4 seeds**; (iii) the **within-type-and-block collinearity between `da_cos_mean` and
+`d_eff_rank` is |r| < 0.30**, confirming separability.
+*Status:* **satisfied by committed REQ-047 + REQ-048 data** (−5.16 to −8.40; 4/4 positive; |r| ≈ 0.09).
+**No new compute requested; ≤2-node ceiling.**
+
+**Standing rule 27.** *Before concluding two predictors are inseparable, test the collinearity on the
+finest axis the data supports. Aggregation can CREATE collinearity that does not exist in the underlying
+measurements — here +0.705 at block level versus −0.09 per matrix — and a sign can reverse when it is
+removed.* **This is Simpson's paradox in the predictor space rather than the outcome space, and rule 9
+(check collinearity first) needs this addendum: check it at every available granularity.**
+
+**Queue:** REQ-035/036/048 DONE; **REQ-050 OPEN**; **REQ-051 OPEN** (its `k_a/k_d/k_rho` split would test
+this directly); **REQ-052 OPEN**; REQ-049 optional. **No Jerry response since REQ-048.**
+
 ## ◐ THE SECOND COMPONENT IS BACKWARD-SIDE — token coherence, but not separably (iteration 204)
 
 *Band 72 showed the residual is **not** curvature along any measured direction, leaving the **gradient
