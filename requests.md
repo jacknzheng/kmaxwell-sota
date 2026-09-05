@@ -29,6 +29,84 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅ REQ-036 VALIDATION CLOSED (iteration 173) — verified against its own source; the design is ALGEBRAICALLY powerless on the layer axis
+
+*Rule 18 cost twenty iterations, so its implication was acted on immediately: **read the Jerry scripts I
+have never read.** Priority went to `make_req036_arms.py`, since REQ-036 is the design this loop
+explicitly asks me to validate — and until now I had validated it from its **results**, never from its
+**source**.*
+
+**THE DESIGN, FROM THE SOURCE** (`logs/kmaxwell/req036_equalized_curvature_lr/make_req036_arms.py`):
+
+```
+A2 = {attn.proj 0.40, attn.k 0.88, mlp.fc 0.91, attn.q 1.18, attn.v 1.25, mlp.proj 1.56}
+A5 = {attn.q 0.568, attn.k 0.755, attn.proj 0.642, attn.v 1.101, mlp.fc 1.260, mlp.proj 2.462}
+A4 = 1/A2                     # anti-rule
+a3 = A2, except blocks 0 and 11 where attn.proj→1.20 and mlp.proj→3.00
+```
+
+> **Every arm is a PER-TYPE CONSTANT in depth.** The sole depth dependence in the entire design is
+> arm a3's override at **2 of 12 blocks, for 2 of 6 types**. **The design has essentially no depth
+> dimension.** This is confirmed from the source, not inferred from the outcome.
+
+**⇒ THE DECISIVE RESULT — a per-type constant is ALGEBRAICALLY powerless on the between-layer axis.**
+A per-type multiplier shifts **every layer of that type by the same amount**, so all block means move
+together and the between-layer **spread** is unchanged. Searching **2000 random per-type rules** over
+multipliers in [0.3, 3.0]:
+
+| quantity | value |
+|---|---:|
+| between-layer variance of block-mean log C (s = 1.0) | 0.03527 |
+| **best between-layer variance reduction over 2000 rules** | **0.000%** |
+
+**Not "small" — zero, by construction.** **No choice of per-type constants, including the optimal ones,
+could have moved the between-layer effect.** This is stronger than the three empirical mechanisms
+previously recorded: it is not that the design *failed*, it is that **on this axis it could not have
+succeeded.**
+
+**⚖️ IN FAIRNESS TO THE DESIGN — it was not aimed at nothing.**
+
+| axis | variance of the corresponding means |
+|---|---:|
+| **between-TYPE** (type-mean log C) | **0.17855** |
+| between-LAYER (block-mean log C) | 0.03527 |
+| **ratio** | **5.06×** |
+
+**The type axis carries 5× more curvature variance than the layer axis.** A per-type rule targets a real
+and larger source of C-spread. **The mismatch is with the campaign's GOAL — "what sets the difference in
+C between LAYERS" — not with the design's internal logic.** REQ-036 answers a different question than the
+one this loop is chasing, and answers it in the negative (uniform LR best, harm monotone in equalization,
+Spearman −1.000).
+
+**⇒ CONSOLIDATED REQ-036 VERDICT — now four independent reasons, one of them algebraic:**
+1. **Band 16** — C is actively restored; equalizing it fights a homeostat.
+2. **Band 43** — along Muon's actual step direction there is **no bowl to equalize**.
+3. **Bands 45/46** — types share one positional bowl whose amplitude also varies by type: two
+   orthogonal axes.
+4. **THIS — algebraic**: a per-type constant cannot change between-layer spread at all (0.000%
+   over 2000 rules).
+
+**⇒ RECOMMENDATION, FINAL AND UNCHANGED: do not build per-layer or per-type LR on curvature
+equalization.** If the goal is the **layer** axis, the lever must be **per-layer** (or per-matrix); a
+per-type lever is provably inert there. **The REQ-036 validation this loop asked for is COMPLETE.**
+
+**PROPOSED n=4 SEED CHECK — band 48 (criterion registered).**
+*Criterion:* on any panel, (i) the best per-type-constant rule reduces between-layer variance of
+block-mean log C by **< 1%** over ≥1000 random draws; (ii) **between-type variance exceeds between-layer
+variance** (confirming the design targeted a real but different axis).
+*Status:* **satisfied by committed data** (0.000%; ratio 5.06×). **This criterion is deterministic given
+the panel — it needs no new compute and cannot fail by chance.** ≤2-node ceiling; nothing requested.
+
+**⚠️ SCRIPT AUDIT STATUS (rule 18).** Read so far: `analyze_req035_armA.py` (which produced iteration
+172's axis correction) and `make_req036_arms.py` (this iteration — **confirms** the analysis rather than
+overturning it). **Unread and outstanding:** `make_req037_arms.py`, `analyze_req046.py`,
+`make_req046_arms.py`, `apply_req046_patches.py`, `make_req045_arms.py`, `analyze_req045.py`,
+`analyze_req047.py`, and the three `measure_activation_backward*.py` probes. **Any of these could carry
+a correction of the same kind as iteration 172's**, and they are the cheapest remaining source of
+information in the repository.
+
+**Queue:** REQ-048 still **OPEN**, no Jerry response.
+
 ## ⛔⇒★ MAJOR CORRECTION: THE "FORK STATES" ARE LEARNING RATES (iteration 172) — mislabelled throughout, and the bowl is STRONGER for it
 
 *Unable to run REQ-048 locally (no CUDA on this machine), I read **Jerry's own analysis script**,
