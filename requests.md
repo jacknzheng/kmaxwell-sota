@@ -142,6 +142,23 @@ REQ-050 tests H1 across training steps (does the interaction appear with the bow
 REQ-051 tests it causally, since it varies per-type LR directly. Neither requires more than the
 two-node ceiling already in force.
 
+**Clarification from iteration 228 -- expect the RAW slopes to look null.** The type-by-depth effect
+is **suppressed** in `log C`: each type's direct curvature drift with depth is largely offset by its
+concentration drifting the other way. Across the six types, sd(direct) = 0.0219 but
+sd(total) = 0.0098, with corr(via `n_eff`, direct) = **−0.920**. Without a concentration control the
+R² gain is only 0.065; with one it is 0.44–0.50.
+
+Therefore, when scoring H1:
+
+- Evaluate the slope criteria on residuals **after** controlling concentration, exactly as H1 states.
+  A near-null raw `log C` slope is **consistent with H1 being true** and must not be reported as a
+  refutation.
+- Report the decomposition `total = beta x (slope of log n_eff) + direct` per type. It is an exact
+  identity; publishing all three columns makes the cancellation visible rather than hidden.
+- A `lam`-free control (`n_eff_bulk = trace(H)²/(trace(H²) − lam²)`, or `participation_ratio`) gives
+  the same answer on REQ-048 (0.437 / 0.460 vs 0.446) and is preferred where available, since it
+  shares no term with the outcome.
+
 ## REQ-051: decompose why each matrix has a different LR-to-curvature response
 
 - status: **OPEN**

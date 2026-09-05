@@ -948,6 +948,68 @@ a list of failed predictors: a third of it is *how each matrix type's curvature 
 above and beyond the main depth bowl and the concentration term. That is a narrower question than
 "what predicts the residual", and it is a question new measurement can answer.
 
+## The type-by-depth interaction is a suppressed effect, and the cancellation is exact (2026-09-05)
+
+Iteration 227's interaction was checked against the way `log n_eff` was controlled. The first result
+looked like a failure and turned out to be the finding.
+
+**The interaction exists only conditional on the concentration control.** R² gain from per-type depth
+slopes on `log C`:
+
+| control on `log n_eff` | mean R² gain | per seed |
+|---|---|---|
+| **none** | **0.065** | 0.055, 0.074, 0.111, 0.021 |
+| linear (as used in 227) | 0.446 | 0.535, 0.399, 0.488, 0.360 |
+| linear + quadratic | 0.470 | 0.583, 0.408, 0.501, 0.389 |
+| separate slope per type | 0.498 | 0.648, 0.431, 0.496, 0.418 |
+
+An effect that appears only after conditioning is a warning sign with two readings: benign
+**suppression**, or a **collider artifact** from conditioning on a descendant of the outcome. The
+second is a live concern here because `n_eff = trace(H)²/trace(H²)` and `trace(H²) ≥ lam²`, so
+`n_eff` contains `lam` — it passes the letter of the hard rule (Hutchinson, not the Lanczos
+tridiagonal) while still sharing a term with the outcome.
+
+**Collider refuted, by construction rather than by argument.** Replacing the control with a
+**lam-free** concentration measure, `n_eff_bulk = trace(H)²/(trace(H²) − lam²)`, leaves the result
+intact: **0.437** versus 0.446. `log participation_ratio` gives 0.460. Conditioning on `lam` is not
+what creates the interaction — and in fact `lam²` is only a median **2.7%** of `trace(H²)`, so
+`n_eff` was never `lam`-driven.
+
+**Suppression verified directly, not by elimination.** The effect decomposes exactly:
+`total slope = beta x (slope of log n_eff) + direct slope`, with beta the concentration coefficient
+(−0.362 mean). The identity closes to 1e-9 for every type:
+
+| type | TOTAL | via `n_eff` | DIRECT |
+|---|---|---|---|
+| `attn.k` | −0.0017 | +0.0008 | −0.0025 |
+| `attn.proj` | −0.0036 | +0.0150 | −0.0186 |
+| `attn.q` | +0.0032 | −0.0120 | +0.0153 |
+| `attn.v` | −0.0226 | +0.0021 | −0.0248 |
+| `mlp.fc` | −0.0036 | −0.0173 | +0.0137 |
+| `mlp.proj` | +0.0049 | −0.0275 | **+0.0324** |
+
+Across the six types: sd(TOTAL) **0.0098**, sd(via) 0.0154, sd(DIRECT) **0.0219**, and
+**corr(via, direct) = −0.920**. Per seed the correlation is −0.797 to −0.920 with
+sd(TOTAL)/sd(DIRECT) = 0.39–0.64.
+
+**The physical statement.** Each matrix type's curvature drifts with depth, and its spectral
+concentration drifts the *opposite* way, largely cancelling in `C = lam/g²`. The near-null raw
+type-by-depth effect in `C` is a **cancellation, not an absence**. `mlp.proj` is the clearest case: a
+direct slope of +0.0324 dex/block almost entirely offset by −0.0275 through concentration, leaving
++0.0049.
+
+**What carries the evidence, stated precisely.** `total = via + direct` is an exact algebraic
+identity, so once both components are large and the total is small, cancellation is arithmetically
+forced. The per-seed correlations *describe* that cancellation; they do not independently prove it —
+six type-slopes per seed is a weak correlation test, and by rule 32 the four seeds are ~76% shared
+and are not four independent confirmations. The identity is the load-bearing part.
+
+**Effect on H1.** None of this scores H1, which stays registered for REQ-050/051. It does sharpen
+what those runs should measure: the quantity with real between-type structure is the **direct**
+component (sd 0.0219) rather than the total (sd 0.0098), so H1's slope criteria should be evaluated
+on residuals **after** a concentration control — as specified — and the raw `log C` slopes should be
+expected to look near-null even if H1 is true.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -973,3 +1035,7 @@ is 76% shared, so judge claims on within-seed effect size with clustered standar
 Before hunting predictors for a residual, compute its reproducible share across replicates: that
 share is a ceiling on what any structural predictor can explain, and it says whether the search is
 worth running at all.
+When an effect appears only after conditioning on a control, distinguish suppression from a
+collider artifact by rebuilding the control without the shared term; if the result is unchanged,
+the conditioning did not create it. Then verify suppression by exact decomposition, not by
+elimination.
