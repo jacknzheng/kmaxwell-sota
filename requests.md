@@ -29,6 +29,75 @@ Next request number: **REQ-052**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★ THE WRITER SPLIT APPEARS A THIRD TIME — in the LR ELASTICITY (iteration 197) — and my iteration-196 numbers are corrected
+
+*Iteration 196 flagged that REQ-051's decision 5 targets q/k/v while `attn.proj` (+0.217) and `mlp.proj`
+(+2.874) appeared to differ by **13×**. **That was measured on REQ-045 alone, where only 37 of 72
+matrices have full LR coverage and attn.proj had n = 4.** Before proposing anything, it had to be checked
+on **REQ-023 — an independent per-matrix LR experiment with FULL coverage (all 72 matrices, 12 per
+type).***
+
+**⚠️ FIRST, THE CORRECTION TO MY OWN NUMBERS.** REQ-045's `attn.proj = +0.217` was a **small-sample
+artifact**:
+
+| type | REQ-045 (n per type) | **REQ-023 (n = 12 each)** |
+|---|---:|---:|
+| **attn.proj** *(writer)* | **+0.217** (n=4) | **+1.454** |
+| **mlp.proj** *(writer)* | +2.874 (n=8) | **+2.350** |
+| attn.k | +1.149 (n=7) | +0.897 |
+| attn.q | +1.126 (n=5) | +0.885 |
+| attn.v | +1.077 (n=8) | +0.806 |
+| mlp.fc | +1.721 (n=5) | +1.327 |
+
+**The "13× spread" I reported is not real — it is 1.6× on full-coverage data.** *(Iteration 196's
+recommendation still stands, but its headline number was wrong and is withdrawn here.)*
+
+**★ THE SPLIT ITSELF IS REAL, AND STRONGER ON THE BETTER DATA:**
+
+| experiment | writers | internal | difference | t |
+|---|---:|---:|---:|---:|
+| REQ-045 (37 matrices, partial coverage) | +1.988 | +1.236 | +0.753 | +1.40 |
+| **REQ-023 (72 matrices, full coverage)** | **+1.902** | **+0.979** | **+0.924** | **+3.32** |
+
+**ROBUST ACROSS ALL FIVE MEASUREMENT STEPS** (REQ-023 dumps at 1750–2250, five quasi-independent
+replicates):
+
+| step | writers | internal | diff | t |
+|---|---:|---:|---:|---:|
+| 1750 | +1.295 | +0.843 | +0.452 | +1.90 |
+| 1875 | +1.619 | +0.778 | +0.841 | **+3.73** |
+| 2000 | +1.652 | +0.899 | +0.754 | +2.94 |
+| 2125 | +1.820 | +1.000 | +0.820 | +3.18 |
+| **2250** | **+1.902** | **+0.979** | **+0.924** | **+3.32** |
+
+**Writers > internal at 5/5 steps.**
+
+**⇒ AND IT IS NOT DEPTH IN DISGUISE.** Writers occur at **every** block, so the contrast can be taken
+**within** block. With **full block dummies (saturated in depth)**: **writer coefficient +0.924, se
+0.219, t = +4.23.** **Depth cannot explain it.**
+
+> **★ THIS IS THE THIRD INDEPENDENT QUANTITY ON WHICH THE RESIDUAL-WRITER SPLIT APPEARS:**
+> **band 7** — gradient slopes (+2.17, p < 0.0001); **band 60** — curvature concentration
+> (`writer × edge` −0.627, t −3.29); **and now the LR elasticity itself** (+0.924, t +4.23 saturated).
+> **Three unrelated measurements separate the same two matrix types from the other four.**
+
+**PROPOSED n=4 SEED CHECK — band 67 (criterion registered), and offered to REQ-051 as decision 5b.**
+*Criterion:* on a per-matrix LR panel, (i) **`k_lambda(writers) − k_lambda(internal) > +0.4`** in
+**≥3 of 4 seeds**; (ii) the contrast survives **full block dummies** with **|t| ≥ 3**; (iii) the sign
+holds at **every measurement step** available.
+*Status:* **satisfied by committed REQ-023 data** (+0.924; t +4.23 saturated; 5/5 steps).
+**No new compute requested** — but **REQ-051's balanced six-level ladder would test it at n = 4 seeds
+with full coverage, which neither REQ-023 (1 seed) nor REQ-045 (partial coverage) can.**
+
+**⇒ ADVISORY TO REQ-051 (unchanged: I have not edited the request).** Decision 5's registered q/k/v
+prediction is worth keeping — but on full-coverage data the q/k/v spread is **0.806–0.897, a 1.1×
+range**, while the **writer-vs-internal gap is 1.9×**. **A registered writer prediction would test where
+the between-matrix variation actually lives**, and REQ-051 is the only design that can do it properly.
+
+**Queue:** REQ-035/036/048 DONE; **REQ-050 OPEN**; **REQ-051 OPEN** (clarified 00:07, decision 5 still
+q/k/v only); REQ-049 optional. **No Jerry response since REQ-048** — the recent commits are under my own
+git identity.
+
 ## 📋 REQ-051 PRE-FLIGHTED AGAINST COMMITTED DATA (iteration 196) — three findings before it spends 2 nodes
 
 *REQ-051 (Jack/Codex, 2026-09-05) asks **why the own-LR curvature elasticity differs across matrices** —
