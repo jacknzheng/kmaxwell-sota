@@ -29,6 +29,81 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⊘ BATCH MOVES C's LEVEL, NOT THE BOWL (iteration 176) — the goal-relevant follow-up to band 50, and it is negative
+
+*Band 50 established that batch moves C where the LR cannot. **But the campaign goal is the BETWEEN-LAYER
+difference, not C's level** — and band 48 showed exactly how a lever can move a quantity while leaving its
+depth spread untouched. So the decisive question is whether the batch effect **varies by depth**.*
+
+**IT DOES NOT.** The bowl survives every batch size essentially unchanged:
+
+| batch | argmin | cubic R² | swing |
+|---|---:|---:|---:|
+| 0.5× | **L6** | 0.938 | 0.554 |
+| 1.0× | **L6** | 0.886 | 0.492 |
+| 2.0× | L4 | 0.906 | 0.659 |
+
+Pairwise bowl correlations: **+0.720, +0.889, +0.536.**
+
+**FORMAL TEST — batch × block interaction on log C: F(11, 187) = 0.68**, against a permutation critical
+value of **1.86**. **Far below.** RSS falls only 6.6133 → 6.3598 for 11 extra parameters.
+
+> **⇒ Batch shifts C's LEVEL uniformly across depth; it does not reshape the bowl.** **On the campaign's
+> actual target — the between-layer difference — the batch lever is inert, exactly as the per-type LR was
+> (band 48), though for a different reason: the per-type LR was *algebraically* incapable, while batch is
+> *empirically* uniform in depth.**
+
+**⚠️ THE NULL'S BOUND — rule 16, and a simulation error of mine caught and fixed en route.** A null needs
+its detectable-effect size. My first attempt produced **0% power at amplitude 0.20 and 100% at 0.30** —
+which is not a power curve but a **threshold artifact**: the F-test is deterministic given the data, and I
+had injected a fixed signal with **no added noise**, so all 200 "trials" were identical. Redone with
+residuals resampled per trial (additive-model residual sd **0.1828 dex**):
+
+| injected depth-varying batch effect | power |
+|---:|---:|
+| 0.05 dex/dex | 5.0% |
+| 0.10 | 13.0% |
+| 0.15 | 26.0% |
+| 0.20 | 44.3% |
+| 0.25 | 65.7% |
+| **0.30** | **85.7%** |
+
+> **The design resolves depth-dependence of ~0.29 dex/dex at 80% power.** The null is therefore
+> **meaningful for large effects and silent for small ones** — but note the bowl's own swing is ~**0.5
+> dex**, so a batch effect that **proportionally reshaped** it would have been detected. **A uniform
+> level shift is the correct reading; a subtle reshaping below ~0.29 dex/dex is not excluded.**
+
+**⇒ WHAT THIS DOES TO THE PICTURE.** Two levers have now been tested against the bowl and **both are
+inert on it**:
+
+| lever | moves C's level? | reshapes the bowl? |
+|---|---|---|
+| **learning rate** (per-matrix, REQ-045) | **no** — gauge-cancelled, powered null | no |
+| **batch / gradient noise** (REQ-037) | **yes** — −0.274 (t −5.41) | **no** — F 0.68 |
+
+**The bowl is untouched by both the optimiser's step scale and its noise scale.** Combined with the
+exclusions already recorded (stream scale, input rank, shape, `post_lambda`, `resid_lambda`, axis
+artifacts), **the depth profile is looking like a property of the architecture's forward/backward
+structure that training hyperparameters do not reach at all.** That is consistent with band 47's
+finding that the bowl is **learning-rate invariant across a 2.8× range**, and with iteration 155's
+constraint that it must come from the **loss surface**, not the optimiser.
+
+**⚠️ I am NOT claiming the bowl is unreachable** — two levers is not a proof, and this null has a
+**0.29 dex/dex floor**. What is established is narrower: **the two optimiser knobs tested so far change C
+without changing its depth structure.**
+
+**PROPOSED n=4 SEED CHECK — band 51 (criterion registered).**
+*Criterion:* on a fresh panel, (i) the **batch × block interaction on log C is not significant** (F below
+its permutation 95th percentile) in ≥3 of 4 seeds; (ii) the **bowl's argmin stays in layers 4–8 at every
+batch size**; (iii) the **main batch effect on log C remains significant** (\|t\| ≥ 3) — i.e. the lever
+demonstrably works while failing to reshape.
+*Status:* satisfied by committed REQ-037 data at **n = 1/arm** (F 0.68 vs crit 1.86; argmins L6/L6/L4;
+main effect t −5.41). **Requires replication** — and **REQ-037's arms are step-matched, so the
+token-matched variant recommended in band 50 should be used.** **No new compute requested this
+iteration.**
+
+**Queue:** REQ-048 **OPEN**; REQ-049 **filed**. No Jerry response.
+
 ## ★★ C IS MOVABLE — BUT NOT BY A LEARNING RATE (iteration 175) — a clean two-lever dissociation
 
 *Rule-18 audit continued to `make_req037_arms.py`, and it revealed a design feature I had never
