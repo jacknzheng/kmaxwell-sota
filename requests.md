@@ -75,6 +75,29 @@ claim that ambiguity was impossible was narrative, not a third numerical criteri
 Include the exact measurement steps, per-seed evidence, initialization provenance, code, and
 result location when updating this request. Observing early structure alone does not prove its cause.
 
+**Probe-repeat requirement, added iteration 224.** REQ-048's twelve files were found to be 4 seeds x
+3 **probe repeats** of a single checkpoint (all report `step = 2750`), not three training steps.
+That accident made probe reliability estimable, and the numbers matter for this request's design:
+single-probe `log lam` carries a within-matrix sd of **0.349** against a between-matrix sd of
+**0.347**, i.e. **40.5% of its variance is measurement noise**. `log n_eff` is far cleaner
+(within 0.181, between 0.556).
+
+Therefore: run **at least 3 probe repeats at every measurement step**, with different probe seeds,
+and commit each repeat separately rather than pre-averaging. Rationale:
+
+- Criterion 1 tests a **cubic R² >= 0.70** and a **correlation >= +0.70** with the late profile.
+  Both are attenuated by probe noise. With single probes on `lam`, reliability is ~0.75 per
+  measurement, so a true correlation of 0.80 would be observed near 0.60 and would **fail a
+  criterion it should pass**. Three repeats raise reliability to ~0.90 and make the thresholds
+  mean what they were written to mean.
+- Committing repeats separately preserves the ability to estimate reliability at each step and to
+  disattenuate; pre-averaging discards it permanently.
+- Cost is probe time only, not training time; the 16.2-minute training estimate is unchanged. Report
+  measured probe cost per repeat so the repeat count can be revisited.
+
+If probe cost makes 3 repeats at all six steps infeasible under the two-node ceiling, prefer
+**3 repeats at steps 0 and 1500** (the two the criteria actually compare) over one repeat everywhere.
+
 ## REQ-051: decompose why each matrix has a different LR-to-curvature response
 
 - status: **OPEN**
