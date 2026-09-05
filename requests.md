@@ -29,6 +29,78 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## 🔧 BAND 61's "DISCRETE BREAK" IS BASELINE-DEPENDENT (iteration 188) — the interaction survives, the deviation figure does not
+
+*Band 61 reported L11's writers deviating **−1.384** from the interior trend and called the last block a
+**discrete structural break**. Iteration 187 left that as the only surviving term. **Before building on
+it, it needed the placebo test: with 12 blocks, some block always has the largest deviation, so a single
+pre-chosen block is not evidence until the choice is priced.***
+
+**⚠️ THE PLACEBO TEST — fitting the SAME indicator at every block, over a cubic baseline:**
+
+| block | coef | F | rank |
+|---|---:|---:|---:|
+| **1** | +0.582 | **41.08** | **1/12** |
+| **0** | −0.798 | **24.57** | 2/12 |
+| 3 | −0.251 | 6.90 | 3/12 |
+| 10 | +0.252 | 6.88 | 4/12 |
+| **11** | **−0.389** | **5.46** | **5/12** |
+| … | | 0.15–3.25 | 6–12/12 |
+
+**L11 ranks only 5th of 12.** Blocks 1 and 0 deviate far more from a cubic. **"The last block is a
+structural exception" does not survive a cubic baseline.**
+
+**⇒ AND THE CONFLICT WITH BAND 61's −1.384 RESOLVES EXACTLY — it is the BASELINE:**
+
+| baseline | L11's F | L11's rank |
+|---|---:|---:|
+| **linear** (what band 61 used) | **175.65** | **1/12** |
+| quadratic | 72.33 | **1/12** |
+| **cubic** | **5.46** | **5/12** |
+
+**Against a linear interior trend L11 dominates overwhelmingly; against a cubic it is ordinary, because
+a cubic can bend to follow an end-drop.** Band 61 extrapolated a **linear** fit of L1–L10 to L11. **Every
+bowl result in this campaign is stated against a CUBIC (bands 39, 52, 59), so consistency requires
+judging this claim against the cubic too — and there it does not stand out.**
+
+> **🔧 BAND 61's "−1.384 deviation ⇒ discrete structural break" is WITHDRAWN as baseline-dependent.**
+> It is not a wrong calculation — it is a correct calculation against a baseline the rest of the campaign
+> does not use. **Reported as a correction, not a contradiction.**
+
+**✅ WHAT SURVIVES, AND WHY IT IS UNAFFECTED.** The load-bearing result — the **`writer × LAST`
+interaction** — was fitted with **full block dummies**, i.e. **saturated in depth**. No polynomial
+baseline enters it at all, so the placebo result cannot touch it:
+
+| term | coef | clustered se (72 matrices) | t |
+|---|---:|---:|---:|
+| **writer × LAST (block dummies)** | **−0.926 dex** | 0.230 | **−4.02** |
+
+**With every block given its own intercept, the writers still lose ~0.93 dex of concentration-directions
+at L11 relative to internal matrices at the same block.** That is a **within-block group contrast**, not
+a deviation from a fitted curve — and **band 61's tilt result** (writers supply the bowl's asymmetry;
+internal-only tilt **+0.001 dex**) is likewise a same-block group comparison. **Both stand.**
+
+**PROPOSED n=4 SEED CHECK — band 62 (criterion registered).**
+*Criterion:* (i) the **`writer × LAST` interaction with FULL block dummies is negative with |t| ≥ 3**;
+(ii) **no single-block indicator over a cubic baseline gives L11 the top-3 F rank** — i.e. the discrete-
+break reading must NOT be reinstated; (iii) the internal-only bowl tilt remains **< 0.10 dex**.
+*Status:* **satisfied by committed REQ-048 data** (−0.926, t −4.02; L11 rank 5/12; +0.001 dex).
+**No new compute requested; ≤2-node ceiling.**
+
+**Standing rule 23.** *A deviation-from-trend is a statement about the trend as much as the point. Before
+calling any single position a structural break, (a) run the same test at every position and report the
+rank, and (b) check the claim against the baseline the rest of the work uses. Here a linear baseline made
+L11 rank 1/12 with F = 176; the campaign's own cubic made it 5/12 with F = 5.5.* **Prefer a saturated
+control (dummies) when the claim is about one position — it removes the baseline choice entirely.**
+
+**⇒ NET EFFECT ON THE ACCOUNT.** The **writer effect at the last block is real and baseline-free**; the
+**characterisation of it as a discrete architectural break is withdrawn**. The writers' profile is a bowl
+with a strong end-drop that a cubic accommodates — **consistent with the bowl being smooth rather than
+punctuated**. **REQ-050's question is unchanged and still decisive**: is the writer concentration
+structure present at initialisation?
+
+**Queue:** REQ-048 **DONE**; **REQ-050 OPEN** (highest value); REQ-049 optional. No new Jerry response.
+
 ## ⊘ THE "DOWNSTREAM RE-MIXING" HYPOTHESIS IS REFUTED (iteration 187) — including by a model comparison of mine that was misleading
 
 *Band 61 flagged, as consistent structure rather than tested mechanism, that **L11's writers are the only
