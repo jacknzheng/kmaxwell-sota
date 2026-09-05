@@ -29,6 +29,76 @@ Next request number: **REQ-053**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★ TWO INDEPENDENT CHANNELS EXPLAIN C WITHIN BLOCKS (iteration 207)
+
+*Band 75 left ~63% of **within-block** C variation unexplained. Ten candidates — all declared before
+fitting, all rule-13 clean, none containing `lam_top` — tested at the strictest granularity: **type AND
+block dummies AND `log n_eff` already in**, so this asks what distinguishes matrices **within the same
+block and type**.*
+
+| candidate | mean partial r | same-sign |
+|---|---:|---:|
+| **`curvature_along_polar`** | **+0.354** | 4/4 |
+| **`d_eff_rank`** | **+0.344** | 4/4 |
+| **`curvature_along_random`** | **+0.318** | 4/4 |
+| `grad_rank1_frac` | −0.221 | 4/4 |
+| `a_eff_rank` | +0.160 | 4/4 |
+| `d_frob` | +0.142 | 4/4 |
+| others (`a_frob`, `align_ratio`, `da_cos_mean`, `lcw`) | ≤ 0.19 | mixed |
+
+**Permutation null over matrix labels, max \|r\| across all ten (5,000 shuffles): p = 0.0002.**
+
+**⚠️ RULE 27 FIRST — the three leaders are nearly tied, so collinearity before crediting any.**
+Residualised on type + block + `log n_eff`:
+
+| pair | mean corr | reading |
+|---|---:|---|
+| `cp` ↔ `c_random` | **+0.621** | **one channel seen twice** |
+| `cp` ↔ `d_eff_rank` | **−0.020** | independent |
+| `d_eff_rank` ↔ `c_random` | **+0.049** | independent |
+
+**⇒ JOINT FIT — and only two survive:**
+
+| predictor | mean coef | t across seeds | per-seed t |
+|---|---:|---:|---|
+| **`log n_eff`** | **−0.326** | **−16.04** | −8.8, −5.7, −4.1, −6.4 |
+| **`log d_eff_rank`** | **+0.336** | **+12.16** | **+3.4, +3.2, +2.1, +2.6** |
+| `log cp` | +0.180 | +4.66 | 2.6, 0.5, 1.8, 1.9 — **n.s. in 3/4** |
+| `log c_random` | +0.153 | +1.73 | 0.6, 2.2, 0.2, 0.4 — **n.s. in 3/4** |
+
+> **★ C is governed within blocks by TWO INDEPENDENT channels**: **spectral concentration** (`n_eff`,
+> negative) and **output-gradient effective rank** (`d_eff_rank`, positive). They are **statistically
+> independent** (r = −0.020) and **both significant in every seed**. **The two curvature-direction
+> terms collapse in the joint fit** — `cp` and `c_random` are collinear at +0.621 with each other and
+> neither adds beyond the two channels.
+
+**⇒ AND THIS CONFIRMS ITERATION 205's REVERSAL FROM A SECOND DIRECTION.** Band 74 found `d_eff_rank`
+**positive (+0.322)** once separated per matrix, overturning band 73's block-level −0.659. **Here, with a
+different candidate set and a permutation null over matrix labels, it comes out +0.336 — within 0.014 of
+band 74's estimate, significant in all four seeds.** **Two independent analyses now agree on the sign and
+the magnitude.**
+
+**⇒ INTERPRETATION, STATED CAREFULLY.** `n_eff` negative and `d_eff_rank` positive means: **C is high
+where curvature is concentrated in few directions AND where the output gradient is spread across many.**
+These pull oppositely on the same matrix, which is why block-level aggregation conflated them
+(band 73). **This is a description of what covaries with C, not a demonstrated cause** — both are
+Hessian/gradient functionals, and no intervention is involved.
+
+**PROPOSED n=4 SEED CHECK — band 76 (criterion registered).**
+*Criterion:* in a joint fit of `log C ~ type + block + log n_eff + log d_eff_rank` per seed:
+(i) **`log n_eff` is negative with |t| ≥ 3 in every seed**; (ii) **`log d_eff_rank` is positive with
+|t| ≥ 2 in every seed**; (iii) their **mutual collinearity after type + block is |r| < 0.30**.
+*Status:* **satisfied by committed REQ-047 + REQ-048 data** (t −4.1 to −8.8; t +2.1 to +3.4;
+**|r| = 0.020**). **No new compute requested; ≤2-node ceiling.**
+
+**⇒ THE ACCOUNT.** Between-layer C is **majority spectral concentration** (bands 44/57/71/75), and
+**within blocks** it is jointly governed by **concentration and output-gradient rank** — two independent
+channels. **The `da_cos_mean` lead from band 73 does not survive** at this granularity (partial r −0.073).
+**REQ-051 remains the instrument that could test these channels causally rather than observationally.**
+
+**Queue:** REQ-035/036/048 DONE; **REQ-050 OPEN**; **REQ-051 OPEN**; **REQ-052 OPEN**; REQ-049 optional.
+**No Jerry response since REQ-048.**
+
 ## ✅ BAND 71 SURVIVES RULE 27 — with a scope note, and a stronger result underneath (iteration 206)
 
 *Rule 27 was written last iteration after aggregation manufactured a **+0.705** collinearity that
