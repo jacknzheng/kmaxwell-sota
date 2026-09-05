@@ -29,6 +29,84 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★/🔧 A RICHER PANEL FOUND — 11 LEARNING RATES (iteration 177): the bowl is confirmed, band 47 is corrected
+
+*Looking for early-training curvature, I found **`logs/kmaxwell/req019_eos_state_dependence/`** — a panel
+I had never opened: **fork@1500 with ELEVEN learning rates (0.60×–1.70×)** plus fork@2000 with three.
+**5,760 rows.** Nearly 4× the LR resolution of the 3-point axis every LR claim in this campaign has
+rested on. (Rule 18 again: the data was in the repo the whole time.)*
+
+**★ THE BOWL IS CONFIRMED FAR MORE STRONGLY THAN BEFORE.** Fitted independently at each of 11 LRs:
+
+| | result |
+|---|---|
+| **argmin at layer 6** | **11 of 11 learning rates** |
+| cubic R² | 0.869 – 0.956 |
+| **linear R²** | **0.003 – 0.112 (≈0 throughout)** |
+| swing | 0.439 – 0.538 dex |
+| **mean pairwise bowl correlation** | **+0.922** (min +0.683) |
+
+**And identically at fork 2000** (3 LRs, argmin L6 ×3, mean pairwise **+0.968**). **The bowl is the most
+robust finding in this campaign** — it survives 11 learning rates, 2 fork points, 4 seeds, 5 checkpoints,
+6 matrix types and a 2.8× LR range.
+
+**🔧 BUT BAND 47's "LR-INVARIANT" IS TOO STRONG AND IS CORRECTED.** With 11 LR arms there is real power
+to detect shape drift, and there **is** some: the **LR × block interaction is significant**,
+**F(11, 3931) = 2.22** against a permutation critical value of **1.79**.
+
+Significance alone is not the point (n = 3960 detects tiny effects — the mirror of rule 16), so the
+**magnitude**:
+
+| quantity | value |
+|---|---:|
+| bowl swing | 0.4630 dex |
+| interaction coefficients (d bowl / d log s) | −0.4216 to −0.0321 |
+| **implied bowl distortion over the full 2.8× LR range** | **0.1762 dex** |
+| **as a fraction of the bowl** | **38.0%** |
+
+> **38% is not negligible.** **Band 47's claim is corrected from "the bowl is LR-invariant" to "the
+> bowl's minimum and shape are preserved at every LR (argmin L6, 11/11), but its amplitude/shape is
+> modulated by up to ~38% across a 2.8× LR range."** The **existence and location** of the bowl are
+> LR-invariant; its **exact profile** is not.
+
+**⚠️/★ AND A SECOND RESULT THAT LOOKS LIKE A CONTRADICTION BUT IS NOT — the two LR levers genuinely
+differ.**
+
+| lever | d log λ | d log g | **d log C** |
+|---|---:|---:|---:|
+| **per-MATRIX LR** (REQ-045, band 49) | −1.218 | **−0.650** | **+0.081** (powered **null**) |
+| **GLOBAL LR** (REQ-019, 11 arms) | −1.347 | **−0.456** | **−0.436** (t **−18.29**) |
+
+**λ responds almost identically (−1.22 vs −1.35). The entire difference is in g** — and it is exactly
+what decides whether C moves:
+- per-matrix: `2 × (−0.650) = −1.300` ≈ cancels λ's −1.218 → **C flat**
+- global: `2 × (−0.456) = −0.912` < λ's −1.347 → **C moves −0.436**
+
+*(Identity check: −1.347 − 2(−0.456) = **−0.435** vs fitted **−0.436**. Internally exact.)*
+
+> **⇒ THE GAUGE THEOREM IS NOT VIOLATED — its precondition simply fails for a global LR.** The theorem
+> requires the scalar to multiply **that matrix's whole contribution**, holding everything else fixed. A
+> **per-matrix** multiplier does exactly that. A **global** LR changes **every** matrix at once, so the
+> network follows a **different trajectory** to a **different point in weight space**; g is not merely
+> rescaled. **Band 42's theorem stands, and this sharpens its scope: it applies to per-matrix
+> interventions, not to global hyperparameter changes.**
+
+**PROPOSED n=4 SEED CHECK — band 52 (criterion registered).**
+*Criterion:* on a fresh multi-LR panel, (i) the C bowl's **argmin is in layers 5–7 at ≥90% of LRs**;
+(ii) the **LR × block interaction distorts the bowl by < 60% of its swing** across the tested LR range;
+(iii) the **global-LR elasticity of log C is significantly negative** while the **per-matrix elasticity
+is not** — the two-lever distinction.
+*Status:* satisfied by committed REQ-019 + REQ-045 data (11/11 argmin L6; 38.0%; −0.436 t −18.3 vs +0.081
+t +0.89). ⚠️ **REQ-019's LR arms are n = 1 each** — the *LR axis* is richly sampled, the *seed axis* is
+not. **No new compute requested.**
+
+**⚠️ WHAT THIS CHANGES ELSEWHERE.** Band 42's **empirical** LR corroboration (iteration 172's "C's
+LR-response is 0.44× λ's") was computed on **global** LR arms — so it was measuring the **global** lever,
+where C legitimately *does* respond. **That number is not evidence for the gauge theorem** and should not
+be cited as such; **REQ-045's per-matrix result (band 49) is the theorem's proper empirical test.**
+
+**Queue:** REQ-048 **OPEN**; REQ-049 **filed**. No Jerry response.
+
 ## ⊘ BATCH MOVES C's LEVEL, NOT THE BOWL (iteration 176) — the goal-relevant follow-up to band 50, and it is negative
 
 *Band 50 established that batch moves C where the LR cannot. **But the campaign goal is the BETWEEN-LAYER
