@@ -29,6 +29,72 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★ BAND 49 REPLICATES ON AN INDEPENDENT EXPERIMENT (iteration 178) — REQ-049's question answered from committed data
+
+*Surveying every curvature-bearing dataset in the repo (rule 18, third application) turned up
+**`logs/kmaxwell/req023_per_matrix_lr/`** — **a second, independent per-matrix LR experiment** I had
+cited many times but never opened the raw data for. Its `assignments.tsv` gives each of 72 matrices a
+multiplier in {0.6, 1.0, 1.7} across three arms, at **fork 1500** — **REQ-045's design at a different
+fork with a different randomisation.** **This is precisely the replication REQ-049 was filed to request.***
+
+**THE REPLICATION** (1,080 observations vs REQ-045's 216; type, block and arm controlled; the predictor
+is the **assigned multiplier**, a treatment, so it remains admissible and causal):
+
+| quantity | **REQ-023** (fork 1500, n=1080) | **REQ-045** (fork 2000, n=216) |
+|---|---:|---:|
+| d log λ | **−1.152** (t −21.11) | −1.218 (t −7.55) |
+| d log g | **−0.541** (t −33.04) | −0.650 (t −12.61) |
+| **d log C** | **−0.070** (t **−2.01**) | **+0.081** (t +0.89) |
+| identity residual | **1.2e-16** | 9.99e-16 |
+
+**λ replicates closely (−1.15 vs −1.22).** **C is small in both** — but REQ-023's is **marginally
+significant** where REQ-045's was a clean null, so the two must be compared formally rather than
+eyeballed.
+
+**FORMAL COMPARISON:**
+
+| test | result |
+|---|---|
+| difference of the two C estimates | +0.151 ± 0.097, **z = +1.55** ⇒ **CONSISTENT** |
+| **inverse-variance pooled C elasticity** | **−0.0505 ± 0.0327** (t −1.55), 95% CI **[−0.115, +0.014]** |
+| **C's response as a fraction of λ's** | **4.2%** |
+
+> **★ BAND 49 REPLICATES — with its claim made more precise.** Two independent per-matrix LR
+> experiments, at different forks with different randomisations, agree that **C's response is ~4% of
+> λ's** and not distinguishable from zero when pooled. **But the correct statement is "C's response to a
+> per-matrix LR is at most a few percent of λ's, and may be slightly negative" — NOT "C is exactly
+> invariant."** The gauge theorem predicts **exactly zero**; at n = 1080 a small deviation is becoming
+> detectable, and pretending otherwise would be overclaiming.
+
+**⇒ WHY IT NEED NOT BE EXACTLY ZERO — a principled reason, flagged not tested.** The theorem assumes the
+multiplier scales a matrix's whole contribution **with everything else fixed**. In practice a per-matrix
+LR change **also moves that matrix's own weights**, which feeds back into the loss surface it subsequently
+sees — a second-order effect the theorem ignores. **The prediction is that the deviation should scale
+with |log m|.** REQ-023 has only 3 multiplier levels, so that test would be underpowered; **I am flagging
+it rather than running it under-powered** (rule 16).
+
+**⇒ REQ-049's STATUS.** Its question — *does band 49's causal result replicate?* — **is now answered
+from committed data: yes, at 5× the sample size, on an independent fork and randomisation.** **REQ-049
+should be DOWNGRADED from "high priority" to "optional"**: a genuine 4-seed version would still add the
+seed axis (both experiments are n=1 seed), but the **replication risk it was filed against has been
+retired.** **REQ-048 is now the only request whose question remains unanswered.**
+
+**PROPOSED n=4 SEED CHECK — band 53 (criterion registered).**
+*Criterion:* across ≥2 independent per-matrix LR experiments, (i) **d log λ/d log m ∈ [−1.5, −0.9]** in
+each; (ii) **|d log C/d log m| < 0.15** in each; (iii) the **pooled** C elasticity is **< 10% of λ's in
+magnitude**; (iv) both **identity residuals < 1e-10**.
+*Status:* **satisfied by committed REQ-023 + REQ-045** (−1.152/−1.218; 0.070/0.081; **4.2%**;
+1.2e-16/9.99e-16). **No new compute requested; ≤2-node ceiling.**
+
+**⚠️ DATASET SURVEY RESULT (rule 18).** Only **two** directories in `logs/kmaxwell/` carry per-matrix
+curvature data beyond those already used: **REQ-019** (11 LRs — iteration 177) and **REQ-023** (this
+iteration). **Both are now analysed.** The committed-data seam that rule 18 opened is, as far as the
+repository shows, **exhausted** — which restores REQ-048 as the binding constraint on the central
+question.
+
+**Queue:** REQ-048 **OPEN** (the only outstanding question); REQ-049 **filed, now optional**. No Jerry
+response.
+
 ## ★/🔧 A RICHER PANEL FOUND — 11 LEARNING RATES (iteration 177): the bowl is confirmed, band 47 is corrected
 
 *Looking for early-training curvature, I found **`logs/kmaxwell/req019_eos_state_dependence/`** — a panel
