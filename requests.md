@@ -29,6 +29,69 @@ Next request number: **REQ-053**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⛔⛔ BANDS 73, 74 AND 76 RETRACTED — a block-alignment error of mine (iteration 208)
+
+*Testing whether band 76's two channels reconstruct the **bowl** produced an empty result. **Diagnosing
+that exposed an indexing error in my own joins**, present in **three consecutive bands.***
+
+**⚠️ THE ERROR.** In bands 73/74/76 I joined REQ-047 to REQ-048 using `blk + (1 if blk >= 6 else 0)` —
+a shift I applied on the assumption that REQ-047 indexed physical blocks around the attention-free
+block 6. **That shift is wrong, and iteration 157 had already proved it wrong**: both panels use the
+**same 12-block attention-layer axis** (verified there by counting cells — all 12 blocks carry all 6
+types, no gap).
+
+**What the shift actually did:**
+- produced blocks **0–5 and 7–12** — **dropping block 6 and inventing a block 12**
+- **joined REQ-047's block 6 to REQ-048's block 7**, and likewise for every deeper layer
+- **misaligned 6 of 12 blocks**, and silently discarded 6 of 72 matrices per seed (66 rows, not 72)
+
+**⛔ AND THE SECOND CHANNEL DOES NOT SURVIVE THE FIX:**
+
+| predictor | **with the +1 shift** (as recorded) | **correct straight join** |
+|---|---|---|
+| `log n_eff` | −0.376, per-seed t **−5.3 to −8.6** | **−0.351, per-seed t −5.1 to −7.8** |
+| **`log d_eff_rank`** | **+0.325, t +2.1 to +3.0 (all 4 seeds)** | **+0.040, t +0.2 to +0.7 (NONE)** |
+| rows / blocks | 66 per seed, **11 blocks** | **72 per seed, 12 blocks** |
+
+> **⛔ BAND 76's "two independent channels" is RETRACTED.** The second channel — output-gradient
+> effective rank — **collapses from +0.325 (significant in all four seeds) to +0.040 (significant in
+> none)** once the blocks are aligned correctly. **It was an artifact of comparing each deep layer's
+> curvature against the neighbouring layer's gradient statistics.**
+> **BAND 74 is RETRACTED** for the same reason: its "sign reversal" (+0.322) is the same artifact.
+> **BAND 73 is RETRACTED**: its `da_cos_mean` / `d_eff_rank` result used the same join.
+
+**✅ WHAT SURVIVES, AND IT IS THE LOAD-BEARING PART.** **`log n_eff` is essentially unchanged**
+(−0.351 vs −0.376; per-seed t −5.1 to −7.8, significant in every seed). **Spectral concentration
+predicts C within blocks regardless of the join** — **bands 44, 57, 59, 63, 64, 71 and 75 are
+unaffected**, because **none of them uses REQ-047 at all**; they are computed entirely within REQ-048.
+
+**⇒ WHAT IS NOW OPEN AGAIN.** The **~43% of the layer profile that concentration does not explain**
+(band 71, unaffected) is **unidentified once more**. Bands 73/74/76 appeared to attribute it to
+backward-side quantities; **that attribution is withdrawn in full.** **The honest state: concentration
+is the only identified channel, and the remainder has no candidate.**
+
+**⚠️ HOW THIS GOT THROUGH, STATED PLAINLY.** The shift was introduced in iteration 204 and reused in
+205, 206 and 207 without re-examination. **Iteration 157 had already established the correct axis and I
+did not consult my own finding.** Worse, **iteration 205's rule 27 and iteration 207's permutation nulls
+both "confirmed" the artifact** — a misaligned join produces a perfectly real, reproducible, seed-stable
+correlation, and **no amount of significance testing detects a join error.** **Three bands passed every
+statistical guard the campaign has and were still wrong.**
+
+**Standing rule 28.** *A join is a modelling assumption and must be validated like one. Before merging
+two panels, verify the key alignment empirically — matched row counts, identical key sets, and a
+sanity-check on a quantity both panels measure. **Statistical guards cannot detect a bad join**: they
+test the data you gave them, not whether you gave them the right data.* **The 66-vs-72 row count was
+visible in every one of those iterations and I did not look at it.**
+
+**PROPOSED n=4 SEED CHECK — band 77 (criterion registered).**
+*Criterion:* for any cross-panel analysis, (i) **merged rows per seed equal the expected 72**;
+(ii) **the merged block set equals the full 0–11**; (iii) a **quantity measured in BOTH panels agrees**
+across the join (correlation ≥ +0.9). *Status:* the corrected join satisfies (i) and (ii);
+**bands 73/74/76 failed (i) and (ii) and were not checked.** **No new compute requested.**
+
+**Queue:** REQ-035/036/048 DONE; **REQ-050 OPEN**; **REQ-051 OPEN**; **REQ-052 OPEN**; REQ-049 optional.
+**No Jerry response since REQ-048.**
+
 ## ★ TWO INDEPENDENT CHANNELS EXPLAIN C WITHIN BLOCKS (iteration 207)
 
 *Band 75 left ~63% of **within-block** C variation unexplained. Ten candidates — all declared before
