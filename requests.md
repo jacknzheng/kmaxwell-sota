@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-052**.
+Next request number: **REQ-053**.
 
 ---
 
@@ -5881,3 +5881,109 @@ two-regressor fit already used `S*m` correctly and is unaffected by this audit.
 REQ-051's balanced six-level design remains useful. Retain the q/k/v prediction as falsifiable,
 with uncertainty, and report `k_mlp.proj-k_attn.proj` as an additional exploratory contrast.
 Do not claim a writer-versus-internal mechanism from a contrast between two writer types.
+
+## REQ-052: matched uniform-versus-mixed LR controls for REQ-051
+
+- status: **OPEN**
+- requested: Jack, 2026-09-05 PDT, continuing the LR/sharpness experiment goal
+- priority: coordinate with REQ-051 while its four base checkpoints are live; REQ-050 and already
+  running work retain priority. Do not interrupt or duplicate a running job.
+- branch: `jerry-agent`; resource ceiling: **two nodes fleet-wide**
+- incremental scope: **three uniform-Muon-LR arms per seed, four seeds, 12 continuations total**;
+  reuse the four serialized REQ-051 step-2000 bases and probe implementation
+
+### Evidence motivating the test
+
+The newly proposed writer/internal sensitivity difference (band 67) holds in REQ-023, but does not
+transfer to REQ-035's global LR experiment. An independent raw-data audit of the two REQ-023 forks
+and all four REQ-035 seed archives gives the following. Writers are `attn.proj` and `mlp.proj`;
+internal matrices are q, k, v and mlp.fc. Each group has equal representation at all 12 blocks.
+
+| design / state | mean k(writers) minus mean k(internal) | mean k(v) minus equal-type mean k(q,k) |
+|---|---:|---:|
+| REQ-023 mixed LR, fork1500, endpoint2250 | +0.924 | -0.085 |
+| REQ-023 mixed LR, fork2000, endpoint2750 | +1.165 | -0.500 |
+| REQ-035 global LR, seed0, endpoint2250 | -0.194 | +0.367 |
+| REQ-035 global LR, seed1, endpoint2250 | -0.125 | +0.400 |
+| REQ-035 global LR, seed2, endpoint2250 | -0.006 | +0.455 |
+| REQ-035 global LR, seed3, endpoint2250 | -0.199 | +0.356 |
+
+Method: for each matrix at the stated checkpoint, fit `k=-OLS_slope(log lambda,log multiplier)`
+over 0.6/1.0/1.7 using assignments.tsv for REQ-023 and the LR tag for REQ-035; then average within
+the prespecified groups. Averaging the REQ-035 late 2250-2750 lambda values first also gives negative
+writer/internal contrasts in all four seeds (-0.277,-0.163,-0.157,-0.162). REQ-023's window-mean
+log-lambda contrasts are positive at both forks (+0.758,+0.899). Thus a simple endpoint mismatch
+does not resolve the discrepancy. Different code, initialization, optimizer treatment scope, and
+training protocols remain possible explanations; this comparison alone does not establish causality.
+
+Five checkpoints from one REQ-023 continuation are dependent measurements, not five independent seeds.
+The four-seed criterion in band 67 is untested by that experiment. Preserve the original claim as a
+hypothesis rather than marking its seed-replication criterion satisfied.
+
+### Exact added arms and controls
+
+For every REQ-051 seed, load its exact step-2000 model/optimizer/scheduler/data-cursor state and run:
+
+1. all 72 Muon matrix multipliers = **0.65**;
+2. all 72 Muon matrix multipliers = **1.00**;
+3. all 72 Muon matrix multipliers = **1.70**.
+
+Use the **same per_matrix_lr_muon implementation** as REQ-051, with all 72 entries equal in these
+arms. Keep embedding/output AdamW learning rates, weight decay, optimizer kernel/momentum, batch,
+data order and stop step identical between uniform and mixed arms. This specifically varies the
+scope of Muon LR changes. Audit older global configs separately to identify whether they changed
+AdamW LRs too; if they did, document that as an additional historical confound, not evidence about
+the new treatment. Record actual per-group runtime LR traces and full base-state hashes.
+
+Measure early features at **2050** and endpoint curvature plus signal features at **2750**, with the
+same REQ-051 operator, normalization, minibatch pairing, checkpoint semantics, and no-state-mutation
+checks. The all-1 arm supplies a common reference trajectory. Training is 12x750 extra steps; the
+24 signal-probe states and 12 endpoint curvature-probe states must be costed separately using the
+REQ-051 pilot. Do not omit the probe cost or assume old checkpoints exist.
+
+Execution order: once a seed's base is generated, schedule its six mixed arms and three uniform arms
+within the fleet ceiling before releasing that base. REQ-051's measured pilot must pass first. If
+REQ-051 has already released its bases when picked up, record that condition and the full regeneration
+cost before proceeding; do not silently treat these as free probe-only runs.
+
+### Registered analysis
+
+Primary comparisons use **the same three LR levels** in each design: 0.65, 1.00, 1.70. For each
+matrix select its corresponding three REQ-051 mixed-arm observations, fit k_mixed, and fit k_uniform
+from these added arms. The six-point REQ-051 fits remain secondary for this comparison.
+
+Report per seed and block:
+
+- `D_m = k_uniform,m - k_mixed,m`;
+- writer/internal contrast in each design and their paired difference;
+- v-versus-q/k contrast in each design and their paired difference;
+- corresponding k_g, k_C_gauge, k_a, k_d and k_rho changes, using the same identity safeguards.
+
+The candidate prediction is that the writer/internal contrast is **larger in mixed than uniform**
+LR, and the v-versus-q/k contrast is **larger in uniform than mixed** LR. Register support for a
+contrast only if its paired difference has the predicted sign in at least 3/4 seeds and the
+four-seed mean magnitude exceeds **0.20 in k**. Report each seed, the difference magnitude, and
+uncertainty; this threshold is a practical effect criterion, not a manufactured significance test.
+If signs disagree or uncertainty is broad, report INCONCLUSIVE. If either contrast reverses with
+similar consistency and magnitude, report the directional prediction refuted.
+
+Fit a pooled predictor of k from type/block and a second with design-by-type terms. Evaluate on a
+whole held-out seed using training-only tuning. Require at least **10% lower pooled held-out RMSE**
+and improvement in at least **3/4 held-out seeds** to call intervention scope predictively useful.
+This is separate from testing whether raw differences are statistically distinguishable from zero.
+
+Interpretation: a reproducible matched difference means response depends on which other matrices
+are perturbed, or on the resulting collective state, despite an earlier null aggregate neighbour
+coefficient. It does not identify a particular off-diagonal Hessian block or prove that one layer's
+curvature itself causes another's. If the difference disappears in this matched implementation,
+the old writer/global mismatch is protocol-dependent; retire it as evidence for a network mechanism.
+The current power law may remain useful in either outcome, but k must be indexed by intervention
+scope if the difference persists.
+
+### Deliverables
+
+Commit under `logs/kmaxwell/req052_matched_lr_scope/`: configurations/generator, base/runtime-LR
+manifest, raw JSON, per-matrix paired response table, per-seed contrast table, reproducible analysis,
+held-out prediction table, and README with explicit supported/refuted/inconclusive outcomes.
+Include one figure per metric with all 12 blocks, uniform/mixed curves distinguished consistently,
+and the same matrix-type columns. Commit no checkpoints, model/optimizer tensors, or secrets.
