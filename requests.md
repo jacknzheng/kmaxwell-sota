@@ -29,6 +29,70 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## 🔧 BAND 3 GUARDED AT LAST (iteration 195) — the position field survives; the word "symmetric" does not
+
+*The guard audit covered bands 39–64. **Bands 1–38 predate rules 13 and 23 entirely** and were never
+tested against them. Scanning them, **band 3 is the priority**: it is load-bearing for everything
+downstream, and its evidence is explicitly a **deviation-from-trend** ("corr with block-mean residual",
+"a symmetric term must beat a linear one") — **precisely the class that killed band 61 and the
+iteration-163 residual.***
+
+**⚠️ AND ITS CLAIM IS NOT BAND 63's.** Band 63 says *"an interior minimum exists"*. **Band 3 says
+something stronger: the field is SYMMETRIC — a linear trend cannot explain it.** The saturated test of
+*that* is a direct three-way position contrast, with free per-block effects and the gradient controlled:
+
+| block | 0 | 2 | 4 | **6** | 8 | 10 | 11 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| effect | 0.000 *(ref)* | −0.145 | −0.269 | **−0.371** | −0.238 | −0.057 | +0.136 |
+
+| contrast | estimate | se | t |
+|---|---:|---:|---:|
+| **block 0 − block 6** | **+0.371** | 0.049 | **+7.51** |
+| **block 11 − block 6** | **+0.506** | 0.049 | **+10.37** |
+| **block 0 − block 11** *(symmetry)* | **−0.136** | 0.065 | **−2.10** |
+
+**PER-FIT:**
+
+| check | result |
+|---|---|
+| **both ends above the middle** | **12/12 fits** |
+| argmin interior (4–8) | **12/12 fits** |
+| L0 − min | **+0.386**, t **+5.75**, 12/12 same sign |
+| L11 − min | **+0.522**, t **+16.85**, 12/12 same sign |
+| **L0 − L11 (asymmetry)** | **−0.136**, t **−1.96**, only **8/12** same sign |
+
+> **✅ BAND 3's SUBSTANCE SURVIVES.** With **no polynomial and no fitted trend**, both ends sit
+> significantly above the middle in **every one of the 12 fits**. **The position field is real and is not
+> an artefact of the model comparison that established it** — which is a genuine result, given that two
+> other deviation-from-trend claims in this campaign did not survive the same guard.
+
+> **🔧 BUT "SYMMETRIC" IS NOT SUPPORTED AND IS WITHDRAWN FROM THE BAND'S TITLE.** The two ends differ by
+> **−0.136 dex (t = −2.10 pooled, −1.96 per-fit, 8/12 same sign)** — **marginal, but pointing
+> consistently the same way, and the campaign already knows why:** **band 61 showed the tilt is supplied
+> entirely by residual writers** (internal-only tilt **+0.001 dex**). **Band 3's "symmetric" was a
+> convenient description of a field that is genuinely lopsided toward the output end.**
+
+**⚠️ NOT A CONTRADICTION — a convergence.** Band 3 (iteration 55) called the field symmetric; band 39
+(iteration 154) found a tilt; band 61 (iteration 186) attributed the tilt to writers; **this iteration
+shows band 3's own saturated data carries that same tilt.** **Four independent routes now agree the
+field is asymmetric, and band 3's title was the last place still saying otherwise.**
+
+**PROPOSED n=4 SEED CHECK — band 66 (criterion registered).**
+*Criterion:* using **free per-block effects with the gradient controlled** (no polynomial): (i) **both
+endpoint-minus-minimum contrasts are positive in ≥10 of 12 fits**; (ii) both are pooled-significant at
+**|t| ≥ 3**; (iii) the **L0 − L11 asymmetry is NOT claimed as zero** — report it with its sign.
+*Status:* **satisfied by committed REQ-035 data** (12/12 and 12/12; t +7.51 and +10.37; asymmetry −0.136
+reported, not assumed away). **No new compute requested; ≤2-node ceiling.**
+
+**⇒ AUDIT STATUS OF THE OLDER BANDS.** Bands **6, 7, 8, 9, 10, 12** also rest on deviation-from-trend or
+offset constructions and remain unguarded. **Band 10 is already marked ❌ NOT CONFIRMED**, and band 8 is
+itself a bias-correction, so the live exposures are **6, 7, 9, 12** — the residual-writer slope split and
+the type-offset structure. **Those are next**; band 3 was taken first because it is the one everything
+else is built on.
+
+**Queue:** REQ-035/036/048 DONE, REQ-049 optional, **REQ-050 OPEN** (16.2 min training, 4 seeds, ≤2
+nodes — the only route to a causal answer). No new Jerry response.
+
 ## 🔧 REQ-050's COST PREMISE WAS WRONG — resolved from the record (iteration 193)
 
 *REQ-050 is the only route left to a causal answer, and it has sat OPEN. Before adding analysis, I
