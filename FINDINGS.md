@@ -575,6 +575,56 @@ Rule 27 covered predictor-to-predictor collinearity at the finest granularity; t
 predictor-to-control, inside a single type where depth has only 12 levels. **A result whose sign depends
 on the order of a nuisance polynomial is not a result.**
 
+## The concentration result survives the failure that killed everything else (2026-09-05)
+
+`d_cv` was withdrawn because its sign flipped with the depth polynomial — within `mlp.proj` it
+correlated with block² at +0.975, so 12 matrices could not separate it from depth. **The concentration
+result is the campaign's headline and is fitted the same way, so it needed the same test. It passes.**
+
+**The coefficient of `log n_eff` does not move across five depth controls:**
+
+| depth control | s0 | s1 | s2 | s3 | mean |
+|---|---:|---:|---:|---:|---:|
+| none | −0.413 | −0.404 | −0.421 | −0.477 | **−0.429** |
+| linear | −0.457 | −0.420 | −0.426 | −0.490 | **−0.448** |
+| quadratic | −0.384 | −0.356 | −0.352 | −0.377 | **−0.367** |
+| cubic | −0.379 | −0.335 | −0.327 | −0.380 | **−0.355** |
+| **full block dummies** | −0.374 | −0.329 | −0.324 | −0.359 | **−0.347** |
+
+**Negative in all 20 specification-seed combinations, spanning only −0.324 to −0.490.** For contrast,
+`d_cv` swung from **+0.894 to −0.717** across the same ladder.
+
+**And it holds within every type**, including the one where its depth-collinearity is highest:
+
+| type | corr(`log n_eff`, block²) | linear-depth coef | quadratic-depth coef | sign flip? |
+|---|---:|---:|---:|:---:|
+| **mlp.fc** | **+0.879** | −1.682 | −1.062 | **no** |
+| attn.proj | −0.553 | −0.611 | −0.546 | no |
+| attn.q | +0.501 | −0.530 | −0.513 | no |
+| attn.v | −0.347 | −0.515 | −0.466 | no |
+| mlp.proj | +0.328 | −0.541 | −0.485 | no |
+| attn.k | −0.250 | −0.524 | −0.295 | no |
+
+**⇒ And the contrast explains both outcomes.** It is not the raw collinearity that decides — `mlp.fc`
+reaches +0.879 and survives. **It is whether the design supplies variation that breaks the collinearity.**
+
+| | `d_cv` within `mlp.proj` | `log n_eff` pooled |
+|---|---|---|
+| points | 12 | 72 across six types |
+| corr with block² | 0.975 | ≤ 0.92 in one type |
+| **variance surviving type + quadratic depth** | near zero | **54–58%** |
+| outcome | **sign flips** | **stable** |
+
+**`log n_eff` retains over half its variance after depth and type are removed**, so the fit has real
+independent variation to work with. `d_cv` inside a single type had almost none. **That is the
+structural difference between a result and an artifact here, and it is measurable in advance.**
+
+**What this settles.** The campaign's central claim — **between-layer C is majority spectral
+concentration** — has now been tested against every failure mode that has withdrawn a finding in this
+work: shared-term construction (it is `g`-free), bad joins (it is computed within one panel),
+aggregation artifacts (it holds per matrix and per block), selection (it was not chosen from a search),
+and now depth-collinearity. **It is the one result that has survived all of them.**
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
