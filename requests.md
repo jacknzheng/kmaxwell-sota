@@ -29,6 +29,76 @@ Next request number: **REQ-053**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅ THE CONCENTRATION RESULT REPLICATES ON A PANEL IT WAS NOT DERIVED FROM (iteration 200)
+
+*Bands 44, 57 and 59 — the answer to the campaign's central question — **all come from ONE panel**:
+REQ-048, the only dataset carrying `participation_ratio` / `trace_est` / `trace_sq_est`. **That
+single-panel dependence has never been flagged, and it is a real weakness.** REQ-019 (11 LRs) and
+REQ-023 lack those fields — **but band 57's mechanism makes a prediction testable with the fields they
+DO have.***
+
+**THE PREDICTION.** Band 57: `trace(H)` is flat across depth while `trace(H²)` carries the bowl. A
+spectrum whose second moment rises while its first stays flat **must push `λ_top` up relative to a
+non-extremal direction**. `curvature_along_polar` is such a direction and **is present in
+REQ-019/023**. So `log λ_top − log cp` should show the bowl on a panel where the concentration fields
+do not exist.
+
+**⚠️ SCOPE, STATED FIRST.** `cp` is a **separate HVP, not tridiagonal** (rule 13 satisfied), **but
+`log λ` appears in both this quantity and in C.** Under **rule 6** this is a **descriptive consistency
+check, NOT independent evidence for band 44.** Recorded as such.
+
+**FIRST PASS — partial, and the failure is informative:**
+
+| | result |
+|---|---|
+| corr(peak profile, C profile) | **+0.723**, positive in **11/11** LRs |
+| peak's own argmin interior (4–8) | **6/11** — drifts to blocks 0–1 |
+| below both ends | 10/11 |
+
+**⇒ AND THE DRIFT IS EXPLAINED BY AN EXISTING BAND, not a failure.** Decomposing (identity exact to
+**6.9e-17**):
+
+| block | 0 | 3 | 6 | 9 | 11 |
+|---|---:|---:|---:|---:|---:|
+| **C** | +0.169 | −0.011 | **−0.163** | −0.030 | +0.300 |
+| log λ | +0.145 | +0.140 | −0.081 | −0.045 | +0.454 |
+| **log cp** | **+0.208** | +0.195 | +0.046 | −0.118 | +0.037 |
+
+**`log cp` is monotone — linear R² 0.487, slope −0.0286/block — which is exactly band 56's finding,
+reproduced here on an independent panel.** Subtracting a *monotone* cp from a *bowl-shaped* λ tilts the
+result toward the input end. **The partial reproduction is what band 56 predicts.**
+
+**★ REMOVING THAT TILT GIVES A CLEAN REPLICATION:**
+
+| | result |
+|---|---|
+| **argmin interior (4–8)** | **11/11 LRs** |
+| **below both endpoints** | **11/11 LRs** |
+| argmins | 4, 6, 6, 6, 6, 6, 6, 6, 7, 7, 6 |
+
+> **✅ The concentration mechanism's observable consequence reproduces at 11 learning rates on a panel
+> that has none of the concentration fields.** **Bands 44/57/59 are no longer a single-panel result in
+> their *implication*** — though the direct PR measurement still exists only in REQ-048, and **that
+> limitation stands.**
+
+**PROPOSED n=4 SEED CHECK — band 69 (criterion registered).**
+*Criterion:* on any panel carrying `top_eigenvalue` and `curvature_along_polar`: (i) after removing the
+**linear** component that `cp`'s monotone depth trend injects, `log λ − log cp` has an **interior
+minimum in ≥80% of LR/seed fits**; (ii) it is **below both endpoints in ≥80%**; (iii) the **raw**
+(untilted) profile still correlates with the C profile at **≥ +0.50**.
+*Status:* **satisfied by committed REQ-019 data** (11/11; 11/11; +0.723). ⚠️ **Descriptive only under
+rule 6 — shares `log λ` with C.** **No new compute requested; ≤2-node ceiling.**
+
+**⇒ WHAT THIS DOES AND DOES NOT FIX.** It **does** show the concentration story is not an artifact of
+REQ-048's probe implementation — its consequence appears on a differently-produced, differently-forked,
+11-LR panel. It **does not** provide independent evidence for band 44 (shared `log λ`), and it **does
+not** remove the need for the direct measurement to be replicated. **REQ-051's probe list includes
+`curvature_along_polar` and `top_eigenvalue` at both 2050 and 2750, so it would extend this check to
+4 seeds at no extra cost** — worth noting for whoever runs it.
+
+**Queue:** REQ-035/036/048 DONE; **REQ-050 OPEN** (the causal question, 16.2 min); **REQ-051 OPEN**;
+**REQ-052 OPEN** (endorsed); REQ-049 optional. **No Jerry response since REQ-048; no NEEDS-INFO.**
+
 ## ✅ THE LEVER HAZARD IS CONTAINED (iteration 199) — band 67 was the only exposed survivor
 
 *Band 67 died because a quantity measured under the **mixed-LR** design reversed under the **global-LR**
