@@ -1299,6 +1299,72 @@ design — multiple probe repeats and a proper LR ladder — is exactly what thi
 1-probe pilot cannot deliver, and the signal-to-noise ratio of 0.82 found here is the concrete reason
 its **probe-repeat requirement matters for the gradient side too**, not only for curvature.
 
+## Under a per-type LR intervention the gauge violation largely disappears (2026-09-05)
+
+Rule 39's archive audit continued and found two more archives carrying `top_eigenvalue` and
+`gradient_block_norm`: **REQ-036** (5 arms, the per-type LR design this campaign must validate) and
+**REQ-035 Arm A** (4 seeds). Both were tested for the intervention `k = d(log lam)/d(log g)`. The
+results substantially qualify iterations 231 and 233.
+
+**REQ-036, within-matrix across five arms (n = 360, 72 matrices, cluster-robust by matrix):**
+
+| estimate | k | se | t vs 2 |
+|---|---|---|---|
+| **REQ-036 (per-type LR intervention)** | **+1.922** | 0.077 | **−1.01** |
+| REQ-045 (per-matrix LR intervention) | +2.237 | 0.086 | +2.77 |
+| REQ-048 (observational) | +3.173 | — | — |
+
+**On the per-type LR design, k is indistinguishable from the gauge value of 2.** It is not driven by
+any single arm — dropping each in turn gives +1.853 to +1.975 — and all four control-vs-treatment
+contrasts agree (`a2_pertype` +1.643, `a3_endcap` +2.156, `a4_antirule` +1.790, `a5_polar` +1.875).
+
+**Arm A's apparent n=4 confirmation is withdrawn before it was used.** Arm A's four seeds initially
+gave a within-matrix k of **+2.843**, above 2 in 4/4. That is **not an intervention estimate**: Arm
+A's "arms" are the `s060/s100/s170` labels, which iteration 224 established are **probe repeats of a
+single checkpoint**, not manipulations. Its within-matrix contrast therefore contains no experimental
+variation in `g` — the within-matrix sd of `log g` is **0.078 dex** against REQ-048's per-probe noise
+of 0.115 dex, i.e. the same magnitude. `lam` and `g` share a probe batch, so correlated errors
+inflate the slope. Consistently, Arm A's cross-repeat (independent-error) estimate is **+2.837**,
+matching the *observational* +3.17 family rather than any intervention value. Arm A cannot serve as
+the n=4 seed check for k.
+
+## `mlp.proj` is the one type that violates the gauge in both interventions (2026-09-05)
+
+The two genuine interventions disagree at the pooled level (+2.237 vs +1.922), but they agree on
+where the violation lives. Within-matrix k per type:
+
+| type | REQ-045 (per-matrix LR) | REQ-036 (per-type LR) |
+|---|---|---|
+| **`mlp.proj`** | **+2.504** (t vs 2 = +6.06) | **+2.287** (t vs 2 = +3.32) |
+| `attn.v` | +2.421 (+1.47) | +1.409 (−3.44) |
+| `attn.q` | +2.337 (+1.61) | +1.296 (−2.68) |
+| `mlp.fc` | +2.122 (+0.56) | +1.737 (−0.43) |
+| `attn.k` | +1.895 (−0.37) | +1.453 (−1.24) |
+| `attn.proj` | +1.397 (−2.34) | +1.910 (−1.01) |
+
+**`mlp.proj` is the only type above the gauge value in both designs**, and the only one significantly
+so in either. Every other type is at or below 2 in REQ-036, and only `attn.proj` is decisively below
+in REQ-045. Two independent LR designs, different manipulations, same answer for this one type.
+
+This is the cross-design replication that Arm A could not supply. It is **not** a four-seed check —
+REQ-036 and REQ-045 are each single-seed — so it establishes reproducibility across *designs*, not
+across initialisations.
+
+**What must now be said about the observational ladder.** Iteration 231's +3.173, and the excess of
++1.17 above gauge it implied, is **observational and largely not causal**. Iteration 233 showed 81%
+of the gap to REQ-045 is dataset rather than estimator; REQ-036 now shows that under a per-type LR
+manipulation the pooled violation is absent altogether. The surviving causal claim is narrow: **one
+matrix type, `mlp.proj`, has curvature that responds to its gradient more steeply than a
+reparametrisation would produce.** The broad statement that "matrices with larger gradients hold
+curvature in fewer directions" remains supported **observationally** (iteration 232's independent-probe
+tests stand) but is not established causally.
+
+**For REQ-051.** Compare its causal k against this pair of benchmarks, not against +3.173: **+2.237**
+under per-matrix LR and **+1.922** under per-type LR. The divergence between them is itself a target
+— per-matrix multipliers break confounds that per-type rules cannot, since a per-type rule moves all
+twelve matrices of a type together. Report per-type k, and specifically whether `mlp.proj` reproduces
+above 2.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1346,3 +1412,6 @@ Before concluding a question needs new data, check every committed archive for t
 it requires -- a weaker archive may support part of the test. And when disattenuating, verify the
 regressor's and outcome's errors are independent: shared-probe errors can bias a slope either way,
 so no corrected value should be quoted.
+Confirm that a design's 'arms' are actual manipulations before treating a within-unit contrast as
+causal: repeated measurement files can masquerade as arms, and when the outcome and regressor share
+a measurement batch their correlated errors inflate the slope.
