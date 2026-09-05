@@ -1545,6 +1545,77 @@ seed-replicated estimate, which is precisely the deficiency identified here. The
 prediction stands as written: does `mlp.proj` again have the highest per-type `k`, judged within each
 seed?
 
+## The ranking churn is rivals moving, not `mlp.proj` — and a stronger test replaces the rank claim (2026-09-05)
+
+Iteration 237 weakened the `mlp.proj` claim to p = 0.053 because a design's own per-type ranking is
+unstable across arm subsets. This iteration asks **where that instability lives**, and the answer
+inverts the reading.
+
+**`mlp.proj` is the most stable type in the design.** Across REQ-036's 26 arm subsets:
+
+| type | mean k | sd across subsets | mean SE | pairwise heterogeneity Q (9 dof) |
+|---|---|---|---|---|
+| **`mlp.proj`** | +2.301 | **0.201** | 0.147 | 16.6 — consistent with one value |
+| `attn.proj` | +1.797 | 0.386 | 0.235 | 16.0 — consistent |
+| `attn.q` | +1.134 | 0.582 | 0.321 | **26.6 — heterogeneous** |
+| `attn.v` | +1.405 | 0.586 | 0.313 | **55.6 — heterogeneous** |
+| `attn.k` | +1.254 | 0.659 | 0.530 | **22.1 — heterogeneous** |
+| `mlp.fc` | +1.741 | 0.745 | 1.122 | 7.2 — consistent |
+
+**`mlp.proj` has the smallest spread of any type**, roughly half the next smallest.
+
+**The churn is entirely rivals spiking.** In the 7 of 26 subsets where `mlp.proj` is not first:
+
+- `mlp.proj`'s k is **+2.287** full-design, **+2.310** when it wins, **+2.275** when it loses — a
+  drop of **0.012**.
+- The winning rival's k exceeds its own full-design value by **+1.143** on average.
+
+So the ranking instability is not evidence against `mlp.proj`; it is volatility in the attention
+types' estimates.
+
+## A precision-weighted interaction replaces the rank statistic (2026-09-05)
+
+The stability asymmetry cuts both ways: a stable estimate can top an average ranking even under a
+common true k, because ranks ignore precision. The fix is to abandon ranks and test the hypothesis
+directly — fit `d(log lam) = a + b·d(log g) + c·[mlp.proj]·d(log g)` per design, where `c` is
+`mlp.proj`'s extra elasticity over the other five types combined.
+
+| design | b (other five) | **c (mlp.proj extra)** | se | t | p |
+|---|---|---|---|---|---|
+| REQ-045 | +2.037 | **+0.467** | 0.167 | +2.79 | 0.0053 |
+| REQ-036 | +1.751 | **+0.536** | 0.134 | +3.99 | 0.0001 |
+| REQ-037 | +0.283 | **+1.149** | 0.274 | +4.19 | <0.0001 |
+
+**Significant in each design separately.** Fixed-effect pooling gives **c = +0.591, se 0.098,
+t = +6.03**, with heterogeneity Q = 4.85 on 2 dof (consistent). Clustering by **block** rather than
+by matrix — 72 matrices sit inside 12 blocks — gives **c = +0.578, se 0.075, t = +7.72**.
+
+**Placebo on every type**, the null distribution made concrete (block-clustered, pooled):
+
+| type | REQ-045 | REQ-036 | REQ-037 | pooled c | t |
+|---|---|---|---|---|---|
+| **`mlp.proj`** | **+0.467** | **+0.536** | **+1.149** | **+0.578** | **+7.72** |
+| `mlp.fc` | −0.143 | −0.187 | +0.454 | −0.002 | −0.01 |
+| `attn.proj` | −0.944 | −0.024 | −0.602 | −0.171 | −1.44 |
+| `attn.q` | +0.109 | −0.705 | −0.387 | −0.318 | −2.33 |
+| `attn.v` | +0.205 | −0.533 | −1.313 | −0.442 | −4.06 |
+| `attn.k` | −0.372 | −0.490 | −0.515 | −0.460 | −2.07 |
+
+**`mlp.proj` is the only type positive in all three designs**, and the only one with a large positive
+pooled interaction. The specification does not manufacture positive interactions.
+
+**Selection caveat, stated plainly.** The interaction statistic was chosen **after** the rank
+statistic returned p = 0.053 (rule 43). It is a better statistic on its merits — it uses magnitudes
+and standard errors, it is immune to rank churn and to the stability asymmetry, and the placebo
+provides its own null — but it was not pre-specified for this data. Treat it as a strong,
+well-controlled description rather than a confirmatory test.
+
+**Status.** `mlp.proj`'s curvature responds to its gradient about **+0.58 dex per dex more steeply**
+than the other five matrix types, consistently across three interventions with different levers.
+This survives block clustering and a six-way placebo. It still rests on **three single-seed designs**;
+REQ-051's four seeds remain the confirmatory test, and its registered prediction should now be scored
+on **this interaction**, not on the rank.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1606,3 +1677,6 @@ Before pricing a cross-dataset agreement, measure how stable each dataset's own 
 analytic p-value that treats one fit per dataset as a clean draw overstates the evidence when
 resampling within a dataset changes its answer. And when a second statistic is chosen after the
 first has been seen, report both and mark the second as non-confirmatory.
+When a ranking is unstable, ask which competitor is moving before weakening the claim: the churn
+may lie entirely in volatile rivals. Then replace the rank with a precision-weighted contrast and
+run the same test on every category as a placebo -- that makes the null concrete instead of assumed.
