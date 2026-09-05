@@ -216,9 +216,18 @@ Therefore, when scoring H1:
   has the highest k of the six types in REQ-045, REQ-036 and REQ-037 (1/1/1), p ≈ 0.028 conditional
   on its post-hoc selection, while overall rank concordance between designs is weak (Kendall tau
   −0.07 to +0.33).
-  **So REQ-051 should score two distinct predictions, not one:** (i) does `mlp.proj` again have the
-  **highest** per-type k — the claim that survived three designs; and (ii) does its k **exceed 2** —
-  true under both LR levers, false under batch. Report both, per seed.
+  **Score the INTERACTION, not the rank (revised iteration 238).** The rank statistic is weak and
+  unstable; the per-type ranking churns because the *attention* types' estimates are volatile, not
+  because `mlp.proj` moves (its k is +2.287 full-design, +2.310 when it wins a subset, +2.275 when it
+  loses). Fit instead, per seed:
+  `d(log lam) = a + b·d(log g) + c·[mlp.proj]·d(log g)`, cluster-robust by block.
+  On the three committed designs `c` is +0.467, +0.536 and +1.149 — significant in each separately,
+  pooling to **c = +0.578, se 0.075, t = +7.72** with block clustering, and a six-way placebo shows
+  `mlp.proj` is the **only** type positive in all three. Registered prediction: **c > 0 in each of
+  the four seeds**, with a pooled estimate near +0.6.
+  Also report (ii) whether `mlp.proj`'s absolute k **exceeds 2** — true under both LR levers, false
+  under batch — but treat (i) as the primary test, since it is level-free and the level itself is
+  design-bound (85% of k's variance is between designs; iteration 236).
   **The n=4 seed check on k is not obtainable from committed data.** Every archive with
   `top_eigenvalue` and `gradient_block_norm` under a real intervention is single-seed (REQ-036,
   REQ-045, REQ-037). REQ-051's four seeds are the first opportunity to seed-replicate any causal k,
