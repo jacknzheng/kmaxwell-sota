@@ -2289,6 +2289,59 @@ is real (it has structure) but not parabolic, so "the arch deepens the bowl" is 
 explanation, and no substitute has been tested. This is a description of a systematic asymmetry
 across five independent runs, awaiting a mechanism.
 
+## Why C is more parabolic than its components: shared non-quadratic structure cancels (2026-09-05)
+
+Iteration 250 established that a parabola describes `log C`'s depth profile far better (R² 0.819)
+than it describes either `log lam` (0.433) or `log g` (0.133), and left the mechanism open.
+Subtracting a poorly-parabolic profile from a weakly-parabolic one should not *improve* the fit —
+unless the two share their non-parabolic structure.
+
+**They do.** Removing a fitted quadratic from each profile leaves a non-quadratic residual shape;
+those shapes are strongly correlated between curvature and gradient:
+
+| panel | sd nq(`lam`) | sd nq(`g`) | **corr** |
+|---|---|---|---|
+| REQ-048 | 0.1387 | 0.0398 | **+0.969** |
+| Arm A | 0.1272 | 0.0393 | **+0.960** |
+| REQ-036 | 0.1648 | 0.0588 | +0.744 |
+| REQ-037 | 0.1582 | 0.0510 | **+0.968** |
+| REQ-045 | 0.1317 | 0.0667 | +0.930 |
+
+**And `C`'s coefficient of 2 is close to the cancelling one.** Fitting `k` freely to minimise the
+non-quadratic residual of `log lam − k·log g`:
+
+| panel | best `k` | nq sd at best `k` | at `k = 2` | at `k = 0` |
+|---|---|---|---|---|
+| REQ-048 | 3.38 | 0.0344 | 0.0647 | 0.1387 |
+| Arm A | 3.11 | 0.0356 | 0.0562 | 0.1272 |
+| REQ-036 | 2.09 | 0.1101 | 0.1102 | 0.1648 |
+| REQ-037 | 3.01 | 0.0394 | 0.0647 | 0.1582 |
+| REQ-045 | 1.84 | 0.0484 | 0.0496 | 0.1317 |
+
+Best `k` = **2.68 ± 0.68**, straddling the 2 that `C = lam/g²` uses. At `k = 2` the non-quadratic
+residual is already less than half its `k = 0` value (0.056 vs 0.132 on average).
+
+**So C's cleaner bowl is not a new phenomenon — it is the λ–g relationship acting on the depth axis.**
+The shared non-quadratic depth structure of curvature and gradient largely cancels in `lam/g²`,
+leaving the quadratic component exposed. That the exponent 2 happens to sit near the cancelling
+coefficient is a property of the EoS constant's algebraic form, not a tuned choice.
+
+**The cancelling `k` belongs to the λ–g elasticity family.** Computed on the same five panels, `k`
+(mean 2.68) tracks the between-matrix elasticity (mean 2.83) at **corr +0.966** and the block-mean
+slope (mean 2.05) at **+0.898**. Exact permutation nulls over all 120 orderings of five panels give
+**p = 0.0083** — the smallest value n = 5 permits — and **p = 0.033** respectively.
+
+**What is not claimed.** That `k` tracks the *between-matrix* elasticity more closely than the
+block-mean slope is **not supported**: the gap between +0.966 and +0.898 is well inside the sampling
+error of a correlation on five points, and the two predictors are themselves correlated at +0.876. The
+supported statement is the weaker one — the cancelling coefficient is a member of the λ–g elasticity
+family rather than an independent constant.
+
+**Connection to the standing account.** This links three previously separate results: the λ–g
+elasticity (iterations 231–234, ~2–3 depending on design), C's cancellation-stabilised minimum
+(iteration 249), and C's parabolic depth profile (iteration 250). They are aspects of one
+relationship between curvature and gradient norm, expressed at different grains.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2393,3 +2446,6 @@ prediction can be far better determined than the quantity it is being tested aga
 Check that a fitted functional form describes the data before interpreting its coefficients: a
 parabola fitted to a non-parabolic profile returns a curvature coefficient that measures residual
 shape, not curvature. Report the fit's R2 alongside the coefficient.
+With a handful of panels, two high correlations are not distinguishable from each other: use an
+exact permutation null to price each, and do not claim one predictor beats another when the gap is
+inside the sampling error and the predictors are themselves correlated.
