@@ -1901,6 +1901,59 @@ time**. FINDINGS.md carried the retraction; requests.md did not, and that incons
 Standing lesson: when a statistic is retracted in FINDINGS.md, search requests.md for it in the same
 commit. The 2-node resource constraint is preserved in the rewritten header.
 
+## The depth axis is a minority of C's variation — type carries most of it (2026-09-05)
+
+Iteration 243 found type carries 83% of `log g`'s variance and depth only 4.5%. Applying the same
+decomposition to every quantity gives a result that **reframes what this campaign's headline question
+is asking**, and it should be stated plainly rather than left implicit.
+
+**Variance shares of each quantity** (REQ-048, mean over 4 seeds, block and type as dummies):
+
+| quantity | type only | block (depth) only | both | residual |
+|---|---|---|---|---|
+| **`log C`** | **0.755** | **0.116** | 0.871 | 0.129 |
+| `log lam` | 0.299 | 0.226 | 0.525 | 0.475 |
+| `log g` | 0.847 | 0.041 | 0.888 | 0.112 |
+| `log n_eff` | 0.622 | 0.110 | 0.732 | 0.268 |
+
+**In absolute terms** (dex): `log C` total sd 0.452, type-axis sd **0.393**, depth-axis sd **0.153**.
+
+**The decision-relevant version.** A *perfect per-type* learning-rate schedule would remove
+**73–78%** of `log C`'s variance; a *perfect per-layer* schedule would remove **9–16%**.
+
+**Three checks before recording, all passed.**
+
+- **Not parameter count.** `mlp.fc`/`mlp.proj` hold 2,359,296 parameters against attention's 589,824,
+  so a size effect could masquerade as type. But `log n_params` alone explains only **0.158–0.243**
+  against full type dummies at **0.731–0.780** — the bulk is *within*-group type structure, not an
+  MLP-vs-attention split.
+- **Not a scale effect.** `C = lam/g²` is invariant under the reparametrisation gauge, so a per-type
+  scale difference cannot produce a type effect in C. Conditioning on `log g` first, type still adds
+  **+0.408 to +0.511** incrementally.
+- **Reproduces across archives**, not just REQ-048's four seeds: REQ-036 control (type 0.683, depth
+  0.211), REQ-037 control (0.804, 0.079), REQ-045 (0.744, 0.104).
+
+**What this changes, and what it does not.**
+
+It does **not** invalidate any finding in this file. The bowl, the concentration account, the
+LR-invariance of C's depth profile and the REQ-036 null are all statements *about the depth axis*,
+and they remain exactly as measured. What changes is the **framing**: the depth axis is roughly
+**one-eighth** of `log C`'s between-matrix variation, while type is roughly three-quarters. Every
+"explains X% of the profile" figure in this file is a share of that one-eighth, not of C's total
+spread, and should be read that way.
+
+Note this is consistent with — and sharpens — the campaign's completed REQ-036 validation. That work
+showed a **per-type** learning-rate rule cannot change the between-layer spread of C (a per-type
+constant cancels exactly in the depth contrast). The present decomposition shows the converse
+framing: per-type structure is where most of C's variance actually lives, but it is precisely the
+part a per-type LR rule cannot touch *in the depth direction*. The two results address different
+axes and do not conflict.
+
+**A caveat on `log lam`.** Curvature alone is far more balanced (type 0.299, depth 0.226) than C is.
+C's type dominance is inherited largely from `g`, which is 84.7% type. So the depth question is
+relatively *more* prominent in raw curvature than in C — which is why the curvature-side account
+(concentration) has been the productive one.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1982,3 +2035,6 @@ State the GRAIN of a reproducibility figure: a matrix-level correlation dominate
 category effect says nothing about whether a within-category profile reproduces. Decompose the
 variance by axis before quoting the number. When retracting a statistic, grep every file that
 quotes it, not only the findings record.
+Report what share of a quantity's total variation the studied axis carries, early and in the
+findings record: a result explaining most of one axis may explain a small fraction of the whole,
+and readers will assume otherwise unless told.
