@@ -756,6 +756,76 @@ the only other per-matrix archive, holds activation and gradient fields (`weight
 checkpoint. Any spectral question beyond the top eigenvalue requires new measurement -- which is what
 REQ-050 and REQ-051 are for.
 
+## "Interior minimum below both ends" is a weak criterion and is retired (2026-09-05)
+
+A guard used repeatedly in the pre-consolidation record (bands 3, 63 and the summary table, all at
+commit `28d0074`) is shown here to carry almost no evidential weight, and is retired.
+
+The criterion asks whether free per-block effects put the profile's minimum strictly inside the
+network and below both endpoints, reported as "12/12" or "4/4". **Its chance rate is ~0.48.** With
+12 exchangeable per-block values the minimum falls in the interior 10 of 12 slots by pure
+combinatorics: P = 10/12 = **0.8335**, so four independent seeds agree by chance at
+0.8335^4 = **0.4826**. A block-relabelling permutation on the real REQ-048 data returns **0.470**
+(940/2000), matching the combinatorial rate. The criterion is weak by construction, for reasons
+having nothing to do with this data.
+
+**This does not weaken the bowl.** The consolidation had already dropped the criterion from the
+active FINDINGS.md -- it appears nowhere in the current file -- so no standing claim rests on it.
+And the bowl's real evidence is far stronger on the same data:
+
+| criterion | observed | chance |
+|---|---|---|
+| all 4 seed argmins within a span of 1 | argmin **[6, 6, 6, 7]**, span 1 | **0.008** |
+| cubic depth fit beats linear, per seed | R² gain **+0.070 to +0.117**, 4/4 | -- |
+
+The location agreement is the load-bearing evidence, not the interiority. Retire the weak criterion;
+quote argmin agreement and the cubic-over-linear gain instead.
+
+## Band 58 restated: three directions have depth profiles, one turns around inside (2026-09-05)
+
+Iteration 225 checked whether any past NEGATIVE result was killed by probe noise rather than by
+absence of signal, using the reliabilities that iteration 224's probe-repeat discovery made
+estimable. Ranking every REQ-048 field:
+
+| field | reliability (m=3) | admissible? |
+|---|---|---|
+| `curvature_along_random` | **0.651** | yes |
+| `curvature_along_gradient` | 0.704 | **no -- circular** |
+| `top_eigenvalue` | 0.748 | (the outcome) |
+| `curvature_along_polar` | 0.759 | yes |
+| `trace_sq_est` | 0.768 | yes |
+| `curvature_along_weight` | 0.799 | yes |
+| `residual_tail` | 0.820 | **no -- circular** |
+| `trace_est` | 0.838 | yes |
+| `gradient_block_norm` | 0.917 | yes |
+| `participation_ratio` | 0.959 | yes |
+
+`curvature_along_random` at 0.651 was low enough to make band 58's null on it suspect, so band 58
+was re-tested. **The concern turned out not to apply, for a reason worth recording:** block index is
+measured exactly, so regressing a noisy *outcome* on exact depth is unbiased. Attenuation acts only
+through noise in a *regressor*. Probe noise inflates standard errors and deflates R², but cannot
+manufacture or hide a depth profile's amplitude.
+
+The re-test nevertheless **corrects band 58's wording.** It is not true that only the top
+eigendirection varies with depth. Cubic amplitudes, probe-averaged, type-absorbed:
+
+| direction | amplitude | seed sd | t | free-fit argmin (4 seeds) |
+|---|---|---|---|---|
+| top eigenvalue | 0.466 | 0.040 | 23.4 | **6, 6, 6, 7** |
+| Muon step (polar) | 0.376 | 0.092 | 8.2 | 9, 10, 9, 10 |
+| learned weight | 0.810 | 0.090 | 18.0 | 9, 10, 9, 11 |
+| random | **0.166** | 0.042 | **7.9** | 2, 11, 3, 11 |
+
+The random direction's profile is significantly nonzero -- "flat" was imprecise. What distinguishes
+the top eigendirection is **where** the profile turns: its minimum sits at block 6-7 in all four
+seeds, while the weight direction runs monotonically toward the output end and the random direction
+gives an unstable argmin (2, 11, 3, 11) consistent with no reproducible location.
+
+Note the internal consistency: the interiority of the Muon-step and weight profiles (both 3-4 of 4
+"interior") is exactly the weak criterion retired above, and their argmin **spans** are 1 and 2
+against the top eigendirection's 1 at a much more distinctive location. Amplitude and interiority
+were never the discriminators; **reproducible argmin location** is.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -771,3 +841,7 @@ it is fitting, not deriving.
 Verify what a filename suffix means before treating it as an experimental factor; repeated files
 may be probe repeats of one state rather than distinct states, which changes both the correct
 averaging and what guards are runnable at all.
+Compute a criterion's chance rate before citing it as evidence: an 'interior minimum' style test
+on k bins passes by pure combinatorics at (k-2)/k per replicate, so agreement counts like 4/4 or
+12/12 can be near-worthless. Prefer criteria whose chance rate is small, such as agreement of a
+location across seeds.
