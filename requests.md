@@ -209,6 +209,20 @@ Therefore, when scoring H1:
   repeats of one checkpoint, not arms; its within-matrix k of +2.843 is inflated by `lam` and `g`
   sharing a probe batch, and its independent-error estimate (+2.837) matches the observational family
   rather than any intervention.
+  **Third pilot benchmark, added iteration 235 — REQ-037 (batch size).** A third lever gives pooled
+  **k = +0.557** and `mlp.proj` **+1.432** (t vs 2 = −2.61), i.e. **below** gauge. So `mlp.proj`'s
+  above-gauge result is **not** replicated in levels by a non-LR intervention, and iteration 234's
+  wording is downgraded accordingly. What holds across all three designs is a **rank**: `mlp.proj`
+  has the highest k of the six types in REQ-045, REQ-036 and REQ-037 (1/1/1), p ≈ 0.028 conditional
+  on its post-hoc selection, while overall rank concordance between designs is weak (Kendall tau
+  −0.07 to +0.33).
+  **So REQ-051 should score two distinct predictions, not one:** (i) does `mlp.proj` again have the
+  **highest** per-type k — the claim that survived three designs; and (ii) does its k **exceed 2** —
+  true under both LR levers, false under batch. Report both, per seed.
+  **The n=4 seed check on k is not obtainable from committed data.** Every archive with
+  `top_eigenvalue` and `gradient_block_norm` under a real intervention is single-seed (REQ-036,
+  REQ-045, REQ-037). REQ-051's four seeds are the first opportunity to seed-replicate any causal k,
+  which is the main reason it should run before further observational analysis.
 - **second target, added iteration 231 — the moment ladder.** Under the reparametrisation gauge
   (`W = c·V` gives `g ~ c`, every Hessian moment `~ c²`), **all** spectral moments must have
   elasticity **+2** wrt `log g`. Observationally on REQ-048 they do not, and they deviate in a strict
