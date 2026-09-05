@@ -481,6 +481,53 @@ their input passed through a nonlinearity. **REQ-051 measures `k_a`, `k_d` and `
 per-matrix LR ladder**, which would show whether `mlp.proj`'s backward channel responds differently to
 intervention — a causal discriminator that no observational split on this data can provide.
 
+## A third explanation for mlp.proj fails, and the type axis is exhausted (2026-09-05)
+
+Two structural groupings — the ReLU² expansion and the residual-writer role — already failed to predict
+which types show the `d_cv` coupling. **The remaining option was that the effect is graded rather than
+binary, with the six-type ordering tracking some measured property.**
+
+**Per-type `d_cv` coefficient, ordered, against six pre-declared measured properties:**
+
+| type | `d_cv` coef | `d_cv` | `a_cv` | `d_eff` | `a_eff` | `da_cos` | `rank1` |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **mlp.proj** | **−0.717** | 0.580 | 0.631 | 355 | 142 | 0.091 | 0.227 |
+| attn.v | −0.341 | 1.256 | 0.035 | 108 | 31 | 0.417 | 0.543 |
+| attn.k | +0.097 | 0.964 | 0.035 | 77 | 31 | −0.018 | 0.183 |
+| attn.q | +0.145 | 0.862 | 0.035 | 76 | 31 | 0.060 | 0.238 |
+| attn.proj | +0.171 | 0.593 | 0.229 | 383 | 61 | 0.085 | 0.218 |
+| mlp.fc | +0.212 | 0.647 | 0.038 | 876 | 19 | 0.036 | 0.270 |
+
+| property | correlation with the coefficient |
+|---|---:|
+| `a_eff_rank` | **−0.786** |
+| `a_cv` | −0.747 |
+| `da_cos_mean` | −0.447 |
+| others | ≤ 0.33 |
+
+**⚠️ The best correlation is −0.786 and it means nothing.** Permutation over the six type labels, taking
+the max across all six properties: **p = 0.3132**. **With six points and six candidates, |r| ≈ 0.79 is an
+ordinary draw** — the achievable floor is about 0.003, so a p of 0.31 is uninformative rather than
+marginal. *(This is the same arithmetic that made the writer-split p of 0.068 uninterpretable earlier:
+six types cannot support a six-candidate search.)*
+
+**⇒ The type axis is exhausted for this question.** Three explanations have now been tested and failed —
+the expansion (refuted by its own discriminating prediction), the writer role (refuted by `attn.proj`),
+and a graded ordering (unsupported at n=6). **No further structural hypothesis can be distinguished on
+six types**, regardless of how plausible it sounds: the data cannot separate a real ordering from a
+random one at this size.
+
+**What stands.** The `mlp.proj` association itself is unaffected — it rests on **72 matrices across
+4 seeds**, not on the six-type comparison, and remains selection-priced at p = 0.0002 with all four
+seeds negative. **What is now firmly established is the boundary: a validated association with no
+structural account, and no prospect of one from this data.**
+
+**Method note worth keeping.** Each of the three failed explanations was tested by a criterion chosen
+*before* seeing its result — the expansion by whether `mlp.fc` shares it, the writer role by whether
+`attn.proj` matches, the ordering by a selection-priced null. **All three were plausible; none
+survived.** The alternative — accepting the first plausible story — is how bands 61 and 73 stayed alive
+long enough to require retraction.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
