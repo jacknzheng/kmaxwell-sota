@@ -673,6 +673,89 @@ much**, and cannot yet explain **why that much**. The question relocates to what
 bulk-to-top elasticity k = 1.271, which these two moments cannot answer -- it needs the eigenvalue
 distribution, which is not in the committed data at any depth.
 
+## The three REQ-048 files per seed are probe repeats, not training steps (2026-09-05)
+
+A structural fact about the only curvature archive, established this iteration and consequential
+enough to record before any further use of that data. The twelve REQ-048 files are named
+`req048_s{seed}_s{060,100,170}.json`. The `s060/s100/s170` suffix was read throughout this campaign
+as a training step. It is not: **every file reports `step = 2750`**. They are three independent
+probe repeats (Hutchinson/Lanczos seeds) of one checkpoint, 4 seeds x 72 matrices x 3 repeats = 864
+rows. There is only one checkpoint in the archive, so no step-stability guard can be run on it.
+
+**This makes probe reliability measurable for the first time**, since repeats of one fixed quantity
+are exactly what a reliability estimate needs.
+
+| quantity | within-matrix sd | between-matrix sd | reliability (m=3) |
+|---|---|---|---|
+| `log lam` | 0.349 | 0.347 | **0.748** |
+| `log n_eff` | 0.181 | 0.556 | **0.966** |
+| `log C` | 0.178 | 0.434 | 0.947 |
+
+`log lam` is **noisy: 40.5% of its single-probe variance is measurement error.** This sounds alarming
+for a campaign built on lam, and the reason it is not is a point about which side of the regression
+the noise sits on. Classical errors-in-variables attenuates a slope only through noise in a
+**regressor**; noise in the outcome inflates standard errors but leaves the slope unbiased. In the
+headline fit, lam enters only through the outcome `log C = log lam - 2 log g`. The regressor is
+`log n_eff = 2 log T - log trace(H^2)`, whose reliability is 0.966.
+
+**Effect on the headline: negligible.** The saturated concentration coefficient is -0.3466 measured,
+**-0.3589 disattenuated** -- a 3.5% correction, in the direction of a *larger* effect. Sign, share
+and the twenty no-sign-flip specification-seed combinations are untouched.
+
+**Effect on iteration 223: it further undercuts the coefficient-matching exercise**, which was
+already refuted three times. The -0.5745 target was itself attenuated by a factor nobody had
+measured. Recorded for completeness; it does not rescue any of the three predictions, whose misses
+(-0.500, -6.15, -0.730) are all far larger than a 3.5% correction.
+
+**Correction to iteration 223's k.** k was fitted on probe-averaged rows and reported as +1.271; the
+correctly-averaged value is **+1.312** (sd 0.048). Pooling the three repeats as independent rows
+instead gives +1.44 -- inflated, because probe noise in `log lam` enters `log S = log(trace(H^2) -
+lam^2)` on both sides. Averaging repeats before fitting is the correct treatment. Shared-term
+contamination (rule 22) is small: the uncontaminated analogue `d(log trace(H^2))/d(log lam)` is
++1.364, a difference of +0.052.
+
+## The bulk-to-top elasticity is not a constant, so there is no k to explain (2026-09-05)
+
+Iteration 223 closed by relocating the open question to "what sets k = 1.271?". That question is
+withdrawn: **k varies by matrix type by more than six times its seed uncertainty.**
+
+| type | k | seed sd |
+|---|---|---|
+| mlp.fc | **+0.466** | 0.099 |
+| attn.k | +0.883 | 0.283 |
+| attn.q | +0.921 | 0.157 |
+| attn.proj | +1.071 | 0.078 |
+| mlp.proj | +1.536 | 0.032 |
+| attn.v | **+1.587** | 0.488 |
+
+Range 1.121 against a typical seed sd of 0.190. A pooled k of +1.312 is an average over six different
+elasticities, not a spectral constant, and "explain k" was the wrong question to hand forward.
+
+## Ritz values cannot reopen the spectral question -- on two independent grounds (2026-09-05)
+
+Iteration 223 asserted that the eigenvalue distribution is absent from committed data. That was
+**wrong as stated** and is corrected here: REQ-048 commits the full Lanczos tridiagonal (`alphas[8]`,
+`offdiags[7]`), whose 8 Ritz values are partial spectral information. The conclusion nevertheless
+holds, for two reasons established by measurement rather than assertion.
+
+**1. The hard rule rejects them, and the data confirms why.** `ritz1` is bit-for-bit identical to
+`top_eigenvalue` (max relative difference 7.2e-16) -- the same object, not a correlate. The
+subdominant Ritz values are not independent probes of a different spectral region: controlling the
+independent trace probe, partial corr(log ritz2, log lam | log trace) = **+0.957** and for ritz3
+**+0.923**. All 8 come from one Krylov sequence seeded by one starting vector, so a poor seed or
+early convergence moves them together. They are circular under the standing rule.
+
+**2. Even setting circularity aside, they cannot describe the bulk.** The 8 Ritz values account for a
+median **9.2%** of trace(H^2) and **1.4%** of trace(H). The ~91% of trace(H^2) that carries the bulk
+behaviour is invisible to them.
+
+**Cross-archive replication of any curvature moment is impossible from committed data.** REQ-047,
+the only other per-matrix archive, holds activation and gradient fields (`weight_frob`, `a_frob`,
+`d_frob`, `d_eff_rank`, `da_cos_mean`, `align_ratio`, `grad_rank1_frac`) and **no** `trace_est`,
+`trace_sq_est` or `top_eigenvalue`. REQ-048 is the sole source of curvature moments, at a single
+checkpoint. Any spectral question beyond the top eigenvalue requires new measurement -- which is what
+REQ-050 and REQ-051 are for.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -685,3 +768,6 @@ a correlation. Report seed dependence, effect sizes, uncertainty, and inconclusi
 A parameter-free prediction must be derived and stated before its target value is looked at; once
 several derivations have missed a known number, stop -- a further algebraic form chosen to land on
 it is fitting, not deriving.
+Verify what a filename suffix means before treating it as an experimental factor; repeated files
+may be probe repeats of one state rather than distinct states, which changes both the correct
+averaging and what guards are runnable at all.
