@@ -2189,6 +2189,56 @@ the location.
 should be made is about C's minimum *location* (blocks 4–6, 5/5 panels) rather than about profile
 correlation, which the components share.
 
+## Why C's minimum is more stable than its components': the mechanism, quantified (2026-09-05)
+
+Iteration 248 found `log C`'s argmin sits at block 4–6 in all five runs while `log lam`'s scatters
+(1, 6, 7) and `log g`'s scatters (1, 10). A difference of two unstable quantities being *more* stable
+than either is not automatic — it requires their run-to-run fluctuations to be correlated in a
+specific way, and that requirement is a sharp, checkable inequality.
+
+**The condition.** With `log C = log lam − 2 log g`, C's profile is more run-stable than lam's exactly
+when `cov(dev_lam, dev_g) > var(dev_g)`. Measured over five panels × 12 blocks:
+
+| quantity | value |
+|---|---|
+| `var(dev_lam)` | 0.00745 |
+| `var(dev_g)` | 0.00074 |
+| `cov(dev_lam, dev_g)` | **0.00112** |
+| corr | +0.476 |
+
+**0.00112 > 0.00074 — the condition is satisfied**, and `var(dev_C) = 0.00594`, a ratio of **0.798**
+against lam's.
+
+**A second mechanism points the same way.** C's bowl is *sharper* than lam's — quadratic coefficient
+**+0.0136** versus **+0.0112** — and a sharper bowl pins the minimum more tightly against the same
+noise.
+
+**A parameter-free prediction.** For a profile `a(x−m)² + noise(s)`, the argmin's sd scales as `s/a`,
+so the predicted argmin-sd ratio is `sqrt(0.798) × (0.0112/0.0136) = 0.736`.
+
+| | argmin (quadratic fit) mean | sd across runs |
+|---|---|---|
+| `log lam` | 5.27 | 0.82 |
+| `log g` | 5.36 | 3.19 |
+| **`log C`** | **5.35** | **0.53** |
+
+**Observed ratio 0.640 against a predicted 0.736.** This is the first parameter-free prediction in
+this campaign that has not been refuted — iteration 223's three attempts missed by factors of 1.15,
+10 and 1.3.
+
+**Reported as consistent, not confirmed.** Leave-one-panel-out shows the *prediction* is stable
+(0.678–0.842) but the *observation* is not: dropping REQ-037 gives 0.328, dropping REQ-045 gives
+0.924. With five panels an sd has 4 dof, whose 90% sampling interval already spans a factor of
+0.65–1.87 of the true value, and a ratio of two such sds is wider still. The agreement in magnitude
+and direction is real; the point values are not precise.
+
+**An incidental structural finding.** `log g`'s quadratic coefficient across depth is **negative**
+(−0.0012, negative in all five panels): **g is an arch, not a bowl.** The quadratic-argmin model
+therefore does not apply to `g` at all, and the C-versus-g version of the prediction is meaningless —
+recorded so the comparison is not attempted later. It also sharpens iteration 240's cancellation
+picture: C's bowl is not curvature's bowl minus a gradient bowl, but curvature's bowl **plus** the
+inverse of a gradient arch, with both contributions deepening the same interior minimum.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2287,3 +2337,6 @@ correlated seeds -- use them when the fields allow.
 Run the same reproducibility test on a quantity's components before claiming the result is special
 to it: if the components agree equally well, the reproducible feature is something else -- find the
 statistic that actually distinguishes them.
+When a prediction is compared to an observed ratio of standard deviations, check the observation's
+own stability by leave-one-out before claiming agreement: with a handful of replicates the
+prediction can be far better determined than the quantity it is being tested against.
