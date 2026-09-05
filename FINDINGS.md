@@ -312,6 +312,55 @@ comparison (redirected the finding from `d` to the product), and the identity ch
 permutation null was never going to detect this** — the correlation is real, reproducible and
 seed-stable; it is simply between a quantity and itself.
 
+## A g-free predictor of the unexplained component (2026-09-05)
+
+The previous entry withdrew the gradient-side association because every REQ-047 *magnitude* field is a
+factor of `g`, and `g` sits in `C = lambda/g^2`. **I then claimed the seam was exhausted. That claim was
+wrong, and testing it found the campaign's first admissible predictor of the residual.**
+
+**The distinction that was missed: `g`-family versus `g`-free fields.**
+
+| class | fields | usable for this residual? |
+|---|---|---|
+| **`g`-family** (multiplicative factors of `g`) | `a_frob`, `d_frob`, `align_ratio`, `grad_frob` | **no — shared-term artifact** |
+| **`g`-free** (ratios, ranks, coherences — scale-invariant) | `d_cv`, `d_part`, `a_cv`, `a_part`, eff-ranks, `da_cos_mean`, `grad_rank1_frac` | **yes** |
+
+**`d_cv` — the coefficient of variation of the per-token backward norms — is the leading g-free
+predictor**, from eight declared in advance:
+
+| candidate | partial correlation with the residual | same sign |
+|---|---:|---:|
+| **`d_cv`** | **−0.445** | **4/4** |
+| `d_part` | +0.325 | 4/4 |
+| `grad_rank1_frac` | −0.181 | 3/4 |
+| `a_part` | −0.179 | 4/4 |
+| others | ≤ 0.07 | mixed |
+
+Permutation null over matrix labels, max across all eight: **p = 0.0002**.
+
+**It is genuinely `g`-free, formally and empirically.** `d_cv` is a **ratio** (sd ÷ mean of token
+norms), so scaling the backward signal by any constant leaves it unchanged — it cannot be a factor of
+`g`. **In the data its partial correlation with `log g` is −0.169**, confirming the formal argument
+rather than assuming it. **This is exactly the check the withdrawn `d_frob` result failed.**
+
+**`d_cv` and `d_part` are one construct.** They are collinear at **−0.731**, and in a joint fit `d_cv`
+survives (mean −0.315) while **`d_part` collapses to exactly 0.000**. Participation ratio and
+coefficient of variation are two views of the same token-norm dispersion.
+
+**Effect size, with its variability stated.** Incremental R² of `d_cv` over type + block + concentration:
+**21.1% on average**, but **6.9% to 32.3% across seeds**, and per-seed |t| ≥ 2 in only **2 of 4**. **It
+is a substantial but unstable contributor** — larger than anything else found for the residual, and not
+yet a settled result.
+
+**Interpretation.** C is higher where the backward signal is **evenly spread across tokens** (low
+dispersion) and lower where a few tokens dominate. Together with concentration this gives two
+scale-invariant descriptors — one of the curvature spectrum, one of the token-level gradient
+distribution — neither of which is a factor of `g`.
+
+**Method note.** The productive step was **classifying candidates by their algebraic relationship to the
+outcome before testing them**, rather than by which panel they came from. Every previously withdrawn
+gradient-side finding was `g`-family; the surviving one is not.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
