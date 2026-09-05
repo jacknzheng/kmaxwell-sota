@@ -29,6 +29,79 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★/⚠️ THE BOWL IN UNITS OF DIRECTIONS (iteration 184) — and a point prediction that FAILS
+
+*Band 57 says `trace(H²)` carries the bowl while `trace(H)` is flat; band 58 says only the extreme
+eigendirection carries depth structure. Both are stated as **correlations**. This iteration converts them
+into a quantity with **units** — `n_eff = trace(H)²/trace(H²)`, the **effective number of curvature
+directions** — because a number of directions is **checkable against the matrix dimension** and therefore
+falsifiable in a way a correlation is not.*
+
+**SANITY CHECKS PASS.** `n_eff` must lie in [1, n_params]: **0 violations in 864 rows**, observed range
+35.4 to 72,128 against n_params of 589,824 / 2,359,296.
+
+**★ THE BOWL, IN DIRECTIONS** (geometric mean over fits and types):
+
+| block | 0 | 2 | 4 | **6** | **8** | 10 | 11 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **n_eff** | **1494** | 1977 | 2820 | **4724** | **4784** | 3389 | **1508** |
+
+> **The middle of the network spreads its curvature over ≈4,600 directions; the ends over ≈1,500 — a
+> 3.05× contrast at the same total curvature.** *(corr(log n_eff, C profile) = **−0.862**, argmax L8 —
+> band 44 restated on an absolute scale.)*
+> **And curvature is extremely concentrated everywhere: n_eff is a median 0.23% of available
+> directions.**
+
+**⚠️ ROBUST IN SIGN, BUT NOT UNIFORM — the per-type spread is large.** Checking per fit and per type (the
+discipline that caught band 37's artifact):
+
+| | result |
+|---|---|
+| **per fit (12)** | mean **3.24×**, **>1 in 12/12**, range 2.08–7.11 |
+| per type | mlp.proj **15.34×**, attn.proj **9.30×**, attn.k 2.60×, mlp.fc 1.41×, attn.q 1.25×, attn.v **1.22×** |
+
+**The contrast holds in every fit and every type, so it is a property of the network — but "3×" is a
+pooled average spanning 1.22× to 15.34×.** The two **residual-writer** types (attn.proj, mlp.proj) show
+by far the largest concentration contrast, echoing band 7's residual-writer split; **the four others are
+between 1.2× and 2.6×.** **Reporting "the middle spreads curvature 3× more" as a uniform fact would
+overstate it.**
+
+**⚠️/★ A POINT PREDICTION, TESTED AND FAILED — and this is the useful part.** If C were set by
+concentration in the simplest way — a spectrum of `n_eff` **equal** eigenvalues has
+`λ_top ≈ trace/n_eff`, and `trace` is flat — then **d(log C)/d(log n_eff) should be exactly −1.**
+Measured across the 12 fits:
+
+| | value |
+|---|---:|
+| slope d(log C)/d(log n_eff) | **−0.590** (sd 0.171) |
+| t vs the predicted **−1** | **+8.28** ⇒ **rejected** |
+| t vs 0 | **−11.92** ⇒ clearly real |
+
+> **The equal-eigenvalue model is REFUTED at −0.590, roughly 60% of the predicted response.**
+> **Concentration is real and drives C, but the spectrum's shape is not "n_eff equal directions".** A
+> slope below 1 means the top eigenvalue grows **more slowly** than pure concentration would imply — i.e.
+> as directions are removed, the curvature that leaves them is **not** fully inherited by the top
+> eigenvalue; part spreads into the sub-leading bulk. **This is a genuine constraint on the spectral
+> shape, obtained only because the claim was stated with units and a coefficient rather than as a
+> correlation.**
+
+**PROPOSED n=4 SEED CHECK — band 59 (criterion registered).**
+*Criterion:* (i) **n_eff ∈ [1, n_params]** for every matrix (an implementation check);
+(ii) **n_eff(middle L5–L8) / n_eff(ends L0,L11) > 1 in ≥10 of 12 fits**;
+(iii) **d(log C)/d(log n_eff) is significantly negative AND significantly greater than −1** — i.e. the
+equal-eigenvalue model is rejected in the same direction.
+*Status:* **satisfied by committed REQ-048 data** (0/864 violations; 12/12; −0.590 with t −11.92 vs 0 and
+t +8.28 vs −1). **No new compute requested; ≤2-node ceiling.**
+
+**Standing rule 21.** *Restate a correlational finding with units and a predicted coefficient wherever
+the algebra allows. Here the correlation (−0.862) was already known and told us nothing new; the
+**slope** (−0.590 vs a predicted −1) refuted a specific spectral model. **A correlation can only be
+confirmed; a coefficient can be wrong.***
+
+**Queue:** REQ-048 **DONE**; **REQ-050 OPEN** — still the highest-value request, and now sharper: it
+would show whether this **1,500-vs-4,600-direction structure** is present at initialisation or built
+during training. REQ-049 optional. No new Jerry response.
+
 ## ⊘/★ THE BOWL IS IN THE **TOP** OF THE SPECTRUM ONLY — three directions now tested (iteration 183)
 
 *The last unused REQ-048 field is `curvature_along_weight = ŴᵀHŴ` — curvature along the **learned weight
