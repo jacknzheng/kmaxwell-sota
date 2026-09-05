@@ -29,6 +29,85 @@ Next request number: **REQ-052**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## 📋 REQ-051 PRE-FLIGHTED AGAINST COMMITTED DATA (iteration 196) — three findings before it spends 2 nodes
+
+*REQ-051 (Jack/Codex, 2026-09-05) asks **why the own-LR curvature elasticity differs across matrices** —
+directly the campaign's open question, and it correctly builds on the existing record (`C_gauge`
+notation, the ~−1.16 pooled elasticity, the null neighbour channel). **Several of its seven registered
+decisions are testable NOW on REQ-045's committed data.** Doing that first is cheap and changes what the
+run will mean.*
+
+**① DECISION 1 WOULD "FAIL" ON EXISTING DATA — but the failure is a COVERAGE ARTIFACT, and REQ-051's
+design is exactly the fix.**
+
+*Criterion:* ≥90% of matrices have `k_lambda > 0`, seed-median in [0.9, 1.5].
+*On REQ-045:* **89.2%**, median **1.353** — a hair under the threshold. But:
+
+| distinct LR levels per matrix in REQ-045 | count |
+|---|---:|
+| 3 levels | **37** |
+| 2 levels | 34 |
+| 1 level | 1 |
+
+**REQ-045 drew each matrix's multiplier independently per arm, so a matrix could receive the same level
+twice — only 37 of 72 have a genuine 3-point curve.** Splitting by coverage:
+
+| subsample | k>0 | median |
+|---|---:|---:|
+| 3-level matrices (n=37) | **89.2%** | 1.353 |
+| 2-level matrices (n=35) | **74.3%** | 1.251 |
+
+**The shortfall is estimation noise on short curves, not evidence against the inverse law.**
+**REQ-051's cyclic Latin assignment — every matrix gets every one of 6 levels exactly once — is
+precisely the right correction**, and it is *why* the threshold is reachable there and not here. **No
+change requested; this is a note that decision 1's failure on old data must not be read as a prior
+against it.**
+
+**② DECISION 4 ALREADY PASSES — so it will confirm, not discriminate.**
+
+*Criterion:* `|mean(k_C_gauge)| < 0.15` **and** `|k_C| < 15%` of `|k_lambda|`.
+*On REQ-045:* **mean k_C_gauge = +0.1378** (< 0.15 ✓) and the ratio is **9.3%** (< 15% ✓) — **passes on
+both legs, but +0.1378 sits at 92% of its own threshold.** **A six-level, fully-covered design will
+estimate this far more precisely, and the criterion may well tighten past it.** **Suggestion: report
+`k_C_gauge` with a confidence interval rather than a pass/fail against 0.15** — the interesting quantity
+is *how close to zero*, and bands 49/53 already put the pooled per-matrix C response at **4.2% of λ's**.
+
+**③ DECISION 5's REGISTERED PREDICTION IS REVERSED ON EXISTING DATA — and it is aimed away from the
+variance.**
+
+*Registered:* `k_lambda(attn.v) > mean k_lambda(attn.q, attn.k)` in ≥3 of 4 seeds.
+*On REQ-045 (3-level matrices only):*
+
+| type | k_lambda | n |
+|---|---:|---:|
+| **attn.proj** | **+0.217** | 4 |
+| attn.v | +1.077 | 8 |
+| attn.q | +1.126 | 5 |
+| attn.k | +1.149 | 7 |
+| mlp.fc | +1.721 | 5 |
+| **mlp.proj** | **+2.874** | 8 |
+
+**attn.v (+1.077) is BELOW the q/k mean (+1.137) — the prediction is reversed, though the gap is small
+and n is thin.** More substantively: **attn.proj and mlp.proj differ by 13×**, and **that is the
+residual-writer split** (bands 7, 60) — **the q-vs-k-vs-v contrast is a small effect sitting inside a
+much larger one the prediction does not mention.**
+
+> **RECOMMENDATION (advisory — this is Jack's request, not mine to alter):** **add a registered
+> writer-vs-internal prediction to decision 5.** The campaign has it on two independent quantities
+> already — gradient slopes (band 7: +2.17, p < 0.0001) and concentration (band 60: `writer × edge`
+> −0.627, t −3.29) — and REQ-051's balanced ladder would test it on a *third*, the LR elasticity itself,
+> where committed data already shows a **13× spread**. **That is where the between-matrix variation
+> REQ-051 is chasing actually lives.**
+
+**⚠️ NO CHANGES MADE TO REQ-051.** It is well-specified, correctly scoped to ≤2 nodes, and explicitly
+sequenced **after REQ-050** — which I agree with: REQ-050 answers *inherited vs learned* and is 16.2 min
+of training, while REQ-051 is a six-arm × four-seed design. **These notes are recorded here for whoever
+runs it; the request itself is unedited.**
+
+**Queue:** REQ-035/036/048 DONE; **REQ-050 OPEN** (highest value, cost exact); **REQ-051 OPEN** (new,
+sequenced after REQ-050); REQ-049 optional. **Note: REQ-051 was committed under the same git identity as
+my own commits, so it is NOT a Jerry pickup — Jerry's last delivery remains REQ-048.**
+
 ## 🔧 BAND 3 GUARDED AT LAST (iteration 195) — the position field survives; the word "symmetric" does not
 
 *The guard audit covered bands 39–64. **Bands 1–38 predate rules 13 and 23 entirely** and were never
