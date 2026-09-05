@@ -153,8 +153,15 @@ Therefore, when scoring H1:
 - Evaluate the slope criteria on residuals **after** controlling concentration, exactly as H1 states.
   A near-null raw `log C` slope is **consistent with H1 being true** and must not be reported as a
   refutation.
-- Report the decomposition `total = beta x (slope of log n_eff) + direct` per type. It is an exact
-  identity; publishing all three columns makes the cancellation visible rather than hidden.
+- Report the decomposition `total = beta x (slope of log n_eff) + direct` per type as a
+  **description**, and publish all three columns. But do **not** score cancellation from a
+  correlation between `via` and `direct`, or from the identity closing: `direct` is defined as
+  `total - via`, so that correlation is mechanically negative (mean −0.81 even for independent
+  components) and the identity holds for any data. Iteration 228 made this error and it is retracted.
+- Score cancellation with a **pairing permutation** instead: hold each type's curvature-depth slope
+  and each type's concentration-depth slope fixed, permute which concentration profile pairs with
+  which type, and compare the observed sd(total) to that null. On REQ-048 this gives p = 0.004-0.034
+  across seeds, with breaking the pairing roughly doubling the spread.
 - A `lam`-free control (`n_eff_bulk = trace(H)²/(trace(H²) − lam²)`, or `participation_ratio`) gives
   the same answer on REQ-048 (0.437 / 0.460 vs 0.446) and is preferred where available, since it
   shares no term with the outcome.

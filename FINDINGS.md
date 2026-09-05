@@ -1010,6 +1010,62 @@ component (sd 0.0219) rather than the total (sd 0.0098), so H1's slope criteria 
 on residuals **after** a concentration control — as specified — and the raw `log C` slopes should be
 expected to look near-null even if H1 is true.
 
+## Retraction: iteration 228's −0.920 correlation was an artifact of the decomposition (2026-09-05)
+
+Iteration 228 reported `corr(via n_eff, direct) = −0.920` across the six types as evidence of
+cancellation. **That statistic is withdrawn.** It is not evidence of anything.
+
+`direct` is *defined* as `total − via`, so `via` appears on both sides with opposite sign and the
+correlation is mechanically negative regardless of the data. Simulating independent components with
+the observed standard deviations gives `corr(via, total − via)` a mean of **−0.813**, a median of
+−0.874, and **P(≤ −0.920) = 0.32**. The observed value is an unremarkable draw from what the
+decomposition produces on its own.
+
+**How it was caught.** Iteration 229 tried to extend the claim from 6 types to 72 individual
+matrices and got `corr(via, direct) = 0.0000` in every seed — exactly zero, because at that grain
+`direct` is an OLS residual and is orthogonal to the regressor by construction. A test that can only
+return one value is vacuous; that prompted an audit of the coarser test, which proved to be a milder
+version of the same defect.
+
+Two prior statements are corrected with it. The sd ratio comparison "sd(TOTAL) 0.0098 vs sd(DIRECT)
+0.0219" carried no independent weight either — under independence sd(direct) would be 0.0183, so the
+numbers were never far from what unrelated components give. And 228's claim that "the algebraic
+identity is the load-bearing part" was **wrong in the opposite direction from the usual error**: the
+identity `total = via + direct` closing to 1e-9 is arithmetic that holds for any data whatsoever, so
+it proves nothing at all.
+
+## The cancellation itself survives a proper test (2026-09-05)
+
+The **conclusion** of iteration 228 stands; only its evidence was bad. The well-posed question is
+about the total, not the decomposition: *is the type-by-depth structure of `log C` smaller than it
+would be if each type's curvature drift and concentration drift were unrelated?*
+
+**Test.** Hold every type's curvature-depth slope and every type's concentration-depth slope exactly
+as observed, but permute **which concentration profile is paired with which type**. This breaks only
+the pairing — the claim — and cannot be satisfied by the decomposition's algebra. Using the lam-free
+control `n_eff_bulk` so the control shares no term with the outcome (rule 34):
+
+| seed | sd(total) observed | null mean | null 5th pct | p |
+|---|---|---|---|---|
+| 0 | 0.01245 | 0.02877 | 0.01705 | **0.0059** |
+| 1 | 0.01417 | 0.02765 | 0.01573 | **0.0343** |
+| 2 | 0.01673 | 0.02913 | 0.01908 | **0.0141** |
+| 3 | 0.00722 | 0.02500 | 0.01265 | **0.0036** |
+
+Breaking the pairing roughly **doubles** the type-by-depth spread in `C`, in every seed. The observed
+pairing is genuinely special: each type's curvature drift with depth is offset by its concentration
+drifting the other way, and this is a property of *which* concentration profile goes with *which*
+type, not an artifact of how the components were defined.
+
+Caveat on resolution: with six types there are only 720 permutations, so the attainable p is coarse
+and these are not extreme values. The result is consistent across all four seeds, which by rule 32
+is robustness to initialisation rather than four independent tests.
+
+**The physical statement is unchanged**, and the per-type numbers from 228 (`mlp.proj` direct
++0.0324 offset by −0.0275 through concentration, leaving +0.0049) remain accurate as a description.
+What changed is that the cancellation is now supported by a test of the pairing rather than by a
+correlation that any decomposition would have produced.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1039,3 +1095,7 @@ When an effect appears only after conditioning on a control, distinguish suppres
 collider artifact by rebuilding the control without the shared term; if the result is unchanged,
 the conditioning did not create it. Then verify suppression by exact decomposition, not by
 elimination.
+Never treat a relationship between a quantity and its own residual as evidence: if B is defined as
+A minus C, then corr(C, B) is mechanically negative and corr on an OLS residual is exactly zero.
+Test the claim on the composed quantity against a null that breaks only the hypothesised link.
+An exact algebraic identity closing to machine precision confirms arithmetic, never a hypothesis.
