@@ -165,6 +165,29 @@ corrupted by a cross-panel key error**, which is why only the row-level merge fa
 validation; comparing independently-computed estimates is not.* The failed case used 66 of 72 matrices
 per seed and that discrepancy was visible in every run that used it.
 
+## Cross-panel audit completed (2026-09-05)
+
+The audit begun after the backward-rank retraction is now finished. **Every result that touches more
+than one panel has been classified**, and the two remaining REQ-047 results were re-derived from raw
+data to confirm they carry no join at all.
+
+| result | panels used | verdict |
+|---|---|---|
+| withdrawn backward-rank channel | REQ-047 **merged into** REQ-048 | **retracted** — 66 of 72 rows, six blocks misaligned |
+| q/k token-incoherence mediation | **REQ-047 only** (`da_cos_mean` and `align_ratio` are both its fields) | **clean** — no join exists |
+| q/k step-alignment gap | **curvature probe only** (`curvature_along_polar` and `λ_top`) | **clean** — no join exists |
+| per-matrix LR elasticity, writer contrast | REQ-023 and REQ-045, **fitted separately** | **clean** — estimates compared, not rows merged |
+
+**Both clean REQ-047 results were re-derived, not merely inspected.** Token incoherence reproduces at
+**8/9/8/8% of the v/proj reference across the four seeds** (recorded: 8–9%) on the **full 72 rows per
+seed**. The step-alignment gap reproduces at **−0.321 dex with the same sign in 11 of 11 LR arms**
+(recorded: −0.3079). Neither figure moves.
+
+**The failure mode was narrower than it first appeared.** Only one analysis ever merged rows across
+panels, and only that one broke. **The distinguishing feature is not "uses two panels" but "merges rows
+on a key"** — a result computed inside one panel, or assembled from separately-fitted estimates, has no
+key to get wrong.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
