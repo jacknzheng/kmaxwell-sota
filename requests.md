@@ -29,6 +29,68 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅ CONSISTENCY RE-VERIFIED AFTER THE GUARD AUDIT (iteration 192) — and the consolidated answer
+
+*The last end-to-end check was **iteration 169**. Since then the account gained bands 44, 57–61, 63, 64
+and had bands 39, 42, 47, 49, 59, 61 **corrected or withdrawn**. **A consistency check run before ten
+bands changed is not evidence about the current account**, so it was re-run on constraints that *must*
+hold together.*
+
+| # | constraint | value | verdict |
+|---|---|---:|:---:|
+| 1 | `n_eff = n_params × PR` — bands 44 and 59 share a definition | **8.88e-16** | **PASS** |
+| 2 | `log PR = 2·log tr − log tr² − log n` — band 57's identity | **2.22e-15** | **PASS** |
+| 3 | band 63's C contrast, block 6 − block 0 = −0.393 | **4.9e-04** | **PASS** |
+| 4 | band 64's mirror — C and PR opposite at **both** ends | exact | **PASS** |
+| 5 | band 59's slope in (−1, 0), rejecting equal-eigenvalue | **−0.336** | **PASS** |
+
+**5/5 hold simultaneously on one dataset** — two definitional identities to machine precision, three
+empirical claims reproducing. **The account is internally consistent after the audit.**
+
+---
+
+### THE CONSOLIDATED ANSWER — what sets the between-layer difference in C
+
+**THE MECHANISM, stated model-free.** `C = λ/g²` is high at the network's ends and low in its middle
+because **the Hessian's curvature is concentrated into few directions at the boundaries and spread
+across many in the middle, at the same total curvature**:
+
+- **`trace(H)` is FLAT across depth** (corr with the C profile −0.061, 6/12) while **`trace(H²)` carries
+  the bowl** (+0.644, 12/12) — *band 57*.
+- In units: **≈1,500 effective curvature directions at the ends vs ≈4,600 in the middle** (`n_eff =
+  trace(H)²/trace(H²)`, 0 violations of [1, n_params] in 864 rows) — *band 59*.
+- **Only the top eigendirection carries this.** Muon's step direction, the learned weight direction and
+  the average random direction are all **monotone or flat** in depth — *band 58*.
+- **Both claims survive with NO functional form** (free per-block effects, matrix-clustered): C's
+  interior minimum is below both ends **12/12**, PR's interior maximum above both ends **12/12**, and the
+  mirror holds as opposite-signed **position contrasts** — *bands 63, 64*.
+
+**WHY NO OPTIMISER LEVER REACHES IT.** The **gauge theorem** (band 42): any scalar multiplying a matrix's
+whole contribution cancels exactly in `λ/g²`. Confirmed causally — a randomised **per-matrix LR** moves
+λ by −1.2 and C by **4.2% of that**, pooled across two independent experiments (bands 49, 53). Batch
+moves C's *level* but **not** its shape (band 51). **The bowl lives in a subspace neither the optimiser's
+step nor the learned solution occupies.**
+
+**THE REQ-036 VERDICT — five independent reasons, one algebraic.** C is actively restored (band 16);
+there is no bowl along Muon's step direction (band 56); types share one positional bowl (bands 45/46); a
+per-type constant **cannot change between-layer spread at all** — 0.000% over 2000 random rules
+(band 48); and **no LR intervention at any granularity moves C** (band 49). **Recommendation, final:
+curvature equalization is unreachable through the learning rate. For the layer axis the lever must be
+per-layer or per-matrix — and even then C is gauge-invariant to it.**
+
+**WHAT REMAINS GENUINELY OPEN.** *Why* the boundary concentrates curvature into fewer directions. This
+is a **structural identification, not a cause** — `trace(H²)` and C are both Hessian functionals.
+**REQ-050** (curvature at steps 0–1500) is the filed, unrun experiment that separates **inherited from
+the architecture** vs **built during training**, and it is now the **only** route to a causal answer:
+every committed-data claim has been guarded, and the earliest curvature measurement in the repository is
+step 1750 (band 54).
+
+**⚠️ NO n=4 SEED CHECK PROPOSED.** This iteration verifies existing bands rather than making a new claim.
+**No new compute requested; ≤2-node ceiling.**
+
+**Queue:** REQ-035 DONE, REQ-036 DONE, REQ-048 DONE, REQ-049 optional, **REQ-050 OPEN**. No new Jerry
+response.
+
 ## 🔧 BAND 59's SLOPE IS SPECIFICATION-DEPENDENT (iteration 191) — the conclusion holds, the number does not
 
 *Band 64 flagged band 59's slope (**−0.590** vs the predicted **−1**) as the one load-bearing-adjacent
