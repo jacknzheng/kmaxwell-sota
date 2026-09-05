@@ -29,6 +29,73 @@ Next request number: **REQ-053**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⛔ BAND 67 DOWNGRADED — REQ-052's audit is CORRECT and I reproduce it exactly (iteration 198)
+
+*REQ-052 (Jack, 2026-09-05) challenges band 67 on two grounds. **Both are right, I have verified the
+first independently from the raw archives, and the second is a rule I wrote myself and then failed to
+apply.***
+
+**① THE SPLIT REVERSES ON GLOBAL-LR DATA — reproduced exactly.**
+
+| design | writer − internal k_lambda |
+|---|---:|
+| REQ-023 **mixed** LR, fork1500 → 2250 | **+0.924** |
+| REQ-023 **mixed** LR, fork2000 → 2750 | **+1.165** |
+| **REQ-035 global LR, 4 seeds @ 2250** | **−0.194, −0.125, −0.006, −0.199** |
+| *(my independent reproduction @ 2250)* | ***−0.194, −0.125, −0.006, −0.199*** ✓ |
+| *(and @ 2750, which I checked additionally)* | *−0.276, −0.232, −0.248, −0.255 — **more negative*** |
+
+**My reproduction matches REQ-052's audit to three decimals.** **Band 67's positive writer split does
+NOT generalise from the mixed-LR design to the global-LR design — it reverses sign in 4/4 independent
+seeds.**
+
+**② THE "5/5 STEPS" ROBUSTNESS WAS PSEUDO-REPLICATION — my own rule 15, unapplied.** Band 67 cited
+*"writers > internal at 5/5 steps"*. **Those five checkpoints come from ONE continuation: dependent
+measurements of the same network, not five independent replicates.** **Rule 15 was written in iteration
+164 after exactly this error cost a claim** (the localised-residual retraction), and **I applied it to
+bands 40/42/43 in iteration 165 and then failed to apply it to my own band 67 one iteration ago.**
+**REQ-052 is correct that band 67's four-seed criterion is untested by REQ-023.**
+
+> **⛔ BAND 67 IS DOWNGRADED from "CONFIRMED" to "MIXED-LR ONLY, n=1 seed, CONTRADICTED under global
+> LR".** The finding is **not withdrawn entirely** — it is a real, large, depth-saturated contrast
+> **within the mixed-LR design** (+0.924, t +4.23 with full block dummies) — **but it is
+> design-specific, and the opposite sign holds under global LR.**
+
+**⇒ AND THE REVERSAL IS NOT A PUZZLE — the campaign already explains it.** **Iteration 177 established
+that the per-matrix and global LR levers are mechanistically different**: a per-matrix multiplier scales
+one matrix's whole contribution (the gauge theorem applies, band 42), while **a global LR changes the
+TRAJECTORY**, so every matrix reaches a different point in weight space and `g` is not merely rescaled.
+Measured then: **global-LR `d log C/d log s` = −0.436 (t −18.29)** versus **per-matrix +0.081 (powered
+null)**. **A quantity that behaves oppositely under the two levers is exactly what that distinction
+predicts.** **REQ-052's control design is the right way to settle it**, and its five uniform-vs-mixed
+arms directly target this.
+
+**③ ONE THING BAND 67's ANALYSIS DID GET RIGHT, and it survives.** The three-way test I ran this
+iteration (before seeing REQ-052) asked whether the writer split's three appearances are one effect or
+three. After removing group means, per-matrix within-group correlations on REQ-023:
+
+| pair | corr |
+|---|---:|
+| k_lambda vs gradient slope | **+0.602** |
+| k_lambda vs k_g | **+0.678** |
+| **gradient slope vs k_g** | **−0.058** |
+
+**k_lambda tracks both, but the other two do not track each other** — so **"three independent
+confirmations" was already too strong even before REQ-052**, and the correct reading is that the LR
+elasticity is the shared axis. **Recorded as a partial self-correction that arrived independently.**
+
+**⚠️ NO n=4 SEED CHECK PROPOSED — the criterion I registered has been shown untestable on the data I
+cited.** **REQ-052 is the correct instrument** and it is already filed. **No new compute requested from
+me; I endorse REQ-052's scope (5 control arms × 4 seeds, ≤2 nodes, reusing REQ-051's bases).**
+
+**Standing rule 25.** *Apply your own guards to your own newest claim first. Rule 15 existed for 33
+iterations, was applied to four other bands, and was still missed on band 67 — because the "5/5 steps"
+framing made dependent measurements look like replication.* **A robustness count is only as independent
+as its unit; state the unit explicitly whenever quoting one.**
+
+**Queue:** REQ-035/036/048 DONE; **REQ-050 OPEN**; **REQ-051 OPEN**; **REQ-052 OPEN (new — endorsed)**;
+REQ-049 optional. **No Jerry response since REQ-048.**
+
 ## ★ THE WRITER SPLIT APPEARS A THIRD TIME — in the LR ELASTICITY (iteration 197) — and my iteration-196 numbers are corrected
 
 *Iteration 196 flagged that REQ-051's decision 5 targets q/k/v while `attn.proj` (+0.217) and `mlp.proj`
