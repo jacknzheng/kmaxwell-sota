@@ -2119,6 +2119,76 @@ This does not disturb iteration 243's finding that `log g` reproduces **by type,
 comparison was at matrix level and stands. It adds that the *averaged* depth profile is nonetheless
 reliable enough to analyse, which iteration 243's +0.688 figure understated for the same reason.
 
+## C's depth bowl reproduces across five genuinely different runs (2026-09-05)
+
+Every depth claim in this campaign has rested on REQ-048's four seeds, which rule 32 showed share
+~76% of their structure. Five archives carry both `top_eigenvalue` and `gradient_block_norm`, so
+`log C`'s depth profile is computable in all of them — **different training runs, different steps,
+different configurations**: REQ-048 (4 seeds, step 2750), Arm A (4 seeds, 2750), REQ-036 control
+(2250), REQ-037 control (2750), REQ-045 arm s10 (2750).
+
+**The bowl reproduces.** Mean pairwise correlation of the five depth profiles is **+0.8009**, and
+**+0.8661 after removing a linear depth trend from each** — the agreement is in the *curvature*, not
+a shared slope. Removing the quadratic as well collapses it to +0.333, confirming the bowl **is** the
+quadratic component.
+
+**Permutation null**, shuffling block labels independently per panel over 20,000 draws:
+
+| profiles | observed | null mean | null 95th | p |
+|---|---|---|---|---|
+| raw | +0.8009 | +0.0010 | +0.1784 | **0.00000** |
+| linear-detrended | +0.8661 | +0.0001 | +0.1707 | **0.00000** |
+
+**Which blocks carry it**, z-scored across the five panels (sd is across *different runs*):
+
+| block | mean z | sd |
+|---|---|---|
+| 5 | −0.76 | **0.08** |
+| 8 | −0.47 | 0.17 |
+| 6 | **−1.07** | 0.25 |
+| 10 | +0.42 | 0.26 |
+| 7 | −0.78 | 0.32 |
+| **11** | **+2.04** | 0.52 |
+
+Blocks 5–8 (the interior minimum) and block 11 (the output end) are tightest. Block 11 is the highest
+block in **every** panel (+0.295 to +0.370 dex centred).
+
+**This is much stronger evidence than seed replication.** Four correlated seeds cannot demonstrate
+run-independence; five systematically different runs can, and the bowl is present in all of them with
+argmin at block **4 or 6** and amplitude 0.49–0.87 dex.
+
+## But the cross-run agreement is not specific to C (2026-09-05)
+
+A guard against over-claiming: the same test on the components gives near-identical numbers.
+
+| quantity | raw cross-run corr | detrended | amplitude range |
+|---|---|---|---|
+| `log C` | +0.8009 | +0.8661 | 0.492–0.865 dex |
+| `log lam` | +0.8009 | **+0.8755** | 0.608–0.852 dex |
+| `log g` | +0.7757 | +0.8612 | 0.147–0.263 dex |
+
+So "the depth profile reproduces across runs" is **not** a special property of C — curvature and
+gradient norm each reproduce about as well. What *is* specific to C is the **location** of its
+minimum:
+
+| panel | argmin `log C` | argmin `log lam` | argmin `log g` |
+|---|---|---|---|
+| REQ-048 | 6 | 6 | 1 |
+| Arm A | 6 | 6 | 1 |
+| REQ-036 | 4 | 7 | 10 |
+| REQ-037 | 6 | **1** | 10 |
+| REQ-045 | 4 | **1** | 1 |
+
+`log C`'s minimum sits at block 4 or 6 in all five panels; `log lam`'s scatters across 1, 6 and 7,
+and `log g`'s across 1 and 10. **C's interior minimum is the reproducible object, and it is more
+stable than either component's** — consistent with iteration 240's finding that C's profile is the
+residue of a partial cancellation between curvature and gradient, with the cancellation stabilising
+the location.
+
+**Status.** The bowl is established as run-independent, not merely seed-replicated. The claim that
+should be made is about C's minimum *location* (blocks 4–6, 5/5 panels) rather than about profile
+correlation, which the components share.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2214,3 +2284,6 @@ Measure reliability on the estimator you actually use: pairwise correlations bet
 replicates understate an averaged profile's reliability, and the intraclass correlation over all
 replicates is the right statistic. Systematically different runs test a claim more strongly than
 correlated seeds -- use them when the fields allow.
+Run the same reproducibility test on a quantity's components before claiming the result is special
+to it: if the components agree equally well, the reproducible feature is something else -- find the
+statistic that actually distinguishes them.
