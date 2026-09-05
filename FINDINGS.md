@@ -1365,6 +1365,68 @@ under per-matrix LR and **+1.922** under per-type LR. The divergence between the
 twelve matrices of a type together. Report per-type k, and specifically whether `mlp.proj` reproduces
 above 2.
 
+## A third intervention: `mlp.proj`'s gauge violation does not replicate in levels (2026-09-05)
+
+REQ-037 varies **batch size** (0.5x, 1x, 2x) — a different physical lever from the two LR designs —
+and carries `top_eigenvalue` and `gradient_block_norm`. It is an independent test of iteration 234's
+`mlp.proj` claim, and the claim **fails in levels**.
+
+| design | lever | pooled k | `mlp.proj` k |
+|---|---|---|---|
+| REQ-045 | per-matrix LR | +2.237 | **+2.504** (t vs 2 = +6.06) |
+| REQ-036 | per-type LR | +1.922 | **+2.287** (t vs 2 = +3.32) |
+| **REQ-037** | **batch size** | **+0.557** | **+1.432** (t vs 2 = **−2.61**) |
+
+Under batch variation `mlp.proj` sits **below** the gauge value, not above it. Every type is far
+below 2 here, and the three pairwise arm contrasts agree (+0.003, +1.034, +0.585).
+
+**An argument I made and then had to retract, within this iteration.** I proposed dismissing REQ-037
+on the ground that batch size moves `g` purely through mini-batch sampling noise — a channel that
+cannot move `lam` — which predicts `g ~ 1/sqrt(B)`, i.e. **larger** `g` at **smaller** batch. The data
+show the opposite: mean `log10 g` is 3.771 at 0.5x, 3.822 at 1x, 3.873 at 2x. `g` **grows** with
+batch; observed/predicted = **−0.34**. The sampling-noise story is wrong and **cannot** be used to set
+REQ-037 aside. Recorded because it was the convenient conclusion and it did not survive its own test.
+
+**What can honestly be said about REQ-037's leverage.** Across a 4x batch change, `log g` moves 0.102
+dex while `log lam` moves only 0.039 dex. Two readings remain open and this archive cannot separate
+them: batch genuinely does not move curvature much (k is low for a real reason), or batch moves `g`
+through a channel weakly coupled to curvature (k is attenuated for an instrument reason). REQ-037
+lacks `trace_est`/`trace_sq_est`, so the spectral decomposition that would distinguish them is
+unavailable. **No internal reliability estimate exists either:** the 8 "rank shards" are shards of one
+distributed measurement, not repeats, so within-arm spread is undefined (it computes as NaN).
+
+## What survives is a rank claim, not a level claim (2026-09-05)
+
+The three designs disagree sharply on levels and their overall orderings are nearly unrelated —
+Kendall tau between designs is **−0.07, +0.33, +0.33**. Against that background, one fact holds:
+
+| type | REQ-045 | REQ-036 | REQ-037 | rank in each |
+|---|---|---|---|---|
+| **`mlp.proj`** | +2.504 | +2.287 | +1.432 | **1 / 1 / 1** |
+| `mlp.fc` | +2.122 | +1.737 | +0.901 | 4 / 3 / 2 |
+| `attn.q` | +2.337 | +1.296 | +0.240 | 3 / 6 / 3 |
+| `attn.k` | +1.895 | +1.453 | +0.136 | 5 / 4 / 4 |
+| `attn.proj` | +1.397 | +1.910 | −0.021 | 6 / 2 / 5 |
+| `attn.v` | +2.421 | +1.409 | −0.607 | 2 / 5 / 6 |
+
+**`mlp.proj` has the highest k of the six types in all three designs**, across two different physical
+levers. Priced honestly: `mlp.proj` was selected *because* it topped REQ-045, so the conditional
+probability is P(1st in the other two | 1st in the first) = (1/6)² = **0.028** under independent
+ranks — and the near-zero tau values make independence a roughly fair, mildly conservative
+assumption.
+
+**The claim is therefore downgraded, not withdrawn.** Iteration 234 stated that `mlp.proj` "violates
+the gauge in both interventions". The correct statement after three designs is weaker: **`mlp.proj`
+is consistently the matrix type whose curvature responds most steeply to its gradient**, p ≈ 0.03
+from a single post-hoc selection, with **no seed replication behind any of the three designs**.
+Whether it exceeds the gauge value of 2 is design-dependent — yes under both LR levers, no under
+batch.
+
+**Status of the n=4 seed check.** It cannot be done for k from committed data. Every archive
+carrying `top_eigenvalue` and `gradient_block_norm` under an intervention is **single-seed**
+(REQ-036, REQ-045, REQ-037); REQ-035 Arm A has four seeds but its "arms" are probe repeats, not
+manipulations (iteration 234). REQ-051 remains the only route to a seed-replicated causal k.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1415,3 +1477,7 @@ so no corrected value should be quoted.
 Confirm that a design's 'arms' are actual manipulations before treating a within-unit contrast as
 causal: repeated measurement files can masquerade as arms, and when the outcome and regressor share
 a measurement batch their correlated errors inflate the slope.
+Test the mechanism you invoke to dismiss inconvenient data: a plausible story for why a result
+should be discounted is a hypothesis with its own predictions, and it may fail them. When several
+designs disagree on levels, a rank that holds across all of them may still be real -- price it for
+post-hoc selection rather than quoting the level agreement.
