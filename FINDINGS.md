@@ -271,6 +271,47 @@ shared-term check, and the join underlying it is verified against a physically s
 **2.8%** of variance against concentration's 44.3%, and the forward and backward magnitudes are
 entangled rather than separable.
 
+## The gradient-side association is construction — withdrawn (2026-09-05)
+
+Iteration 213 reported `d_frob` (backward signal magnitude) as the leading gradient-side correlate of
+the unexplained component (+0.224, surviving a permutation null at p = 0.0008). **That result is
+withdrawn.** Following it one step further exposed the reason.
+
+**Step 1 — it is not the backward half.** Testing the sum and difference of the two magnitudes:
+
+| predictor | partial correlation with the C residual |
+|---|---:|
+| **`log a + log d`** (the product `\|a\|·\|d\|`) | **+0.333** |
+| `log d` alone | +0.224 |
+| **`log d − log a`** (the difference) | **+0.076** |
+
+The **product** carries the signal and the **difference is null** — so the effect was never specific to
+the backward direction.
+
+**Step 2 — and the product is `g`.** For a bias-free Linear, `g = \|a\|_F · \|d\|_F · align_ratio`
+exactly (verified to 8.9e-16), so `log a + log d = log g − log align`. Adding the alignment factor back:
+
+| predictor | partial correlation |
+|---|---:|
+| `log a + log d` | +0.333 |
+| **`log g`** | **+0.341** |
+
+**`log g` alone matches the product.** But **`C = lambda/g²` has `g` in its denominator by
+construction**, and REQ-047's `grad_frob` correlates with REQ-048's `gradient_block_norm` at **+0.9556**
+— the same physical quantity in both panels. **So this is `g` appearing on both sides of the
+regression.** It is a shared-term artifact, not a mechanism.
+
+**What this means for the open question.** The unexplained component is **still unexplained**, and now
+for a structural reason worth stating: **every gradient-side quantity REQ-047 measures is a factor of
+`g`**, and `g` is already inside `C`. **No decomposition of `g` can serve as an independent predictor of
+a residual defined using `g`.** Separating these requires an experiment that varies the gradient side
+*causally* rather than observing it — which is what REQ-051's per-matrix LR ladder does.
+
+**Method note.** Three checks in sequence were needed: a permutation null (passed), a component
+comparison (redirected the finding from `d` to the product), and the identity check (killed it). **The
+permutation null was never going to detect this** — the correlation is real, reproducible and
+seed-stable; it is simply between a quantity and itself.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
