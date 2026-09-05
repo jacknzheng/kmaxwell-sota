@@ -528,6 +528,53 @@ structural account, and no prospect of one from this data.**
 survived.** The alternative — accepting the first plausible story — is how bands 61 and 73 stayed alive
 long enough to require retraction.
 
+## The mlp.proj association is withdrawn — d_cv is collinear with depth (2026-09-05)
+
+The `mlp.proj` result was recorded as **the first predictor of the unexplained component to survive
+every guard** — all four seeds negative at −0.717, selection-priced at p = 0.0002, and shown not to be a
+power artifact. **It is withdrawn.** Extending it along the depth axis produced a sign contradiction that
+exposed the reason.
+
+**The contradiction.** Testing whether the effect was uniform across depth returned **+0.67 in all four
+seeds** — opposite to the recorded −0.717 on the same rows. The two analyses differed in exactly one
+respect: the depth control.
+
+| specification | s0 | s1 | s2 | s3 | mean |
+|---|---:|---:|---:|---:|---:|
+| no depth term | +0.940 | +0.889 | +0.886 | +0.860 | **+0.894** |
+| **linear depth** | +0.747 | +0.668 | +0.669 | +0.573 | **+0.664** |
+| **quadratic depth** *(as recorded)* | −0.748 | −0.651 | −0.922 | −0.548 | **−0.717** |
+| cubic depth | −0.500 | −0.610 | −0.843 | −0.385 | −0.585 |
+
+**The sign is a property of the depth polynomial, not of the data.**
+
+**The cause.** Within `mlp.proj`, `d_cv` is very nearly a function of depth:
+
+| seed | corr(`d_cv`, block) | corr(`d_cv`, block²) |
+|---|---:|---:|
+| 0 | +0.882 | **+0.963** |
+| 1 | +0.840 | **+0.932** |
+| 2 | +0.908 | **+0.975** |
+| 3 | +0.839 | **+0.945** |
+
+**With 12 matrices and a predictor correlated at +0.97 with block², `d_cv` and depth cannot be
+separated.** Every figure in that analysis — the −0.717, the p = 0.0002, the power-artifact check — was
+computed on a fit that is degenerate in a way none of those tests examines.
+
+**Why the earlier guards passed it.** The permutation null shuffled `d_cv` against a *fixed* design
+matrix, so it priced the selection of `mlp.proj` from six types but **never questioned the depth
+specification**. The power-artifact check compared spreads, not collinearity. **All three guards were
+answering a different question from the one that mattered.**
+
+**⇒ The unexplained component has no surviving predictor.** Every candidate has now failed for a
+distinct reason: the `g`-family fields by construction, `d_eff_rank` and `da_cos_mean` by a bad join,
+the six-type ordering by insufficient points, and `d_cv` by collinearity with depth.
+
+**Rule addition.** *Check a predictor's collinearity with the CONTROLS, not only with other predictors.*
+Rule 27 covered predictor-to-predictor collinearity at the finest granularity; this failure was
+predictor-to-control, inside a single type where depth has only 12 levels. **A result whose sign depends
+on the order of a nuisance polynomial is not a result.**
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
