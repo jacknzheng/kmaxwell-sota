@@ -12,6 +12,7 @@ keep this queue for runnable specifications, concise status updates, and result 
 | 1 | [REQ-050](#req-050-curvature-at-initialisation-and-early-training) | OPEN | Establish when the depth-curvature profile appears. |
 | 2 | [REQ-051](#req-051-decompose-why-each-matrix-has-a-different-lr-to-curvature-response) | OPEN | Measure LR-response components across four seeds and six matrix LR levels. |
 | With 051 | [REQ-052](#req-052-matched-uniform-versus-mixed-lr-controls-for-req-051) | OPEN | Compare mixed, uniform-Muon, and full-global LR using the same bases. |
+| 4 (last) | [REQ-053](#req-053-what-makes-mlpproj-different--expansion-ratio-vs-nonlinearity) | OPEN | Separate the ReLU² input from the fan-in shape as the source of `mlp.proj`'s excess elasticity. |
 
 These are queue states; no GPU execution handle has been supplied. Do not interrupt running work.
 Run the REQ-051 pilot first, then coordinate REQ-052 while each base checkpoint is available.
@@ -602,6 +603,54 @@ manifest, raw JSON, per-matrix paired response table, per-seed contrast table, r
 held-out prediction table, and README with explicit supported/refuted/inconclusive outcomes.
 Include one figure per metric with all 12 blocks, uniform/mixed curves distinguished consistently,
 and the same matrix-type columns. Commit no checkpoints, model/optimizer tensors, or secrets.
+
+## REQ-053: what makes `mlp.proj` different — expansion ratio vs nonlinearity
+
+- status: **OPEN (low priority)**
+- requested: iteration 239, 2026-09-05
+- priority: **after REQ-050, REQ-051 and REQ-052.** This answers a mechanism question about one
+  matrix type, not the C-profile question the campaign is chartered on. Do not displace the queue.
+- resource constraint: **at most 2 nodes fleet-wide**, same ceiling as everything else in this file.
+
+### Question
+
+`mlp.proj` has an excess curvature-to-gradient elasticity of **c = +0.578** (se 0.075, t = +7.72,
+block-clustered) over the other five matrix types, positive in all three committed intervention
+designs (+0.467 REQ-045, +0.536 REQ-036, +1.149 REQ-037) and the only type positive in all three.
+**Why that matrix?** Two hypotheses survive and **cannot be separated from committed data**, because
+in this architecture they select exactly the same rows:
+
+- **H-B — the ReLU² input.** `mlp.proj` is the only matrix whose input is the squared-ReLU expansion.
+- **H-C — the fan-in shape.** `mlp.proj` (768, 3072) is the only matrix with fan-in > fan-out.
+
+A third hypothesis, the residual-writer role, is **refuted**: `attn.proj` is also a writer and has
+c = −0.171, and pooling the two writers *dilutes* the effect (+0.395 vs +0.578).
+
+A within-`mlp.proj` depth test returned a null (pooled d(k)/d(block) = +0.018, p = 0.27) but detects
+only swings ≥ 0.511 in k — 88% of the effect itself — so it discriminates nothing at realistic sizes.
+
+### Arms
+
+Both are single-config training runs to the existing endpoint, with the standard per-matrix curvature
+probe. Run **arm 1 first**; it is the cleaner discriminator.
+
+1. **Expansion-ratio arm.** MLP hidden width at **2×** and **8×** instead of 4×, ReLU² unchanged.
+   - H-C predicts c scales with the fan-in ratio (larger at 8×, smaller at 2×).
+   - H-B predicts c is unchanged across all three widths.
+2. **Nonlinearity arm.** Replace ReLU² with GELU at the unchanged 4× width.
+   - H-B predicts c changes materially.
+   - H-C predicts c is unchanged.
+
+### Reporting
+
+Fit per seed and report `c` from `d(log lam) = a + b·d(log g) + c·[mlp.proj]·d(log g)`,
+cluster-robust by block, exactly as in the REQ-051 scoring note. Include the six-way placebo (the
+same interaction run for every matrix type) — on committed data `mlp.proj` is the only type positive
+in all three designs, and that specificity is part of the claim being tested.
+
+Commit **≥3 probe repeats** per measurement point for `gradient_block_norm` as well as the curvature
+moments; the committed archives' within-matrix signal-to-noise on the gradient side is ~0.82, which
+is the binding limitation on every elasticity in this file.
 
 ## Template
 

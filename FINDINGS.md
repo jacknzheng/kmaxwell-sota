@@ -1616,6 +1616,52 @@ This survives block clustering and a six-way placebo. It still rests on **three 
 REQ-051's four seeds remain the confirmatory test, and its registered prediction should now be scored
 on **this interaction**, not on the rank.
 
+## Why `mlp.proj`? One hypothesis refuted, two not separable from committed data (2026-09-05)
+
+The `mlp.proj` interaction (c = +0.578) is a description, not a mechanism. Three structural facts
+distinguish `mlp.proj` from the other five matrix types, and they make different predictions.
+
+**H-A — residual writer: REFUTED.** `mlp.proj` writes to the residual stream, but so does
+`attn.proj`, so H-A predicts `attn.proj` should also show c > 0. Measured `attn.proj` c = **−0.171**
+(pooled, block-clustered). Grouping the two writers together gives c = +0.395 (t = +3.36) — *lower*
+than `mlp.proj` alone (+0.578, t = +7.72), i.e. adding `attn.proj` dilutes the effect rather than
+strengthening it. The residual-writer role does not explain this, consistent with the earlier
+withdrawal of that grouping elsewhere in this file.
+
+**H-B (ReLU² input) and H-C (fan-in shape) cannot be separated by grouping**, because in this
+architecture they select exactly the same matrix. Shapes from the committed `shape` field:
+
+| type | shape (out, in) | fan-in / fan-out |
+|---|---|---|
+| `attn.{q,k,v,proj}` | (768, 768) | 1.00 |
+| `mlp.fc` | (3072, 768) | 0.25 |
+| **`mlp.proj`** | **(768, 3072)** | **4.00** |
+
+`mlp.proj` is the only matrix that is *wide* (fan-in > fan-out) **and** the only one whose input is
+the squared-ReLU expansion. Selecting on either fact selects the same rows. Note `mlp.fc` has the
+same 4× dimension ratio transposed and shows c = **−0.002**, so the effect is not about the ratio
+alone — but orientation and nonlinearity-position are still confounded.
+
+**A within-`mlp.proj` discriminator was attempted and returned a null.** Shape is identical at every
+depth and cannot vary; the ReLU² expansion's activation statistics do change with depth. So a
+depth-dependent effect would favour H-B. Measured d(k)/d(block) within `mlp.proj`: +0.0669 (REQ-045),
+−0.0144 (REQ-036), −0.1069 (REQ-037), pooled **+0.0182, se 0.0166, p = 0.27**, signs inconsistent
+across designs.
+
+**The null is weak, and is reported as weak.** At 80% power this test detects |d(k)/d(block)| ≥ 0.047
+per block, i.e. a swing of **0.511 in k** across twelve blocks — **88% of the entire c effect**. It
+therefore rules out a depth dependence comparable in size to the effect itself, and rules out nothing
+smaller. Since H-B predicts no particular size, this does **not** favour H-C; both hypotheses remain
+live. **No mechanism for `mlp.proj` is established.**
+
+**What would separate them** (registered as REQ-053 below, as a follow-on rather than a substitute
+for the open queue):
+
+- **Expansion-ratio arm.** An MLP at 2× or 8× instead of 4×, holding ReLU² fixed. H-C predicts c
+  scales with the ratio; H-B predicts c is unchanged.
+- **Nonlinearity arm.** GELU in place of ReLU² at the same 4× shape. H-B predicts c changes; H-C
+  predicts it does not.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1680,3 +1726,6 @@ first has been seen, report both and mark the second as non-confirmatory.
 When a ranking is unstable, ask which competitor is moving before weakening the claim: the churn
 may lie entirely in volatile rivals. Then replace the rank with a precision-weighted contrast and
 run the same test on every category as a placebo -- that makes the null concrete instead of assumed.
+Report a null with the effect size it could have detected; a null that only excludes effects as
+large as the phenomenon itself does not favour either hypothesis. And when two explanations select
+the same rows, no grouping can separate them -- say so and design the run that varies one alone.
