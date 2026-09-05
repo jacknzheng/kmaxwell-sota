@@ -2011,6 +2011,61 @@ cross-seed +0.880) and concentration accounts for at most about half of it. What
 fifth of `log lam`'s total variance — is reproducible structure with **no admissible explanation**,
 and it is a larger target than the depth residual this campaign has been chasing.
 
+## The lam–g relationship confirmed across independent runs (2026-09-05)
+
+Iteration 242 left a real worry: `lam` and `g` are measured on the same probe batch in REQ-048, so
+their association could be inflated by shared measurement error. REQ-047 settles it, because its
+`grad_frob` is the gradient norm measured in a **different run** and cannot share probe error with
+REQ-048's `lam`.
+
+Joined on (seed, matrix name) with rule-28 discipline: 288 = 288 rows, identical key sets, 12 blocks
+per seed. `corr(log g_REQ048, log grad_frob_REQ047) = +0.9552` — the same physical quantity.
+
+**Partial correlation with `log lam`**, after type, block and `log n_eff_bulk`:
+
+| gradient measurement | provenance | partial r | per seed |
+|---|---|---|---|
+| `grad_frob` (REQ-047) | **different run — no shared probe error** | **+0.750** | +0.75, +0.76, +0.75, +0.74 |
+| `gradient_block_norm` (REQ-048) | same run, same probe batch | +0.786 | +0.82, +0.79, +0.80, +0.74 |
+
+**The relationship survives the clean test at 95% of its same-archive strength.** This is the
+strongest available answer to iteration 242's concern: the curvature–gradient association is not an
+artifact of shared probe measurement, and it is remarkably stable across seeds (range 0.02).
+
+**This is the known relationship re-measured, not a new predictor.** Iteration 231 established
+`d(log lam)/d(log g) = +3.173`; the +0.750 here is that same association reaching `log lam` through
+an independent archive. It does **not** address iteration 245's target — the reproducible per-matrix
+curvature structure that type, depth and concentration leave unexplained.
+
+## The cross-archive increment is inconclusive — three explanations, none clean (2026-09-05)
+
+`grad_frob` retains a partial correlation of **+0.264** with `log lam` even after REQ-048's own `g` is
+controlled. Three readings were tested and **none survives cleanly**; the result is recorded as
+inconclusive rather than resolved.
+
+**Attenuation — refuted, twice.** If REQ-048's `g` were merely noisy, a second independent
+measurement would pick up the uncontrolled remainder, and the increment should *shrink* as the
+control improves. It does the opposite: controlling `g` from one probe repeat gives **+0.189**, two
+repeats **+0.259**, all three **+0.264**. Attenuation also predicts symmetry; the relationship is
+asymmetric — `g48 | grad_frob` = **+0.432** versus `grad_frob | g48` = **+0.264**.
+
+**Same-run confounding — partially supported but insufficient.** REQ-048's `g` shares both run state
+and probe batch with REQ-048's `lam`, which would explain its advantage without either measurement
+being better. But if REQ-047 contributed only a generic cross-run gradient signal, its other
+gradient-side field should behave similarly. It does not: `d_frob | g48` retains only **+0.105**
+against `grad_frob`'s +0.264. Whatever REQ-047 adds is specific to its gradient-norm measurement.
+
+**Structured run disagreement — the most likely account, and a limitation.** The two archives'
+gradient measurements disagree by sd **0.0748 dex** around a constant per-seed offset, and that
+disagreement is **not** random: **30.9%** of it is explained by matrix type and **20.3%** by block.
+The two runs differ systematically, not just noisily. An increment built on a structured
+between-run difference cannot be interpreted as either measurement error or new physics without an
+experiment that holds the run fixed.
+
+**Status.** No new predictor of `log lam`'s unexplained structure was found. The productive outcome
+is the cross-run confirmation above; the increment is left open, and the structured disagreement
+between REQ-047 and REQ-048 is now on record as a constraint on any future cross-archive join.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2099,3 +2154,6 @@ Benchmark an added predictor against a model containing its own mathematical rel
 against the structural baseline: moments that bound the outcome will carry most of a high R2 by
 identity. Report an increment as an upper bound when the predictor still shares a term with the
 outcome.
+Two measurements of one quantity from different runs are not interchangeable: check whether their
+disagreement is structured by the same axes as the analysis before treating one as a cleaner
+instrument for the other.
