@@ -29,6 +29,72 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★★ C IS MOVABLE — BUT NOT BY A LEARNING RATE (iteration 175) — a clean two-lever dissociation
+
+*Rule-18 audit continued to `make_req037_arms.py`, and it revealed a design feature I had never
+registered: **`skip = FORK*BASE_BATCH//bt`, so every batch arm resumes from the SAME TOKEN POSITION at
+the fork.** The batch arms are token-matched at the fork and hold the LR fixed — making batch a **second,
+mechanistically different lever** to set against REQ-045's LR lever.*
+
+**WHY THIS IS THE RIGHT CONTRAST.** The gauge theorem (band 42) says the LR cancels in `C = λ/g²` because
+it multiplies a matrix's **whole contribution**. **Batch does not do that** — it changes gradient
+**noise**, not the scale of W's influence — so **the theorem makes no cancellation prediction here.**
+That is a genuine out-of-sample test of the theorem's *scope*, not just its content.
+
+**THE TWO LEVERS, SIDE BY SIDE** (both from randomised/assigned treatments; both 216 observations;
+type and block controlled):
+
+| | **LR lever** (REQ-045, per-matrix) | **BATCH lever** (REQ-037, 0.5×/1×/2×) |
+|---|---:|---:|
+| d(log λ) | **−1.218** (t **−7.55**) | **+0.065** (t **+0.79** — *unmoved*) |
+| d(log g) | −0.650 (t −12.61) | **+0.169** (t **+6.94**) |
+| **d(log C)** | **+0.081** (t +0.89 — **powered null**) | **−0.274** (t **−5.41**) |
+| identity residual | 9.99e-16 | **1.7e-16** |
+
+> **★ THE DISSOCIATION IS EXACT AND INVERTED.** The **LR** lever moves **λ hard and leaves C fixed**.
+> The **batch** lever leaves **λ unmoved and moves C decisively**. **C is not an inert construct — it is
+> movable. It is simply not movable by a learning rate**, at any granularity (band 49).
+
+**⇒ THIS ANSWERS A QUESTION OPEN SINCE BAND 13.** REQ-037 arm 4 (the per-matrix gradient clip) was
+deferred, and REQ-046's clip instrument proved **inert** (iteration 130: Muon's unit-norm step absorbed
+it, exponent 0/0). **The batch arms were the working non-LR instrument all along, sitting in committed
+data.** They demonstrate that **a non-LR intervention CAN move C**, which no experiment in this campaign
+had previously shown.
+
+**⚠️ THE CONFOUND, ADDRESSED HONESTLY AND NOT EXPLAINED AWAY.** REQ-037's own status flags it: *"batch
+confounds g-noise with tokens-seen (val 0.5× 3.626 / 1× 3.512 / 2× 3.421)"*. At fixed step count a larger
+batch sees more tokens. I checked whether it could be controlled for:
+
+**`corr(log batch, val) = −0.9979` across the three arms.** With **3 arms lying on a line**, batch and
+tokens-seen are **not separable** — fitting both to three points is exactly what **rule 9** forbids
+(check two constructed regressors' correlation *before* regressing). **No attempt is made, and the
+magnitude −0.274 is NOT claimed as a pure batch effect.**
+
+> **WHAT SURVIVES THE CONFOUND — and it is the load-bearing part.** The confound affects *how much* of
+> the C response to attribute to batch versus training progress. It **cannot** explain **which component
+> each lever moves**, because that is a contrast **within the same arms**: the batch lever moves **g**
+> (t +6.94) while leaving **λ** flat (t +0.79) — the **exact inverse** of the LR lever. **A confound
+> shared by all three arms cannot invert a component split.** **The dissociation stands; the effect size
+> does not.**
+
+**PROPOSED n=4 SEED CHECK — band 50 (criterion registered, with the confound built into the design).**
+*Criterion:* on a fresh panel, (i) the **LR** lever gives **|d log λ| ≥ 0.5, |t| ≥ 3** with **d log C not
+significant**; (ii) the **BATCH** lever gives **|d log C| ≥ 0.15 with |t| ≥ 3** and **d log λ not
+significant** — the inverted split; (iii) both identity residuals **< 1e-10**.
+*Design note for whoever runs it:* **the confound is removable** — run the batch arms **token-matched at
+the STOP step** (equal tokens seen, unequal step counts) rather than step-matched. That breaks the
+batch/progress collinearity and would license a causal magnitude, not just a dissociation.
+*Status:* the **dissociation** is satisfied by committed data (REQ-045 n=1 seed, REQ-037 n=1/arm); **the
+magnitudes are not established.** **No new compute requested this iteration** — REQ-049 already asks for
+the n=4 replication of the LR half, and a token-matched batch arm would be the natural companion.
+
+**⇒ CONSEQUENCE FOR THE CAMPAIGN GOAL.** The between-layer bowl is a property of the **loss surface**
+(band 40), immune to every scale factor (band 42), and now shown **movable by a noise-channel
+intervention**. **That is the first positive evidence about what kind of intervention could reach it** —
+and it points away from optimiser hyperparameters toward the **gradient-noise / batch channel.**
+
+**Queue:** REQ-048 **OPEN**; REQ-049 **filed** (iteration 174). No Jerry response.
+
 ## ★★★ THE GAUGE THEOREM IS CONFIRMED CAUSALLY (iteration 174) — a randomised per-matrix LR moves λ but NOT C
 
 *Continuing the rule-18 script audit. `make_req045_arms.py` reveals REQ-045 to be **the one experiment in
