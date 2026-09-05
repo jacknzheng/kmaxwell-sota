@@ -188,6 +188,55 @@ panels, and only that one broke. **The distinguishing feature is not "uses two p
 on a key"** — a result computed inside one panel, or assembled from separately-fitted estimates, has no
 key to get wrong.
 
+## The unexplained component, re-tested on a validated join (2026-09-05)
+
+The withdrawn backward-rank result left the ~43% of the layer profile that concentration does not
+explain without a candidate. That question needs a **gradient-side** predictor, and **REQ-047 carries no
+curvature field at all**, so `lambda/g^2` cannot be formed inside it — the test unavoidably requires a
+join. Rather than avoid the operation that failed, the **key was validated first**:
+
+| check | result |
+|---|---|
+| (seed, matrix-name) key sets, REQ-047 vs REQ-048 | **288 = 288, identical, zero unmatched either way** |
+| rows per seed after joining on name | **72** (not 66) |
+| distinct blocks after joining | **12** (not 11) |
+
+**The earlier failure was not inherent to joining these panels.** A straight name-keyed join is exact;
+the retracted work broke because it **imposed a block shift the data never required**.
+
+**Re-running the test on that validated join gives a different and much weaker answer.** Seven
+gradient-side candidates, declared in advance, with type and block dummies and spectral concentration
+already in the model:
+
+| candidate | partial correlation with the residual | same sign |
+|---|---:|---:|
+| **`d_frob`** (backward signal magnitude) | **+0.224** | 4/4 |
+| `grad_rank1_frac` | −0.181 | 3/4 |
+| `a_frob` | +0.116 | 4/4 |
+| `d_eff_rank` | **+0.045** | 4/4 |
+| `da_cos_mean` | **−0.068** | 4/4 |
+| others | ≤ 0.05 | mixed |
+
+Permutation null over matrix labels, max across all seven: **p = 0.0008**.
+
+**⚠️ But the effect size is small, and that is the operative fact.** Adding `d_frob` on top of
+concentration:
+
+| | mean |
+|---|---:|
+| spectral concentration, beyond type + block | **44.3%** of variance |
+| **`d_frob`, on top of that** | **2.8%** |
+| per-seed significance | **2 of 4** |
+
+**`d_frob` is a real but minor contributor — it nibbles at the residual rather than explaining it.**
+Reporting it as the answer would repeat the overclaiming that produced the retraction.
+
+**Two things this settles.** First, the two quantities the retracted bands named — `d_eff_rank` and
+`da_cos_mean` — are **near zero on the corrected join** (+0.045 and −0.068), confirming the retraction
+was correct rather than merely cautious. Second, **the residual remains substantially unexplained**: no
+available gradient-side field accounts for more than a few percent of it, and REQ-047's field set is
+now exhausted.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
