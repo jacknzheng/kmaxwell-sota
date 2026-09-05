@@ -1662,6 +1662,74 @@ for the open queue):
 - **Nonlinearity arm.** GELU in place of ReLU² at the same 4× shape. H-B predicts c changes; H-C
   predicts it does not.
 
+## The `mlp.proj` elasticity result cannot carry the depth question (2026-09-05)
+
+Five iterations of work on `k` and `mlp.proj` produced a gradient-side type effect. Before extending
+it further, this iteration asks the accounting question the campaign's charter demands: **how much of
+C's depth profile can it explain?** The answer is: very little, and this is recorded as a limit on
+that whole line of work.
+
+**Upper bound.** A type-specific elasticity difference reaches the depth profile only through the
+depth variation of `g` itself, which is small:
+
+| seed | sd of block-mean `log g` | sd of block-mean `log C` | generous bound `0.578 × sd(log g)` | as % of C's depth spread |
+|---|---|---|---|---|
+| 0 | 0.0526 | 0.1486 | 0.0304 | **20.5%** |
+| 1 | 0.0420 | 0.1373 | 0.0243 | 17.7% |
+| 2 | 0.0505 | 0.1562 | 0.0292 | 18.7% |
+| 3 | 0.0582 | 0.1971 | 0.0336 | 17.1% |
+
+And that bound is generous twice over: it applies to **one type of six**, and only if `mlp.proj`'s
+depth pattern aligned with the average (measured corr +0.36 to +0.72).
+
+**Direct test — remove `mlp.proj` entirely.** The depth profile is essentially unchanged: argmin
+stays at 6, 6, 6, 7; correlation with the full profile is **+0.92 to +0.96**. Leave-one-type-out for
+all six types gives correlations of **0.944 to 0.993** — `mlp.proj` is the most influential type, and
+even it does not carry the profile. No single matrix type does, consistent with the bowl being
+positional rather than type-driven.
+
+## C's depth profile is what survives a curvature–gradient cancellation (2026-09-05)
+
+Decomposing the block-mean profile exactly (`log C = log lam − 2 log g`) produced a finding not
+previously recorded:
+
+| seed | sd `log C` | sd `log lam` | sd `2 log g` | corr(lam, g) across depth |
+|---|---|---|---|---|
+| 0 | 0.1423 | **0.1773** | 0.1008 | +0.597 |
+| 1 | 0.1314 | **0.1866** | 0.0805 | +0.800 |
+| 2 | 0.1495 | **0.1953** | 0.0966 | +0.665 |
+| 3 | 0.1887 | **0.2332** | 0.1115 | +0.600 |
+
+**`sd(log lam)` exceeds `sd(log C)` in every seed.** The curvature profile is *larger* than the C
+profile, and the gradient profile partially cancels it — `g` rises with `lam` across depth and enters
+with a minus sign. C's depth profile is the residue of that cancellation.
+
+**Tested with the pairing permutation** (rule 35's instrument, holding each block's `lam` and `g`
+fixed and permuting only which `g` profile pairs with which `lam` profile):
+
+| seed | sd(log C) observed | null mean | p |
+|---|---|---|---|
+| 0 | 0.1423 | 0.2026 | **0.0154** |
+| 1 | 0.1314 | 0.2019 | **0.0018** |
+| 2 | 0.1495 | 0.2165 | **0.0089** |
+| 3 | 0.1887 | 0.2563 | **0.0240** |
+
+Breaking the pairing raises C's depth spread by roughly 40% in every seed. This is the **same
+suppression structure** found for the type-by-depth interaction, now at the level of the main depth
+profile — the second independent appearance of curvature and gradient moving together and partly
+cancelling in `C = lam/g²`.
+
+**A presentation error corrected in passing.** A variance-share framing of this decomposition printed
+"lam 155–202%, g 35–50%", which is meaningless: the shares exceed 100% because the cross term is
+large and negative. Standard deviations with the cross term shown explicitly are the correct
+presentation, and are what appear above.
+
+**Where this leaves the charter question.** C's depth profile is a **curvature** profile, not a
+gradient one; within the curvature part, concentration explains 63–73% of the depth variance. The
+gradient side contributes mainly by *cancelling* part of the curvature profile rather than by
+creating it. The `mlp.proj` elasticity result remains a real type effect (c = +0.578, t = +7.72) but
+is **largely orthogonal to the depth question**, and REQ-053 is correctly ranked last.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1729,3 +1797,7 @@ run the same test on every category as a placebo -- that makes the null concrete
 Report a null with the effect size it could have detected; a null that only excludes effects as
 large as the phenomenon itself does not favour either hypothesis. And when two explanations select
 the same rows, no grouping can separate them -- say so and design the run that varies one alone.
+Before extending a line of work, compute how much of the chartered question it could explain at
+best; an effect can be real, well-controlled and replicated while being nearly orthogonal to the
+question being asked. Never present variance shares when the cross term is large and negative --
+report standard deviations with the covariance shown.
