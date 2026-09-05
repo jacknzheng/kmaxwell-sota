@@ -1786,6 +1786,61 @@ training dynamics. It also does **not** close the account — the open question 
 this, because answering it with the Hutchinson moments is exactly the circular move withdrawn above.
 Settling it needs a design that moves curvature and gradient independently, which is **REQ-051**.
 
+## The curvature/gradient displacement asymmetry is a noise artifact (2026-09-05)
+
+Iteration 241 left open whether the curvature–gradient relationship has a direction. The three
+intervention archives can address it without Hutchinson moments: an LR change acts on the optimiser,
+so comparing each arm's displacement from control in `log lam` versus `log g` says which side moves.
+
+**The raw result looked like a strong asymmetry.** Under every arm, `sd(d log lam)` exceeded
+`sd(d log g)` by **2.3× to 4.9×** — apparently, curvature responds far more than the gradient norm.
+
+**It does not survive noise accounting.** Two errors were made and corrected in sequence.
+
+**First error — a vacuous test.** A "reverse regression" diagnostic was computed, comparing
+`b(lam~g)` with `b(g~lam)`. Their product equals `corr²` as an algebraic identity, so the test can
+never disagree with itself. Discarded (rule 35).
+
+**Second error — an inapplicable noise constant.** Subtracting REQ-048's measured per-probe noise
+(0.349 dex for `log lam`) floored *every* displacement at exactly zero, because that noise exceeds
+every observed displacement (0.17–0.30 dex). **That constant does not transfer.** REQ-048's figure is
+the spread of an 8-iteration Lanczos estimate under *reseeding*; REQ-036 and REQ-037 each trained
+their own arms and probed once. The archives settle it directly: matching REQ-036's control against
+REQ-037's control over 72 shared matrices gives **corr(log lam) = +0.865**, whereas noise of 0.349
+dex against a between-matrix sd of 0.446 would cap reliability at **0.620**. The transferred constant
+is too large.
+
+**Redone with a defensible bound.** The same cross-archive comparison bounds noise from *above*
+without assuming anything: `sd` of the control-to-control difference is **0.2234 dex** for `log lam`
+and **0.0416 dex** for `log g`. These contain both archives' noise *and* real drift (steps 2250 vs
+2750, different runs), so per-measurement noise is at most 0.158 and 0.029 dex — upper bounds, which
+make any surviving signal conservative.
+
+| design | arm | raw sd d(log lam) | **signal** | raw sd d(log g) | **signal** | signal ratio |
+|---|---|---|---|---|---|---|
+| REQ-036 | a2_pertype | 0.2305 | 0.0570 | 0.0734 | 0.0604 | **0.94** |
+| REQ-036 | a3_endcap | 0.2658 | 0.1441 | 0.0884 | 0.0780 | **1.85** |
+| REQ-036 | a4_antirule | 0.2711 | 0.1537 | 0.1142 | 0.1064 | **1.44** |
+| REQ-036 | a5_polar | 0.2992 | 0.1990 | 0.1288 | 0.1219 | **1.63** |
+| REQ-037 | a2_batch05x | 0.1716 | **0.000** | 0.0395 | **0.000** | — |
+| REQ-037 | a3_batch2x | 0.1849 | **0.000** | 0.0375 | **0.000** | — |
+
+**The pure-noise expectation for the raw ratio is 5.37** — larger than every raw ratio observed. So
+the raw 2.3–4.9× was never evidence of asymmetry; it was consistent with noise alone, and the
+noise-corrected ratios (**0.94 to 1.85, mean 1.47**) show curvature and gradient displacing by
+**comparable** amounts under an LR intervention.
+
+**Both readings the raw number invited are therefore withdrawn:** curvature is not shown to be more
+responsive than the gradient norm, and no direction is established. REQ-037's batch arms produce no
+detectable signal at all under these bounds, consistent with iteration 235's finding that batch size
+is a weak instrument here.
+
+**What this leaves.** The direction of the curvature–gradient relationship remains **undetermined**
+from committed data, as it was after iteration 241. The useful by-product is a **transferable
+measurement fact**: `log g` is measured far more reproducibly than `log lam` across archives
+(control-to-control difference 0.042 vs 0.223 dex; corr +0.988 vs +0.865), which is why every
+elasticity in this campaign is limited by the curvature side, not the gradient side.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1860,3 +1915,6 @@ report standard deviations with the covariance shown.
 Check what a set of controls SPANS before interpreting a partial correlation: two controls that
 jointly reconstruct the outcome will collapse any association, and the collapse means nothing.
 Measure how well the controls predict the outcome itself first.
+A noise estimate is specific to how a measurement was repeated; do not transfer one archive's
+probe-reseeding spread to archives probed once. Bound the noise from within the archives being
+compared, and check the ratio a pure-noise model predicts before calling a ratio an asymmetry.
