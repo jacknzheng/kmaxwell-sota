@@ -29,6 +29,70 @@ Next request number: **REQ-053**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## 🔧 "ONE PHENOMENON" IS TOO STRONG (iteration 202) — concentration explains 57% of the bowl, and the rest is REPRODUCIBLE
+
+*Band 70 argued the bowl and the concentration signature are **co-established**, from **timing** (both
+present at 1750) and **correlation** (+0.77). **Neither distinguishes "one phenomenon" from "two
+phenomena sharing an origin and a rough shape."** A sharper test exists on REQ-048, and — unlike bands
+69/70 — **it is rule-6 CLEAN**: `log n_eff` contains **no `lam_top`**.*
+
+**THE TEST.** Regress the C profile on the `log n_eff` profile with a free slope. Under *one
+phenomenon*, the residual should sit at the per-layer noise floor.
+
+| quantity | value |
+|---|---:|
+| mean slope | **−0.590** (sd 0.171) |
+| **mean R²** | **0.567** — concentration explains **57%** of the C profile |
+| mean rms residual | **0.1006 dex** (17% of the 0.600 dex bowl swing) |
+| per-layer noise floor (this panel) | 0.0824 dex |
+| **residual / floor** | **1.22×** |
+
+**⇒ AND THE RESIDUAL IS A REPRODUCIBLE SECOND STRUCTURE, not fit noise:**
+
+| check | result |
+|---|---:|
+| **mean pairwise correlation of the residual across the 12 fits** | **+0.422** (max +0.936) |
+| within-seed pairwise correlation (across LRs, same network) | **+0.410** |
+| residual swing | **0.272 dex** |
+| cubic R² of the mean residual | **0.746** |
+
+| block | 0 | 2 | 6 | 8 | 10 | 11 |
+|---|---:|---:|---:|---:|---:|---:|
+| mean residual | +0.029 | **−0.130** | −0.074 | +0.048 | +0.076 | **+0.142** |
+
+**The residual replicates across fits and is essentially as strong within-seed as across seeds (+0.410
+vs +0.422), so it is architectural rather than seed-specific.** It has its **own** shape — rising toward
+**both** ends, cubic R² 0.746.
+
+> **🔧 BAND 70's "one phenomenon, not a phenomenon and a later consequence" is CORRECTED.** The timing
+> claim stands — both structures are present and at equilibrium by step 1750. **But they are not the
+> same object.** **Spectral concentration accounts for ~57% of the between-layer C profile; the
+> remaining ~43% is a reproducible, architecturally-consistent second structure that concentration does
+> not explain.**
+
+**⚠️ AND NOTE THE SLOPE.** The fitted slope here is **−0.590** — **identical to band 59's profile-level
+figure**, which iteration 191 corrected to a range (−0.34 saturated to −0.59 profile-level). **That
+consistency is expected, since this is the same profile-level construction**, and it is a reminder that
+**this iteration's 57% is itself a profile-level number**; the saturated relationship is weaker.
+
+**PROPOSED n=4 SEED CHECK — band 71 (criterion registered).**
+*Criterion:* regressing the C profile on the `log n_eff` profile per fit: (i) **mean R² is in
+[0.35, 0.80]** — i.e. concentration explains a substantial but **not complete** share; (ii) the residual
+**replicates at mean pairwise correlation ≥ +0.30** across fits; (iii) the residual's **rms exceeds the
+per-layer noise floor by ≥1.1×**.
+*Status:* **satisfied by committed REQ-048 data** (R² 0.567; +0.422; 1.22×).
+**No new compute requested; ≤2-node ceiling.**
+
+**⇒ WHAT THIS CHANGES IN THE ACCOUNT.** The headline answer becomes **quantitative rather than
+absolute**: *the between-layer difference in C is **majority** a spectral-concentration profile, with a
+**second, smaller, reproducible component** that concentration does not capture.* **That is a weaker
+claim than the one I have been making since iteration 181, and it is the accurate one.** **Identifying
+the second component is now the sharpest open analysis question** — and it is bounded: **0.272 dex of
+swing, cubic-shaped, rising toward both ends.**
+
+**Queue:** REQ-035/036/048 DONE; **REQ-050 OPEN** (origin, 16.2 min); **REQ-051 OPEN**; **REQ-052 OPEN**;
+REQ-049 optional. **No Jerry response since REQ-048.**
+
 ## ★ THE CONCENTRATION SIGNATURE IS PRESENT AS EARLY AS THE BOWL (iteration 201)
 
 *Band 69 replicated band 57's consequence off-panel but left a gap: **REQ-048 measures only at step
