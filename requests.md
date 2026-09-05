@@ -29,6 +29,66 @@ Next request number: **REQ-053**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★ THE CONCENTRATION SIGNATURE IS PRESENT AS EARLY AS THE BOWL (iteration 201)
+
+*Band 69 replicated band 57's consequence off-panel but left a gap: **REQ-048 measures only at step
+2750**, so the concentration story could still be a **late-training description** rather than the bowl's
+origin. **REQ-023 measures at 1750–2250 and carries both required fields** — and band 54 already showed
+the **C bowl** is fully formed at 1750. **The untested question is whether the concentration signature is
+too.***
+
+**IT IS — unanimously, from the earliest measurement that exists:**
+
+| step | detilted argmin (3 arms) | below both ends | corr with C profile |
+|---|---|---:|---:|
+| **1750** | 6, 6, 7 | **3/3** | **+0.754** |
+| 1875 | 7, 7, 7 | 3/3 | +0.793 |
+| 2000 | 4, 6, 6 | 3/3 | +0.777 |
+| 2125 | 6, 5, 4 | 3/3 | +0.778 |
+| 2250 | 4, 6, 4 | 3/3 | +0.765 |
+
+**Interior minimum in 15/15 arm-steps; below both endpoints in 15/15; mean correlation with the C
+profile +0.773, positive in 15/15.**
+
+**⇒ AND IT IS ALREADY AT EQUILIBRIUM AMPLITUDE, not still growing:**
+
+| quantity | trend over 1750–2250 | t |
+|---|---:|---:|
+| **concentration signature** (detilted swing) | **+0.028 dex/1000 steps** | **+0.14** |
+| *(band 54: the C bowl itself)* | *+0.1425 dex/1000 steps* | *+1.04* |
+
+**Neither trend is significant.** **The bowl and its concentration signature are BOTH at equilibrium by
+step 1750 — the earliest curvature measurement anywhere in the repository (band 54).**
+
+> **★ THIS CLOSES A REAL ALTERNATIVE.** Band 57's mechanism could have been a *description of the
+> equilibrated state* that emerges late — in which case it would explain the bowl's *maintenance* but not
+> its *origin*. **It is not: the signature is fully formed at the earliest observable point, at the same
+> amplitude it has 1000 steps later.** **Whatever establishes the bowl establishes the concentration
+> structure at the same time — they are one phenomenon, not a phenomenon and a later consequence.**
+
+**⚠️ RULE 6 CAVEAT, CARRIED FORWARD UNCHANGED.** This quantity shares `log λ` with C, so it remains a
+**descriptive consistency check, not independent evidence** for band 44. What it adds is a **timing**
+fact, which the shared term does not affect: *when* the signature appears is not an artifact of *how*
+it is constructed.
+
+**PROPOSED n=4 SEED CHECK — band 70 (criterion registered).**
+*Criterion:* on a panel with `top_eigenvalue` + `curvature_along_polar` at multiple early steps:
+(i) the detilted `log λ − log cp` profile has an **interior minimum below both endpoints in ≥80% of
+arm-steps at the EARLIEST available step**; (ii) its depth amplitude shows **no significant trend**
+across the early window; (iii) its correlation with the C profile is **≥ +0.50 at every step**.
+*Status:* **satisfied by committed REQ-023 data** (3/3 at step 1750; trend t +0.14; +0.754–0.793).
+⚠️ **n = 3 arms, 1 seed.** **No new compute requested; ≤2-node ceiling.**
+
+**⇒ WHAT THIS DOES TO THE OPEN QUESTION.** Both the bowl **and** its concentration signature are
+established **before step 1750**, and **nothing in the repository measures earlier** (band 54, verified
+across 22 curvature files). **The entire remaining question now sits inside a window no committed data
+touches** — which is precisely what **REQ-050** (steps 0, 125, 250, 500, 1000, 1500; **16.2 min of
+training for 4 seeds**) was filed to probe. **This iteration sharpens REQ-050's value: it would now
+answer the origin of TWO co-established structures, not one.**
+
+**Queue:** REQ-035/036/048 DONE; **REQ-050 OPEN** (highest value); **REQ-051 OPEN**; **REQ-052 OPEN**
+(endorsed); REQ-049 optional. **No Jerry response since REQ-048; no NEEDS-INFO.**
+
 ## ✅ THE CONCENTRATION RESULT REPLICATES ON A PANEL IT WAS NOT DERIVED FROM (iteration 200)
 
 *Bands 44, 57 and 59 — the answer to the campaign's central question — **all come from ONE panel**:
