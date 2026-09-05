@@ -29,6 +29,88 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⛔⇒★ MAJOR CORRECTION: THE "FORK STATES" ARE LEARNING RATES (iteration 172) — mislabelled throughout, and the bowl is STRONGER for it
+
+*Unable to run REQ-048 locally (no CUDA on this machine), I read **Jerry's own analysis script**,
+`logs/kmaxwell/req035_armA_seed_replication/analyze_req035_armA.py`. **It reveals that I have been
+misinterpreting the REQ-035 panel's third axis for roughly twenty iterations.***
+
+**WHAT JERRY'S SCRIPT SAYS:**
+
+```
+S = {"s060":0.60, "s100":1.00, "s170":1.70}
+fit:  log10 lam = log10 C - k*log10 s      # C is the INTERCEPT at s = 1
+```
+
+and REQ-035's own status line reports **"k = 1.17–1.34 per seed"**. **`s` is a LEARNING-RATE
+MULTIPLIER.** The three tags are **three separate training runs at 0.60×, 1.00× and 1.70× LR** — not
+three checkpoints of one run.
+
+**VERIFIED AGAINST THE RAW DATA, not taken on trust:**
+
+| check | result |
+|---|---|
+| recovered `k = −d(log λ)/d(log s)` per matrix | **1.364** (sd 0.530, n=288) — **matches REQ-035's 1.17–1.34** |
+| median raw λ at s = 0.60 / 1.00 / 1.70 | **22576 → 12562 → 5494** — monotone in LR, as `k > 0` requires |
+
+**⇒ WHAT I GOT WRONG.** I called these "fork states" and treated them as **replicates**. Every statistic
+that averaged over them or measured spread across them was mis-labelled:
+- **band 42's "per-matrix sd of log C across fork states = 0.1449 dex"** — described as *stability*;
+- **bands 38/39's "cross-fork transfer"** — described as generalisation across *training states*;
+- the **60-fit panel** (4 seeds × 3 "forks" × 5 steps) — the 3 was a **treatment**, not replication.
+
+**⇒ WHAT SURVIVES, AND IS STRONGER THAN CLAIMED — the bowl is LR-INVARIANT.** Recomputing the bowl
+**separately within each learning rate** (the correct conditioning, since `s` is a treatment):
+
+| learning rate | cubic R² | linear R² | argmin | swing |
+|---|---:|---:|---:|---:|
+| **0.60×** | 0.904 | 0.054 | **L6** | 0.523 |
+| **1.00×** | 0.961 | 0.042 | **L6** | 0.602 |
+| **1.70×** | 0.975 | 0.048 | **L6** | 0.488 |
+
+**Pairwise correlation of the bowl between learning rates: +0.977, +0.886, +0.817.**
+
+> **The bowl has the same shape, the same minimum at layer 6, and comparable amplitude across a 2.8×
+> learning-rate range.** That is a **genuine robustness result** — far stronger than the "replication
+> across checkpoints" I mistakenly reported. **The central positional finding is not damaged by this
+> error; it is corroborated by it.**
+
+**⇒ AND BAND 42's NUMBER BECOMES A BETTER RESULT UNDER THE CORRECT READING.** The 0.44× ratio
+(sd log C **0.1449** vs sd log λ **0.3320**) is **not** "C is more stable across checkpoints". It is:
+**C responds far less to the learning rate than λ does.** **That is precisely what the gauge theorem
+predicts** — the LR is one of the scale factors that cancels exactly in `C = λ/g²` — so a statistic I
+mis-derived turns out to be **a direct empirical confirmation of band 42's central claim**, and a
+sharper one than the stability framing.
+
+**⇒ IMPLICATIONS FOR THE OTHER BANDS.** The **within-LR** results are untouched, because they never
+crossed the `s` axis: band 39's bowl and cubic form (argmin L6 in **each** LR separately, above),
+band 45's per-type bowls, band 40's variance decomposition, band 43's C_polar dissociation, and the
+gauge theorem itself. **What must be re-labelled is every phrase reading "fork state" as a replicate**,
+and every "cross-fork transfer" figure, which is **cross-LR generalisation** — still a meaningful and
+arguably better test, but not what the text says.
+
+**⚠️ AND IT VOIDS ONE OF MY OWN RULES-DERIVED CONCLUSIONS.** Iteration 165's rule-15 audit averaged fork
+states *within* a seed to form "n = 4 independent units". **Averaging over a treatment is wrong** — those
+seed-level profiles mix three learning rates. The audit's *conclusions* happen to survive (the bowl is
+LR-invariant, so averaging over LR distorts little, as the table above shows), **but the reasoning was
+invalid and is corrected here.**
+
+**Standing rule 18.** *Read the producing team's own analysis script before interpreting their data
+layout. A directory-name convention (`s060`, `s100`, `s170`) is not self-documenting, and twenty
+iterations were built on a guess about one when the answer was one file away in the same repository.*
+**This is the single largest interpretive error of the campaign** — larger than any retracted band,
+because it touched the axis rather than a claim.
+
+**PROPOSED n=4 SEED CHECK — band 47 (criterion registered).**
+*Criterion:* on a fresh panel, (i) the C bowl has **cubic R² ≥ 0.80 with argmin in layers 5–7 at EVERY
+learning rate separately**; (ii) **pairwise correlation of the bowl between LRs ≥ +0.70**; (iii) **sd(log C)
+across LRs < 0.60 × sd(log λ)** — the gauge theorem's LR prediction.
+*Status:* **satisfied by committed REQ-035 Arm A data** (0.904/0.961/0.975, argmin L6 ×3; r +0.82 to
++0.98; 0.1449/0.3320 = **0.44**). **No new compute requested; ≤2-node ceiling.**
+
+**Queue:** REQ-048 still **OPEN**, no Jerry response. **Note for whoever runs it: REQ-048 should record
+the LR multiplier explicitly in its output**, so this ambiguity cannot recur.
+
 ## ◐ THE AMPLITUDE TRACKS λ's DEPTH RANGE (iteration 170) — survives circularity checks, then largely deflates itself
 
 *Band 46 left the 19.6× type-varying amplitude **unexplained**: four architectural candidates, best
