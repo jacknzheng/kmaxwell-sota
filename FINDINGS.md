@@ -361,6 +361,43 @@ distribution — neither of which is a factor of `g`.
 outcome before testing them**, rather than by which panel they came from. Every previously withdrawn
 gradient-side finding was `g`-family; the surviving one is not.
 
+## The g-free predictor is one matrix type, not a general effect (2026-09-05)
+
+The previous entry recorded `d_cv` (token-norm dispersion of the backward signal) as the first
+admissible predictor of the unexplained component: −0.445 across four seeds, permutation p = 0.0002,
+21.1% incremental variance. **It also flagged the effect as unstable — 6.9% to 32.3% by seed. Chasing
+that instability changes the reading.**
+
+**The instability is not in the predictor.** `d_cv`'s own distribution is near-identical across seeds
+(sd 0.310–0.325, mean 0.811–0.820) and the outcome's residual spread is likewise uniform (0.103–0.126
+dex). So neither side of the regression varies — the *relationship* does.
+
+**Fitted within each matrix type, only one type carries it:**
+
+| type | partial correlation | per-seed values |
+|---|---:|---|
+| **`mlp.proj`** | **−0.717** | −0.75, −0.65, −0.92, −0.55 — **all four negative** |
+| `attn.v` | −0.341 | −0.36, −0.42, **+0.01**, −0.60 |
+| `mlp.fc` | +0.212 | **−0.09, −0.47, +0.93, +0.48** — sign flips |
+| `attn.q` | +0.145 | +0.07, +0.21, +0.76, **−0.46** |
+| `attn.proj` | +0.171 | −0.01, +0.13, +0.05, +0.52 |
+| `attn.k` | +0.097 | **+0.47, −0.39,** +0.32, −0.01 |
+
+**`mlp.proj` is consistent and strong; the other five types are unstable or opposite-signed.** The
+pooled −0.445 is **one matrix type generalised to six** — the same failure mode as the withdrawn
+`mlp.fc` concentration exception, which also looked general until fitted per type.
+
+**What survives, stated narrowly.** For **`mlp.proj` specifically**, C is lower where the backward
+signal's token-norm dispersion is higher, consistently across all four seeds. **That is a real
+type-specific association.** It is **not** a general account of the unexplained component, and the
+21.1% figure should not be quoted as one.
+
+**A specification error worth recording.** The first attempt at this test fit block dummies *within*
+each type — 12 matrices against 12 dummies, zero degrees of freedom, all-NaN output. **The NaNs were
+the only reason the mistake surfaced**; a design with one more matrix per type would have returned
+plausible numbers from an over-specified fit. **Check residual degrees of freedom before reading any
+per-group regression.**
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
