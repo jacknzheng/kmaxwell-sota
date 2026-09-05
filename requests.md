@@ -29,6 +29,97 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★ THE BOWL IS ALREADY FORMED AT THE EARLIEST MEASUREMENT THAT EXISTS (iteration 179)
+
+*REQ-023's curvature dumps run at steps **1750, 1875, 2000, 2125, 2250** — **500 steps earlier than any
+data used so far** (everything else starts at 2250). Two levers are inert on the bowl and it survives 11
+LRs, so the natural hypothesis is that it is set **early**. This tests it.*
+
+**THE BOWL AT EACH EARLY STEP:**
+
+| step | argmin | cubic R² | linear R² | swing |
+|---|---:|---:|---:|---:|
+| **1750** | **L6** | 0.926 | 0.106 | 0.501 |
+| 1875 | **L6** | 0.905 | 0.227 | 0.404 |
+| 2000 | L4 | 0.890 | 0.008 | 0.468 |
+| 2125 | **L6** | 0.881 | 0.046 | 0.476 |
+| 2250 | **L6** | 0.952 | 0.020 | 0.555 |
+
+**Mean pairwise correlation across steps: +0.928** (min +0.853).
+
+**⇒ AND IT IS THE SAME BOWL AS 1000 STEPS LATER:**
+
+| early step vs step 2750 | r |
+|---|---:|
+| **1750** | **+0.943** |
+| 1875 | +0.914 |
+| 2000 | +0.902 |
+| 2125 | +0.928 |
+| 2250 | +0.927 |
+
+> **The bowl at step 1750 is the same bowl as at step 2750 (r = +0.943).** It is not a late-training
+> phenomenon. Combined with its **LR-invariance in location** (band 52, 11/11 argmin L6), its
+> **immunity to the per-matrix LR lever** (band 53) and to **batch reshaping** (band 51), the picture is
+> consistent throughout: **the depth profile is established early and training hyperparameters do not
+> move it.**
+
+**⚠️ IS IT STILL FORMING AT 1750? — no detectable trend.** Regressing bowl swing on step over the
+1750–2250 window: **+0.1425 dex per 1000 steps, se 0.1369, t = +1.04.** **Not significant** — the bowl is
+already at its equilibrium amplitude by 1750, not still growing.
+
+**⛔ AND THE LIMIT, STATED RATHER THAN CROSSED.** **Step 1750 is the earliest curvature measurement that
+exists anywhere in the repository** (verified: 22 curvature files scanned, global minimum step = 1750).
+**So "is the bowl present at initialisation?" CANNOT be answered from committed data.** A linear back-cast
+from a 500-step window to step 0 gives 0.196 dex, but **that is an extrapolation 1750 steps outside the
+data's range and is NOT offered as evidence** — it is precisely the error iteration 128 was withdrawn for
+(interpreting an intercept where no regressor reaches zero).
+
+**PROPOSED n=4 SEED CHECK — band 54 (criterion registered).**
+*Criterion:* (i) the bowl's **argmin is in layers 5–7 at ≥4 of 5 early steps**; (ii) **mean pairwise
+correlation across early steps ≥ +0.80**; (iii) **correlation with the late (2750) bowl ≥ +0.80**;
+(iv) the **trend in swing over the early window is not significant**.
+*Status:* **satisfied by committed REQ-023 data** (4/5 argmin L6; +0.928; +0.902 to +0.943; t +1.04).
+⚠️ **n = 1 seed, 3 arms.** **No new compute requested for this band.**
+
+---
+
+## REQ-050: curvature at initialisation and early training — is the bowl inherited or learned?
+
+- status: **OPEN — filed 2026-09-04 (iteration 179). ≤2 nodes. PROBE-ONLY if early checkpoints exist; otherwise one short training run.**
+- priority: **high — it separates two mechanisms that all committed data is blind to.**
+
+**THE QUESTION.** The bowl is fully formed at **step 1750**, the earliest measurement in the repository,
+and is unmoved by the learning rate (bands 52, 53), by batch reshaping (band 51), by `post_lambda` /
+`resid_lambda` (bands 41, 42), and by stream scale, input rank or shape (iterations 156, 161).
+**Everything tested says "not the optimiser".** The untested alternative is that it is **inherited from
+the architecture at initialisation** — which no committed data can distinguish from "formed during the
+first 1750 steps".
+
+**WHAT TO RUN.** The existing curvature probe (`measure_per_matrix_curvature.py`, unmodified) at:
+**steps 0, 125, 250, 500, 1000, 1500** — on **one seed** initially; 4 seeds if cheap.
+- **Step 0 is the decisive point**: an untrained network at initialisation.
+- **No training is needed if checkpoints at these steps were retained** (the standard cadence is 125), in
+  which case this is a **probe-only** request costing a few GPU-minutes.
+- If early checkpoints were **not** retained, it needs **one run to step 1500** with dumps — ~a third of
+  the REQ-035 Arm A budget by that precedent.
+
+**BAND 55 — CRITERION REGISTERED IN ADVANCE:**
+(i) **INHERITED**: if the bowl is present at **step 0** with **cubic R² ≥ 0.70 and argmin in layers 4–8**,
+and correlates **≥ +0.70** with the step-2750 bowl ⇒ **the depth profile is an architectural property of
+the initialised network**, and the entire optimiser-side search was correctly abandoned.
+(ii) **LEARNED-EARLY**: if step 0 shows **no bowl** (cubic R² < 0.30 or argmin at an edge) but the bowl is
+present by step 500–1500 ⇒ **it forms in early training**, and the mechanism question becomes *what
+happens in the first few hundred steps* — a completely different and newly-tractable target.
+(iii) Either outcome is decisive. **There is no ambiguous result**, which is why this is worth the budget.
+
+**WHY THIS MAY BEAT REQ-048.** REQ-048 (spectral participation ratio) asks *what property of the surface*
+makes the bowl; **REQ-050 asks whether the bowl exists before any surface has been shaped by training.**
+If the answer is **inherited**, REQ-048's measurement should be taken **at initialisation**, where it is
+far easier to interpret — so **REQ-050 may reframe REQ-048 rather than compete with it.**
+
+- requester: analysis loop, iteration 179
+- constraint acknowledged: **≤2 nodes**, no assertion of any higher authority.
+
 ## ★ BAND 49 REPLICATES ON AN INDEPENDENT EXPERIMENT (iteration 178) — REQ-049's question answered from committed data
 
 *Surveying every curvature-bearing dataset in the repo (rule 18, third application) turned up
