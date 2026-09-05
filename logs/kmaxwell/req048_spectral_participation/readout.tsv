@@ -1,0 +1,18 @@
+seed	LR	corr_logPR_loglam	PR_cubicR2	PR_linR2	PR_argmin	PR_argmax
+0	0.6	-0.936	0.879	0.009	11	6
+0	1.0	-0.389	0.967	0.301	0	8
+0	1.7	-0.458	0.791	0.353	0	8
+1	0.6	-0.760	0.843	0.007	11	6
+1	1.0	-0.798	0.839	0.003	11	6
+1	1.7	-0.732	0.805	0.392	0	8
+2	0.6	-0.843	0.780	0.004	11	7
+2	1.0	-0.857	0.812	0.001	11	7
+2	1.7	-0.734	0.803	0.187	3	7
+3	0.6	-0.635	0.816	0.084	11	8
+3	1.0	-0.688	0.843	0.265	0	8
+3	1.7	-0.908	0.745	0.145	0	6
+#
+# (i) corr<=-0.60 in 10/12, negative in 12/12 (registered: same sign >=10/12) -> PASS; mean -0.728 sd 0.161
+# (ii) PR cubic R2>=0.70 in 12/12 (mean 0.827); PR argmin at ENDS(L0/L11) in 11/12 -> PR is a HUMP = C-bowl inverted (concentrated at ends, spread mid)
+# per-LR mean corr: 0.6x=-0.794  1.0x=-0.683  1.7x=-0.708
+# FALSIFICATION (|corr|<0.30 or PR monotone): NOT triggered -> spectral-concentration hypothesis CONFIRMED n=4
