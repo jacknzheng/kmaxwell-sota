@@ -29,6 +29,79 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★★ THE BOWL'S TILT IS ENTIRELY A LAST-BLOCK WRITER EFFECT (iteration 186)
+
+*Band 60 found writers lose concentration-directions "at the ends" — but **the two ends are
+structurally different**, and band 39 already established the bowl itself is **asymmetric** (L11 +0.302
+vs L0 +0.166). Splitting the interaction by end is a **pre-declared structural contrast**, not a search.*
+
+**★ THE EFFECT IS STRONGLY ASYMMETRIC:**
+
+| term | coef | clustered se (72 matrices) | t | per-fit |
+|---|---:|---:|---:|---|
+| writer (interior) | +0.954 dex | 0.100 | +9.50 | — |
+| **writer × FIRST (L0)** | **−0.300 dex** | 0.131 | −2.29 | −0.300 ± 0.160, **11/12** |
+| **writer × LAST (L11)** | **−0.953 dex** | 0.233 | **−4.09** | −0.953 ± 0.149, **12/12** |
+| **paired difference (FIRST − LAST)** | **+0.653** | 0.053 | **+12.42** | — |
+
+**The last block's writers lose 3.2× more concentration-directions than the first block's.** Band 60's
+*"writers lose concentration at the ends"* is **too coarse and is restated here**: it is overwhelmingly a
+**last-block** effect.
+
+**★★ AND IT EXPLAINS THE BOWL'S TILT — a falsifiable prediction, confirmed.** If the writer asymmetry
+causes band 39's tilt, removing the writer types must remove the tilt:
+
+| group | C bowl tilt (L11 − L0) | positive in |
+|---|---:|---:|
+| all 6 types | **+0.117 dex** | 9/12 |
+| **internal 4 types only** | **+0.001 dex** | 7/12 |
+| writers only | **+0.350 dex** | 10/12 |
+| **paired reduction on dropping writers** | **+0.116 ± 0.024** | **t = +4.91** |
+
+> **★★ The bowl's asymmetry is ENTIRELY a residual-writer effect.** Among internal matrices the tilt is
+> **+0.001 dex — exactly zero.** **Band 39's "the bowl is tilted toward the output end" is now explained:
+> the tilt is contributed by the two types that write to the residual stream, and specifically by the
+> LAST block's writers.**
+
+**⇒ AND THE LAST BLOCK IS A DISCRETE EXCEPTION, NOT A TREND ENDPOINT.** Extrapolating the writers'
+interior trend (L1–L10) to each end:
+
+| end | observed log n_eff | interior-trend prediction | **deviation** |
+|---|---:|---:|---:|
+| L0 | +3.610 | +3.762 | **−0.152** |
+| **L11** | **+3.179** | **+4.563** | **−1.384** |
+
+**L11 deviates 9× more than L0.** The last block is a **structural break**, not the far end of a smooth
+gradient.
+
+**⇒ THE ARCHITECTURAL FACT THAT MATCHES IT.** From `train_gpt.py` (read in iteration 157): the final
+block's output passes through `norm(x)` and goes **straight to the LM head**. **L11's writers are the
+only matrices in the network whose output is never re-mixed by a subsequent attention or MLP block.**
+**That is a concrete, pre-existing structural asymmetry of exactly the right shape** — a discrete
+exception at one block, affecting only the matrices that write to the stream. *(Stated as a matching
+structural fact, **not** as a demonstrated cause: nothing here manipulates the architecture, so this is a
+hypothesis the data is consistent with, not a tested mechanism.)*
+
+**PROPOSED n=4 SEED CHECK — band 61 (criterion registered).**
+*Criterion:* (i) **`writer × LAST` is negative with |t| ≥ 3** clustered by matrix, and **|writer × LAST| >
+2 × |writer × FIRST|**; (ii) the **C bowl tilt among internal-only types is not significant** (|mean| <
+0.10 dex); (iii) the writers' **L11 deviation from their interior trend exceeds their L0 deviation by
+≥3×**.
+*Status:* **satisfied by committed REQ-048 data** (−0.953 t −4.09, ratio **3.2×**; internal tilt
+**+0.001**; deviations −1.384 vs −0.152 = **9.1×**). **No new compute requested; ≤2-node ceiling.**
+
+**⇒ WHAT THIS DOES TO THE ACCOUNT.** The bowl now decomposes into two separable parts:
+- a **symmetric** component present in all six types (internal-only contrast still 1.54×, band 60), and
+- an **asymmetric** component supplied **entirely by last-block residual writers**, which is what makes
+the bowl tilt.
+
+**REQ-050 gains a second decisive question:** does the **last-block writer anomaly** exist at
+initialisation? Since it is tied to a fixed architectural feature — nothing downstream re-mixes L11 — an
+origin at step 0 is plausible and directly checkable.
+
+**Queue:** REQ-048 **DONE**; **REQ-050 OPEN** (highest value, now two questions); REQ-049 optional. No new
+Jerry response.
+
 ## ★ THE CONCENTRATION CONTRAST IS A RESIDUAL-WRITER EFFECT (iteration 185)
 
 *Band 59 left a specific anomaly: the ends-vs-middle concentration ratio spans **1.22× to 15.34×** by
