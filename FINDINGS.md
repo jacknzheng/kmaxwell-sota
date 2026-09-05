@@ -826,6 +826,68 @@ Note the internal consistency: the interiority of the Muon-step and weight profi
 against the top eigendirection's 1 at a much more distinctive location. Amplitude and interiority
 were never the discriminators; **reproducible argmin location** is.
 
+## "Same sign in 4/4 seeds" is a weak criterion in this design (2026-09-05)
+
+Rule 31 (compute a criterion's chance rate before citing it) was applied to the campaign's most
+frequently cited corroboration. It does not survive.
+
+**Calibration.** A pure-noise predictor was drawn 4000 times and run through the campaign's own
+specification -- per-seed partial correlation against the residual of `log C` on type and block
+dummies -- counting how often the four per-seed signs agreed.
+
+| null model | P(4/4 same sign) | P(3/4 or better) |
+|---|---|---|
+| independent noise per seed (the idealised assumption) | 0.126 | 0.616 |
+| **shared structural predictor** (one value per matrix name, as every real candidate is) | **0.582** | **0.868** |
+
+The nominal rate 2*(1/2)^4 = 0.125 is reproduced exactly by the idealised model, confirming the
+simulation. But no predictor this campaign has tested is seed-specific noise: `d_frob`, `d_cv`,
+`d_eff_rank`, `grad_rank1_frac`, `a_frob`, `n_eff` are all **structural properties of a matrix**,
+identical or near-identical across seeds. For those, **4/4 sign agreement occurs by chance 58% of
+the time.**
+
+**The mechanism, measured.** The residual that every candidate is tested against is largely shared
+between seeds. Cross-seed correlation of the `log C` residual after type and block are absorbed:
+
+| | seed 0 | seed 1 | seed 2 | seed 3 |
+|---|---|---|---|---|
+| seed 0 | 1.000 | 0.761 | 0.789 | 0.708 |
+| seed 1 | 0.761 | 1.000 | 0.794 | 0.760 |
+| seed 2 | 0.789 | 0.794 | 1.000 | 0.734 |
+| seed 3 | 0.708 | 0.760 | 0.734 | 1.000 |
+
+Mean off-diagonal **+0.758**. The residual is a reproducible per-matrix structure, not seed noise.
+Four seeds therefore supply close to **one** test of a structural hypothesis repeated four times,
+not four independent tests. Seed replication in this design tests robustness to **initialisation**
+-- genuinely useful, and not nothing -- but it is not independent replication of structure.
+
+**What this does and does not touch.** It does not reverse any finding: a weak criterion passing
+does not make a claim false, and every withdrawn claim was withdrawn for a *different* and still
+valid reason (shared-term construction, the bad join, aggregation, selection, depth-collinearity).
+What it removes is the **corroborative weight** of the "4/4" column wherever it appears in the tables
+above -- for `d_frob` (+0.224), `grad_rank1_frac` (-0.181), `a_frob` (+0.116), `d_eff_rank` (+0.045),
+`da_cos_mean` (-0.068), `d_part` (+0.325), `a_part` (-0.179) and `d_cv` (-0.445). Those partial
+correlations stand or fall on their magnitudes, which is how the small ones (`d_eff_rank` +0.045,
+`da_cos_mean` -0.068) should always have been read.
+
+**The headline does not depend on it.** Tested per seed on that seed's own 72 matrices, with
+standard errors clustered by block so within-block dependence is not counted as information:
+
+| seed | coefficient | cluster-robust se | t | partial R² |
+|---|---|---|---|---|
+| 0 | -0.3919 | 0.0390 | **-10.04** | 0.562 |
+| 1 | -0.3484 | 0.0205 | **-17.02** | 0.421 |
+| 2 | -0.3312 | 0.0352 | **-9.40** | 0.344 |
+| 3 | -0.3764 | 0.0329 | **-11.43** | 0.531 |
+
+Every seed is individually significant with a partial R² of 0.34-0.56 **within** that seed. The
+cross-seed sharing is irrelevant to these four tests. The concentration result rests on effect size
+inside a single seed, which is what it should have rested on all along.
+
+**Consequence for experiment design.** REQ-050 and REQ-051 both specify four seeds. Four seeds
+remain correct for testing initialisation-robustness, but their registered criteria should be judged
+on **within-seed effect sizes**, not on cross-seed sign agreement. This is now noted in REQ-050.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -845,3 +907,6 @@ Compute a criterion's chance rate before citing it as evidence: an 'interior min
 on k bins passes by pure combinatorics at (k-2)/k per replicate, so agreement counts like 4/4 or
 12/12 can be near-worthless. Prefer criteria whose chance rate is small, such as agreement of a
 location across seeds.
+Cross-seed agreement is not independent replication when the tested residual is shared across
+seeds; measure that sharing before treating N seeds as N tests. In this design the log C residual
+is 76% shared, so judge claims on within-seed effect size with clustered standard errors.
