@@ -144,6 +144,27 @@ Earlier results: [REQ-034](logs/kmaxwell/req034_kmaxwell_batch_ladder/),
 [REQ-037](logs/kmaxwell/req037_nonlr_instrument/),
 [REQ-038/041](logs/kmaxwell/req038_activation_backward_probe/).
 
+## Cross-panel join audit (2026-09-05)
+
+The withdrawn backward-rank result came from a **row-level merge** of two panels on a mis-shifted block
+key. Every other two-panel result was audited for the same failure mode. The outcome separates two
+structurally different ways of using two panels:
+
+| result | how it combines panels | exposed? |
+|---|---|---|
+| withdrawn backward-rank channel | **row-level merge** of REQ-047 into REQ-048 on a shifted block key | **yes — retracted** |
+| per-matrix LR elasticity (REQ-023 + REQ-045) | separate fits per panel, then estimates compared/pooled | no |
+| writer-vs-internal LR contrast | separate per-panel contrasts, compared side by side | no |
+
+**Key sets verified:** REQ-023 and REQ-045 contain the **same 72 matrix names** and the **same block
+range 0–11** (identical key sets confirmed), so a name-keyed merge between them would in fact be safe —
+but none of those results performs one. **An estimate computed entirely within a single panel cannot be
+corrupted by a cross-panel key error**, which is why only the row-level merge failed.
+
+**The distinction worth keeping:** *merging rows across panels is a modelling assumption requiring
+validation; comparing independently-computed estimates is not.* The failed case used 66 of 72 matrices
+per seed and that discrepancy was visible in every run that used it.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
