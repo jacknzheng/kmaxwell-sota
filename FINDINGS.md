@@ -1427,6 +1427,66 @@ carrying `top_eigenvalue` and `gradient_block_norm` under an intervention is **s
 (REQ-036, REQ-045, REQ-037); REQ-035 Arm A has four seeds but its "arms" are probe repeats, not
 manipulations (iteration 234). REQ-051 remains the only route to a seed-replicated causal k.
 
+## The k spread across designs is not an attenuation artifact — a fitted explanation withdrawn (2026-09-05)
+
+Three interventions give pooled within-matrix `k` of +2.237 (REQ-045), +1.922 (REQ-036) and +0.557
+(REQ-037). This iteration tested a specific, measurable explanation for that spread and **refuted
+it**, including the version that initially looked convincing.
+
+**The candidate.** If part of each design's observed `d(log g)` is measurement noise rather than
+manipulation, the within-matrix slope is attenuated by `s²/(s²+e²)`. Weaker manipulations would then
+give smaller `k`. The manipulation strengths are measurable and the ordering matches:
+
+| design | sd `d(log g)` | k |
+|---|---|---|
+| REQ-045 | 0.0948 | +2.237 |
+| REQ-036 | 0.0823 | +1.922 |
+| REQ-037 | 0.0487 | +0.557 |
+
+Fitting `observed_k = true_k · s²/(s²+e²)` gives `true_k = 2.76`, noise 0.0435 dex, and an **RMS
+residual of 0.051** — an apparently excellent fit across all three designs.
+
+**Why that fit is not evidence.** With three points and two parameters there is one residual degree
+of freedom. A straight line in `sd(dg)` fits nearly as well (RMS 0.064) with the same parameter
+count, so the in-sample fit distinguishes nothing: it shows only that `k` rises with manipulation
+strength, which the raw ordering already showed.
+
+**The out-of-sample test, and both models fail it.** Arm subsets within each design vary the
+manipulation strength *without changing the estimator*, giving 34 within-matrix estimates on the same
+scale. The curve was fitted on three pooled points and checked against all of them:
+
+| model | in-sample RMS (3 points) | **out-of-sample RMS (34 subsets)** | max abs error |
+|---|---|---|---|
+| attenuation | 0.051 | **0.654** | 2.089 |
+| straight line | 0.064 | **0.695** | 1.750 |
+
+Against a k range of roughly 0 to 2.4, both are useless out of sample. The attenuation model also
+predicts negative signal variance (returning NaN) for four low-`sd` subsets — it is not merely
+inaccurate there but inadmissible.
+
+**What actually explains k: the design, not the manipulation.**
+
+| design | subsets | mean k | sd k | sd(dg) range |
+|---|---|---|---|---|
+| REQ-045 | 4 | +2.206 | 0.139 | 0.0663–0.0983 |
+| REQ-036 | 26 | +1.882 | 0.163 | 0.0274–0.1022 |
+| REQ-037 | 4 | +0.545 | 0.422 | 0.0317–0.0575 |
+
+**Between designs: 85.0% of the variance. Within design: 15.0%.** REQ-036's 26 subsets stay at
++1.88 ± 0.16 across a **3.7× range** of manipulation strength. Within-design correlations between
+`sd(dg)` and `k` are +0.53 (REQ-036, 26 subsets), +0.88 (REQ-045, 4 subsets) and +0.06 (REQ-037,
+4 subsets) — not the uniform strong relationship attenuation requires.
+
+**Status: the divergence stands unexplained.** It is a real property of the three designs, not an
+artifact of weak manipulation, and it is the reason `k`'s *level* cannot yet be quoted as a physical
+constant. The surviving cross-design claim remains the **rank** one from iteration 235 (`mlp.proj`
+highest in all three, p ≈ 0.028), which is unaffected: ranks within a design do not depend on the
+design's overall level.
+
+**Method note.** This is the second time in this campaign that a model fitting a handful of aggregate
+points collapsed when tested at finer grain — the first was iteration 208's join error. A fit with
+one residual degree of freedom should be treated as a hypothesis to test, never as a result.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1481,3 +1541,6 @@ Test the mechanism you invoke to dismiss inconvenient data: a plausible story fo
 should be discounted is a hypothesis with its own predictions, and it may fail them. When several
 designs disagree on levels, a rank that holds across all of them may still be real -- price it for
 post-hoc selection rather than quoting the level agreement.
+A model fitted to a handful of aggregate points must be tested at finer grain before it is
+believed: subsets that vary the fitted predictor without changing the estimator are usually
+available, and a fit with one residual degree of freedom is a hypothesis, not a result.
