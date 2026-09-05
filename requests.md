@@ -194,6 +194,21 @@ Therefore, when scoring H1:
   elasticities will be attenuated by an unmeasurable amount. Note also that `lam` and `g` share a
   probe batch, so their errors are correlated and no clean disattenuation is available: commit
   repeats rather than planning to correct after the fact.
+  **Second pilot benchmark, added iteration 234 — the two interventions disagree.** REQ-036's five
+  arms (the per-**type** LR design) give a within-matrix **k = +1.922** (se 0.077, t vs 2 = −1.01,
+  n = 360): **indistinguishable from the gauge value**, stable to dropping any arm (+1.853 to +1.975)
+  and consistent across all four control-vs-treatment contrasts. REQ-045's per-**matrix** multipliers
+  give +2.237. Report REQ-051's causal k against **both**, and treat the gap as a target in itself:
+  a per-type rule moves all twelve matrices of a type together and cannot break the confounds that
+  independently-drawn per-matrix multipliers do.
+  **Report per-type k.** `mlp.proj` is the only type above gauge in **both** designs — +2.504
+  (t = +6.06) under per-matrix LR and +2.287 (t = +3.32) under per-type LR — while every other type
+  sits at or below 2 in REQ-036. Whether `mlp.proj` reproduces above 2 is the sharpest single
+  prediction REQ-051 can test.
+  **Do not use REQ-035 Arm A as a seed check for this.** Its `s060/s100/s170` labels are probe
+  repeats of one checkpoint, not arms; its within-matrix k of +2.843 is inflated by `lam` and `g`
+  sharing a probe batch, and its independent-error estimate (+2.837) matches the observational family
+  rather than any intervention.
 - **second target, added iteration 231 — the moment ladder.** Under the reparametrisation gauge
   (`W = c·V` gives `g ~ c`, every Hessian moment `~ c²`), **all** spectral moments must have
   elasticity **+2** wrt `log g`. Observationally on REQ-048 they do not, and they deviate in a strict
