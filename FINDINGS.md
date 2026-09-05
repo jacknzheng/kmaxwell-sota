@@ -1487,6 +1487,64 @@ design's overall level.
 points collapsed when tested at finer grain — the first was iteration 208's join error. A fit with
 one residual degree of freedom should be treated as a hypothesis to test, never as a result.
 
+## The `mlp.proj` rank claim repriced: p = 0.053, not 0.028 (2026-09-05)
+
+Iteration 235 reported that `mlp.proj` has the highest per-type `k` in all three intervention designs
+and priced it at (1/6)² = **0.028**, conditioning on its post-hoc selection but assuming each design's
+ranking is a clean independent draw. **That assumption is wrong, and the p-value is corrected upward.**
+
+**A design's own ranking is not stable.** Recomputing per-type `k` on every arm subset within each
+design shows how often `mlp.proj` actually leads:
+
+| design | arm subsets | `mlp.proj` mean rank | sd | % of subsets ranked 1st |
+|---|---|---|---|---|
+| REQ-045 | 4 | 1.75 | 0.96 | **50%** |
+| REQ-036 | 26 | 1.42 | 0.81 | **73%** |
+| REQ-037 | 4 | 1.00 | 0.00 | **100%** |
+
+In REQ-045 three different types top at least one subset; in REQ-036, five do. A single fit per design
+is therefore noisier than a clean draw, and 1/36 overstated the evidence.
+
+**Repriced with a permutation null.** Shuffling the type labels once and applying that assignment to
+all three designs — the correct null, since the six types are the same physical objects in every
+design, so a genuinely special type is special everywhere:
+
+| statistic | observed | null mean | p |
+|---|---|---|---|
+| **A: best mean rank across designs** (pre-specified) | 1.000 | 1.990 | **0.0525** |
+| B: best mean z-score of `k` (post-hoc) | +1.358 | 0.810 | 0.0255 |
+
+**Statistic A is the result: p = 0.053.** It is the statistic that follows directly from iteration
+235's claim. Statistic B is more powerful — it uses the size of each gap rather than only the
+ordering, and z-scoring within design makes it immune to the level divergence of iteration 236 — but
+it was **chosen after seeing A's result**, so its p-value is not a valid confirmatory test and is
+recorded for completeness only.
+
+**Per-type means across the three designs** (z-scored within design, so levels do not contribute):
+
+| type | mean z | mean rank |
+|---|---|---|
+| **`mlp.proj`** | **+1.358** | 1.00 |
+| `mlp.fc` | +0.314 | 3.00 |
+| `attn.q` | −0.214 | 4.00 |
+| `attn.v` | −0.438 | 4.33 |
+| `attn.k` | −0.477 | 4.33 |
+| `attn.proj` | −0.543 | 4.33 |
+
+`mlp.proj` sits well clear of the next type, and the two MLP matrices occupy the top two places in
+the mean while the four attention matrices fill the bottom four. That is the substantive picture;
+the formal p sits at the margin of conventional significance.
+
+**Current status of the claim.** `mlp.proj` is *plausibly* the matrix type whose curvature responds
+most steeply to its gradient — p = 0.053 on the pre-specified statistic, from three single-seed
+designs whose internal rankings are unstable. It is **not** established. Iteration 235's 0.028 is
+superseded.
+
+**This is what REQ-051 is for.** Four seeds would convert an unstable single fit per design into a
+seed-replicated estimate, which is precisely the deficiency identified here. The pre-registered
+prediction stands as written: does `mlp.proj` again have the highest per-type `k`, judged within each
+seed?
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1544,3 +1602,7 @@ post-hoc selection rather than quoting the level agreement.
 A model fitted to a handful of aggregate points must be tested at finer grain before it is
 believed: subsets that vary the fitted predictor without changing the estimator are usually
 available, and a fit with one residual degree of freedom is a hypothesis, not a result.
+Before pricing a cross-dataset agreement, measure how stable each dataset's own answer is: an
+analytic p-value that treats one fit per dataset as a clean draw overstates the evidence when
+resampling within a dataset changes its answer. And when a second statistic is chosen after the
+first has been seen, report both and mark the second as non-confirmatory.
