@@ -1954,6 +1954,63 @@ C's type dominance is inherited largely from `g`, which is 84.7% type. So the de
 relatively *more* prominent in raw curvature than in C — which is why the curvature-side account
 (concentration) has been the productive one.
 
+## `log lam`'s large residual is real structure, and concentration explains about half of it (2026-09-05)
+
+Iteration 244 found `log lam` retains a **47.5%** residual after type and block, against `log C`'s
+12.9%. The probe repeats settle whether that is signal or noise.
+
+**It is overwhelmingly signal.** Splitting each residual into a part that survives probe reseeding
+and a part that does not:
+
+| quantity | residual sd | reproducible sd | noise sd | **reproducible share** |
+|---|---|---|---|---|
+| `log lam` | 0.2893 | 0.2711 | 0.1009 | **87.8%** |
+| `log n_eff` | 0.3042 | 0.2843 | 0.1082 | 87.3% |
+| `log g` | 0.0828 | 0.0787 | 0.0255 | 90.5% |
+| `log C` | 0.1731 | 0.1411 | 0.1003 | 66.4% |
+
+The `log lam` residual also correlates **+0.880 across seeds** (`log C`: +0.756). So there is a large,
+reproducible per-matrix curvature pattern that neither type nor depth captures — **larger than the
+depth bowl itself**.
+
+**Concentration explains roughly half of it.** Adding the lam-free `log n_eff_bulk` to additive type
+and block dummies removes **47.6% to 62.3%** of that residual's variance per seed (residual sd 0.270–0.294
+→ 0.166–0.213 dex), lifting R² for `log lam` from **0.525 to 0.783**, an increment of **+0.257**.
+
+This extends the standing concentration account beyond the depth axis: concentration predicts
+per-matrix curvature generally, not only its depth profile.
+
+## Withdrawn before use: an R² of 0.907 that was mostly a mathematical identity (2026-09-05)
+
+Adding `log trace` alongside `n_eff_bulk` raised R² for `log lam` to **0.907**, which looked like a
+near-complete account. **It is not reportable**, and rule 47 catches it.
+
+`{n_eff_bulk, trace}` spans the two Hutchinson moments, and those moments predict `log lam` **on
+their own**:
+
+| model for `log lam` | R² |
+|---|---|
+| **moments only (`trace`, `rms`)** | **0.766** |
+| type + block only | 0.525 |
+| moments + type | 0.868 |
+| moments + type + block | 0.921 |
+
+Once the moments are in the model, type and block together add only **+0.156**. Most of the 0.907 is
+the mathematical relationship between `lam` and the spectral moments that bound it — `sqrt(trace(H²))`
+is an upper bound on `lam` — not an explanation of per-matrix structure.
+
+**Caveat carried to the surviving number.** `n_eff_bulk = trace(H)²/(trace(H²) − lam²)` is built to
+exclude `lam` algebraically and is admissible under the hard rule (Hutchinson, not the Lanczos
+tridiagonal). But it still contains `trace(H²)`, which bounds `lam` above, so it is not fully
+independent of the outcome. **The +0.257 increment should be read as an upper bound** on
+concentration's incremental explanatory value for `log lam`, not a point estimate. On its own,
+`n_eff_bulk` explains 0.276 of `log lam`.
+
+**Net position.** The reproducible per-matrix curvature structure is real (87.8% reproducible,
+cross-seed +0.880) and concentration accounts for at most about half of it. What remains — roughly a
+fifth of `log lam`'s total variance — is reproducible structure with **no admissible explanation**,
+and it is a larger target than the depth residual this campaign has been chasing.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2038,3 +2095,7 @@ quotes it, not only the findings record.
 Report what share of a quantity's total variation the studied axis carries, early and in the
 findings record: a result explaining most of one axis may explain a small fraction of the whole,
 and readers will assume otherwise unless told.
+Benchmark an added predictor against a model containing its own mathematical relatives, not only
+against the structural baseline: moments that bound the outcome will carry most of a high R2 by
+identity. Report an increment as an upper bound when the predictor still shares a term with the
+outcome.
