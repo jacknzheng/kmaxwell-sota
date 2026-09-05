@@ -237,6 +237,40 @@ was correct rather than merely cautious. Second, **the residual remains substant
 available gradient-side field accounts for more than a few percent of it, and REQ-047's field set is
 now exhausted.
 
+## Is the backward-magnitude association real? (2026-09-05)
+
+`d_frob` emerged as the leading gradient-side correlate of the unexplained component. **It is a
+multiplicative factor of `g`, and `g` sits in `C = lambda/g^2`'s denominator** — precisely the
+shared-term structure that has produced several withdrawals in this campaign. Three checks were run
+before treating it as real.
+
+**The join is independently validated by a physical quantity.** REQ-047's `grad_frob` and REQ-048's
+`gradient_block_norm` measure the same thing in different panels and correlate at **+0.9556** across
+the name-keyed join (spread 0.074 dex). **A mis-paired join could not produce that.** The
+component identity `g = |a|_F · |d|_F · align_ratio` also holds to **8.9e-16**, confirming the
+decomposition is exact rather than approximate.
+
+**The three components of `g` do NOT behave alike**, so the signal is not simply the `g` channel
+leaking through the denominator:
+
+| component of `g` | partial correlation with the residual | per seed |
+|---|---:|---|
+| **`d_frob`** (backward magnitude) | **+0.224** | +0.27, +0.27, +0.16, +0.21 |
+| `a_frob` (forward magnitude) | +0.116 | +0.09, +0.16, +0.15, +0.07 |
+| `align_ratio` | −0.044 | −0.12, −0.03, +0.05, −0.07 |
+
+**⚠️ But `a_frob` and `d_frob` are negatively collinear (−0.454), and that changes the reading.**
+Entering both **raises** each coefficient — `a_frob` +0.635, `d_frob` +0.688 — which is **mutual
+suppression, not two independent channels**. `d_frob` is significant in **3 of 4** seeds, `a_frob` in
+**1 of 4**.
+
+**What this supports, stated at its actual strength:** the residual is associated with the **backward
+signal magnitude** more than with the forward magnitude or the alignment, the association survives the
+shared-term check, and the join underlying it is verified against a physically shared measurement.
+**What it does not support:** treating `d_frob` as *the* explanation. Its incremental contribution is
+**2.8%** of variance against concentration's 44.3%, and the forward and backward magnitudes are
+entangled rather than separable.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
