@@ -29,6 +29,60 @@ Next request number: **REQ-053**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅ BAND 71 SURVIVES RULE 27 — with a scope note, and a stronger result underneath (iteration 206)
+
+*Rule 27 was written last iteration after aggregation manufactured a **+0.705** collinearity that
+vanished (**−0.09**) on the matrix axis and **reversed a sign**. **Its first duty is to be turned on
+band 71's 57%** — the campaign's headline decomposition, computed on the same **12 block means**.*
+
+**THE TWO GRANULARITIES, PAIRED ON THE SAME 12 FITS:**
+
+| | mean R² | sd |
+|---|---:|---:|
+| **between-block** (band 71's claim) | **0.567** | 0.194 |
+| **per-matrix** (type controlled, no block dummies) | **0.432** | 0.092 |
+| **paired difference** | **+0.135** | t **+3.53**, positive **10/12** |
+
+> **✅ Band 71 does NOT collapse.** Concentration explains a **substantial share at both granularities**
+> — 57% of the layer profile, 43% of individual matrices. **The 57% is not an aggregation artifact.**
+> 🔧 **But the gap is real (t +3.53)**: concentration explains the **layer profile better than it
+> explains individual matrices**. **Band 71's figure is a statement about LAYERS, and should be quoted
+> that way** — which is fortunate, since the campaign's question *is* the between-layer difference.
+
+**★ AND THE STRICTEST TEST IS THE MOST INFORMATIVE.** Adding **block dummies** — so the fit uses only
+**within-block** variation, with everything positional and type-level already absorbed:
+
+| | incremental R² of `log n_eff` |
+|---|---:|
+| **after type + block dummies** | **0.368** (sd 0.095, min 0.198) |
+
+**Concentration explains 36.8% of C beyond type AND position.** **It is therefore not merely tracking
+depth** — it carries information about individual matrices that no positional or type variable supplies.
+**That is a stronger claim than band 71 makes**, and it corroborates iteration 205's incidental finding
+(`log n_eff` at t = −31.4 with block dummies present) from the variance side rather than the coefficient
+side.
+
+**PROPOSED n=4 SEED CHECK — band 75 (criterion registered).**
+*Criterion:* (i) the **between-block R²** of the C profile on the `n_eff` profile is **≥ 0.40**;
+(ii) the **per-matrix R²** (type controlled) is **≥ 0.30**; (iii) the **incremental R² after type AND
+block dummies is ≥ 0.20** — i.e. concentration is not merely positional.
+*Status:* **satisfied by committed REQ-048 data** (0.567; 0.432; **0.368**, min 0.198).
+**No new compute requested; ≤2-node ceiling.**
+
+**⇒ WHY THIS ITERATION WAS WORTH RUNNING EVEN THOUGH THE HEADLINE SURVIVED.** Rule 27 was written from a
+case where aggregation **created** a false result. **Applying it here shows the rule does not
+indiscriminately destroy block-level findings** — band 73's collinearity was an artifact, band 71's 57%
+is not. **A guard that only ever produces retractions would be miscalibrated; this one distinguishes.**
+
+**⚠️ ONE HONEST NOTE ON THE 43% RESIDUAL.** Band 71's residual is now better described as **~43% of the
+layer profile**, and iteration 205 showed its leading backward-side candidate (`d_eff_rank`) **reverses
+sign** when separated per matrix. **So the residual's composition remains open — bands 73/74 narrowed it
+to backward-side quantities but did not settle which.** **REQ-051's `k_a/k_d/k_rho` decomposition is
+still the instrument that would.**
+
+**Queue:** REQ-035/036/048 DONE; **REQ-050 OPEN** (origin, 16.2 min); **REQ-051 OPEN**; **REQ-052 OPEN**;
+REQ-049 optional. **No Jerry response since REQ-048; no NEEDS-INFO.**
+
 ## 🔧 BAND 73 CORRECTED ON THE MATRIX AXIS (iteration 205) — `d_eff_rank` REVERSES SIGN when separated
 
 *Band 73 could not separate `da_cos_mean` from `d_eff_rank`: on **12 block means** they correlate at
