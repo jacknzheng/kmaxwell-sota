@@ -13,7 +13,7 @@ Keep this file as an active queue, not a permanent results archive. Delete
 completed and superseded requests after their useful code, logs, and summaries
 have landed in the appropriate repository paths.
 
-Next request number: **REQ-048**.
+Next request number: **REQ-052**.
 
 ---
 
@@ -5483,3 +5483,166 @@ load-bearing band. File it as a background run if a box is idle.
 success criteria, artifact paths, and any ordering constraints. Do not include
 secrets; refer to already-provisioned environment variables.>
 ```
+
+## REQ-051: decompose why each matrix has a different LR-to-curvature response
+
+- status: **OPEN**
+- requested: Jack / Codex, 2026-09-05 PDT
+- priority: **high, after the already-open REQ-050; do not interrupt work already running**
+- repo: `https://github.com/jacknzheng/kmaxwell-sota`, branch `jerry-agent`
+- implementation base: use the committed per-matrix-LR machinery from REQ-023/045 and the
+  activation/backward probes from REQ-043/047; record the exact final code SHA
+- resource constraint: **at most 2 nodes total**
+
+### Question
+
+REQ-023 and REQ-045 establish that a matrix's own LR changes its equilibrium top curvature with a
+pooled elasticity near `-1.16`, while the separately identified neighbour-LR coefficient is null.
+REQ-043/047 explain the q/k weight-gradient deficit as a backward-magnitude plus token-alignment
+effect. What remains unanswered is **why the own-LR curvature elasticity differs across matrices,
+types, and blocks**.
+
+Use the repository's current notation throughout:
+
+- `lambda` = per-matrix `top_eigenvalue`;
+- `g` = raw same-minibatch weight-gradient Frobenius norm;
+- `C_gauge = lambda / g^2` — call this `C_gauge`, not merely `C`, to avoid confusing it with the
+  older power-law intercept;
+- `rho = g / (||a||_F ||d||_F)` = REQ-043's `align_ratio`;
+- for any positive quantity `x`, `k_x = -d log(x) / d log(own LR multiplier)`.
+
+Two decompositions must be evaluated on **the same state and the same minibatch**:
+
+```text
+k_lambda = 2*k_g + k_C_gauge
+k_g      = k_a + k_d + k_rho
+
+therefore:
+k_lambda = 2*(k_a + k_d + k_rho) + k_C_gauge
+```
+
+The first follows from `C_gauge = lambda/g^2`. The second follows exactly from
+`g = ||a||_F ||d||_F rho` for the hooked bias-free Linear. These are accounting identities, not by
+themselves causal mechanisms; their value is that they reveal **which measured component carries the
+between-matrix variation in LR response**.
+
+### Design: six-level, within-matrix LR curves on four independent bases
+
+Train **four genuinely independent seeds** to a serialized fork at step 2000. From each base, run six
+750-step continuation arms to step 2750. Use per-matrix multipliers
+
+```text
+{0.50, 0.65, 0.85, 1.00, 1.30, 1.70}
+```
+
+with a cyclic Latin assignment across arms:
+
+- every one of the 72 Muon matrices receives every multiplier exactly once across the six arms;
+- within each arm, each multiplier is assigned to exactly 12 matrices;
+- stratify within matrix type: each of the six types contributes exactly two matrices to every
+  multiplier in every arm;
+- redraw/rotate the block-to-level mapping independently by seed;
+- keep the full-network multiplier histogram identical in every arm, so the experiment changes a
+  matrix's own LR without changing the network-wide LR distribution;
+- write the effective LR multiplier explicitly into every output row.
+
+Within each seed, all six arms must load the exact same serialized model, optimizer, scheduler, and
+data cursor, then consume the same post-fork minibatch sequence; only the per-matrix LR assignment may
+differ. Record and verify the base-state hash. Across seeds, the four base hashes must be distinct.
+
+REQ-045 has already identified the neighbour channel as null. Still report each matrix's others-mean
+multiplier and the mechanical own/others correlation; do not reinterpret this balanced ladder as a new
+neighbour-effect test.
+
+Save checkpoints at **2050 and 2750**. Step 2050 is a mandatory early-response measurement, not a
+conditional branch. Step 2750 is the equilibrium endpoint. Full checkpoints may be retained locally
+for the probes but must not be committed.
+
+### Measurements
+
+At both 2050 and 2750, on one fixed, recorded validation minibatch shared across all arms within a
+seed, run a combined same-state probe that records per matrix:
+
+- `a_frob`, `a_rms`, `a_eff_rank`;
+- `d_frob`, `d_rms`, `d_eff_rank`;
+- raw `grad_frob` and `align_ratio`;
+- REQ-047's `d_token_participation`, `da_cos_mean`, and `grad_rank1_frac`;
+- `weight_frob`;
+- momentum/polar-input norm, post-polar update Frobenius norm and spectral norm;
+- realized relative update `effective_lr * ||polar_update||_F / ||W||_F`.
+
+At 2750 also record, from the same loss scaling and token batch:
+
+- `top_eigenvalue`;
+- `gradient_block_norm`, plus an explicit equality/scale check against `grad_frob`;
+- `curvature_along_polar`;
+- the usual Lanczos convergence diagnostics.
+
+Do not add another uniform pre-polar gradient multiplier: REQ-046 already proves that Muon's polar map
+normalizes that intervention away. Do not mix REQ-043 gradients from one minibatch with curvature from
+another; if the curvature code and hook code cannot share one pass, record the exact normalization
+factor and require the per-matrix `gradient_block_norm`/`grad_frob` ratio to be constant across arms.
+
+### Analyses and registered decisions
+
+1. **Own-LR inverse law.** Fit each matrix's six-point `log lambda ~ log multiplier` curve separately,
+   then summarize by seed, type, and block. The inverse-law hypothesis passes if, in every seed,
+   at least 90% of matrices have `k_lambda > 0` and the seed-median `k_lambda` lies in `[0.9, 1.5]`.
+   Report disagreement rather than pooling it away.
+
+2. **Power law versus saturation.** For each matrix compare
+   `lambda=A*m^(-k)` against `lambda=lambda_floor+A*m^(-k)` using leave-one-LR-level-out prediction.
+   Call saturation supported only if the positive-floor model reduces held-out RMSE by at least 15%
+   in at least three of four seeds. Otherwise retain the simpler power law. Report which types/blocks,
+   if any, support a floor.
+
+3. **Exact response accounting.** Require maximum absolute residual below `1e-5` for both
+   `k_lambda-(2*k_g+k_C_gauge)` and `k_g-(k_a+k_d+k_rho)`, after documenting log base and normalization.
+   A larger residual is a probe mismatch and must be fixed before interpretation.
+
+4. **Gauge-restoration hypothesis.** The prior prediction is that the LR response is carried almost
+   entirely by `g`, with `C_gauge` nearly restored. It passes if each seed has
+   `|mean(k_C_gauge)| < 0.15` and the pooled magnitude of `k_C_gauge` is less than 15% of
+   `k_lambda`. Failure means the small pooled REQ-023/045 result hides systematic matrix-level
+   heterogeneity and must be revised.
+
+5. **Which part of the gradient response differs by layer?** Within each seed, remove matrix-type
+   means and report the variance/covariance decomposition of `k_g = k_a+k_d+k_rho` across blocks.
+   Also report type-specific values. The registered q/k/v prediction is that `attn.v` has larger
+   `k_lambda` than the mean of q/k in at least three of four seeds. Do not call the largest component
+   causal; label it the component carrying the response variation.
+
+6. **Early prediction of final sharpness response.** Predict the step-2750 `k_lambda` using only
+   step-2050 response features (`k_a`, `k_d`, `k_rho`, early `k_g`, effective relative update,
+   effective-rank and token-coherence responses), with one entire seed held out. Compare against the
+   existing matrix-type prior (`R^2=0.217`, RMSE `0.427`). The early-response hypothesis passes if
+   held-out-seed `R^2 >= 0.32` and RMSE `<= 0.40`; otherwise conclude that the first 50 steps do not
+   predict equilibrium reaction well enough.
+
+7. **Depth discipline.** Fit depth only within type and seed. Compare linear depth, free block effects,
+   and type-by-depth models under held-out-seed evaluation. No pooled “deep layers react more” claim is
+   allowed unless its sign holds in all six types and at least three of four seeds.
+
+### Required artifacts
+
+Write code, configs, logs, and results to:
+
+`logs/kmaxwell/req051_lr_elasticity_decomposition/`
+
+Include:
+
+- `README.md` with design, provenance, results, caveats, and explicit pass/fail for all seven decisions;
+- `assignments.json` with seed/arm/matrix/type/block/multiplier and balance checks;
+- `manifest.tsv` with independent-base state hashes, checkpoint steps, data cursor, node, config, SHA,
+  and exit status;
+- `per_matrix_measurements.tsv` for the same-state 2050/2750 fields;
+- `elasticities.tsv` containing every per-matrix `k_lambda`, `k_g`, `k_C_gauge`, `k_a`, `k_d`, and
+  `k_rho` plus identity residuals;
+- `model_comparison.tsv` for power versus saturation and the held-out-seed early predictor;
+- raw JSONs, config generator, combined probe, and analysis script;
+- figures showing all 12 blocks together, unified by metric: per-type/per-seed `k_lambda`, the
+  `k_a/k_d/k_rho/k_C_gauge` decomposition, six-level LR curves with held-out predictions, and early
+  predicted versus final `k_lambda`.
+
+Commit no model weights, optimizer tensors, secrets, or full checkpoints. Preserve disagreement across
+seeds and matrices in the tables; do not report only pooled averages.
