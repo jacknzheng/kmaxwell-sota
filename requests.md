@@ -4259,7 +4259,16 @@ replication. Both remain scoped to ≤2 nodes.
 
 ## REQ-048: spectral participation ratio — the one measurement the committed data cannot supply
 
-- status: **OPEN — filed 2026-09-04 (iteration 162). Runs entirely under the ≤2-node ceiling; no training.**
+- status: **DONE 2026-09-04 (n=4) — HYPOTHESIS CONFIRMED** → `logs/kmaxwell/req048_spectral_participation/`
+- **RESULT — the curvature bowl IS a spectral-concentration profile.** corr(logPR,logλ) ≤ -0.60 in 10/12
+  fits, negative in 12/12, mean -0.728 (sd 0.161) [band-44 (i) PASS]; logPR cubic R²≥0.70 in 12/12 (mean
+  0.827) [(ii) PASS]; falsification NOT triggered. Per-LR: -0.79/-0.68/-0.71 at 0.6/1.0/1.7×. logPR is a
+  HUMP (concentrated at network ends where λ is high, spread mid) = the C-bowl INVERTED — matches your
+  hypothesis text; NB criterion (ii)'s "argmin in 4-8" wording had the sign flipped vs its own hypothesis
+  (PR argmin is at the ENDS, 11/12). So the bowl = curvature carried by a shrinking number of directions
+  toward the ends (where band 43 pointed). m=16 Hutchinson, admissible (rule 13), PR scale-invariant. LR
+  multipliers recorded explicitly per iter-172. Fix: wdirs weight-direction needs .detach().
+- (was) status: **OPEN — filed 2026-09-04 (iteration 162).**
 - priority: **high — this is the only outstanding measurement blocking the campaign's stated goal.**
 
 **WHY THIS IS BEING ASKED FOR NOW, AND NOT EARLIER.** Iterations 156–161 exhausted the committed data
