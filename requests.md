@@ -169,6 +169,18 @@ Therefore, when scoring H1:
 ## REQ-051: decompose why each matrix has a different LR-to-curvature response
 
 - status: **OPEN**
+- **primary quantitative target, added iteration 230:** measure the **causal** elasticity
+  `k = d(log lam)/d(log g)`. Observationally, on REQ-048 with type and block absorbed, `k = 3.173`
+  (per seed 3.28/3.27/2.99/3.15, cluster-robust by block, t vs 2 = +17.1), and `k = 2.569` with a
+  lam-free concentration control (t vs 2 = +4.88). **k = 2 is the gauge-invariant value** — a scalar
+  rescaling a matrix's whole contribution moves `lam` by c² and `g` by c, leaving `C = lam/g²`
+  untouched. So observationally the between-matrix variation is **not** a pure gauge rescaling, and
+  `d(log C)/d(log g) = +1.17` (+0.57 with the concentration control), worth 0.17–0.21 dex of C across
+  ±1 sd of residual `log g`, partial R² 0.30–0.39.
+  **The confound this cannot resolve:** `g` and `lam` are measured at the same step and both respond
+  to the same training dynamics, so the observational k may be confounded. REQ-051 varies per-matrix
+  LR causally and is the only instrument in the queue that can separate them. Report the causal k
+  with its distance from 2, per seed, using within-seed effect sizes (rule 32).
 - requested: Jack / Codex, 2026-09-05 PDT
 - priority: **high, after the already-open REQ-050; do not interrupt work already running**
 - repo: `https://github.com/jacknzheng/kmaxwell-sota`, branch `jerry-agent`
