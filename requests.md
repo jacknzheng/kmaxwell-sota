@@ -5889,7 +5889,7 @@ Do not claim a writer-versus-internal mechanism from a contrast between two writ
 - priority: coordinate with REQ-051 while its four base checkpoints are live; REQ-050 and already
   running work retain priority. Do not interrupt or duplicate a running job.
 - branch: `jerry-agent`; resource ceiling: **two nodes fleet-wide**
-- incremental scope: **three uniform-Muon-LR arms per seed, four seeds, 12 continuations total**;
+- incremental scope: **five control arms per seed, four seeds, 20 continuations total**;
   reuse the four serialized REQ-051 step-2000 bases and probe implementation
 
 ### Evidence motivating the test
@@ -5929,19 +5929,48 @@ For every REQ-051 seed, load its exact step-2000 model/optimizer/scheduler/data-
 3. all 72 Muon matrix multipliers = **1.70**.
 
 Use the **same per_matrix_lr_muon implementation** as REQ-051, with all 72 entries equal in these
-arms. Keep embedding/output AdamW learning rates, weight decay, optimizer kernel/momentum, batch,
-data order and stop step identical between uniform and mixed arms. This specifically varies the
-scope of Muon LR changes. Audit older global configs separately to identify whether they changed
-AdamW LRs too; if they did, document that as an additional historical confound, not evidence about
-the new treatment. Record actual per-group runtime LR traces and full base-state hashes.
+three arms. Keep embedding/output/other AdamW learning rates fixed for the Muon-only arms.
+
+**Runtime audit resolved the historical scope question before launch (2026-09-05).** REQ-019's
+`eos_f1500_s{060,100,170}/train-log.txt`, `learning_rates step:1500`, records:
+
+| multiplier | embedding AdamW | output AdamW | Muon | other AdamW |
+|---|---:|---:|---:|---:|
+| 0.60 | 0.42 | 0.0024 | 0.015 | 0.009 |
+| 1.00 | 0.70 | 0.0040 | 0.025 | 0.015 |
+| 1.70 | 1.19 | 0.0068 | 0.0425 | 0.0255 |
+
+REQ-023's runtime traces keep the AdamW entries at 0.70/0.004/0.015 across assignments. The
+REQ-035 README describes reuse of the REQ-019 ladder, but does not commit its runtime LR traces;
+the directly verified all-optimizer scope is REQ-019. Its writer/internal contrasts are also
+negative at both matched endpoints: -0.345 (fork1500,2250) and -0.330 (fork2000,2750), while
+v-minus-qk is +0.325 and +0.317. Thus the same ranking reversal is present in a global dataset
+whose actual LR treatment is directly logged.
+
+To separate uniform Muon scope from non-Muon LR changes, add just **two further arms per seed**:
+
+4. **full_global065:** all 72 Muon multipliers = 0.65 AND all non-Muon optimizer group LRs = 0.65x
+   their reference values;
+5. **full_global170:** all 72 Muon multipliers = 1.70 AND all non-Muon optimizer group LRs = 1.70x
+   their reference values.
+
+Reuse arm 2 (all multipliers 1.00, reference non-Muon LRs) as the shared full-global 1.00 control.
+Do not duplicate it. In full-global arms apply the Muon scale exactly once: set per-matrix entries
+to s with the base Muon LR unchanged, and separately scale non-Muon groups. Verify actual traces
+after restoring optimizer state and applying hooks, since loading state can overwrite YAML LRs.
+
+All arms keep weight-decay coefficients, kernel/momentum, batch, data order, and stop step fixed.
+Changing LR also changes realized decoupled weight decay; log its update separately from the
+gradient-driven update and do not describe the result as isolating those two channels.
+Record actual per-group runtime LR traces and full base-state hashes.
 
 Measure early features at **2050** and endpoint curvature plus signal features at **2750**, with the
 same REQ-051 operator, normalization, minibatch pairing, checkpoint semantics, and no-state-mutation
-checks. The all-1 arm supplies a common reference trajectory. Training is 12x750 extra steps; the
-24 signal-probe states and 12 endpoint curvature-probe states must be costed separately using the
+checks. The all-1 arm supplies a common reference trajectory. Training is 20x750 extra steps; the
+40 signal-probe states and 20 endpoint curvature-probe states must be costed separately using the
 REQ-051 pilot. Do not omit the probe cost or assume old checkpoints exist.
 
-Execution order: once a seed's base is generated, schedule its six mixed arms and three uniform arms
+Execution order: once a seed's base is generated, schedule its six mixed arms and five control arms
 within the fleet ceiling before releasing that base. REQ-051's measured pilot must pass first. If
 REQ-051 has already released its bases when picked up, record that condition and the full regeneration
 cost before proceeding; do not silently treat these as free probe-only runs.
@@ -5950,7 +5979,8 @@ cost before proceeding; do not silently treat these as free probe-only runs.
 
 Primary comparisons use **the same three LR levels** in each design: 0.65, 1.00, 1.70. For each
 matrix select its corresponding three REQ-051 mixed-arm observations, fit k_mixed, and fit k_uniform
-from these added arms. The six-point REQ-051 fits remain secondary for this comparison.
+from the three Muon-only controls. Also fit k_full_global from full_global065, shared all-1,
+and full_global170. The six-point REQ-051 fits remain secondary for this comparison.
 
 Report per seed and block:
 
@@ -5958,6 +5988,14 @@ Report per seed and block:
 - writer/internal contrast in each design and their paired difference;
 - v-versus-q/k contrast in each design and their paired difference;
 - corresponding k_g, k_C_gauge, k_a, k_d and k_rho changes, using the same identity safeguards.
+
+Repeat these contrasts for full-global minus uniform-Muon and full-global minus mixed. The
+full-global-minus-uniform-Muon contrast holds each Muon LR fixed at a given level and changes
+only the non-Muon LR group. Its effect identifies sensitivity to those accompanying LR changes
+in this matched setup; it does not identify which individual non-Muon parameter caused it.
+Apply the same practical threshold/seed-sign criteria below separately to each contrast and
+report all three comparisons. The direction of the intermediate uniform-Muon condition is open.
+The historical directional prediction primarily concerns **full-global versus mixed** scope.
 
 The candidate prediction is that the writer/internal contrast is **larger in mixed than uniform**
 LR, and the v-versus-q/k contrast is **larger in uniform than mixed** LR. Register support for a
@@ -5967,7 +6005,7 @@ uncertainty; this threshold is a practical effect criterion, not a manufactured 
 If signs disagree or uncertainty is broad, report INCONCLUSIVE. If either contrast reverses with
 similar consistency and magnitude, report the directional prediction refuted.
 
-Fit a pooled predictor of k from type/block and a second with design-by-type terms. Evaluate on a
+Fit a pooled predictor of k from type/block and a second with three-way design-by-type terms. Evaluate on a
 whole held-out seed using training-only tuning. Require at least **10% lower pooled held-out RMSE**
 and improvement in at least **3/4 held-out seeds** to call intervention scope predictively useful.
 This is separate from testing whether raw differences are statistically distinguishable from zero.
@@ -5979,6 +6017,9 @@ curvature itself causes another's. If the difference disappears in this matched 
 the old writer/global mismatch is protocol-dependent; retire it as evidence for a network mechanism.
 The current power law may remain useful in either outcome, but k must be indexed by intervention
 scope if the difference persists.
+
+If the reversal appears only in full-global and not uniform-Muon, attribute the matched contrast to
+the accompanying non-Muon LR intervention, not to an established Muon-neighbour curvature channel.
 
 ### Deliverables
 
