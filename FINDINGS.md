@@ -1730,6 +1730,62 @@ gradient side contributes mainly by *cancelling* part of the curvature profile r
 creating it. The `mlp.proj` elasticity result remains a real type effect (c = +0.578, t = +7.72) but
 is **largely orthogonal to the depth question**, and REQ-053 is correctly ranked last.
 
+## Withdrawn before use: the "trace + n_eff" control is a proxy for the outcome (2026-09-05)
+
+Iteration 240 found `log lam` and `log g` co-move across depth (corr +0.60 to +0.80). Testing whether
+concentration explains that co-movement, controlling `log n_eff` alone left it intact (+0.51 to
++0.85), but controlling `log trace(H)` **and** `log n_eff` together collapsed it to −0.007, +0.443,
+−0.013, −0.221.
+
+**That collapse is not reportable.** Since `log n_eff = 2 log trace(H) − log trace(H²)`, those two
+controls span exactly the two Hutchinson moments — and those moments predict `log lam` across depth
+at **R² = 0.80 to 0.88** (corr(log lam, log rms) = +0.85 to +0.93). Controlling them removes most of
+`lam`'s own depth variation, so the residual correlation with `log g` is computed on what little of
+`lam` remains. That is rule 35's defect: a quantity regressed against its own near-complement. The
+result is withdrawn before it was used, and the question it was meant to answer — whether the
+`lam`–`g` co-movement reduces to concentration — **remains open**.
+
+## The curvature moments predict the gradient norm's depth profile (2026-09-05)
+
+The non-circular version of that question is legitimate and gives a strong result. Ask whether the
+**gradient** norm's depth profile is predicted by the two Hutchinson curvature moments, using `g` as
+the outcome and never using `lam`. Neither the hard rule nor rule 35 applies: `g` is not built from
+either moment, and `lam` appears nowhere.
+
+**Block-mean depth profile** (12 blocks), `log g` on `log trace(H)` and `log sqrt(trace(H²))`:
+
+| seed | R² | adjusted R² | permutation p |
+|---|---|---|---|
+| 0 | **0.9410** | 0.9278 | **0.0000** |
+| 1 | 0.8854 | 0.8600 | 0.0000 |
+| 2 | 0.8837 | 0.8579 | 0.0000 |
+| 3 | 0.8547 | 0.8225 | 0.0000 |
+
+The permutation null shuffles which block's moments pair with which block's `g`: null mean R² is
+**0.18** (95th percentile 0.48) against observed 0.85–0.94, in 2000 draws per seed.
+
+**It is not an aggregation artifact.** At **matrix level** — 72 points per seed, no block averaging,
+type absorbed — R² is **0.975 to 0.982**, an incremental **+0.120 to +0.157** over type alone.
+
+**It is not a shared depth trend.** Against a baseline of type plus **cubic depth**, the two moments
+still add **+0.100 to +0.146** in every seed.
+
+**Coefficients are stable and both positive**: on `log trace(H)` +0.198 to +0.323, on
+`log sqrt(trace(H²))` +0.217 to +0.277, across all four seeds.
+
+**What this says.** Where a matrix's curvature is large — in both total (`trace`) and top-weighted
+(`rms`) senses — its gradient norm is large too, and this holds at matrix level after depth and type
+are absorbed. Combined with iteration 231's ladder (elasticities wrt `log g` rising from `trace` to
+`rms` to `lam`), the two moments are jointly informative about the gradient side rather than either
+one alone.
+
+**What it does not say.** This is observational co-variation within a single checkpoint, not a
+direction of causation: curvature and gradient norm are measured at the same step and both respond to
+training dynamics. It also does **not** close the account — the open question from iteration 240
+(*why* `lam` and `g` co-move across depth, and whether that reduces to concentration) is untouched by
+this, because answering it with the Hutchinson moments is exactly the circular move withdrawn above.
+Settling it needs a design that moves curvature and gradient independently, which is **REQ-051**.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1801,3 +1857,6 @@ Before extending a line of work, compute how much of the chartered question it c
 best; an effect can be real, well-controlled and replicated while being nearly orthogonal to the
 question being asked. Never present variance shares when the cross term is large and negative --
 report standard deviations with the covariance shown.
+Check what a set of controls SPANS before interpreting a partial correlation: two controls that
+jointly reconstruct the outcome will collapse any association, and the collapse means nothing.
+Measure how well the controls predict the outcome itself first.
