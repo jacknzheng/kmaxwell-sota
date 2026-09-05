@@ -98,6 +98,19 @@ and commit each repeat separately rather than pre-averaging. Rationale:
 If probe cost makes 3 repeats at all six steps infeasible under the two-node ceiling, prefer
 **3 repeats at steps 0 and 1500** (the two the criteria actually compare) over one repeat everywhere.
 
+**Judge the registered criteria within seeds, added iteration 226.** Criterion 1 asks for a cubic
+R² and a correlation with the late profile; do **not** additionally require cross-seed sign or
+threshold agreement as corroboration. In this design the `log C` residual is **76% shared across
+seeds** (mean off-diagonal correlation +0.758 after type and block are absorbed), so four seeds are
+close to one structural test repeated four times. A pure-noise structural predictor achieves 4/4
+sign agreement **58%** of the time.
+
+Four seeds are still the right design -- they test robustness to **initialisation**, which is what
+criterion 1 needs. But report each seed's result on its own matrices, with standard errors clustered
+by block, and treat a criterion as met on **within-seed effect size**. For reference, the standing
+concentration result under exactly this treatment gives t = -9.4 to -17.0 with partial R² 0.34-0.56
+per seed; that is the standard of evidence a new claim should be held to.
+
 ## REQ-051: decompose why each matrix has a different LR-to-curvature response
 
 - status: **OPEN**
