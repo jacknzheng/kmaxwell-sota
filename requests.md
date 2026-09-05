@@ -29,6 +29,71 @@ Next request number: **REQ-053**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ◐ THE SECOND COMPONENT IS BACKWARD-SIDE — token coherence, but not separably (iteration 204)
+
+*Band 72 showed the residual is **not** curvature along any measured direction, leaving the **gradient
+side** as the remaining candidate. **REQ-047 measures exactly that, on the SAME four seeds.** Seven
+candidates, **all declared before fitting**, all rule-13 and rule-6 clean (none tridiagonal-derived, none
+contains `lam_top`), selection priced by permutation over block labels.*
+
+| candidate | mean corr with the residual | same-sign |
+|---|---:|---:|
+| **`da_cos_mean`** *(adjacent-token backward coherence)* | **−0.710** | **4/4** |
+| **`d_eff_rank`** *(output-gradient effective rank)* | **−0.659** | **4/4** |
+| `d_frob` | −0.422 | 4/4 |
+| `a_frob` | +0.395 | 4/4 |
+| `align_ratio` | −0.224 | 3/4 |
+| `a_eff_rank` | +0.109 | 2/4 |
+| `grad_rank1_frac` | +0.041 | 2/4 |
+
+**Permutation null over block labels, max \|r\| across all seven (20,000 shuffles): p = 0.0471.**
+
+> **★ The second component is BACKWARD-SIDE.** The two leading candidates are both properties of the
+> **output gradient** — its **token coherence** and its **effective rank** — and both are negative in
+> **4/4 seeds**. The four forward-side and alignment candidates are weak or unstable. **This is the first
+> positive identification of the 43% that spectral concentration does not explain.**
+
+**⚠️ BUT NOT SEPARABLY — three checks, and they qualify the claim.**
+
+| check | result |
+|---|---|
+| **(1) collinearity** (rule 9) | corr(`da_cos_mean`, `d_eff_rank`) = **+0.705** (per seed +0.64 to +0.77) |
+| **(2) per-seed stability** | `da_cos_mean` **−0.710, sd 0.112**; `d_eff_rank` −0.659, **sd 0.190** |
+| **(3) mutual partial correlation** | residual~`da_cos` \| `d_eff_rank` = **−0.481**; residual~`d_eff_rank` \| `da_cos` = **−0.368** |
+
+**The two are collinear at +0.705, so on 12 blocks neither can be credited alone.** `da_cos_mean` is the
+**more stable** (sd 0.112 vs 0.190) and **retains more under mutual control** (−0.481 vs −0.368), so it
+is the better single description — **but the honest statement is "a backward-side factor spanning token
+coherence and gradient rank", not "token coherence causes it".**
+
+**⚠️ AND p = 0.0471 IS MARGINAL.** Seven candidates on 12 points, with the null correctly pricing the
+selection. **This is a lead worth registering, not a settled result** — exactly the strength at which the
+amplitude finding (iteration 170) was correctly deflated.
+
+**⇒ WHY IT IS PLAUSIBLE RATHER THAN A COINCIDENCE.** `da_cos_mean` is not an arbitrary field: **band 36
+established it as the complete mediator of the q/k alignment deficit** (shrinkage 101–128%, t = 11–13).
+**A quantity already shown to control one gradient-side depth effect turning up as the leading candidate
+for another is a coherent finding, not a fishing result** — though the collinearity means it may be
+standing in for the broader backward-rank structure.
+
+**PROPOSED n=4 SEED CHECK — band 73 (criterion registered).**
+*Criterion:* after removing the concentration component from the C profile, (i) **both `da_cos_mean` and
+`d_eff_rank` correlate negatively with the residual in ≥3 of 4 seeds**; (ii) the **best backward-side
+candidate beats a selection-priced permutation null at p < 0.10**; (iii) **no forward-side candidate
+(`a_frob`, `a_eff_rank`) exceeds \|r\| = 0.45** — the effect must be specifically backward.
+*Status:* **satisfied by committed REQ-047 + REQ-048 data** (4/4 and 4/4; p = 0.0471; a_frob +0.395,
+a_eff_rank +0.109). ⚠️ **Registered as a LEAD at marginal significance**, with the collinearity stated.
+**No new compute requested; ≤2-node ceiling.**
+
+**⇒ THE ACCOUNT, UPDATED.** *Between-layer C is **~57% spectral concentration** (bands 44/57/59/71) plus
+a **~43% backward-side component** associated with output-gradient token coherence and effective rank
+(here). **Both are present and at equilibrium by step 1750** (bands 54, 70).* **REQ-051 would settle the
+collinearity**: its `k_a / k_d / k_rho` decomposition separates exactly these channels at two
+checkpoints, on four seeds.
+
+**Queue:** REQ-035/036/048 DONE; **REQ-050 OPEN**; **REQ-051 OPEN** (would separate this); **REQ-052
+OPEN**; REQ-049 optional. **No Jerry response since REQ-048.**
+
 ## ⊘ THE SECOND COMPONENT IS NOT ANY MEASURED DIRECTION (iteration 203) — a pre-declared negative
 
 *Band 71 bounds the unexplained component precisely: **0.272 dex of swing, cubic (R² 0.746), rising
