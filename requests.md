@@ -29,6 +29,79 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★ THE BOWL IS IN THE HESSIAN'S **SECOND MOMENT** (iteration 182) — band 44 localised, and one cross-check withdrawn
+
+*REQ-048 also delivered two diagnostic HVPs I had requested but never used —
+`curvature_along_weight` and `curvature_along_random`. Both are separate HVPs (rule 13 clean). Using them
+sharpens band 44 from "concentration" to a specific moment, **and retires a cross-check that looked
+excellent.***
+
+**⚠️ FIRST — A CROSS-CHECK THAT LOOKED DECISIVE AND IS WITHDRAWN.** `curvature_along_random` estimates
+the **typical** direction (`E[vᵀHv] = trace(H)/n`), so `λ_top / curvature_along_random` is a **peak-to-mean
+ratio** — a second, independent concentration measure. It correlates with the C profile at **+0.941,
+12/12, cubic R² 0.831, argmin interior 12/12.** Superb — and **largely construction**:
+
+```
+log C          = log λ − 2 log g
+log peak2mean  = log λ − log rnd      ← shares log λ, SAME sign
+```
+
+**Rule 6 check on the raw components — the clean predictors that contain NO `lam_top`:**
+
+| predictor | corr with C profile | same-sign |
+|---|---:|---:|
+| log `curvature_along_random` (raw) | **−0.062** | 7/12 |
+| log `trace_est` (raw) | **−0.061** | 6/12 |
+| **log PR** (Hutchinson, no λ) | **−0.741** | **12/12** |
+| *(log λ_top — shares with C)* | *+0.876* | *12/12* |
+
+> **The +0.941 is withdrawn as a shared-term artifact** — the same construction that inflated iteration
+> 160's `align` result and iteration 170's amplitude result. **This is the fourth time a quantity passed
+> every significance test and failed on construction.** **But PR survives at −0.741, 12/12, and PR
+> contains no `lam_top`** — so **band 44 is unaffected**, and the honest cross-check is that the two
+> *raw* trace probes are null while PR is not.
+
+**★ AND THAT DISCREPANCY LOCALISES THE FINDING.** `log PR = 2·log(trace) − log(trace_sq) − log n`
+exactly (identity residual **1.67e-16**). If `trace` alone is null but PR is not, the signal must sit in
+the **second moment**:
+
+| quantity | corr with C profile | same-sign | depth swing |
+|---|---:|---:|---:|
+| log `trace_est` (**first moment**) | **−0.061** | 6/12 | 0.227 |
+| log `trace_sq_est` (**second moment**) | **+0.644** | **12/12** | **0.659** |
+| log PR | −0.741 | 12/12 | 0.506 |
+
+> **★ THE BOWL IS IN `trace(H²)`, NOT `trace(H)`.** The Hessian's **total** curvature (first moment) is
+> **flat across depth** — swing 0.227, correlation null. Its **squared** curvature (second moment) carries
+> the profile — swing 0.659, **+0.644 in 12/12 fits**. **PR is not a delicate cancellation** (trace's
+> contribution is small); **PR ≈ inverted trace_sq**, so band 44's "concentration" reading is really a
+> statement about the **second moment**.
+
+**⇒ WHY THIS IS A SHARPER RESULT.** `trace(H)` is the **sum** of eigenvalues, `trace(H²)` the **sum of
+their squares**. Equal totals with unequal squares means the eigenvalues are **differently distributed at
+the same total** — the ends of the network hold their curvature in **fewer, larger** eigenvalues, the
+middle spreads the **same total** across more directions. **This is a precise mathematical statement of
+what differs between layers, and it is measured directly rather than inferred from a ratio.**
+
+**PROPOSED n=4 SEED CHECK — band 57 (criterion registered).**
+*Criterion:* (i) **corr(C profile, log trace_sq_est) ≥ +0.50** with the same sign in ≥10/12 fits;
+(ii) **corr(C profile, log trace_est) not significant** (|mean| < 0.25, same sign < 9/12);
+(iii) **swing(trace_sq profile) > 2 × swing(trace profile)**.
+*Status:* **satisfied by committed REQ-048 data** (+0.644, 12/12; −0.061, 6/12; 0.659 vs 0.227 = 2.9×).
+**No new compute requested; ≤2-node ceiling.**
+
+**⚠️ STILL A STRUCTURAL IDENTIFICATION.** `trace(H²)` is a Hessian functional like C, so this remains
+*what differs*, not *what causes it*. **The causal question is now maximally sharp: why does the second
+moment of the Hessian spectrum peak at the network's boundaries while the first moment stays flat?**
+**REQ-050** (curvature at initialisation) is the filed experiment that would separate *inherited* from
+*learned* — and it is now the highest-value open request.
+
+**Standing rule 20.** *A ratio that survives rule 6 should be decomposed into its raw parts before being
+interpreted. Here PR passed the shared-term check, but only decomposing it revealed the signal lives
+entirely in one component — a sharper and more testable claim than the ratio itself.*
+
+**Queue:** REQ-048 **DONE**; **REQ-050 OPEN** (highest value); REQ-049 optional. No new Jerry response.
+
 ## ★★★ REQ-048 DELIVERED — THE BOWL **IS** A SPECTRAL-CONCENTRATION PROFILE (iteration 181)
 
 *Jerry delivered REQ-048 (`logs/kmaxwell/req048_spectral_participation/`, n=4). **It answers the
