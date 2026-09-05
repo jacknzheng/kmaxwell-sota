@@ -625,6 +625,54 @@ work: shared-term construction (it is `g`-free), bad joins (it is computed withi
 aggregation artifacts (it holds per matrix and per block), selection (it was not chosen from a search),
 and now depth-collinearity. **It is the one result that has survived all of them.**
 
+## The concentration coefficient has no closed form from the committed moments (2026-09-05)
+
+Bands 71/75 established that spectral concentration carries the majority of the between-layer C
+profile, and iteration 222 showed the result survives depth-collinearity. What had never been tested
+is the coefficient's **value**. The saturated fits give d(log C)/d(log n_eff) = -0.347; controlling
+trace and fitting log lam directly gives **-0.5745** (sd 0.0305 across 4 seeds, t vs 0 = -37.6).
+
+Three parameter-free predictions were derived and **all three were refuted by the data.**
+
+**Attempt 1 -- the small-share limit, prediction -0.500.** With lam a small share of trace(H) (median
+lam/trace = 0.0040, so the regime assumption holds) and lam dominating trace(H^2), n_eff ~ T^2/lam^2
+gives exactly -0.5. Measured -0.5745, t vs -0.5 = **-4.88** across seeds, all four seeds below -0.5.
+REFUTED -- consistent overshoot, not noise.
+
+**Attempt 2 -- the exact partial derivative, prediction -1/(2f).** Relaxing "lam dominates trace(H^2)"
+to a measured share f = lam^2/trace(H^2) gives d(log lam)/d(log n_eff) = -1/(2f) at fixed bulk.
+Measured f = 0.0814 (median 0.0354), so the prediction is **-6.15** against a fitted -0.574.
+REFUTED by an order of magnitude.
+
+**The diagnosis, tested rather than asserted.** Attempt 2 assumed the bulk S = trace(H^2) - lam^2 is
+held fixed while lam varies. It is not: corr(log lam, log S) = **+0.753** pooled (+0.732 to +0.773
+per seed), and the saturated elasticity is d(log S)/d(log lam) = **+1.271** (sd 0.036). The bulk
+co-moves strongly with the top eigenvalue, so the observed between-matrix slope is a total
+derivative and the fixed-bulk partial was simply the wrong object.
+
+**Attempt 3 -- the co-moving-bulk formula, prediction -1/(k + (2-k)f) with k = 1.271.** Both inputs
+measured independently of the -0.5745 regression, so this is arithmetic, not a fit. Predicted -0.730
+to -0.773 per seed against fitted -0.539 to -0.605: mean gap **-0.178**, sd 0.049, t = **-7.23**.
+REFUTED.
+
+**What this establishes.** The two Hutchinson moments trace(H) and trace(H^2) do **not** determine
+the concentration coefficient. Three successive relaxations of the spectral model -- each removing
+the assumption the previous one violated -- land at -0.500, -6.15 and -0.73 against a measured
+-0.574. The search was stopped here deliberately: a fourth algebraic form chosen to land on -0.574
+would be fitting, not deriving, and would carry none of the falsifiability of these three.
+
+An incidental refutation, recorded so it is not re-used: f is **not** a scale-free shape statistic.
+corr(log lam, f) = +0.48 and corr(log trace, f) = -0.31 per seed, so the "n_eff is pure shape,
+therefore no scale-based derivation can apply" escape was itself wrong and is withdrawn.
+
+**Effect on the standing account: none.** The concentration finding is a claim about sign, share and
+robustness -- 57% of the layer profile, 37% incremental beyond type and block, no sign flip in 20
+specification-seed combinations. Its coefficient being empirical rather than derived does not weaken
+any of that. What is now on record is the sharper statement: the account explains **that** and **how
+much**, and cannot yet explain **why that much**. The question relocates to what sets the
+bulk-to-top elasticity k = 1.271, which these two moments cannot answer -- it needs the eigenvalue
+distribution, which is not in the committed data at any depth.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -634,3 +682,6 @@ Separate cross-type, within-type depth, and within-matrix treatment relationship
 Check shared terms, collinearity, group-summary artifacts and selection leakage before interpreting
 a correlation. Report seed dependence, effect sizes, uncertainty, and inconclusive outcomes.
 
+A parameter-free prediction must be derived and stated before its target value is looked at; once
+several derivations have missed a known number, stop -- a further algebraic form chosen to land on
+it is fitting, not deriving.
