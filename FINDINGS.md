@@ -1130,6 +1130,60 @@ has a specific quantitative target: measure whether the causal elasticity of `la
 above 2, or whether the observational k > 2 is confounded by the joint response of both quantities to
 training dynamics.
 
+## The gradient norm tracks spectral concentration, not curvature size (2026-09-05)
+
+Iteration 230 measured `k = d(log lam)/d(log g) = 3.173` against a gauge-invariant value of 2, and
+concluded the between-matrix variation is not a rescaling. This iteration asks **what breaks the
+gauge**, and the answer arrives as an ordered ladder.
+
+**First, the gauge reference re-derived, because the obvious derivation is wrong.** Scaling a
+matrix's *contribution to the loss* by c scales the gradient by c and the Hessian block by **c¹**
+(the Hessian is a second derivative of a term linear in c), which would leave `C = lam/g²` varying as
+1/c — not invariant. The campaign's theorem is about a **reparametrisation**: write `W = c·V`, then
+`dL/dV = c·dL/dW` so `g ~ c`, and `d²L/dV² = c²·d²L/dW²` so `lam ~ c²`. That is the gauge under
+which C is invariant, and it fixes **every** spectral moment's elasticity wrt `log g` at **+2**.
+
+**All three moments deviate, and they deviate in order.** Saturated in type and block:
+
+| moment | gauge value | measured | deviation | per seed |
+|---|---|---|---|---|
+| `log trace(H)` (sum of all eigenvalues) | 2.00 | **+1.107** | **−0.893** | 1.12, 1.07, 1.14, 1.10 |
+| `log sqrt(trace(H²))` (top-few weighted) | 2.00 | **+2.424** | +0.424 | 2.39, 2.49, 2.28, 2.53 |
+| `log lam_top` (the single largest) | 2.00 | **+3.173** | +1.173 | 3.28, 3.27, 2.99, 3.15 |
+
+The elasticity **rises monotonically with how top-weighted the moment is**. The differences are what
+the claim asserts, and they are strong within seeds — the right standard under rule 32, since the
+three moments are measured on the same matrices and are highly correlated:
+
+| difference | mean | seed sd | t | sign |
+|---|---|---|---|---|
+| `lam − trace` | **+2.066** | 0.157 | **+26.3** | 4/4 |
+| `lam − rms` | +0.749 | 0.113 | +13.3 | 4/4 |
+| `rms − trace` | +1.317 | 0.134 | +19.7 | 4/4 |
+
+**Permutation null:** shuffling `log g` within seed and recomputing gives a `lam − trace` spread
+centred at +0.002 with sd 0.071 against an observed **+2.066** — **p = 0.0000** over 2000 draws.
+
+**The physical statement.** `trace(H)` is the sum over all eigenvalues, `sqrt(trace(H²))` is dominated
+by the largest few, `lam_top` is the single largest. An elasticity that rises across that sequence
+means **matrices with larger gradients hold their curvature in fewer directions**. Total curvature
+barely responds to `g` (+1.11, well *below* the gauge value), while the top eigenvalue responds
+strongly (+3.17). The gradient norm tracks **concentration**, not size.
+
+**Why this matters beyond restating bands 71/75.** Those established that concentration explains the
+depth profile of C, using `n_eff` as a predictor. This arrives at concentration from an entirely
+different direction — the gauge structure of `C = lam/g²` and the gradient norm — and uses no
+concentration statistic as a regressor at all. The three moments are separate Hutchinson estimates;
+`lam_top` is the Lanczos quantity, and it appears here as an **outcome**, never as a predictor, so
+the hard rule is not engaged.
+
+**The limit, unchanged from iteration 230.** `g` is not exogenous; it is measured at the same step as
+the curvature moments and both respond to the same training dynamics. This is co-variation across
+matrices, not a demonstration that changing `g` would move the spectrum. **REQ-051** remains the only
+queued instrument that can separate them, and this result gives it a second registered target
+alongside the causal `k`: whether the **moment ladder** itself survives causal variation of the
+gradient side, or collapses toward the gauge value of +2 for all three moments.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1166,3 +1220,6 @@ An exact algebraic identity closing to machine precision confirms arithmetic, ne
 When a correlation has the OPPOSITE sign to what its construction artifact predicts, the artifact
 is not the whole story: compute the artifact's expected value and treat the gap as a measurable
 quantity rather than dismissing the correlation.
+Re-derive a theoretical reference value before testing against it; the plausible derivation may
+give the wrong exponent. Here, scaling a loss contribution scales the Hessian by c, not c^2 -- only
+a reparametrisation gives the c^2 that makes lam/g^2 gauge-invariant.

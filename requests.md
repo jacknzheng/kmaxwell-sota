@@ -181,6 +181,17 @@ Therefore, when scoring H1:
   to the same training dynamics, so the observational k may be confounded. REQ-051 varies per-matrix
   LR causally and is the only instrument in the queue that can separate them. Report the causal k
   with its distance from 2, per seed, using within-seed effect sizes (rule 32).
+- **second target, added iteration 231 — the moment ladder.** Under the reparametrisation gauge
+  (`W = c·V` gives `g ~ c`, every Hessian moment `~ c²`), **all** spectral moments must have
+  elasticity **+2** wrt `log g`. Observationally on REQ-048 they do not, and they deviate in a strict
+  order: `trace(H)` **+1.107**, `sqrt(trace(H²))` **+2.424**, `lam_top` **+3.173**. Within-seed
+  differences are `lam − trace` +2.066 (t = +26.3), `lam − rms` +0.749 (t = +13.3), `rms − trace`
+  +1.317 (t = +19.7), all 4/4 seeds; a permutation null on `log g` gives p = 0.0000. Physically:
+  **matrices with larger gradients hold their curvature in fewer directions.**
+  Report the same three elasticities under **causal** LR variation. Two outcomes are informative:
+  the ladder survives (concentration genuinely responds to the gradient side), or it collapses toward
+  +2 for all three moments (the observational ladder was confounded by joint response to training
+  dynamics). Report whichever occurs, per seed, with within-seed effect sizes.
 - requested: Jack / Codex, 2026-09-05 PDT
 - priority: **high, after the already-open REQ-050; do not interrupt work already running**
 - repo: `https://github.com/jacknzheng/kmaxwell-sota`, branch `jerry-agent`
