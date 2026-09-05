@@ -1184,6 +1184,56 @@ queued instrument that can separate them, and this result gives it a second regi
 alongside the causal `k`: whether the **moment ladder** itself survives causal variation of the
 gradient side, or collapses toward the gauge value of +2 for all three moments.
 
+## The moment ladder survives independent-probe testing and errors-in-variables (2026-09-05)
+
+Iteration 231's ladder — elasticities wrt `log g` rising from `trace(H)` to `sqrt(trace(H²))` to
+`lam_top`, bracketing the gauge value of +2 — was stress-tested against the one failure mode it had
+not faced. It survives, and one premise stated in setting up the test was wrong and is corrected.
+
+**Correction: `g` is not probe-free.** Iteration 232 assumed `gradient_block_norm` is a norm of a
+stored gradient and therefore measured exactly. It is not: across the three probe repeats of the same
+matrix, `log10 g` has a **within-matrix sd of 0.115 dex** against a between-matrix sd of 0.241.
+Reliability is **0.786 for a single repeat**, 0.917 for the three-repeat average. So `g` is evaluated
+on a probe batch, errors-in-variables applies to the regressor, and the raw elasticities are
+attenuated toward zero.
+
+**The decisive test: independent probe sets.** All three moments and `g` come from the same probe
+draw within a repeat, so shared probe noise could in principle manufacture an ordering. Taking `g`
+from one repeat and the moments from a **different** repeat makes the two error terms independent —
+shared noise cannot survive it. All six ordered pairs:
+
+| `g` / moments | trace | rms | lam | spread |
+|---|---|---|---|---|
+| 060/100 | +1.075 | +2.147 | +2.970 | +1.896 |
+| 060/170 | +0.940 | +1.875 | +2.653 | +1.713 |
+| 100/060 | +1.094 | +2.429 | +3.201 | +2.107 |
+| 100/170 | +0.949 | +2.052 | +2.682 | +1.733 |
+| 170/060 | +1.011 | +2.310 | +2.967 | +1.956 |
+| 170/100 | +1.028 | +2.229 | +2.853 | +1.825 |
+| **mean** | **+1.016** | **+2.174** | **+2.888** | **+1.872** |
+
+The ordering holds in **6 of 6** independent-error configurations. The ladder is not a probe artifact.
+
+**Disattenuated** by the measured single-repeat reliability: trace **+1.292**, rms **+2.765**, lam
+**+3.673**, against a gauge value of +2.000 for all three.
+
+**Robustness to the reliability estimate itself.** Disattenuation divides all three elasticities by
+the same rho, so:
+
+- the **ordering** trace < rms < lam is **rho-invariant by construction**;
+- `lam` (+2.888) and `rms` (+2.174) exceed the gauge value **with no correction at all**, so those
+  conclusions hold for any rho ≤ 1;
+- `trace` (+1.016) would need rho ≤ **0.508** to reach +2; the measured value is 0.786.
+
+Correction moves slopes *away* from zero, so it **widens** the ladder — the raw numbers were the
+conservative ones, and the bracketing of the gauge value is not an artifact of the correction.
+
+**Standing status.** The ladder has now been tested against shared probe noise (independent-probe
+cross-repeat, 6/6), errors-in-variables (disattenuated, conclusions rho-invariant), a permutation
+null (p = 0.0000, iteration 231), and within-seed effect sizes (t = +13 to +26, iteration 231). The
+limit is unchanged and is not statistical: **`g` is not exogenous**, so this remains co-variation
+across matrices. REQ-051 is still the only queued instrument that can make it causal.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1223,3 +1273,7 @@ quantity rather than dismissing the correlation.
 Re-derive a theoretical reference value before testing against it; the plausible derivation may
 give the wrong exponent. Here, scaling a loss contribution scales the Hessian by c, not c^2 -- only
 a reparametrisation gives the c^2 that makes lam/g^2 gauge-invariant.
+Verify whether a quantity is probe-estimated before assuming it is measured exactly; repeated
+probe files make this checkable, and a regressor's reliability decides whether a slope is
+attenuated. When several outcomes share one regressor, attenuation scales them all equally and
+cannot create an ordering -- so orderings are reliability-invariant while level comparisons are not.
