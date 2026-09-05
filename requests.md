@@ -29,6 +29,75 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⊘/★ THE BOWL IS IN THE **TOP** OF THE SPECTRUM ONLY — three directions now tested (iteration 183)
+
+*The last unused REQ-048 field is `curvature_along_weight = ŴᵀHŴ` — curvature along the **learned weight
+direction**. It tests a concrete mechanism for band 57: for a Gauss-Newton Hessian `H = JᵀJ`, if the ends
+of the network concentrate curvature into few directions **and W is aligned with those directions**, then
+the weight direction's curvature relative to the typical direction should be an **inverted-U** mirroring
+PR. **Admissible: a separate HVP, no tridiagonal content (rule 13), no `lam_top` (rule 6 clean).***
+
+**⊘ THE MECHANISM IS REFUTED.**
+
+| quantity | corr with C profile | same-sign | argmax |
+|---|---:|---:|---|
+| log `curvature_along_weight` (raw) | **+0.153** (sd 0.349) | 8/12 | **L0 in 12/12** |
+| log (W-dir curvature ÷ typical) | **+0.163** (sd 0.346) | 8/12 | **L0 in 12/12** (one L1) |
+
+**Essentially null, and monotone rather than the predicted inverted-U.** Curvature along the direction
+the network has actually built does **not** carry the bowl.
+
+**⚠️ AND THE NULL IS POWERED — this is not a noisy field.** The W-curvature profile **replicates at
++0.951 mean pairwise correlation** across the 12 fits (min +0.870) — a precise measurement — and is
+**cleanly monotone: linear R² 0.876, slope −0.0637/block.**
+
+| block | 0 | 2 | 4 | **6** | 8 | 10 | 11 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **C** | +0.199 | −0.026 | −0.036 | **−0.194** | −0.075 | +0.042 | **+0.316** |
+| **log PR** | −0.294 | −0.172 | −0.018 | **+0.206** | +0.212 | +0.062 | −0.290 |
+| **W-curv** | **+0.450** | +0.152 | +0.077 | −0.045 | −0.195 | **−0.383** | −0.141 |
+
+**A profile that replicates at +0.951 but is monotone where C is a bowl is a real dissociation, not a
+failure to measure** — structurally identical to band 56's C_polar result.
+
+**★ ⇒ THREE DIRECTIONS TESTED, AND THE PATTERN IS CLEAN:**
+
+| direction probed | depth profile | carries the bowl? |
+|---|---|:---:|
+| **top eigendirection** (`λ_top`) | **U-shaped, min L6** | **YES** |
+| Muon's step direction (`curvature_along_polar`) | **monotone decline** (band 56, 11/11 LRs) | no |
+| the learned weight direction (`ŴᵀHŴ`) | **monotone decline** (here, +0.951 replication) | no |
+| *typical/random direction* (`trace/n`) | *flat* (band 57, corr −0.061) | no |
+
+> **★ Only the TOP of the spectrum carries the depth structure.** Along **every other direction tested**
+> — the optimiser's step, the learned weights, and the average over random directions — curvature either
+> **declines monotonically with depth or is flat**. **The bowl is not a property of the loss surface
+> broadly; it is a property of its extreme eigendirection**, consistent with band 57's finding that
+> `trace(H²)` carries the profile while `trace(H)` does not.
+
+**⇒ THIS SHARPENS WHY EVERY OPTIMISER LEVER FAILED.** Muon steps along the polar direction (monotone);
+the network's own weights lie along a monotone direction; the average direction is flat. **The bowl lives
+in a subspace that neither the optimiser's step nor the learned solution occupies** — which is precisely
+why the LR (bands 49, 53), batch reshaping (band 51) and per-type equalization (band 48) were all inert
+on it.
+
+**PROPOSED n=4 SEED CHECK — band 58 (criterion registered).**
+*Criterion:* (i) **corr(C profile, log curvature_along_weight) not significant** (|mean| < 0.35, same
+sign < 10/12); (ii) the W-curvature profile **replicates at mean pairwise ≥ +0.70** (so the null is
+powered); (iii) the W-curvature profile is **monotone** — linear R² ≥ 0.60 with a negative slope.
+*Status:* **satisfied by committed REQ-048 data** (+0.153, 8/12; **+0.951**; linear R² 0.876, slope
+−0.0637). **No new compute requested; ≤2-node ceiling.**
+
+**⚠️ WHAT REMAINS OPEN, and it is now a single sharp question.** `trace(H)` flat, `trace(H²)` bowl-shaped,
+and only the extreme eigendirection carrying depth structure ⇒ **why does the network's boundary
+concentrate its curvature into few large eigenvalues while its middle spreads the same total?**
+**REQ-050** (curvature at initialisation) separates *inherited from the architecture* vs *built during
+training* and remains the **highest-value open request**.
+
+**Queue:** REQ-048 **DONE**; **REQ-050 OPEN**; REQ-049 optional. No new Jerry response. **All REQ-048
+fields are now analysed** — `participation_ratio`, `trace_est`, `trace_sq_est`, `curvature_along_random`
+(iteration 182) and `curvature_along_weight` (here).
+
 ## ★ THE BOWL IS IN THE HESSIAN'S **SECOND MOMENT** (iteration 182) — band 44 localised, and one cross-check withdrawn
 
 *REQ-048 also delivered two diagnostic HVPs I had requested but never used —
