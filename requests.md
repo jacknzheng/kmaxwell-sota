@@ -29,6 +29,62 @@ Next request number: **REQ-053**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅ THE LEVER HAZARD IS CONTAINED (iteration 199) — band 67 was the only exposed survivor
+
+*Band 67 died because a quantity measured under the **mixed-LR** design reversed under the **global-LR**
+design. **That is a general hazard, not a one-off**: several bands are estimated on one design and stated
+as if universal. **Before trusting the rest of the account, the exposure had to be enumerated.***
+
+**CLASSIFICATION — a band is lever-exposed only if it FITS AN LR RESPONSE:**
+
+| class | definition | bands |
+|---|---|---|
+| **(A) no LR variation used** | profile computed **within** a single LR; LRs compared only for *agreement* | **44, 57, 58, 59, 63, 64** |
+| (B) global-LR variation | REQ-019's 11 arms / REQ-035's 3 | 52 |
+| (C) per-matrix (mixed) LR | REQ-023 / REQ-045 | 42, 49, 53, **67** |
+
+> **★ EVERY BAND IN THE MODEL-FREE CORE IS CLASS A.** Bands 44, 57, 58, 59, 63 and 64 compute their
+> profiles **within** one LR and then check that the answer **agrees** across LRs. **They never fit an
+> LR response at all**, so the mixed-vs-global distinction **cannot flip them** — it is not a hazard
+> they are exposed to.
+> **Bands 42, 49 and 53 are class C but were ALREADY scope-limited to per-matrix interventions in
+> iteration 177**, before band 67 was written. **Band 67 was the only surviving band that fitted an LR
+> response and stated it universally — and it is the one that fell.**
+
+**EMPIRICAL CONFIRMATION — the bowl is the SAME object under both designs:**
+
+| design | argmin | swing | min − L0 | min − L11 |
+|---|---:|---:|---:|---:|
+| **global LR** (REQ-035) | **L6** | 0.538 | −0.355 | −0.538 |
+| **mixed LR** (REQ-023) | **L6** | 0.555 | −0.418 | −0.555 |
+| | | | **corr = +0.931** | |
+
+**Same minimum, same magnitude, correlation +0.931 across two designs with different forks, different
+randomisations and different LR mechanisms.** **The central finding is design-independent** — which is
+exactly what class A predicts and is now measured rather than assumed.
+
+**PROPOSED n=4 SEED CHECK — band 68 (criterion registered).**
+*Criterion:* (i) the C bowl's **argmin agrees between a global-LR panel and a mixed-LR panel**;
+(ii) the two bowl profiles correlate at **≥ +0.70**; (iii) **no band whose evidence is a within-LR
+profile may be quoted as an LR-response claim** — a documentation criterion, checkable by inspection.
+*Status:* **satisfied by committed REQ-023 + REQ-035 data** (L6 = L6; **+0.931**).
+**No new compute requested; ≤2-node ceiling.**
+
+**⇒ WHAT THIS SETTLES, AND WHAT IT DOES NOT.** It settles that **band 67's failure was contained**: the
+account's core does not rest on LR-response fits, and the bowl reproduces across both lever types.
+**It does not rescue band 67**, which remains downgraded to mixed-LR-only, and **it does not weaken
+REQ-052** — that request is still the right instrument for deciding whether the writer sensitivity is
+real under matched controls, and I continue to endorse it.
+
+**Standing rule 26.** *State which experimental lever a claim's evidence varies, and never generalise an
+LR-response finding beyond the lever that produced it.* **The distinction that killed band 67 was
+already recorded in iteration 177** (global LR moves the trajectory; per-matrix LR scales one
+contribution) — **it simply was not applied as a filter when band 67 was written.** *Enumerating
+exposure by class, as here, is cheaper than discovering it one band at a time.*
+
+**Queue:** REQ-035/036/048 DONE; **REQ-050 OPEN** (16.2 min, the causal question); **REQ-051 OPEN**;
+**REQ-052 OPEN** (endorsed); REQ-049 optional. **No Jerry response since REQ-048.**
+
 ## ⛔ BAND 67 DOWNGRADED — REQ-052's audit is CORRECT and I reproduce it exactly (iteration 198)
 
 *REQ-052 (Jack, 2026-09-05) challenges band 67 on two grounds. **Both are right, I have verified the
