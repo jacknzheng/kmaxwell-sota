@@ -5848,3 +5848,36 @@ These clarifications are part of REQ-051 and do not add training arms:
   Call step 2750 the planned endpoint; establish stationarity from available late training/probe
   diagnostics before calling it equilibrium. If those diagnostics are insufficient, flag that
   limitation and propose a bounded follow-up instead of extrapolating a time course from one point.
+
+### REQ-045 pre-flight axis correction — 2026-09-05
+
+The iteration-196 pre-flight at the top of this queue is reproducible, but it regresses against
+`m_i` alone. REQ-045's actual treatment is **`S_arm * m_i`**, and `S_arm` changes across the three
+arms. Using `req045_draws.json` and the raw step-2750 curvature files:
+
+| axis used | matrices with 3 distinct levels | with 2 | with 1 |
+|---|---:|---:|---:|
+| matrix draw `m_i` only (iteration 196) | 37 | 34 | 1 |
+| effective multiplier `S_arm*m_i` | **64** | **8** | **0** |
+
+For the 64 matrices with three effective levels, the mean descriptive `k_lambda` is:
+
+| type | mean k | matrices |
+|---|---:|---:|
+| attn.q | 0.974 | 11 |
+| attn.k | 1.143 | 7 |
+| attn.v | 1.095 | 11 |
+| attn.proj | 0.401 | 11 |
+| mlp.fc | 1.084 | 12 |
+| mlp.proj | 1.317 | 12 |
+
+These use `k=-OLS_slope(log(top_eigenvalue), log(S*m))` per matrix and then average within type.
+They are still descriptive, noisy three-point fits with an unadjusted neighbour channel, not new
+causal type estimates. The v-minus-equal-weight-q/k contrast is small (+0.036), and the projection
+ratio is about **3.28**, not 13.22. Thus neither the 37/72 effective-level coverage statement nor
+the 13x own-LR sensitivity statement should guide new experiments. The original registered REQ-045
+two-regressor fit already used `S*m` correctly and is unaffected by this audit.
+
+REQ-051's balanced six-level design remains useful. Retain the q/k/v prediction as falsifiable,
+with uncertainty, and report `k_mlp.proj-k_attn.proj` as an additional exploratory contrast.
+Do not claim a writer-versus-internal mechanism from a contrast between two writer types.
