@@ -29,6 +29,73 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅★ BAND 44 SURVIVES THE SATURATED GUARD TOO (iteration 190) — the mirror as position-contrasts, not curve correlation
+
+*Band 63 established the bowl model-free. **Band 44 — the spectral-concentration result, and the answer
+to the campaign's central question — is stated the same polynomial way** ("log PR cubic R² 0.827, argmax
+in layers 4–8") **and its headline is `corr = −0.862` between two FITTED PROFILES.** A correlation
+between fitted curves is exactly the fragile construction rule 23 targets, so the same guard applies.*
+
+**THE SATURATED FORM, in two parts, with free per-block effects and no polynomial anywhere:**
+
+| block | 0 | 2 | 4 | **6** | **8** | 10 | 11 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **log C** | 0.000 *(ref)* | −0.225 | −0.235 | **−0.393** | −0.274 | −0.157 | +0.117 |
+| **log PR** | 0.000 *(ref)* | +0.122 | +0.276 | +0.500 | **+0.506** | +0.356 | +0.004 |
+
+**(i) PR has an interior maximum above both endpoints** (matrix-clustered):
+
+| contrast | estimate | se | t |
+|---|---:|---:|---:|
+| block 8 − block 0 | **+0.506** | 0.107 | **+4.74** |
+| block 8 − block 11 | **+0.501** | 0.202 | **+2.48** |
+
+**(ii) THE MIRROR, restated as paired position-contrasts** — same blocks, opposite signs, **no
+correlation between curves involved**:
+
+| contrast | **C** | **PR** | opposite? |
+|---|---:|---:|:---:|
+| block 6 vs 0 | **−0.393** (t −5.60) | **+0.500** (t +5.50) | **YES** |
+| block 6 vs 11 | **−0.511** (t −4.34) | **+0.496** (t +2.55) | **YES** |
+
+**PER-FIT — unanimous on all four checks:**
+
+| check | result |
+|---|---|
+| PR argmax interior (4–8) | **12/12** |
+| PR above **both** endpoints | **12/12** |
+| C and PR opposite sign @ L0 | **12/12** |
+| C and PR opposite sign @ L11 | **12/12** |
+| mean PR vs L0 | **+0.532**, t **+5.96** |
+| mean PR vs L11 | **+0.528**, t **+20.59** |
+
+**⚠️ NOTE ON THE ONE WEAK LEG.** The pooled `block 8 − block 11` contrast is the weakest (t = +2.48),
+but per-fit the same quantity gives **t = +20.59**. **That is not a contradiction:** the pooled
+clustered SE includes between-fit variation in the *level* of PR at L11, which the paired per-fit test
+differences away. **The paired figure is the appropriate one for a within-fit position contrast, and the
+pooled figure is the conservative one — both are reported rather than the flattering one alone.**
+
+> **✅★ THE CENTRAL RESULT IS NOT AN ARTEFACT OF CURVE-FITTING.** Band 44's answer — *C is high where the
+> Hessian spectrum is concentrated and low where it is spread* — now holds as **contrasts between
+> measured positions**, with **no polynomial and no correlation between fitted profiles.** Together with
+> band 63, **the campaign's two load-bearing claims have both passed the guard that dissolved band 61.**
+
+**PROPOSED n=4 SEED CHECK — band 64 (criterion registered).**
+*Criterion:* using **free per-block effects (no polynomial)**: (i) **log PR's maximum lies in blocks 4–8
+in ≥10 of 12 fits** and is **above both endpoints in ≥10 of 12**; (ii) at the block where **C** is
+minimal, the **C and PR contrasts against each endpoint have OPPOSITE signs in ≥10 of 12 fits**;
+(iii) the pooled PR-vs-L0 contrast is positive with **|t| ≥ 3** under matrix-clustered SEs.
+*Status:* **satisfied by committed REQ-048 data** (12/12, 12/12; 12/12 and 12/12; +0.506, t +4.74).
+**No new compute requested; ≤2-node ceiling.**
+
+**⇒ WHAT IS NOW MODEL-FREE, AND WHAT IS NOT.** Model-free (position contrasts only): **the bowl**
+(band 63) and **the concentration mirror** (here). Still polynomial-dependent, and flagged as such:
+**band 59's `n_eff` slope of −0.590 vs the predicted −1** (a regression coefficient, not a contrast) and
+**band 39's cubic form.** *Neither is load-bearing for the central claim* — but the distinction should be
+kept visible rather than assumed away.
+
+**Queue:** REQ-048 **DONE**; **REQ-050 OPEN** (highest value); REQ-049 optional. No new Jerry response.
+
 ## ✅★ THE BOWL SURVIVES ITS OWN GUARD (iteration 189) — stated with NO functional form
 
 *Rule 23 was written last iteration after band 61's "discrete break" dissolved under a change of
