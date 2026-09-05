@@ -29,6 +29,77 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ✅★ THE BOWL SURVIVES ITS OWN GUARD (iteration 189) — stated with NO functional form
+
+*Rule 23 was written last iteration after band 61's "discrete break" dissolved under a change of
+baseline. **Its first duty is to be turned on the campaign's own headline.** Every bowl result —
+bands 39, 44, 52, 59 — is phrased as *"cubic R² high, linear R² ≈ 0, argmin at L6"*. **That is a
+polynomial-baseline claim, and rule 23 says a fitted baseline can create the very feature being
+claimed.** So: does the bowl survive when depth is modelled with **free per-block effects**?*
+
+**THE SATURATED TEST.** No polynomial anywhere — a free coefficient per block, type controlled, standard
+errors clustered on the 72 matrices. The saturated form of *"there is a bowl"* is: **the free per-block
+profile has an interior minimum significantly below BOTH endpoints.**
+
+| block | 0 | 2 | 4 | **6** | 8 | 10 | 11 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **effect** | 0.000 *(ref)* | −0.225 | −0.235 | **−0.393** | −0.274 | −0.157 | +0.117 |
+| se | — | 0.084 | 0.067 | 0.070 | 0.088 | 0.066 | 0.127 |
+
+| contrast | estimate | se | t |
+|---|---:|---:|---:|
+| **block 6 − block 0** | **−0.393 dex** | 0.070 | **−5.60** |
+| **block 6 − block 11** | **−0.511 dex** | 0.118 | **−4.34** |
+
+**PER-FIT, the honest replication:**
+
+| check | result |
+|---|---|
+| **argmin interior (4–8)** | **12/12 fits** (L6 ×10, L7 ×2) |
+| **minimum below BOTH endpoints** | **12/12 fits** |
+| mean (min − L0) | **−0.397**, t **−4.72** |
+| mean (min − L11) | **−0.515**, t **−25.82** |
+
+> **✅★ THE BOWL IS NOT AN ARTEFACT OF THE CUBIC.** With depth modelled by **free per-block effects and
+> no functional form at all**, an interior minimum at block 6 sits significantly below both ends, in
+> **every one of the 12 fits**. **The campaign's central finding passes the guard that dissolved band
+> 61's break.**
+
+**⇒ AND THE CONVERSE — what the cubic was ever doing.** Fitting the *free* profile:
+
+| fit to the free per-block profile | R² |
+|---|---:|
+| **cubic** | **0.886** |
+| **linear** | **0.000** |
+
+**The cubic DESCRIBES the free profile well; it does not create it.** *(And the linear fit's R² = 0.000
+is the cleanest possible statement that the depth structure is not a trend.)* **Every "cubic R²" figure
+in bands 39/44/52/59 was a faithful summary of a feature that is present without it.**
+
+**⚠️ WHY BAND 61 FAILED THIS TEST AND THE BOWL PASSED — the distinction is real, not luck.** Band 61's
+claim was *"one specific block deviates from a fitted trend"* — that is **defined relative to the
+baseline**, so changing linear→cubic changed the answer (F 176 → 5.46, rank 1/12 → 5/12). **The bowl's
+claim is "an interior point is lower than the endpoints"** — a **contrast between measured positions**,
+which no baseline choice can manufacture or remove. **Rule 23's remedy (prefer saturated controls) works
+because it converts the first kind of claim into the second.**
+
+**PROPOSED n=4 SEED CHECK — band 63 (criterion registered).**
+*Criterion:* on a fresh panel, using **free per-block effects (no polynomial)**: (i) the profile's
+**minimum lies in blocks 4–8 in ≥10 of 12 fits**; (ii) the minimum is **below both endpoints in ≥10 of
+12 fits**; (iii) the pooled **block-6-minus-block-0 and block-6-minus-block-11 contrasts are both
+negative with |t| ≥ 3** under matrix-clustered SEs.
+*Status:* **satisfied by committed REQ-048 data** (12/12; 12/12; −5.60 and −4.34).
+**No new compute requested; ≤2-node ceiling.**
+
+**⇒ STATE OF THE ACCOUNT.** The bowl is now established **three ways**: as a cubic profile (bands 39,
+52), as a spectral-concentration profile (bands 44, 57, 59), and — here — **as a model-free contrast
+between measured positions.** The two claims that did **not** survive scrutiny were both
+*deviation-from-trend* claims (band 61's break, iteration 163's localised residual), and **rule 23 now
+explains why that class fails while position-contrast claims hold.**
+
+**Queue:** REQ-048 **DONE**; **REQ-050 OPEN** (highest value — origin of the concentration structure at
+initialisation); REQ-049 optional. No new Jerry response.
+
 ## 🔧 BAND 61's "DISCRETE BREAK" IS BASELINE-DEPENDENT (iteration 188) — the interaction survives, the deviation figure does not
 
 *Band 61 reported L11's writers deviating **−1.384** from the interior trend and called the last block a
