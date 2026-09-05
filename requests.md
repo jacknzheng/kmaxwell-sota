@@ -29,6 +29,81 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⊘ THE "DOWNSTREAM RE-MIXING" HYPOTHESIS IS REFUTED (iteration 187) — including by a model comparison of mine that was misleading
+
+*Band 61 flagged, as consistent structure rather than tested mechanism, that **L11's writers are the only
+matrices whose output is never re-mixed by a later block**. That makes a graded prediction: a writer at
+block b has **(11−b)** blocks downstream, so if "how much processing follows you" is the mechanism, the
+concentration penalty should scale **smoothly** with downstream depth. **Testing it refutes it — twice.***
+
+**⚠️ FIRST, A MODEL COMPARISON OF MINE THAT LOOKED DECISIVE AND WAS NOT.** Comparing five laws on the
+writers' `log n_eff` (type controlled) by AIC:
+
+| model | k | RSS | AIC |
+|---|---:|---:|---:|
+| **downstream depth + last-block** | 4 | 54.51 | **−471.38** |
+| last-block indicator only | 3 | 71.29 | −396.11 |
+| linear in downstream depth | 3 | 88.23 | −334.71 |
+| type only | 2 | 90.45 | −329.55 |
+| log(1+downstream depth) | 3 | 90.11 | −328.63 |
+
+**The combined model wins by a wide margin**, which reads as "both a graded downstream effect *and* a
+last-block break." **That reading is wrong**, and two checks show why.
+
+**⊘ REFUTATION 1 — THE SIGN IS BACKWARDS.** The hypothesis says more downstream processing ⇒ more
+re-mixing ⇒ curvature **spreads** ⇒ `n_eff` **higher**, so the coefficient must be **positive**:
+
+| term | coef | clustered se (24 writer matrices) | t |
+|---|---:|---:|---:|
+| **downstream depth (per block)** | **−0.0797 dex** | 0.0293 | −2.72 |
+| last-block extra | −1.4115 dex | 0.2034 | −6.94 |
+
+**The downstream coefficient is NEGATIVE — the opposite of the prediction.** More blocks downstream is
+associated with *less* spread, not more.
+
+**⊘ REFUTATION 2 — IT IS NOT AN INDEPENDENT VARIABLE AT ALL.** `downstream = 11 − block` is an **exact
+linear function of block**. Once a depth term is in the model it can add nothing:
+
+| model | RSS |
+|---|---:|
+| cubic in depth alone | **46.140** |
+| **cubic + downstream depth** | **46.140** *(identical — perfectly collinear)* |
+| cubic + last-block indicator | 45.265 — **F(1,282) = 5.46** |
+
+**"Downstream depth" was never a mechanism; it was a reparametrisation of block index.** My AIC table
+was comparing **curve-fitting flexibility**, not competing mechanisms — the combined model won because
+`down + islast` approximates a bowl-plus-step better than either piece alone, not because both effects
+are real.
+
+**⇒ WHAT THE WRITERS' PROFILE ACTUALLY SHOWS** (type-centred `log n_eff`):
+
+| block | 0 | 2 | 4 | **7** | 9 | 10 | **11** |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| log n_eff | −0.424 | −0.470 | −0.051 | **+0.489** | +0.300 | +0.107 | **−0.855** |
+
+**The writers have a BOWL of their own** (rising to a mid-network peak at L7, falling away) **plus a
+discrete L11 drop.** A monotone downstream term cannot produce that shape — it was fitting half of a U.
+
+> **⇒ BAND 61's ARCHITECTURAL READING IS NARROWED, NOT CONFIRMED.** The **discrete last-block break is
+> real** (F = 5.46 over a cubic; band 61's −1.384 interior-trend deviation). But **the graded
+> "downstream re-mixing" story is refuted**: wrong sign, and not separable from depth. **Band 61's
+> statement that this is "consistent structure, NOT a tested mechanism" was the right hedge — and it now
+> has a specific negative attached rather than an open invitation.**
+
+**⚠️ NO n=4 SEED CHECK PROPOSED.** This is a refutation with an exact-collinearity component; no new
+compute can rescue a regressor that is a linear function of one already in the model. **Settled within
+committed data.**
+
+**Standing rule 22.** *Before comparing models, check whether a candidate regressor is an exact function
+of one already present. AIC will happily rank a reparametrisation above the original when it is paired
+with a second term that patches the residual shape — the comparison then measures flexibility, not
+mechanism.* **This is rule 9's collinearity check applied to model SELECTION rather than to coefficient
+interpretation.**
+
+**Queue:** REQ-048 **DONE**; **REQ-050 OPEN** (highest value — the last-block break's origin at
+initialisation is now the sharpest open question, with the graded alternative eliminated); REQ-049
+optional. No new Jerry response.
+
 ## ★★ THE BOWL'S TILT IS ENTIRELY A LAST-BLOCK WRITER EFFECT (iteration 186)
 
 *Band 60 found writers lose concentration-directions "at the ends" — but **the two ends are
