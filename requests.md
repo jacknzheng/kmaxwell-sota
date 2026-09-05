@@ -29,6 +29,55 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## 🔧 REQ-050's COST PREMISE WAS WRONG — resolved from the record (iteration 193)
+
+*REQ-050 is the only route left to a causal answer, and it has sat OPEN. Before adding analysis, I
+checked whether it was blocked on something **I** could fix. **It was: I filed it with an unresolved
+conditional that the campaign's own record had already settled.***
+
+**⚠️ THE ERROR.** REQ-050 was filed as *"**PROBE-ONLY** if early checkpoints exist; otherwise one short
+training run."* **I never checked which branch applied.** The record answers it three times over:
+
+| source | statement |
+|---|---|
+| **REQ-038** (cost premise corrected) | *"no `.pt` weights are committed anywhere in the repo — REQ-019's boxes were ephemeral and only the derived `per_matrix_curvature.json` files landed"* |
+| **REQ-041** | *"prior curvature checkpoints were cleaned by re-bootstraps"* |
+| **REQ-035** | *"Fork-1500 states were regenerated from scratch (the 'existing checkpoint' premise was **false**)"* |
+
+**Early checkpoints do not persist. The probe-only branch is dead**, and **REQ-038 had already been
+corrected for this exact mistake** — I repeated it.
+
+**✅ BUT THE TRUE COST IS SMALL, AND NOW EXACT.** At the campaign's measured **0.162 s/step**:
+
+| run | per seed | **4 seeds** |
+|---|---:|---:|
+| to step 1500 *(as filed)* | 4.0 min | **16.2 min** |
+| to step 1000 | 2.7 min | 10.8 min |
+| to step 500 | 1.4 min | 5.4 min |
+
+**16.2 minutes of training for the full 4-seed version — 1.01× the REQ-035 Arm A budget that was
+already delivered.**
+
+> **★ AND THE STRUCTURE IS FAVOURABLE IN A WAY I HAD NOT STATED.** Unlike every fork-based request in
+> this campaign, **REQ-050's run starts at step 0 — so a SINGLE run passes through EVERY measurement
+> point** (0, 125, 250, 500, 1000, 1500). **The dumps are written in passing: the cost is ONE traversal,
+> not six.** A request that looked like it needed six probe points needs one run per seed.
+
+**REQ-050's status line is corrected in place** with the resolved cost, so whoever picks it up is not
+left re-deriving the conditional.
+
+**Standing rule 24.** *A request that offers two cost branches is unfinished. Resolve the branch from the
+record before filing — the campaign had already corrected REQ-038 for exactly this premise, and I
+repeated it two months of iterations later.* **An unresolved conditional transfers work to the person
+who can least cheaply do it.**
+
+**⚠️ NO NEW COMPUTE REQUESTED THIS ITERATION.** This corrects an existing request rather than adding one.
+**REQ-050 remains ≤2 nodes**, and the corrected figure makes it **cheaper than it appeared**, not more
+expensive.
+
+**Queue:** REQ-035 DONE, REQ-036 DONE, REQ-048 DONE, REQ-049 optional, **REQ-050 OPEN (cost now exact:
+16.2 min training, 4 seeds, ≤2 nodes)**. No new Jerry response.
+
 ## ✅ CONSISTENCY RE-VERIFIED AFTER THE GUARD AUDIT (iteration 192) — and the consolidated answer
 
 *The last end-to-end check was **iteration 169**. Since then the account gained bands 44, 57–61, 63, 64
@@ -1011,7 +1060,7 @@ correlation across early steps ≥ +0.80**; (iii) **correlation with the late (2
 
 ## REQ-050: curvature at initialisation and early training — is the bowl inherited or learned?
 
-- status: **OPEN — filed 2026-09-04 (iteration 179). ≤2 nodes. PROBE-ONLY if early checkpoints exist; otherwise one short training run.**
+- status: **OPEN — filed 2026-09-04 (iteration 179); COST RESOLVED 2026-09-04 (iteration 193).** ⚠️ **The "probe-only" branch is DEAD — the record already answered it and I should have checked before filing.** REQ-038's own correction states *"no `.pt` weights are committed anywhere in the repo — REQ-019's boxes were ephemeral and only the derived `per_matrix_curvature.json` files landed"*; REQ-041 adds *"prior curvature checkpoints were cleaned by re-bootstraps"*; REQ-035 found *"the 'existing checkpoint' premise was false"*. **Early checkpoints do not persist, so this needs a training run from step 0.** ✅ **But the true cost is small and now exact:** at the measured **0.162 s/step**, 1500 steps = **4.0 min/seed**, so **4 seeds = 16.2 min of training — 1.01× the already-delivered REQ-035 Arm A budget.** **Crucially a single run from step 0 passes through EVERY measurement point (0, 125, 250, 500, 1000, 1500) — the dumps are written in passing, so the cost is ONE traversal, not six.** ≤2 nodes.
 - priority: **high — it separates two mechanisms that all committed data is blind to.**
 
 **THE QUESTION.** The bowl is fully formed at **step 1750**, the earliest measurement in the repository,
