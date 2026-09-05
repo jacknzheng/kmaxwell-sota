@@ -76,7 +76,7 @@ claim that ambiguity was impossible was narrative, not a third numerical criteri
 Include the exact measurement steps, per-seed evidence, initialization provenance, code, and
 result location when updating this request. Observing early structure alone does not prove its cause.
 
-**Probe-repeat requirement, added iteration 224.** REQ-048's twelve files were found to be 4 seeds x
+**Probe-repeat requirement.** REQ-048's twelve files were found to be 4 seeds x
 3 **probe repeats** of a single checkpoint (all report `step = 2750`), not three training steps.
 That accident made probe reliability estimable, and the numbers matter for this request's design:
 single-probe `log lam` carries a within-matrix sd of **0.349** against a between-matrix sd of
@@ -99,7 +99,7 @@ and commit each repeat separately rather than pre-averaging. Rationale:
 If probe cost makes 3 repeats at all six steps infeasible under the two-node ceiling, prefer
 **3 repeats at steps 0 and 1500** (the two the criteria actually compare) over one repeat everywhere.
 
-**Judge the registered criteria within seeds, added iteration 226.** Criterion 1 asks for a cubic
+**Judge the registered criteria within seeds.** Criterion 1 asks for a cubic
 R² and a correlation with the late profile; do **not** additionally require cross-seed sign or
 threshold agreement as corroboration. In this design the `log C` residual is **76% shared across
 seeds** (mean off-diagonal correlation +0.758 after type and block are absorbed), so four seeds are
@@ -112,9 +112,9 @@ by block, and treat a criterion as met on **within-seed effect size**. For refer
 concentration result under exactly this treatment gives t = -9.4 to -17.0 with partial R² 0.34-0.56
 per seed; that is the standard of evidence a new claim should be held to.
 
-### Pre-registered hypothesis H1, added iteration 227 -- test on REQ-050/051 data, not on REQ-048
+### Pre-registered hypothesis H1 — test on REQ-050/051 data, not on REQ-048
 
-Iteration 227 found that a **type-by-depth interaction** accounts for ~31% of the reproducible
+A **type-by-depth interaction** accounts for ~31% of the reproducible
 residual in `log C` after type, block and `log n_eff` are absorbed. Per-type depth slopes of that
 residual (dex per block, REQ-048, 4 seeds):
 
@@ -143,11 +143,11 @@ REQ-050 tests H1 across training steps (does the interaction appear with the bow
 REQ-051 tests it causally, since it varies per-type LR directly. Neither requires more than the
 two-node ceiling already in force.
 
-**Clarification from iteration 228 -- expect the RAW slopes to look null.** The type-by-depth effect
-is **suppressed** in `log C`: each type's direct curvature drift with depth is largely offset by its
-concentration drifting the other way. Across the six types, sd(direct) = 0.0219 but
-sd(total) = 0.0098, with corr(via `n_eff`, direct) = **−0.920**. Without a concentration control the
-R² gain is only 0.065; with one it is 0.44–0.50.
+**Expect the RAW slopes to look null.** The type-by-depth effect is **suppressed** in `log C`: each
+type's direct curvature drift with depth is largely offset by its concentration drifting the other
+way. Across the six types, sd(direct) = 0.0219 against sd(total) = 0.0098. Without a concentration
+control the R² gain is only 0.065; with one it is 0.44–0.50. (An earlier `corr(via, direct) = −0.920`
+was quoted here as evidence of the cancellation and is **retracted** — see the bullet below.)
 
 Therefore, when scoring H1:
 
@@ -158,7 +158,7 @@ Therefore, when scoring H1:
   **description**, and publish all three columns. But do **not** score cancellation from a
   correlation between `via` and `direct`, or from the identity closing: `direct` is defined as
   `total - via`, so that correlation is mechanically negative (mean −0.81 even for independent
-  components) and the identity holds for any data. Iteration 228 made this error and it is retracted.
+  components) and the identity holds for any data. That error was made once here and is retracted.
 - Score cancellation with a **pairing permutation** instead: hold each type's curvature-depth slope
   and each type's concentration-depth slope fixed, permute which concentration profile pairs with
   which type, and compare the observed sd(total) to that null. On REQ-048 this gives p = 0.004-0.034
@@ -170,86 +170,70 @@ Therefore, when scoring H1:
 ## REQ-051: decompose why each matrix has a different LR-to-curvature response
 
 - status: **OPEN**
-- **primary quantitative target, added iteration 230:** measure the **causal** elasticity
-  `k = d(log lam)/d(log g)`. Observationally, on REQ-048 with type and block absorbed, `k = 3.173`
-  (per seed 3.28/3.27/2.99/3.15, cluster-robust by block, t vs 2 = +17.1), and `k = 2.569` with a
-  lam-free concentration control (t vs 2 = +4.88). **k = 2 is the gauge-invariant value** — a scalar
-  rescaling a matrix's whole contribution moves `lam` by c² and `g` by c, leaving `C = lam/g²`
-  untouched. So observationally the between-matrix variation is **not** a pure gauge rescaling, and
-  `d(log C)/d(log g) = +1.17` (+0.57 with the concentration control), worth 0.17–0.21 dex of C across
-  ±1 sd of residual `log g`, partial R² 0.30–0.39.
-  **The confound this cannot resolve:** `g` and `lam` are measured at the same step and both respond
-  to the same training dynamics, so the observational k may be confounded. REQ-051 varies per-matrix
-  LR causally and is the only instrument in the queue that can separate them. Report the causal k
-  with its distance from 2, per seed, using within-seed effect sizes (rule 32).
-  **Pilot benchmark, added iteration 233:** REQ-045's 3-arm per-matrix LR data already gives a
-  within-matrix (intervention) estimate of **k = +2.237** (se 0.086, t vs 2 = +2.77, n = 216), versus
-  +2.415 observational on the same data and +3.173 on REQ-048. **Compare REQ-051's causal k against
-  +2.237, not against +3.173** — 81% of that gap is dataset, not estimator, so the observational
-  excess is not a causal quantity. Per type the pilot violation is concentrated: `mlp.proj` +2.504
-  (t vs 2 = +6.06) is decisive, `attn.proj` +1.397 sits *below* gauge, and four types are
-  indistinguishable from 2. Test whether that concentration reproduces.
-  **Probe repeats matter on the gradient side too.** The pilot's within-matrix signal in `log g` is
-  0.0948 dex against a per-probe noise of ~0.115 dex — a signal-to-noise ratio of **0.82**. Repeats
-  are needed for `gradient_block_norm`, not only for the curvature moments, or the LR ladder's
-  elasticities will be attenuated by an unmeasurable amount. Note also that `lam` and `g` share a
-  probe batch, so their errors are correlated and no clean disattenuation is available: commit
-  repeats rather than planning to correct after the fact.
-  **Second pilot benchmark, added iteration 234 — the two interventions disagree.** REQ-036's five
-  arms (the per-**type** LR design) give a within-matrix **k = +1.922** (se 0.077, t vs 2 = −1.01,
-  n = 360): **indistinguishable from the gauge value**, stable to dropping any arm (+1.853 to +1.975)
-  and consistent across all four control-vs-treatment contrasts. REQ-045's per-**matrix** multipliers
-  give +2.237. Report REQ-051's causal k against **both**, and treat the gap as a target in itself:
-  a per-type rule moves all twelve matrices of a type together and cannot break the confounds that
-  independently-drawn per-matrix multipliers do.
-  **Report per-type k.** `mlp.proj` is the only type above gauge in **both** designs — +2.504
-  (t = +6.06) under per-matrix LR and +2.287 (t = +3.32) under per-type LR — while every other type
-  sits at or below 2 in REQ-036. Whether `mlp.proj` reproduces above 2 is the sharpest single
-  prediction REQ-051 can test.
-  **Do not use REQ-035 Arm A as a seed check for this.** Its `s060/s100/s170` labels are probe
-  repeats of one checkpoint, not arms; its within-matrix k of +2.843 is inflated by `lam` and `g`
-  sharing a probe batch, and its independent-error estimate (+2.837) matches the observational family
-  rather than any intervention.
-  **Third pilot benchmark, added iteration 235 — REQ-037 (batch size).** A third lever gives pooled
-  **k = +0.557** and `mlp.proj` **+1.432** (t vs 2 = −2.61), i.e. **below** gauge. So `mlp.proj`'s
-  above-gauge result is **not** replicated in levels by a non-LR intervention, and iteration 234's
-  wording is downgraded accordingly. What holds across all three designs is a **rank**: `mlp.proj`
-  has the highest k of the six types in REQ-045, REQ-036 and REQ-037 (1/1/1), p ≈ 0.028 conditional
-  on its post-hoc selection, while overall rank concordance between designs is weak (Kendall tau
-  −0.07 to +0.33).
-  **Score the INTERACTION, not the rank (revised iteration 238).** The rank statistic is weak and
-  unstable; the per-type ranking churns because the *attention* types' estimates are volatile, not
-  because `mlp.proj` moves (its k is +2.287 full-design, +2.310 when it wins a subset, +2.275 when it
-  loses). Fit instead, per seed:
-  `d(log lam) = a + b·d(log g) + c·[mlp.proj]·d(log g)`, cluster-robust by block.
-  On the three committed designs `c` is +0.467, +0.536 and +1.149 — significant in each separately,
-  pooling to **c = +0.578, se 0.075, t = +7.72** with block clustering, and a six-way placebo shows
-  `mlp.proj` is the **only** type positive in all three. Registered prediction: **c > 0 in each of
-  the four seeds**, with a pooled estimate near +0.6.
-  Also report (ii) whether `mlp.proj`'s absolute k **exceeds 2** — true under both LR levers, false
-  under batch — but treat (i) as the primary test, since it is level-free and the level itself is
-  design-bound (85% of k's variance is between designs; iteration 236).
-  **The n=4 seed check on k is not obtainable from committed data.** Every archive with
-  `top_eigenvalue` and `gradient_block_norm` under a real intervention is single-seed (REQ-036,
-  REQ-045, REQ-037). REQ-051's four seeds are the first opportunity to seed-replicate any causal k,
-  which is the main reason it should run before further observational analysis.
-- **second target, added iteration 231 — the moment ladder.** Under the reparametrisation gauge
-  (`W = c·V` gives `g ~ c`, every Hessian moment `~ c²`), **all** spectral moments must have
-  elasticity **+2** wrt `log g`. Observationally on REQ-048 they do not, and they deviate in a strict
-  order: `trace(H)` **+1.107**, `sqrt(trace(H²))` **+2.424**, `lam_top` **+3.173**. Within-seed
-  differences are `lam − trace` +2.066 (t = +26.3), `lam − rms` +0.749 (t = +13.3), `rms − trace`
-  +1.317 (t = +19.7), all 4/4 seeds; a permutation null on `log g` gives p = 0.0000. Physically:
-  **matrices with larger gradients hold their curvature in fewer directions.**
-  Report the same three elasticities under **causal** LR variation. Two outcomes are informative:
-  the ladder survives (concentration genuinely responds to the gradient side), or it collapses toward
-  +2 for all three moments (the observational ladder was confounded by joint response to training
-  dynamics). Report whichever occurs, per seed, with within-seed effect sizes.
 - requested: Jack / Codex, 2026-09-05 PDT
 - priority: **high, after the already-open REQ-050; do not interrupt work already running**
 - repo: `https://github.com/jacknzheng/kmaxwell-sota`, branch `jerry-agent`
 - implementation base: use the committed per-matrix-LR machinery from REQ-023/045 and the
   activation/backward probes from REQ-043/047; record the exact final code SHA
 - resource constraint: **at most 2 nodes total**
+
+### Registered targets
+
+Three quantities to report, all per seed with within-seed effect sizes and block-clustered standard
+errors. Derivations, retractions and the evidence behind each benchmark are in
+[FINDINGS.md](FINDINGS.md); only the live predictions are restated here.
+
+**Target 1 — the `mlp.proj` interaction (primary).** Fit per seed
+
+    d(log lam) = a + b·d(log g) + c·[mlp.proj]·d(log g)
+
+cluster-robust by block. On the three committed intervention designs `c` is +0.467 (REQ-045),
++0.536 (REQ-036) and +1.149 (REQ-037) — significant in each separately, pooling to
+**c = +0.578, se 0.075, t = +7.72**; a six-way placebo shows `mlp.proj` is the only type positive in
+all three. **Registered prediction: `c > 0` in each of the four seeds, pooled estimate near +0.6.**
+
+This replaces an earlier per-type *rank* statistic, which was weak and unstable — the ranking churns
+because the attention types' estimates are volatile, not because `mlp.proj` moves.
+
+**Target 2 — the causal elasticity `k = d(log lam)/d(log g)`.** `k = 2` is the gauge-invariant value:
+a reparametrisation `W = c·V` moves `lam` by c² and `g` by c, leaving `C = lam/g²` untouched.
+Benchmarks, all single-seed, which is why REQ-051's four seeds matter:
+
+| source | lever | pooled k | `mlp.proj` k |
+|---|---|---|---|
+| REQ-045 | per-matrix LR | **+2.237** (t vs 2 = +2.77) | +2.504 |
+| REQ-036 | per-type LR | **+1.922** (t vs 2 = −1.01) | +2.287 |
+| REQ-037 | batch size | +0.557 | +1.432 |
+| REQ-048 | *observational* | +3.173 | — |
+
+Compare the causal k against **+2.237 and +1.922**, never against the observational +3.173: 81% of
+that gap is dataset rather than estimator. The per-matrix/per-type divergence is itself a target — a
+per-type rule moves all twelve matrices of a type together and cannot break the confounds that
+independently-drawn per-matrix multipliers do. Report per-type k, and whether `mlp.proj` exceeds 2
+(true under both LR levers, false under batch). Treat this as secondary to Target 1, which is
+level-free: 85% of k's variance is between designs.
+
+**Target 3 — the moment ladder.** Under the same gauge, **all** spectral moments must have elasticity
++2 wrt `log g`. Observationally on REQ-048 they do not, and deviate in strict order: `trace(H)`
+**+1.107**, `sqrt(trace(H²))` **+2.424**, `lam_top` **+3.173** (within-seed differences `lam − trace`
++2.066, `lam − rms` +0.749, `rms − trace` +1.317, all 4/4 seeds; permutation null p = 0.0000).
+Physically: matrices with larger gradients hold their curvature in fewer directions. Report the three
+elasticities under causal LR variation. Both outcomes are informative — the ladder survives, or it
+collapses toward +2 and the observational ladder was confounded.
+
+### Measurement requirements
+
+- **Commit ≥3 probe repeats** at every measurement point, for `gradient_block_norm` as well as the
+  curvature moments, with different probe seeds and each repeat committed separately. The pilot's
+  within-matrix signal in `log g` is 0.0948 dex against ~0.115 dex per-probe noise — a
+  signal-to-noise ratio of **0.82**. `lam` and `g` share a probe batch, so their errors are
+  correlated and no clean disattenuation is available after the fact.
+- **Do not use REQ-035 Arm A as a seed check.** Its `s060/s100/s170` labels are probe repeats of one
+  checkpoint, not arms; its within-matrix k of +2.843 is inflated by that shared probe batch, and its
+  independent-error estimate (+2.837) matches the observational family rather than any intervention.
+- Every archive with `top_eigenvalue` and `gradient_block_norm` under a real intervention is
+  single-seed. **REQ-051's four seeds are the first opportunity to seed-replicate any causal k**,
+  which is the main reason it should run before further observational analysis.
 
 ### Question
 
