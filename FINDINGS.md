@@ -2066,6 +2066,59 @@ experiment that holds the run fixed.
 is the cross-run confirmation above; the increment is left open, and the structured disagreement
 between REQ-047 and REQ-048 is now on record as a constraint on any future cross-archive join.
 
+## The type axis is run-independent; the depth axis is low-signal but reliable when averaged (2026-09-05)
+
+Iteration 246 found REQ-047 and REQ-048 differ **systematically** — 30.9% of their gradient
+disagreement is explained by type, 20.3% by block. Two systematically different runs are a stronger
+replication test than four REQ-048 seeds, which rule 32 showed share ~76% of their structure.
+
+**The type axis is run-independent.** Comparing each archive's own gradient measurements:
+
+| axis | within REQ-048 (seed-to-seed) | within REQ-047 | **across archives** |
+|---|---|---|---|
+| type effects | +0.9986 | +0.9994 | **+0.9891** |
+| depth profile | +0.6490 | +0.5692 | **+0.5431** |
+
+The variance split also reproduces: type carries **0.847** of `log g` in REQ-048 and **0.895** in
+REQ-047; depth carries 0.041 and 0.031. The full 6-way type ordering
+(`mlp.proj` > `attn.v` > `mlp.fc` > `attn.proj` > `attn.k` > `attn.q`) is **identical in 3 of 4
+seeds**, with the fourth swapping only the bottom two.
+
+**The depth axis's weaker reproduction is not caused by the run difference.** Cross-archive depth
+correlation (+0.543) is essentially the same as *within*-archive seed-to-seed correlation (+0.649 and
++0.569). Depth reproduces less well because it carries only 3–4% of `log g`'s variance, not because
+the two runs differ in depth structure.
+
+## Correction: single-seed profile correlations understate the averaged profile's reliability (2026-09-05)
+
+Those pairwise correlations of +0.54 to +0.65 invite the conclusion that this campaign's depth
+profiles are shaky. **They are not**, and the pairwise statistic is the wrong instrument: it measures
+a *single-seed* profile, while every depth claim in this file is made on the **4-seed average**.
+
+Intraclass correlation of the 12 block means, treating seeds as replicates — the reliability of the
+averaged profile actually analysed:
+
+| quantity | between-block sd | seed-to-seed sd | **ICC of the 4-seed profile** |
+|---|---|---|---|
+| `log C` | 0.1486 | 0.0630 | **0.957** |
+| `log n_eff` | 0.1872 | 0.0781 | **0.958** |
+| `log lam` | 0.1874 | 0.0904 | **0.945** |
+| `log g` | 0.0406 | 0.0311 | **0.872** |
+
+Restricting to the three probe repeats within a seed — measurement noise only, no training variation
+— gives ICC **0.922** for `log g` and **0.918** for `log lam`, so probe noise and seed-to-seed drift
+contribute comparably.
+
+**Consequence.** The depth profile of `log C` that this campaign has analysed is a **stable object**
+(ICC 0.957), and the bowl, the concentration account and the LR-invariance results rest on a reliable
+measurement. What is genuinely limited is any claim about a **single seed's** depth profile, and any
+claim about `log g`'s depth profile specifically, which is both the lowest-signal (3–4% of variance)
+and the least reliable (0.872) of the four.
+
+This does not disturb iteration 243's finding that `log g` reproduces **by type, not by depth** — that
+comparison was at matrix level and stands. It adds that the *averaged* depth profile is nonetheless
+reliable enough to analyse, which iteration 243's +0.688 figure understated for the same reason.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2157,3 +2210,7 @@ outcome.
 Two measurements of one quantity from different runs are not interchangeable: check whether their
 disagreement is structured by the same axes as the analysis before treating one as a cleaner
 instrument for the other.
+Measure reliability on the estimator you actually use: pairwise correlations between single
+replicates understate an averaged profile's reliability, and the intraclass correlation over all
+replicates is the right statistic. Systematically different runs test a claim more strongly than
+correlated seeds -- use them when the fields allow.
