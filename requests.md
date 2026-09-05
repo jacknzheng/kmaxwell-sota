@@ -5725,3 +5725,56 @@ Include:
 
 Commit no model weights, optimizer tensors, secrets, or full checkpoints. Preserve disagreement across
 seeds and matrices in the tables; do not report only pooled averages.
+
+### Execution and interpretation addendum — 2026-09-05, before execution
+
+Jack has requested continued execution and monitoring every 20 minutes until the LR-response question
+is resolved. Please acknowledge this request when picked up. On starting REQ-050/051, record the live
+scheduler job ID or host/session/process handle, start time in UTC, current seed/arm/step, and a concise
+log location. On completion or failure, record the terminal exit state. A queue status alone is not
+proof that a process is running. Preserve the fleet-wide two-node ceiling and existing running work.
+
+These clarifications are part of REQ-051 and do not add training arms:
+
+- **Scientific scope.** The balanced ladder estimates own-LR response under reassignment of the other
+  matrices' LRs. A fixed multiplier histogram does not hold the other weights or trajectories fixed.
+  REQ-045 failed to detect its particular aggregate neighbour channel; it did not prove that every
+  cross-layer effect is zero. Carry that limitation into the per-matrix response interpretation.
+- **No theorem about LR invariance.** `C_gauge=lambda/g^2` is a defined ratio. Its small response is an
+  empirical hypothesis; changing LR is not a parameter-coordinate transformation. Uniformly scaling
+  the loss also scales both its Hessian and gradient linearly, so it does not leave this ratio
+  unchanged. Do not label a restored ratio a proof of general gauge invariance or gradient mediation.
+- **Shared operator and normalization.** Record whether curvature is the true block Hessian, GGN,
+  or another operator; record loss reduction, token count, batch hash, dtype, and probe seed. Do not
+  log-transform nonpositive eigenvalues or signed directional curvature silently. Record exclusions.
+  Separate actual training-update telemetry from a hypothetical polar update recomputed on eval data.
+  Hooking the eval probe must not mutate the training optimizer or momentum state.
+- **Accounting checks are unit checks.** Fit every component with identical observations, regressors,
+  weights, and masks. Since `rho` and `C_gauge` are defined using `g` and `lambda`, the two slope
+  identities are algebraically guaranteed. Independently verify `sum_t d_t a_t^T` against the autograd
+  gradient before computing `rho`; passing the slope identities alone cannot verify hook correctness.
+- **Mean restoration versus matrix restoration.** Retain decision 4 as the *pooled* test, but additionally
+  report the distribution of `k_C_gauge`, its RMS, type means, and seed consistency at every block.
+  Large positive and negative responses may cancel. A small pooled coefficient establishes only a
+  small mean response. Report uncertain heterogeneous effects without declaring them absent.
+- **Prediction comparison on the new data.** The old `R2=0.217`/`RMSE=0.427` came from REQ-035's global
+  three-level LR ladder and are historical context. Refit mean-only, type-only, and type-plus-block
+  baselines using exactly the new training folds. Require the early-feature predictor to reduce RMSE
+  by at least 10% relative to the strongest of these baselines, with improvement in at least three
+  held-out seeds; also report the originally specified absolute thresholds. Any regularization or
+  feature selection must use training seeds only. Separate baseline-only prediction from prediction
+  after observing the six early treatment responses; the latter requires calibration interventions.
+  Use separate fixed eval minibatches for early features and final outcomes to reduce shared probe
+  noise; all fields within an identity must still use the same minibatch and state.
+- **Dependence and uncertainty.** Four seeds are four independent network replicates, not 288.
+  Report four held-out errors, four per-seed effects, and probe/fit uncertainty. Do not manufacture
+  narrow confidence intervals by treating blocks, arms, or checkpoints as independent networks.
+  For saturation compare error in log-lambda, constrain floor >= 0, A > 0, k >= 0, and report
+  boundary/failed fits. Six points may not identify a floor; an inconclusive outcome is allowed.
+- **Budget and stopping gate.** This is 4 regenerated bases plus 24 continuation arms, 48 inexpensive
+  signal-probe states and 24 endpoint curvature-probe states. Benchmark one base/arm/probe first,
+  report training and probing time separately, and repair any operator/hook/state mismatch before
+  launching the remaining arms. Do not assume endpoint probing is cheap because training is short.
+  Call step 2750 the planned endpoint; establish stationarity from available late training/probe
+  diagnostics before calling it equilibrium. If those diagnostics are insufficient, flag that
+  limitation and propose a bounded follow-up instead of extrapolating a time course from one point.
