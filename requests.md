@@ -29,6 +29,62 @@ Next request number: **REQ-053**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ⊘ THE SECOND COMPONENT IS NOT ANY MEASURED DIRECTION (iteration 203) — a pre-declared negative
+
+*Band 71 bounds the unexplained component precisely: **0.272 dex of swing, cubic (R² 0.746), rising
+toward both ends, replicating at +0.422.** REQ-048 carries **exactly three** admissible quantities not
+already used in the concentration fit — all rule-13 clean, all containing **no `lam_top`**. **All three
+were declared before fitting, all are reported, and the selection is priced by a permutation null.***
+
+**⚠️ THE PRIOR WAS AGAINST ALL THREE, AND IT IS STATED FIRST.** Bands 56, 57 and 58 already established
+what each direction does with depth: `curvature_along_polar` **monotone**, `curvature_along_weight`
+**monotone**, `curvature_along_random` **flat**. **The residual is cubic and rises at BOTH ends** — a
+shape none of them has. **Running the test anyway is the point: a bounded target with three
+pre-declared candidates that all fail is a real negative, not a wasted iteration.**
+
+| candidate | mean corr with the residual | same-sign |
+|---|---:|---:|
+| `curvature_along_weight` | **−0.236** | 7/12 |
+| `curvature_along_polar` | −0.185 | 8/12 |
+| `curvature_along_random` | +0.141 | 8/12 |
+
+**Permutation null over block labels, max \|r\| across all three (20,000 shuffles): p = 0.7454.**
+
+> **⊘ NONE of the three directional probes explains the second component.** The best is −0.236 and the
+> selection-priced p is **0.745** — **not distinguishable from chance.** **The residual is not curvature
+> along any direction REQ-048 measures.**
+
+**⇒ WHY THIS IS INFORMATIVE RATHER THAN EMPTY.** The three probes span the natural alternatives: the
+**optimiser's step direction**, the **learned weight direction**, and the **typical/random direction**.
+Together with the concentration measure itself (`n_eff`, which explains the other 57%), **that is every
+admissible field REQ-048 provides.** **So the second component is not a directional-curvature effect at
+all** — it is something the current probe set does not measure.
+
+**⇒ AND IT TIGHTENS WHAT THE SECOND COMPONENT CAN BE.** It is:
+**reproducible** (+0.422 across fits, +0.410 within seed ⇒ architectural), **cubic** (R² 0.746),
+**symmetric-ish** (rises at both ends), **0.272 dex** in swing, **present in `C = λ/g²` after removing
+concentration**, and **invisible to λ along the step, weight and random directions.** **Since C's only
+other component is `g`, the natural remaining candidate is a GRADIENT-side effect** — which REQ-048 does
+not probe, but **REQ-051 does** (`a_frob`, `d_frob`, `align_ratio`, `d_token_participation`,
+`da_cos_mean`, `grad_rank1_frac` at two checkpoints).
+
+**PROPOSED n=4 SEED CHECK — band 72 (criterion registered).**
+*Criterion:* after regressing the C profile on the concentration profile, the residual's correlation with
+**each** of `curvature_along_polar`, `curvature_along_weight`, `curvature_along_random` must be
+**non-significant** under a permutation null over block labels that prices the selection (p > 0.05), in
+**≥3 of 4 seeds**.
+*Status:* **satisfied by committed REQ-048 data** (best −0.236; **p = 0.745**).
+**No new compute requested; ≤2-node ceiling.**
+
+**⇒ A CONCRETE NOTE FOR REQ-051.** Its probe list already records the gradient-side fields at both 2050
+and 2750. **If the second component is gradient-side, REQ-051's `k_a / k_d / k_rho` decomposition would
+localise it at no additional cost** — and its registered decision 5 (*"which part of the gradient
+response differs by layer?"*) is **exactly the right question, though currently aimed at the LR response
+rather than at this residual.** **Recorded as an observation for whoever runs it; REQ-051 is unedited.**
+
+**Queue:** REQ-035/036/048 DONE; **REQ-050 OPEN** (origin, 16.2 min); **REQ-051 OPEN** (would probe the
+gradient side); **REQ-052 OPEN**; REQ-049 optional. **No Jerry response since REQ-048.**
+
 ## 🔧 "ONE PHENOMENON" IS TOO STRONG (iteration 202) — concentration explains 57% of the bowl, and the rest is REPRODUCIBLE
 
 *Band 70 argued the bowl and the concentration signature are **co-established**, from **timing** (both
