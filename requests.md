@@ -29,6 +29,79 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★★ BAND 43 CONFIRMED AT 11 LEARNING RATES (iteration 180) — the top-of-spectrum localisation is now the campaign's second-strongest claim
+
+*Before filing further requests I checked my own "the committed-data seam is exhausted" claim (iteration
+178) — an exhaustion claim deserves the same scrutiny as any other. The field set is indeed unchanged
+across every dataset, **but one combination had never been run: `curvature_along_polar` on REQ-019's
+11-LR panel.** Band 43 — the finding that localises the bowl to the **top of the spectrum** — was
+established on a single 3-fork panel. **This is a 4× stronger test.***
+
+**ADMISSIBILITY.** `cp` is a **separate HVP**, not from the Lanczos tridiagonal (rule 13). `C_polar =
+cp/g²` contains **no `lam_top`**. Fully admissible.
+
+**THE TWO PROFILES, FITTED ON THE SAME MATRICES AT EACH OF 11 LRs:**
+
+| LR | **C** argmin | C cubic R² | **C linear R²** | **C_polar** argmin | C_polar cubic R² | **C_polar linear R²** | C_polar slope |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 0.60 | **6** | 0.905 | **0.003** | 8 | 0.907 | **0.729** | −0.0219 |
+| 0.85 | **6** | 0.910 | **0.095** | 8 | 0.944 | **0.893** | −0.0232 |
+| 1.00 | **6** | 0.904 | **0.043** | 10 | 0.928 | **0.875** | −0.0264 |
+| 1.30 | **6** | 0.926 | **0.017** | 9 | 0.962 | **0.844** | −0.0344 |
+| 1.70 | **6** | 0.923 | **0.112** | 10 | 0.973 | **0.947** | −0.0390 |
+| *(all 11)* | **6 in 11/11** | 0.869–0.956 | **0.003–0.112** | 8–11 | 0.907–0.978 | **0.729–0.977** | **−0.0302 mean** |
+
+**C_polar's slope is negative in 11/11 LRs, mean −0.0302, |t| = 15.76** — band 43's original value was
+−0.0266, so it **replicates closely on independent data with 4× the LR coverage.**
+
+**⇒ THE DISSOCIATION, MEASURED WITHOUT CHOOSING A FUNCTIONAL FORM.** A "bowl index" = *cubic R² minus
+linear R²* (high = genuinely curved; ≈0 = a straight line already suffices), **paired across the same 11
+LRs and the same matrices, so LR and seed noise cancel:**
+
+| quantity | bowl index | range |
+|---|---:|---|
+| **C** | **0.869** (sd 0.049) | [0.793, 0.950] |
+| **C_polar** | **0.082** (sd 0.062) | [0.001, 0.183] |
+| **paired difference** | **+0.787 ± 0.008** | **t = +93.70, positive in 11/11** |
+
+> **★ C is a bowl; C_polar is a straight line. Same matrices, same fits, 11 learning rates, t = +93.7.**
+> **This is the cleanest statement of band 43 anywhere in the campaign**, and it makes the
+> **top-of-spectrum localisation the second-best-supported claim here** — behind only the bowl's own
+> existence.
+
+**⇒ WHAT IT MEANS, restated.** Conditioning along the **top eigendirection** is U-shaped with a minimum
+at layer 6; conditioning along **Muon's actual step direction** declines monotonically with depth.
+**Whatever creates the bowl acts on the top of the spectrum, not on the subspace the optimiser moves
+in** — which is *why* no optimiser lever has reached it (bands 51, 53) and why REQ-036's equalization was
+inert (band 48).
+
+**⚠️ WHERE THE TWO DIVERGE — descriptive only, rule 6 respected.** `log C − log C_polar = −(alignment)`,
+and C shares `log λ` with alignment, so iteration 160's withdrawn correlation is **not** revived here.
+Used **only to say where** the profiles separate:
+
+| block | 0 | 2 | 4 | 6 | 8 | 10 | 11 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| alignment | +0.063 | +0.023 | **+0.154** | +0.126 | −0.039 | −0.190 | **−0.417** |
+
+**The divergence is concentrated at the output end** (L11 −0.417), i.e. the deep layers are where the
+step direction sees least of the top curvature. **Stated as description, not as evidence for a
+mechanism.**
+
+**PROPOSED n=4 SEED CHECK — band 56 (criterion registered).**
+*Criterion:* on a fresh multi-LR panel, (i) **C's bowl index ≥ 0.60 and C_polar's ≤ 0.30** at ≥90% of
+LRs; (ii) the **paired difference is positive at every LR**; (iii) **C_polar's depth slope is negative at
+≥90% of LRs**.
+*Status:* **satisfied by committed REQ-019 data** (0.869 vs 0.082; 11/11 positive; slope negative 11/11).
+⚠️ **n = 1 seed per LR arm** — the LR axis is richly replicated, the seed axis is not.
+**No new compute requested.**
+
+**⚠️ EXHAUSTION CLAIM, CORRECTED.** Iteration 178 said the committed-data seam was exhausted. **That was
+premature** — this iteration found a genuinely new and high-value result in it. The accurate statement:
+**no new admissible FIELDS remain, but existing fields have not all been crossed with the richer panels.**
+I will not repeat the exhaustion claim without having enumerated field × panel combinations.
+
+**Queue:** REQ-048 **OPEN**, REQ-050 **OPEN** (both unanswered), REQ-049 optional. No Jerry response.
+
 ## ★ THE BOWL IS ALREADY FORMED AT THE EARLIEST MEASUREMENT THAT EXISTS (iteration 179)
 
 *REQ-023's curvature dumps run at steps **1750, 1875, 2000, 2125, 2250** — **500 steps earlier than any
