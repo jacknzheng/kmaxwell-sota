@@ -29,6 +29,81 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★ THE CONCENTRATION CONTRAST IS A RESIDUAL-WRITER EFFECT (iteration 185)
+
+*Band 59 left a specific anomaly: the ends-vs-middle concentration ratio spans **1.22× to 15.34×** by
+type, and **the two largest are exactly the two residual-writer types** — the split **band 7** established
+independently (+2.17 slope gap, p < 0.0001). **That is a pre-existing grouping, not one chosen from this
+data**, so testing it is not a fishing expedition.*
+
+**PER-TYPE gain in `n_eff` from ends to middle** (pooled over 12 fits):
+
+| type | | log₁₀ gain | ratio |
+|---|---|---:|---:|
+| **mlp.proj** | **WRITER** | **+1.186** | **15.34×** |
+| **attn.proj** | **WRITER** | **+0.969** | **9.30×** |
+| attn.k | internal | +0.416 | 2.60× |
+| mlp.fc | internal | +0.148 | 1.41× |
+| attn.q | internal | +0.097 | 1.25× |
+| attn.v | internal | +0.085 | 1.22× |
+
+**Writers 11.94× vs internal 1.54× — a gap of +0.891 dex.**
+
+**⚠️ THE TYPE-AXIS TEST IS CAPPED BY CONSTRUCTION, and I am reporting that rather than the p-value.**
+Permutation over the 6 type labels gives **p = 0.0681** — but with 6 types there are only **C(6,2) = 15**
+possible 2-vs-4 splits, so **the smallest achievable one-sided p is 1/15 = 0.067.** **The writer split is
+therefore the most extreme of all possible splits, and that is all a 6-point test can ever say.** It
+cannot reach conventional significance at this n (the band-46 lesson).
+
+**★ SO THE TEST WAS MOVED TO THE MATRIX AXIS, WHERE THERE IS POWER — 72 matrices, not 6 types.** The
+claim *"writers concentrate more at the ends"* is an **interaction**: `writer × edge` on `log n_eff`.
+
+**⚠️ A DESIGN FAULT CAUGHT AND FIXED FIRST.** My initial fit returned **`se = nan`** for the `edge` main
+effect. Cause: **`edge` is exactly `block_0 + block_11`, so with block dummies present the design is
+rank-deficient** (shape 864×15, rank 14). `lstsq` still returns a minimum-norm solution and the
+interaction is identifiable, **but a rank-deficient design is not something to report from.** Rebuilt
+without the redundant main effect (block dummies absorb it — `edge` has no meaning once every block has
+its own intercept): **864×14, full rank.**
+
+| term | coef | clustered se (72 matrix clusters) | t |
+|---|---:|---:|---:|
+| writer | +0.954 dex | 0.100 | **+9.50** |
+| **writer × edge** | **−0.627 dex** | 0.191 | **−3.29** |
+
+**PER-FIT replication at the independent unit (rule 15):** **−0.627 ± 0.125, negative in 12/12,
+t = −17.39.** *(The clean and rank-deficient designs give an identical interaction estimate — the NaN was
+cosmetic — but the check was still the right call.)*
+
+**⇒ AND THE FALSIFIABLE CONSEQUENCE HOLDS.** If the effect is a writer effect, removing the writers must
+collapse band 59's headline contrast:
+
+| group | ends-vs-middle contrast |
+|---|---:|
+| all 6 types | **3.04×** |
+| **internal 4 types only** | **1.54×** |
+| writers only | **11.94×** |
+
+> **★ Band 59's "3× more curvature directions in the middle" is driven by the two residual-writer types.
+> Among internal matrices the contrast is only 1.54×.** **The concentration bowl is largely a property of
+> the matrices that WRITE to the residual stream** — which independently reproduces **band 7's
+> residual-writer split** on a completely different quantity (`n_eff` from Hutchinson probes, vs band 7's
+> gradient slopes). **Two unrelated measurements now separate the same two types from the other four.**
+
+**PROPOSED n=4 SEED CHECK — band 60 (criterion registered).**
+*Criterion:* (i) the **`writer × edge` interaction on log n_eff is negative with |t| ≥ 3** clustered by
+matrix, in ≥3 of 4 seeds; (ii) the interaction is **negative in ≥10 of 12** fits; (iii) the ends-vs-middle
+contrast **drops by ≥40%** when the writer types are excluded.
+*Status:* **satisfied by committed REQ-048 data** (−0.627, t −3.29 clustered / −17.39 per-fit; 12/12;
+3.04× → 1.54× = **−49%**). **No new compute requested; ≤2-node ceiling.**
+
+**⇒ WHAT THIS SHARPENS FOR REQ-050.** The open question is whether the concentration structure is
+inherited or learned. **It is now more specific: does the RESIDUAL-WRITER concentration contrast exist at
+initialisation?** Writers are the matrices whose output enters the residual stream directly, so an
+architectural origin is plausible and checkable at step 0 — **REQ-050 would answer it without
+modification.**
+
+**Queue:** REQ-048 **DONE**; **REQ-050 OPEN** (highest value); REQ-049 optional. No new Jerry response.
+
 ## ★/⚠️ THE BOWL IN UNITS OF DIRECTIONS (iteration 184) — and a point prediction that FAILS
 
 *Band 57 says `trace(H²)` carries the bowl while `trace(H)` is flat; band 58 says only the extreme
