@@ -29,6 +29,80 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## ★★★ REQ-048 DELIVERED — THE BOWL **IS** A SPECTRAL-CONCENTRATION PROFILE (iteration 181)
+
+*Jerry delivered REQ-048 (`logs/kmaxwell/req048_spectral_participation/`, n=4). **It answers the
+campaign's central question.** Verified against **band 44's registered criterion on the raw JSON**, not
+the README summary — iteration 144's lesson.*
+
+**THE MEASUREMENT.** Per Muon matrix at the 2750 checkpoint, **m = 16 Hutchinson probes** (fresh
+Rademacher, independent of any Lanczos state — **admissible under rule 13**) estimating
+`PR = trace(H)² / (n·trace(H²))`. **Jerry implemented the pre-flighted design exactly** — m = 16 as
+simulated in iteration 162, per-probe values retained, and the **iteration-172 LR-axis correction
+incorporated** (the `s*` tags recorded explicitly as LR multipliers). 12 states, all finite.
+
+**★ THE RESULT — PR IS THE MIRROR IMAGE OF THE BOWL:**
+
+| block | 0 | 2 | 4 | **6** | **8** | 10 | 11 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **C profile** | +0.199 | −0.026 | −0.036 | **−0.194** | −0.075 | +0.042 | **+0.316** |
+| **log PR profile** | **−0.294** | −0.172 | −0.018 | **+0.206** | **+0.212** | +0.062 | **−0.290** |
+
+**C bottoms at layer 6; PR peaks at layer 8. corr(C profile, log PR profile) = −0.862.**
+
+| band-44 criterion | result | verdict |
+|---|---|:---:|
+| **(i)** corr(log PR, **C profile**) ≤ −0.60, ≥10/12 | **mean −0.741** (sd 0.140); **11/12** ≤ −0.60; **12/12 negative** | **PASS** |
+| **(ii)** log PR cubic R² ≥ 0.70, **argmin** in layers 4–8 | cubic R² **0.827, 12/12**; **argmin at L0 or L11 in 12/12** | **FAIL** |
+| falsification (\|corr\| < 0.30, or PR monotone) | not triggered | **survives** |
+
+**⚠️ CRITERION (ii) FAILED BECAUSE I MIS-DRAFTED IT — the hypothesis is confirmed.** REQ-048's stated
+hypothesis was: *"the spectrum is most **concentrated** at the ends of the network and most **spread** in
+the middle."* **PR near 1 = spread, near 1/n = concentrated.** So the hypothesis predicts PR **LOW at the
+ends, HIGH in the middle** — an **inverted bowl, argMAX interior**. **I wrote the shape clause as
+"argmin in layers 4–8", as if PR should track C, when the hypothesis stated in the same request predicts
+the opposite sign.** Criterion (i) — the correlation clause — had the sign right.
+
+**RE-SCORED against the hypothesis as stated** *(criterion (ii′): log PR is an inverted bowl — cubic
+R² ≥ 0.70 and **argmax** in layers 4–8)*:
+
+| | result |
+|---|---|
+| cubic R² ≥ 0.70 | **12/12** (mean 0.827) |
+| **argmax interior (4–8)** | **12/12** — argmaxes 6,8,8,6,6,8,7,7,7,8,8,6 |
+| **VERDICT** | **PASS, 12/12** |
+
+> **★★★ THE ANSWER TO THE CAMPAIGN'S CENTRAL QUESTION.** **The between-layer difference in C is a
+> spectral-concentration profile.** At the **ends** of the network the Hessian's spectrum is
+> **concentrated** in few directions (low PR) and C is **high**; in the **middle** the spectrum is
+> **spread** across many directions (high PR) and C is **low**. **corr = −0.862, holding at every
+> learning rate** (per-LR means −0.794 / −0.683 / −0.708). This is *why* the bowl lives in the **top of
+> the spectrum** (band 56): where curvature concentrates into few directions, the top eigenvalue rises
+> relative to the gradient.
+
+**⚠️ WHAT THIS DOES AND DOES NOT ESTABLISH.** PR and C are **both** functions of the Hessian, so this is
+a **structural identification, not an external cause**: it says *the bowl is a concentration profile*,
+not *what makes the spectrum concentrate at the ends*. **That is a real and substantial narrowing** — the
+question moves from "why is C U-shaped" to "why does the Hessian spectrum concentrate at the network's
+boundaries" — but it is not the end of the causal chain. **Circularity check: PR comes from Hutchinson
+probes, C from `top_eigenvalue`/`gradient_block_norm`; they share the Hessian but not a factorisation,
+so rule 13 is satisfied** — unlike `residual_tail`, rejected in iteration 161.
+
+**BAND 44 — REGISTERED, SCORED, AND AMENDED.** ✅ **CONFIRMED n=4** on criteria (i) and (ii′);
+**criterion (ii) as originally written is withdrawn as a drafting error**, with the correction recorded
+rather than quietly fixed. **The amendment does not weaken the test**: (ii′) is *harder* than (ii) was
+(12/12 vs the 10/12 threshold), and criterion (i) — registered before any data existed and unchanged —
+passes on its own.
+
+**Standing rule 19.** *When registering a criterion, check each clause's SIGN against the hypothesis in
+the same document. A correlation clause and a shape clause can silently disagree, and a pre-registered
+criterion that contradicts its own hypothesis is worse than none — it converts a confirmation into an
+apparent failure.*
+
+**Queue:** **REQ-048 DONE.** **REQ-050 OPEN** (curvature at initialisation) — now the highest-value
+remaining request, since it asks whether this concentration profile is inherited or learned.
+**REQ-049 optional.**
+
 ## ★★ BAND 43 CONFIRMED AT 11 LEARNING RATES (iteration 180) — the top-of-spectrum localisation is now the campaign's second-strongest claim
 
 *Before filing further requests I checked my own "the committed-data seam is exhausted" claim (iteration
