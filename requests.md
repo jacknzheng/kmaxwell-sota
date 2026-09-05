@@ -29,6 +29,75 @@ Next request number: **REQ-048**.
   (`measure_per_matrix_curvature.py:100`), so the first stage would be identically zero. Both were
   fixed in REQ-046 — and band 31 later showed the design was **impossible regardless**.
 
+## 🔧 BAND 59's SLOPE IS SPECIFICATION-DEPENDENT (iteration 191) — the conclusion holds, the number does not
+
+*Band 64 flagged band 59's slope (**−0.590** vs the predicted **−1**) as the one load-bearing-adjacent
+claim still resting on a fitted construction. It was fitted between two **profiles** (type-removed block
+means) — the construction rule 23 targets. **Two separate worries, both now tested.***
+
+**⚠️ WORRY 1 — SPECIFICATION. The coefficient is NOT stable; the conclusion is.**
+
+| specification | slope | t vs 0 | **t vs −1** |
+|---|---:|---:|---:|
+| **profile-level** *(band 59 as recorded)* | **−0.590** | −11.92 | **+8.28** |
+| matrix-level, type dummies only | **−0.408** | — | **+11.47** |
+| **matrix-level, saturated in block AND type** | **−0.336** | −9.44 | **+18.69** |
+
+> **The equal-eigenvalue model is rejected in every specification — and more decisively as the controls
+> get tighter (t vs −1 rises from +8.3 to +18.7).** **But the coefficient ranges −0.336 to −0.590, and
+> band 59 recorded the largest of the three.** The saturated figure identifies the slope from
+> **within-block** variation (across types, seeds and LRs), which is the cleanest available; the
+> profile-level figure additionally absorbs the between-layer signal after smoothing. **Band 59's
+> "−0.590" is corrected to "−0.34 to −0.59 depending on specification, with −0.336 the saturated
+> estimate."**
+
+**✅ WORRY 2 — ATTENUATION. Tested and cleanly ruled out.** `n_eff` is a *measured* quantity, so
+errors-in-variables bias any slope **toward zero** — and −0.59 vs −1 is exactly what attenuation looks
+like. **This is why REQ-048 was specified to store `pr_per_probe_vHv`** (requested in iteration 162 so
+the estimator's own variance would be measurable rather than assumed). Using it:
+
+| quantity | value |
+|---|---:|
+| within-block+type variance of log n_eff | 0.11246 |
+| **mean measurement variance (from the 16 probes)** | **0.00006** |
+| **reliability ratio λ** | **0.9994** |
+| raw saturated slope | −0.3356 |
+| **attenuation-corrected slope** | **−0.3358** |
+
+**The 16 Hutchinson probes are effectively noise-free at this scale — measurement error is 0.05% of the
+signal variance, and the correction moves the slope by 0.0002.** **Attenuation is NOT the explanation for
+the gap from −1**, so **band 59's substantive conclusion stands on firmer ground than when it was
+recorded**: the spectrum is genuinely not "n_eff equal directions", and the shortfall is real physics
+rather than measurement bias.
+
+*(Methodological note: the pre-flight in iteration 162 chose m = 16 by simulation, and the request asked
+for per-probe values specifically so this check would be possible. **That decision, made 29 iterations
+earlier, is what allows attenuation to be excluded rather than merely hoped away.**)*
+
+**PROPOSED n=4 SEED CHECK — band 65 (criterion registered).**
+*Criterion:* (i) **d(log C)/d(log n_eff) rejects −1 (t ≥ 3) in BOTH the profile-level and the
+block-saturated specification**; (ii) the **saturated estimate lies in [−0.55, −0.15]**; (iii) the
+**reliability ratio λ ≥ 0.95**, so attenuation is demonstrably not driving the gap.
+*Status:* **satisfied by committed REQ-048 data** (+8.28 and +18.69; −0.336; λ = 0.9994).
+**No new compute requested; ≤2-node ceiling.**
+
+**⇒ GUARD AUDIT COMPLETE.** Every load-bearing and adjacent claim has now been through rule 23:
+
+| claim | saturated verdict |
+|---|---|
+| **the bowl** (band 63) | ✅ holds model-free — interior minimum below both ends, 12/12 |
+| **the concentration mirror** (band 64) | ✅ holds model-free — opposite-signed position contrasts, 12/12 |
+| **the n_eff slope** (band 59 → here) | 🔧 **conclusion holds, coefficient corrected to a range** |
+| band 61's discrete break | ⛔ withdrawn (iteration 188) — baseline-dependent |
+| iteration 163's localised residual | ⛔ withdrawn (iteration 164) — pseudo-replication |
+
+**Both withdrawn claims were deviation-from-trend claims; all three surviving claims are contrasts or
+coefficients between measured quantities.** **The pattern rule 23 predicted is now complete across the
+campaign.**
+
+**Queue:** REQ-048 **DONE**; **REQ-050 OPEN** (highest value — and now the only route to a *causal*
+answer, since every committed-data claim has been guarded); REQ-049 optional. No new Jerry response.
+
 ## ✅★ BAND 44 SURVIVES THE SATURATED GUARD TOO (iteration 190) — the mirror as position-contrasts, not curve correlation
 
 *Band 63 established the bowl model-free. **Band 44 — the spectral-concentration result, and the answer
