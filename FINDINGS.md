@@ -398,6 +398,47 @@ the only reason the mistake surfaced**; a design with one more matrix per type w
 plausible numbers from an over-specified fit. **Check residual degrees of freedom before reading any
 per-group regression.**
 
+## The mlp.proj association survives every guard (2026-09-05)
+
+The previous entry narrowed the `d_cv` result to a single matrix type and warned it might be the
+band-37 failure mode: **an apparently special type that is really just the noisiest one.** That warning
+was testable, and it is refuted — `mlp.proj` is special in the opposite direction.
+
+**It is the HARDEST type to find a correlation in, and shows the strongest one:**
+
+| type | residual sd | `d_cv` spread | partial correlation |
+|---|---:|---:|---:|
+| attn.v | 0.0644 | **0.4333** (widest) | −0.341 |
+| attn.k | 0.0910 (widest) | 0.1984 | +0.097 |
+| attn.q | 0.0807 | 0.1300 | +0.145 |
+| mlp.fc | 0.0576 | 0.0580 | +0.212 |
+| **mlp.proj** | **0.0588** | **0.0474** (2nd narrowest) | **−0.717** |
+| attn.proj | 0.0753 | 0.0412 (narrowest) | +0.171 |
+
+**`attn.v` has 9× `mlp.proj`'s predictor spread and less than half the effect.** Across the six types,
+**corr(detection ease, effect size) = −0.090** — **the strongest associations appear where detection is
+hardest.** A power artifact would give the opposite sign. **This is the reverse of band 37's mlp.fc
+exception, which was the noisiest type rather than a distinctive one.**
+
+**And the six-way selection is priced.** Permuting block labels within each type-seed cell and taking
+the max \|r\| across all six types: **p = 0.0002**. `mlp.proj`'s −0.717 is not the best of six noisy
+draws.
+
+**What is now established, at its actual scope.** For **`mlp.proj` only**: C is lower where the backward
+signal's token-norm dispersion is higher — **all four seeds negative (−0.75, −0.65, −0.92, −0.55)**,
+selection-priced, and not attributable to that type being easier to measure in. **This is the first
+predictor of the unexplained component to survive every guard this campaign applies** — the shared-term
+check (it is `g`-free, a ratio), the per-type check (it is type-specific and stated so), the
+power-artifact check, and a selection-priced permutation null.
+
+**What it is not.** It explains the residual for **one of six matrix types**. The other five remain
+unexplained, and the campaign's headline decomposition is unchanged: **majority spectral concentration,
+with a substantial remainder that has no general account.**
+
+**Why `mlp.proj` plausibly differs.** It is a residual-stream writer whose input is the ReLU²
+expansion — the one type whose forward signal is both nonlinear and dimension-reduced before writing.
+**That is a structural difference, not a fitted one, but nothing here tests it causally.**
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
