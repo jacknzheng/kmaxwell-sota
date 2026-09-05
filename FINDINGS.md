@@ -439,6 +439,48 @@ with a substantial remainder that has no general account.**
 expansion — the one type whose forward signal is both nonlinear and dimension-reduced before writing.
 **That is a structural difference, not a fitted one, but nothing here tests it causally.**
 
+## Neither structural explanation for mlp.proj survives (2026-09-05)
+
+The previous entry suggested `mlp.proj` might differ because **its input is the ReLU² expansion** — and
+flagged that nothing tested it. **Tested, that explanation fails, and so does the obvious alternative.**
+
+**Test 1 — the expansion.** `mlp.fc` faces the *same* expansion from the other side: its **output**
+gradient is the gradient with respect to the expansion, and `d_cv` is a property of the output gradient.
+So if the expansion drove the coupling, `mlp.fc` should show it.
+
+| type | relationship to the ReLU² expansion | `d_cv` partial correlation |
+|---|---|---:|
+| **`mlp.proj`** | input **is** the expansion | **−0.717** (4/4 negative) |
+| `mlp.fc` | output **is** the expansion | **+0.212** (sign flips: −0.09, −0.47, +0.93, +0.48) |
+
+**Opposite sign and unstable — the expansion-as-such explanation is refuted.**
+
+**Test 2 — the residual-writer role.** `attn.proj` is the other stream writer, with no expansion
+involved:
+
+| type | role | `d_cv` partial correlation |
+|---|---|---:|
+| **`mlp.proj`** | writer | **−0.717** |
+| `attn.proj` | writer | **+0.171** |
+| four readers | — | +0.028 mean |
+
+**The two writers differ by 0.888 — more than the writer/non-writer gap itself.** The writer role does
+not explain it either.
+
+**Where this leaves the finding.** The `mlp.proj` association is **statistically solid** — all four
+seeds negative, selection-priced at p = 0.0002, and shown not to be a power artifact. **But it has no
+structural account.** Neither of the two groupings that distinguish `mlp.proj` from the other five types
+predicts which types show the effect.
+
+**Stated plainly: this is a validated association without a mechanism.** Recording it that way is more
+useful than attaching a structural story that its own discriminating test refutes — the campaign has
+already withdrawn several findings that were kept alive by plausible-sounding structural narratives.
+
+**What would settle it.** `mlp.proj` and `attn.proj` differ in input width (3072 vs 768) and in whether
+their input passed through a nonlinearity. **REQ-051 measures `k_a`, `k_d` and `k_rho` per matrix under a
+per-matrix LR ladder**, which would show whether `mlp.proj`'s backward channel responds differently to
+intervention — a causal discriminator that no observational split on this data can provide.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
