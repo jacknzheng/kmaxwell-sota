@@ -181,6 +181,19 @@ Therefore, when scoring H1:
   to the same training dynamics, so the observational k may be confounded. REQ-051 varies per-matrix
   LR causally and is the only instrument in the queue that can separate them. Report the causal k
   with its distance from 2, per seed, using within-seed effect sizes (rule 32).
+  **Pilot benchmark, added iteration 233:** REQ-045's 3-arm per-matrix LR data already gives a
+  within-matrix (intervention) estimate of **k = +2.237** (se 0.086, t vs 2 = +2.77, n = 216), versus
+  +2.415 observational on the same data and +3.173 on REQ-048. **Compare REQ-051's causal k against
+  +2.237, not against +3.173** — 81% of that gap is dataset, not estimator, so the observational
+  excess is not a causal quantity. Per type the pilot violation is concentrated: `mlp.proj` +2.504
+  (t vs 2 = +6.06) is decisive, `attn.proj` +1.397 sits *below* gauge, and four types are
+  indistinguishable from 2. Test whether that concentration reproduces.
+  **Probe repeats matter on the gradient side too.** The pilot's within-matrix signal in `log g` is
+  0.0948 dex against a per-probe noise of ~0.115 dex — a signal-to-noise ratio of **0.82**. Repeats
+  are needed for `gradient_block_norm`, not only for the curvature moments, or the LR ladder's
+  elasticities will be attenuated by an unmeasurable amount. Note also that `lam` and `g` share a
+  probe batch, so their errors are correlated and no clean disattenuation is available: commit
+  repeats rather than planning to correct after the fact.
 - **second target, added iteration 231 — the moment ladder.** Under the reparametrisation gauge
   (`W = c·V` gives `g ~ c`, every Hessian moment `~ c²`), **all** spectral moments must have
   elasticity **+2** wrt `log g`. Observationally on REQ-048 they do not, and they deviate in a strict

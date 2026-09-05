@@ -1234,6 +1234,71 @@ null (p = 0.0000, iteration 231), and within-seed effect sizes (t = +13 to +26, 
 limit is unchanged and is not statistical: **`g` is not exogenous**, so this remains co-variation
 across matrices. REQ-051 is still the only queued instrument that can make it causal.
 
+## The gauge violation survives an actual intervention, but is far smaller than observed (2026-09-05)
+
+The moment ladder's limit has been that `g` is not exogenous. That limit is partially liftable from
+committed data, which iterations 230-232 assumed it was not.
+
+**What is and is not testable.** REQ-048 is the **only** archive carrying `trace_est` and
+`trace_sq_est` — checked across every local archive (REQ-036, 037, 045, 047, and Arm A all carry
+`gradient_block_norm` and none carry the Hutchinson moments). So the **full ladder** cannot be tested
+under intervention. But its top rung, `k = d(log lam)/d(log g)`, needs only `top_eigenvalue` and
+`gradient_block_norm`, and **REQ-045 has both under a real per-matrix LR intervention** (3 arms,
+72 matrices, deliberate multipliers `m_i`).
+
+**Within-matrix estimate, matrix fixed effects, cluster-robust by matrix (n = 216):**
+
+| estimate | k | se | t vs 2 |
+|---|---|---|---|
+| **intervention (within-matrix, REQ-045)** | **+2.237** | 0.086 | **+2.77** |
+| observational (between-matrix, REQ-045) | +2.415 | — | — |
+| observational (between-matrix, REQ-048) | +3.173 | — | — |
+
+**The gauge violation survives an intervention** — but at +2.237, not +3.173.
+
+**Where the gap comes from.** Decomposing the difference between the intervention estimate and the
+headline observational one: **81% is dataset** (REQ-045's own observational k is +2.415, already well
+below REQ-048's +3.173) and only **19% is estimator** (within +2.237 vs between +2.415 on the same
+data). The observational excess of +1.17 above gauge is therefore **not** a causal quantity, and
+iteration 231's number should not be quoted as one.
+
+**It is not driven by one arm pair.** The three pairwise arm contrasts give **+2.095, +2.390,
++2.101** — consistent.
+
+**It is concentrated, not uniform.** Within-matrix k per type:
+
+| type | k | se | t vs 2 |
+|---|---|---|---|
+| **`mlp.proj`** | **+2.504** | 0.083 | **+6.06** |
+| `attn.v` | +2.421 | 0.287 | +1.47 |
+| `attn.q` | +2.337 | 0.209 | +1.61 |
+| `mlp.fc` | +2.122 | 0.218 | +0.56 |
+| `attn.k` | +1.895 | 0.287 | −0.37 |
+| **`attn.proj`** | **+1.397** | 0.258 | **−2.34** |
+
+Only `mlp.proj` violates the gauge decisively; `attn.proj` sits **below** it; four types are
+indistinguishable from 2. The broad, uniform gauge violation suggested by the observational estimate
+is not what the intervention shows.
+
+**Attenuation: it cannot rescue the observational number.** REQ-045 has one probe per arm, so its
+reliability is not estimable internally. Using REQ-048's per-probe noise in `log g` (0.115 dex) as a
+guide, the within-matrix signal here is only **0.0948 dex** — a signal-to-noise ratio of **0.82**,
+i.e. the noise is *larger* than the signal. If that transfers, the intervention k is heavily
+attenuated. But attenuation biases toward **zero**, and 2 is not zero, so a heavily attenuated
++2.237 implies a true value **above** 2, never below.
+
+**No corrected value is claimed.** Clean disattenuation assumes the regressor's error is independent
+of the outcome's; here `lam` and `g` are measured on the **same probe batch**, so their errors are
+correlated and can bias the slope in either direction. What survives without that assumption: the
+sign of the deviation is positive pooled and in 4 of 6 types, the three arm contrasts agree, and
+`mlp.proj` is decisively above gauge.
+
+**Consequence for REQ-051.** Its registered target stands and gains a benchmark: the causal k should
+be compared against **+2.237** from this pilot, not against the observational +3.173. REQ-051's
+design — multiple probe repeats and a proper LR ladder — is exactly what this 3-arm, 1-seed,
+1-probe pilot cannot deliver, and the signal-to-noise ratio of 0.82 found here is the concrete reason
+its **probe-repeat requirement matters for the gradient side too**, not only for curvature.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1277,3 +1342,7 @@ Verify whether a quantity is probe-estimated before assuming it is measured exac
 probe files make this checkable, and a regressor's reliability decides whether a slope is
 attenuated. When several outcomes share one regressor, attenuation scales them all equally and
 cannot create an ordering -- so orderings are reliability-invariant while level comparisons are not.
+Before concluding a question needs new data, check every committed archive for the specific fields
+it requires -- a weaker archive may support part of the test. And when disattenuating, verify the
+regressor's and outcome's errors are independent: shared-probe errors can bias a slope either way,
+so no corrected value should be quoted.
