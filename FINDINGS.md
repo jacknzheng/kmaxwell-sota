@@ -888,6 +888,66 @@ inside a single seed, which is what it should have rested on all along.
 remain correct for testing initialisation-robustness, but their registered criteria should be judged
 on **within-seed effect sizes**, not on cross-seed sign agreement. This is now noted in REQ-050.
 
+## The unexplained residual is 69% reproducible structure, not noise (2026-09-05)
+
+Rule 32 found the `log C` residual is largely shared across seeds. Following that through gives a
+hard **ceiling** on what any structural predictor could ever explain, computable without any
+candidate in hand: the residual's intraclass correlation across seeds. A predictor that is a
+property of the *matrix* cannot explain the seed-specific part, no matter how good it is.
+
+| residual | mean cross-seed corr | ICC (variance decomposition) | reproducible | seed-specific |
+|---|---|---|---|---|
+| after type + block | +0.7578 | +0.7600 | **75.8%** | 24.2% |
+| after type + block + `log n_eff` | +0.6896 | +0.6917 | **69.0%** | 31.0% |
+
+Two independent estimators agree to 0.002. **The remaining target is real.** The long search for a
+predictor of the unexplained ~43% was not chasing noise: 69% of what is left is reproducible
+per-matrix structure, sd 0.099 dex of genuine signal. Every failed candidate failed on its merits.
+
+## A type-by-depth interaction accounts for a third of that structure (2026-09-05)
+
+Averaging the four seeds cancels most of the 31% seed noise and leaves an estimate of the structure
+itself (sd 0.104 dex, 72 matrices). Type and block **main** effects are zero by construction here --
+they were absorbed -- so anything left in those axes is a genuine interaction.
+
+**Per-type depth slopes of the residual**, continuous depth, no binning:
+
+| type | slope (dex/block) | seed sd | per-seed |
+|---|---|---|---|
+| `mlp.proj` | **+0.0298** | 0.0064 | +0.038, +0.024, +0.031, +0.026 |
+| `attn.q` | +0.0127 | 0.0128 | −0.003, +0.021, +0.026, +0.007 |
+| `mlp.fc` | +0.0111 | 0.0058 | +0.016, +0.012, +0.003, +0.014 |
+| `attn.k` | −0.0051 | 0.0046 | −0.003, −0.006, −0.000, −0.011 |
+| `attn.proj` | −0.0212 | 0.0071 | −0.021, −0.016, −0.031, −0.016 |
+| `attn.v` | **−0.0274** | 0.0059 | −0.027, −0.035, −0.028, −0.020 |
+
+Spread 0.057 dex/block. Three checks, chosen because the first presentation of this (a type x
+early/late table) was **mechanically antisymmetric** -- within a type the residual is mean-zero, so a
+two-bin split forces `late = -early` and proves nothing:
+
+- **Continuous depth** (above) reproduces it without any binning.
+- **Permutation null** over type labels: observed variance share 0.310, null mean 0.143, null 95th
+  percentile 0.250, **p = 0.0065**.
+- **Within-seed** (rule 32, the standard that matters): R² gain from per-type depth slopes is
+  **0.468 / 0.339 / 0.408 / 0.288** on each seed's own matrices.
+- **Leave-one-type-out**: R² gain stays 0.313-0.414 dropping any single type (full 0.375). Not
+  driven by one type.
+
+**The writer/internal split does not explain it.** The campaign's standing structural grouping puts
+`attn.proj` and `mlp.proj` together as residual writers, but they sit at **opposite extremes**
+(−0.021 and +0.030). Writers-vs-internal and mlp-vs-attn both fail to separate the ordering.
+
+**Registered, not claimed.** The grouping that *does* separate cleanly is the attention output path
+(`attn.v`, `attn.proj`) running negative against everything else. That grouping was **read off these
+slopes**, so it cannot be tested on the data that produced it -- it is a hypothesis, and reporting it
+as a finding would be the selection error rules 24 and 25 exist to prevent. It is registered below
+for REQ-050/051 to test on new data.
+
+**What this changes.** For the first time the unexplained residual has a described shape rather than
+a list of failed predictors: a third of it is *how each matrix type's curvature drifts with depth*,
+above and beyond the main depth bowl and the concentration term. That is a narrower question than
+"what predicts the residual", and it is a question new measurement can answer.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -910,3 +970,6 @@ location across seeds.
 Cross-seed agreement is not independent replication when the tested residual is shared across
 seeds; measure that sharing before treating N seeds as N tests. In this design the log C residual
 is 76% shared, so judge claims on within-seed effect size with clustered standard errors.
+Before hunting predictors for a residual, compute its reproducible share across replicates: that
+share is a ceiling on what any structural predictor can explain, and it says whether the search is
+worth running at all.
