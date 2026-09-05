@@ -2239,6 +2239,56 @@ recorded so the comparison is not attempted later. It also sharpens iteration 24
 picture: C's bowl is not curvature's bowl minus a gradient bowl, but curvature's bowl **plus** the
 inverse of a gradient arch, with both contributions deepening the same interior minimum.
 
+## Withdrawn: "`g` is an arch" (2026-09-05)
+
+Iteration 249 recorded, as an incidental finding, that `log g`'s quadratic depth coefficient is
+negative in all five panels and concluded **g is an arch, not a bowl**, with the arch adding to C's
+bowl through the `−2 log g` term. **That is withdrawn.**
+
+**The coefficient is not significant anywhere**: t = −0.31, −0.97, −0.69, −0.31, −1.20 across the five
+panels. Pooling gives `a_g = −0.00099`, se 0.00068, **t = −1.46, p = 0.144**; the 5/5 sign agreement
+alone gives p = 0.062.
+
+**More decisively, the quadratic does not describe `log g`'s depth profile at all.** Its R² is
+**0.034 to 0.244** (mean 0.133). A parabola fitted to a non-parabolic shape returns a coefficient
+that absorbs residual structure rather than measuring curvature, so `a_g` is not evidence of an arch.
+The raw profile confirms it: `g`'s argmin lands on block 1, 1, 10, 10, 1 and its argmax on 11, 3, 3,
+3, 2 — a wiggle, not an arch.
+
+**Consequence for the decomposition.** The identity `a_C = a_lam − 2 a_g` holds by construction, and
+the apparent "arch share of C's bowl" (6.2%–41.1%, mean 17.7%) is therefore **not a real
+apportionment** — it is a share attributed to a coefficient indistinguishable from zero. The correct
+statement is that **the gradient's contribution to C's bowl is not established** by these data.
+
+## The bowl is sharper in C than in either component (2026-09-05)
+
+Asking the same question of every quantity — *does a parabola describe this depth profile?* — gives a
+result that does not follow from either component:
+
+| panel | `log lam` R² | `log g` R² | **`log C` R²** |
+|---|---|---|---|
+| REQ-048 | 0.443 | 0.099 | **0.809** |
+| Arm A | 0.498 | 0.105 | **0.877** |
+| REQ-036 | 0.602 | 0.244 | **0.790** |
+| REQ-037 | 0.256 | 0.034 | **0.743** |
+| REQ-045 | 0.368 | 0.183 | **0.878** |
+| **mean** | **0.433** | **0.133** | **0.819** |
+
+t-statistics on the quadratic term tell the same story: `log C` reaches **+4.29 to +7.93** in every
+panel, `log lam` only **+1.56 to +3.38**, `log g` never differs from zero.
+
+**C is more parabolic than either quantity it is built from.** This rules out the reading that C's
+bowl is simply inherited from curvature: if it were, `log lam`'s parabola would fit at least as well.
+Something about the combination `lam/g²` produces a cleaner quadratic depth profile than curvature
+alone — consistent with iteration 240's cancellation result and iteration 249's finding that C's
+minimum is more run-stable than its components', but stronger than either, because it concerns the
+*shape* rather than the location or the noise.
+
+**What is not claimed.** The mechanism producing this is unidentified. The gradient's depth profile
+is real (it has structure) but not parabolic, so "the arch deepens the bowl" is unavailable as an
+explanation, and no substitute has been tested. This is a description of a systematic asymmetry
+across five independent runs, awaiting a mechanism.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2340,3 +2390,6 @@ statistic that actually distinguishes them.
 When a prediction is compared to an observed ratio of standard deviations, check the observation's
 own stability by leave-one-out before claiming agreement: with a handful of replicates the
 prediction can be far better determined than the quantity it is being tested against.
+Check that a fitted functional form describes the data before interpreting its coefficients: a
+parabola fitted to a non-parabolic profile returns a curvature coefficient that measures residual
+shape, not curvature. Report the fit's R2 alongside the coefficient.
