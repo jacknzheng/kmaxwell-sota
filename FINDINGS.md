@@ -1841,6 +1841,66 @@ measurement fact**: `log g` is measured far more reproducibly than `log lam` acr
 (control-to-control difference 0.042 vs 0.223 dex; corr +0.988 vs +0.865), which is why every
 elasticity in this campaign is limited by the curvature side, not the gradient side.
 
+## `log g` reproduces by **type**, not by depth — a clarification to iteration 242 (2026-09-05)
+
+Iteration 242 reported that `log g` reproduces across archives at **corr +0.988** while `log lam`
+manages +0.865, and used this to argue the gradient side is the better-measured one. That number is
+correct but **must not be read as saying g's depth structure is reproducible**. It is a matrix-level
+correlation over 72 matrices, and it is dominated by the type axis.
+
+**Variance decomposition of `log g` within a panel**, averaged over 11 committed panels
+(REQ-036 control, REQ-037 control, REQ-045, REQ-048 × 4 seeds, Arm A × 4 seeds):
+
+| axis | share of `log g` variance |
+|---|---|
+| **type** | **0.831** |
+| **block (depth)** | **0.045** |
+
+**Reproducibility at each grain**, mean pairwise correlation across the 11 panels:
+
+| grain | mean cross-panel correlation |
+|---|---|
+| matrix level, type structure included | **+0.951** |
+| matrix level, type means removed | +0.760 |
+| **block-mean depth profile (12 points)** | **+0.688** |
+
+So the headline +0.988 reflects a large, stable *type* pattern. g's **depth** profile reproduces far
+less well: the pairwise range is +0.134 to +0.991, and the argmin block splits between **block 1**
+(five panels) and **block 10** (four panels), with argmax at block 3 (seven panels) or block 11.
+
+**g's depth profile does have a consistent shape, but a small one.** Z-scoring each panel's profile,
+7 of 12 blocks have a mean displacement exceeding their cross-panel sd: block 1 is low (−1.57),
+blocks 3 and 4 high (+1.30, +0.88), blocks 9 and 10 low (−0.72, −0.87), block 11 high (+1.06). The
+total depth range is only **0.12 to 0.26 dex**, against the type spread that carries 83% of the
+variance.
+
+**Consequences.**
+
+- Iteration 242's conclusion that curvature, not gradient, is the limiting measurement stands — but
+  the supporting figure should be quoted as **+0.951 at matrix level**, and the depth-specific figure
+  is **+0.688**.
+- The n=4-style cross-archive check hoped for on the gradient side is **weaker than expected**: with
+  depth carrying 4.5% of g's variance, eleven panels agree on the depth profile only moderately.
+- This does not touch iteration 241's result (curvature moments predict g's *matrix-level* profile at
+  R² = 0.975–0.982 with type absorbed), which was fitted at matrix level after removing type — the
+  grain where cross-panel agreement is +0.760, not +0.688.
+
+## Operator cleanup of REQ-051, accepted (2026-09-05)
+
+The branch head moved to `185b68c`, authored by the operator (`jackzengh`), not by Jerry: *"Clean up
+requests.md: restate REQ-051's registered targets once, drop the iteration diary."* No Jerry response
+and no NEEDS-INFO has been received.
+
+The change is correct and is accepted without amendment. Six chronological "added iteration NNN"
+layers had accumulated in REQ-051's header, each partly superseding the last, leaving **three
+contradictory scoring instructions** ahead of the spec and pushing the request metadata ~80 lines
+down. It also removed a stale `corr(via, direct) = −0.920` still quoted as live evidence in the H1
+block — **a figure retracted in iteration 229 that should have been cleared from requests.md at the
+time**. FINDINGS.md carried the retraction; requests.md did not, and that inconsistency was mine.
+
+Standing lesson: when a statistic is retracted in FINDINGS.md, search requests.md for it in the same
+commit. The 2-node resource constraint is preserved in the rewritten header.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -1918,3 +1978,7 @@ Measure how well the controls predict the outcome itself first.
 A noise estimate is specific to how a measurement was repeated; do not transfer one archive's
 probe-reseeding spread to archives probed once. Bound the noise from within the archives being
 compared, and check the ratio a pure-noise model predicts before calling a ratio an asymmetry.
+State the GRAIN of a reproducibility figure: a matrix-level correlation dominated by a large
+category effect says nothing about whether a within-category profile reproduces. Decompose the
+variance by axis before quoting the number. When retracting a statistic, grep every file that
+quotes it, not only the findings record.
