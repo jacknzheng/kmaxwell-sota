@@ -2948,6 +2948,62 @@ absorb the between-type variation.
 **Net.** Iteration 261's scope claim is corrected: a committed field *does* distinguish q/k/v. No
 field explains their bowl ordering, so that conclusion stands on better grounds than before.
 
+## The withdrawn alignment result stays withdrawn on raw values (2026-09-05)
+
+Iteration 262 withdrew "`da_cos_mean` adds +0.28 to +0.57 R² within the qkv group" because it used
+`log10(|x|)` on a signed quantity, and left the underlying question open. Redone on raw values, the
+result is worse than the transform made it look — and the reason is specification, not the transform.
+
+| seed | block only | + `da_cos` | incr | block + **type** | + `da_cos` | incr |
+|---|---|---|---|---|---|---|
+| 0 | 0.064 | 0.769 | **+0.704** | 0.925 | 0.937 | **+0.012** |
+| 1 | 0.072 | 0.784 | +0.711 | 0.898 | 0.899 | +0.001 |
+| 2 | 0.056 | 0.764 | +0.708 | 0.866 | 0.867 | +0.001 |
+| 3 | 0.163 | 0.820 | +0.656 | 0.925 | 0.925 | +0.000 |
+
+`da_cos_mean` is nearly constant within a type (`attn.v` ≈ +0.42, `attn.q` ≈ +0.06, `attn.k` ≈ −0.02,
+seed variation ~0.005), so **without type dummies the test is a three-point comparison of type means
+in disguise** — the same cheap comparison iteration 262 already priced at 1-in-6. **With** type
+dummies it adds **+0.000 to +0.012**. The withdrawn claim is confirmed dead on raw values.
+
+## Gradient–activation alignment adds a little inside `mlp.proj`, and nothing elsewhere (2026-09-05)
+
+The test that does not depend on the between-type ordering — within one type, across 12 blocks, after
+removing a quadratic in depth — gives one positive result:
+
+| type | mean partial corr with `log C` | sign |
+|---|---|---|
+| **`mlp.proj`** | **+0.702** | 4/4 |
+| `attn.v` | +0.320 | 3/4 |
+| `mlp.fc` | +0.235 | 4/4 |
+| `attn.q` | −0.189 | 1/4 |
+| `attn.proj` | −0.126 | 1/4 |
+| `attn.k` | −0.124 | 1/4 |
+
+`mlp.proj`'s value passes a permutation null decisively: observed **+0.702** against a null mean of
+−0.001 and 95th percentile +0.274 over 20,000 draws, **p = 0.0000**.
+
+**But it is largely concentration seen from the gradient side.** Within `mlp.proj`, `da_cos_mean`
+correlates **−0.648** with `log n_eff_bulk`, and under mutual control concentration is much the
+stronger predictor of `log C`:
+
+| | mean partial corr | consistency |
+|---|---|---|
+| `n_eff_bulk` \| `da_cos` | **−0.955** | 4/4 |
+| `da_cos` \| `n_eff_bulk` | **+0.374** | 4/4, but +0.130 to +0.655 across seeds |
+
+Alignment survives the control but weakly and unstably; concentration is essentially undiminished by
+controlling alignment.
+
+**And it does not generalise.** In `mlp.fc` — the other type where the raw correlation was positive
+4/4 — alignment controlled for concentration gives **−0.167, positive in only 1 of 4 seeds**. The
+effect exists in one matrix type.
+
+**Net.** Gradient–activation alignment is not a new explanation of C. It carries a small amount of
+information beyond concentration in `mlp.proj` alone, and the standing account is unchanged: within
+that type, spectral concentration remains the dominant predictor. Recorded so the field is not
+re-tested a third time.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -3089,3 +3145,6 @@ Never log-transform a signed quantity: check the sign and the distance from zero
 a covariance or any centred statistic can straddle zero, and log|x| then makes near-zero entries
 dominate the mean and invent orderings. When two of your own scripts disagree, find the bug before
 reporting either.
+When a predictor is nearly constant within a group, a model omitting group dummies is testing the
+group means, not the predictor: report both specifications and treat the within-group test as the
+informative one.
