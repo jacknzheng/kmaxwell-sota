@@ -2342,6 +2342,61 @@ elasticity (iterations 231–234, ~2–3 depending on design), C's cancellation-
 (iteration 249), and C's parabolic depth profile (iteration 250). They are aspects of one
 relationship between curvature and gradient norm, expressed at different grains.
 
+## The bowl is a curvature phenomenon; dividing by g² sharpens it rather than creating it (2026-09-05)
+
+Iteration 251 explained why C's depth profile is *cleanly* parabolic but not why there is a bowl at
+all. The decisive test: remove the gradient's influence from curvature at matrix level and ask
+whether the bowl survives.
+
+| quantity | mean `a2` | mean t | mean R² | argmins across 5 panels |
+|---|---|---|---|---|
+| `log lam` | +0.0112 | +2.45 | 0.433 | 6, 6, 7, 1, 1 |
+| `log lam \| log g` | +0.0122 | +3.66 | 0.609 | 6, 6, 5, 1, 4 |
+| **`log C`** | **+0.0136** | **+6.39** | **0.819** | **6, 6, 4, 6, 4** |
+
+**The bowl survives.** Curvature with the gradient's linear influence regressed out still has a
+positive quadratic depth coefficient, significant in its own right. The bowl is a property of
+curvature; `lam/g²` does not manufacture it.
+
+**The sharpening is significant and consistent.** Paired across the same five panels, `a2(C) − a2(lam)`
+is **+0.0024** (sd 0.0017, t = +3.09) and `a2(C) − a2(lam|g)` is **+0.0013** (sd 0.0008, t = +3.63),
+**positive in 5/5 panels** in both cases.
+
+**And it is the same bowl, not a different object.** Within-panel profile correlations: corr(`lam|g`,
+`C`) = **+0.867 to +0.958**, corr(`lam`, `lam|g`) = +0.893 to +0.987. The gradient adjustment changes
+the bowl's depth and the stability of its location, not its shape.
+
+## A qualification: growth in the quadratic coefficient is not itself evidence (2026-09-05)
+
+Sweeping the adjustment coefficient `k` in `log lam − k·log g` shows why `a2` alone must not be read
+as sharpening:
+
+| `k` | mean `a2` | mean t | mean R² | argmins |
+|---|---|---|---|---|
+| 0 (raw `lam`) | +0.0112 | +2.45 | 0.433 | 6, 6, 7, 1, 1 |
+| fitted (~1) | +0.0122 | +3.66 | 0.609 | 6, 6, 5, 1, 4 |
+| **2** (`log C`) | +0.0136 | +6.39 | 0.819 | 6, 6, 4, 6, 4 |
+| **2.7** (measured elasticity) | +0.0144 | **+7.96** | **0.863** | 6, 6, 4, 6, 4 |
+| 4 (over-correction) | **+0.0159** | +6.66 | 0.788 | 6, 6, 3, 6, 6 |
+
+`a2` **keeps growing monotonically** even at `k = 4`, a deliberate over-correction — so a larger
+quadratic coefficient can be produced simply by subtracting more of `g`'s own shape, and the rise
+from +0.0112 to +0.0136 is not by itself evidence that the gradient sharpens anything.
+
+**What is evidence is that the fit quality peaks near the measured elasticity.** R² and the
+t-statistic both rise to `k ≈ 2.7` — the λ–g elasticity measured independently in iterations 231–251
+— and **decline** by `k = 4`. The argmins likewise stabilise at [6, 6, 4, 6, 4] for `k` between 2 and
+2.7 and destabilise outside that range. The optimum sitting at the independently measured elasticity,
+rather than at the boundary of the sweep, is what distinguishes a real cancellation from an artifact
+of subtracting more.
+
+**Net position on the charter question.** The bowl in C has three established components: it
+originates in **curvature** (survives removing `g`, +0.0122 with t = +3.66), it is **sharpened and
+its location stabilised** by dividing by `g²` (5/5 panels, and the optimum coincides with the
+measured elasticity), and it is **run-independent** (iteration 248, five different runs). What sets
+the curvature bowl itself remains the open question, with concentration explaining 63–73% of its
+depth variance (iteration 240).
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2449,3 +2504,6 @@ shape, not curvature. Report the fit's R2 alongside the coefficient.
 With a handful of panels, two high correlations are not distinguishable from each other: use an
 exact permutation null to price each, and do not claim one predictor beats another when the gap is
 inside the sampling error and the predictors are themselves correlated.
+When an adjustment improves a statistic, sweep the adjustment past its intended value: if the
+statistic keeps improving monotonically the gain may be mechanical, and the evidence is an interior
+optimum coinciding with an independently measured quantity, not the improvement itself.
