@@ -2900,6 +2900,54 @@ is not geometric. Combined with iteration 253 (concentration explains ~half the 
 254 (the unexplained half is `mlp.fc`'s), the remaining target is a role-dependent, non-geometric
 property that varies among matrices of identical size.
 
+## A log transform applied to a signed quantity — caught, diagnosed, withdrawn (2026-09-05)
+
+Iteration 261 concluded that "no committed field distinguishes `attn.q`, `attn.k` and `attn.v`". That
+was stated too broadly: it was true of the five-panel archives, which hold only `top_eigenvalue` and
+`gradient_block_norm`, but REQ-047's fields exist for REQ-048's seeds and had not been tested against
+the attention ordering. Correcting the scope produced a candidate — and then refuted it.
+
+**The candidate.** Screening all twelve REQ-047 fields, `da_cos_mean` appeared to separate q/k/v at
+**100× seed noise** and to match the bowl ordering `k > v > q`. Every activation field
+(`a_frob`, `a_rms`, `a_eff_rank`) is identical across the three (spread/sd = 0.0), as expected since
+they share an input, so a separating field looked notable.
+
+**It does not survive.** Two guards disagreed with the screen, and the screen was wrong:
+
+- **Per seed**, the ordering is **`attn.v` > `attn.q` > `attn.k`** in all four seeds — not
+  `k > v > q`.
+- **Across all six types**, `da_cos_mean` correlates **−0.300** with bowl depth; the exact
+  permutation test over all 720 orderings gives **p = 0.696**.
+
+**The cause was my own transform.** `da_cos_mean` is a **signed** cosine that straddles zero for
+`attn.k`:
+
+| type | min | mean | max | negative values? |
+|---|---|---|---|---|
+| `attn.q` | +0.00856 | +0.0598 | +0.1110 | no |
+| **`attn.k`** | **−0.12109** | **−0.0183** | +0.05197 | **yes** |
+| `attn.v` | +0.34688 | +0.4166 | +0.50699 | no |
+
+**13 of `attn.k`'s 48 matrices have |da_cos| < 0.01**, minimum 1.06e-04. Applying `log10(|x|)` to
+such a quantity makes near-zero entries dominate the mean, which is what produced the spurious
+`k` value and the false ordering match. Read from raw values, the ordering is stable across seeds and
+**does not** match bowl depth.
+
+**What survives.** `da_cos_mean` does separate the three attention matrices sharply and reproducibly:
+`attn.v` sits near **+0.42**, `attn.q` near **+0.06**, `attn.k` near **−0.02**, with seed-to-seed
+variation of order 0.005. That is a real structural fact — the value path's gradient is strongly
+aligned with its input activations while the key path's is essentially orthogonal — and it corrects
+iteration 261's claim that nothing distinguishes them. **But it does not explain the bowl ordering.**
+
+**Also withdrawn from that screen:** the matrix-level result that `da_cos_mean` adds +0.28 to +0.57
+R² within the qkv group. It used the same log-transformed variable and is not reportable as
+computed. The underlying question — whether gradient-activation alignment predicts C within
+attention — remains open and would need redoing on raw values with a specification that does not
+absorb the between-type variation.
+
+**Net.** Iteration 261's scope claim is corrected: a committed field *does* distinguish q/k/v. No
+field explains their bowl ordering, so that conclusion stands on better grounds than before.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -3037,3 +3085,7 @@ uncorrelated with the mechanism provides no support and should be recorded as a 
 Enumerate every grouping before privileging the one you noticed: a split that looks meaningful may
 rank mid-pack among alternatives, and its close competitors may be restatements of the same fact.
 Check a continuous predictor's number of distinct values before quoting its correlation.
+Never log-transform a signed quantity: check the sign and the distance from zero first. A cosine,
+a covariance or any centred statistic can straddle zero, and log|x| then makes near-zero entries
+dominate the mean and invent orderings. When two of your own scripts disagree, find the bug before
+reporting either.
