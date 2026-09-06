@@ -2682,6 +2682,62 @@ the bowl's location and shape are properties of the architecture, reproducible a
 (iteration 248), and `a_eff_rank`'s depth profile is the closest measured match to the part
 concentration cannot explain.
 
+## Concentration is architecture-level too — a correction to the campaign's evidence base (2026-09-05)
+
+Iteration 257 found `a_eff_rank` explains `mlp.fc`'s bowl through a fixed depth curve. Rule 25
+requires asking the same of the campaign's own standing account. **Concentration behaves the same
+way.**
+
+**Absolute quadratic coefficients** (ratios are unusable here — see the method note below):
+
+| type | raw `a2` | matched `n_eff` | mismatched seeds | seed-averaged |
+|---|---|---|---|---|
+| `attn.k` | +0.0116 | +0.0034 | +0.0060 | **+0.0001** |
+| `attn.proj` | +0.0219 | +0.0050 | +0.0049 | +0.0042 |
+| `attn.v` | +0.0043 | +0.0036 | +0.0027 | +0.0024 |
+| `mlp.fc` | +0.0162 | +0.0163 | +0.0159 | +0.0162 |
+| `mlp.proj` | +0.0193 | +0.0110 | +0.0116 | +0.0109 |
+| `attn.q` | +0.0006 | +0.0002 | +0.0007 | +0.0006 |
+
+Across the five types with a usable bowl, **mean(matched − averaged) = +0.0010** — the seed-averaged
+profile leaves a *smaller* residual than each seed's own. Using seed *j*'s `n_eff` against seed *i*'s
+`log C` works as well as the matched pairing. **Concentration explains the bowl through a depth curve
+that is essentially the same in every seed**, exactly as `a_eff_rank` does.
+
+**The root cause, quantified.** The share of each depth profile that is identical across seeds:
+
+| quantity | between-block sd | seed-to-seed sd | **shared** |
+|---|---|---|---|
+| `log n_eff` | 0.1793 | 0.0611 | **89.6%** |
+| `log C` | 0.1519 | 0.0536 | **88.9%** |
+| `log lam` | 0.1928 | 0.0824 | 84.6% |
+| `log g` | 0.0435 | 0.0302 | 67.5% |
+
+**What this corrects.** Every 4-seed check in this campaign on a **depth-profile** claim was testing
+initialisation robustness of a near-constant curve, not replicating a mechanism. This is rule 32's
+finding (four seeds share ~76% of their structure) reaching the depth axis, and it applies to the
+concentration account as much as to H2. Per-seed agreement on depth claims should not be quoted as
+independent replication anywhere in this file.
+
+**What is unaffected, and is now load-bearing.** The **five-panel cross-run evidence** of iteration
+248 — C's bowl at argmin 4–6 in 5/5 panels, detrended cross-panel correlation +0.866, permutation
+p = 0.0000 — stands untouched, because those panels differ in **run, step and configuration**, not
+only in seed. That is now the campaign's strongest replication, and the only one that tests more than
+initialisation.
+
+**Method note: a ratio statistic broke, and the fix changed the answer.** "Share removed"
+(1 − a2_after/a2_before) produced incoherent values — `attn.k` at matched 71%, mismatched 48%,
+averaged 99%; `attn.q` at 65%, −15%, 2% — because the denominator is small for weak bowls. `attn.q`'s
+raw bowl is +0.0006, so its share is arithmetic noise. Reporting **absolute** `a2` instead resolved
+every inconsistency and reversed the apparent conclusion for `attn.k`.
+
+**What remains genuinely untested.** Both explanations are curves co-varying with C's bowl across
+depth, measured at one step in runs sharing an architecture. Nothing in the committed data
+distinguishes: (i) activation rank and concentration *set* the curvature bowl; (ii) all three are
+downstream of a common architectural cause; (iii) all three are different views of one spectral fact.
+Distinguishing them requires perturbing one and observing the others — **REQ-051** for the LR side,
+**REQ-053** for an architecture change.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2807,3 +2863,6 @@ extra parameters with a random-control null carrying the same structure.
 Test a cross-dataset join by deliberately mismatching the join key: if a mismatched join performs
 as well, the effect carries no per-unit information and must be described at the level that does
 survive -- and the join itself is exonerated of manufacturing the result.
+Prefer absolute changes to ratio-of-effect statistics when the denominator can be small: a
+'share removed' explodes on weak effects and can invert a conclusion. Check the denominator's
+magnitude before quoting any share.
