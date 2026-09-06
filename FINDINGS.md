@@ -2844,6 +2844,62 @@ matrix writes to the residual stream. That is a cross-run result about the bowl 
 of evidence available here — but it is a description of *which matrices* have deep bowls, not of
 *what makes* them deep.
 
+## Bowl depth is not explained by matrix geometry — and "residual writer" is not a distinguished grouping (2026-09-05)
+
+Iteration 260 noted the two residual-stream writers have the deepest bowls (+0.0219 vs +0.0094) but
+flagged that the grouping was chosen after seeing the ordering. Both halves of that caution were
+justified.
+
+**Exhaustive split enumeration.** All 31 two-way splits of the six types, ranked by mean gap across
+five panels:
+
+| rank | group A | mean gap | consistent |
+|---|---|---|---|
+| 1 | `attn.q` | −0.0140 | 0/5 |
+| 2 | `attn.k`+`attn.q`+`attn.v` | −0.0139 | 0/5 |
+| 3 | `attn.q`+`attn.v` | −0.0136 | 0/5 |
+| **4** | **`attn.proj`+`mlp.proj` (writers)** | **+0.0125** | **5/5** |
+| 6 | `attn.proj` | +0.0101 | 5/5 |
+| 7 | `mlp.proj` | +0.0100 | 5/5 |
+
+**Writers rank 4th of 31.** The three above are all "attention QKV are shallow" with the sign
+flipped — the same fact, not competitors — and single-type splits at ranks 6 and 7 do nearly as well.
+**"Residual writer" is one of several equivalent descriptions, not a distinguished grouping**, and
+should not be quoted as an explanation. This is consistent with iteration 239, which refuted the same
+grouping for `mlp.proj`'s excess elasticity.
+
+**Geometry is ruled out decisively.** The six types take only **three distinct shape signatures** —
+768×768 for all four attention matrices, 3072×768 for `mlp.fc`, 768×3072 for `mlp.proj` — so every
+shape-derived variable takes 2–3 distinct values and cannot order six types. `log n_params`
+correlates +0.616 with bowl depth, which is meaningless: it cannot separate `attn.proj` (+0.0213)
+from `attn.q` (+0.0018), which are geometrically identical.
+
+The decisive statistic: **100% of the between-type bowl-depth range lies within the four
+identically-shaped attention matrices** (range 0.0200 within them, 0.0200 across all six). Whatever
+sets bowl depth is a property of a matrix's **role in the computation**, not its size or aspect ratio.
+
+**The attention ordering is itself stable.** `attn.proj` is the deepest attention bowl in **5 of 5**
+panels; Kendall's W among the four = **0.808** against a null mean of 0.200 (**p = 0.0008**).
+
+| panel | ordering |
+|---|---|
+| REQ-048 | `attn.proj` > `attn.k` > `attn.v` > `attn.q` |
+| Arm A | `attn.proj` > `attn.k` > `attn.v` > `attn.q` |
+| REQ-036 | `attn.proj` > `attn.k` > `attn.q` > `attn.v` |
+| REQ-037 | `attn.proj` > `attn.v` > `attn.k` > `attn.q` |
+| REQ-045 | `attn.proj` > `attn.v` > `attn.k` > `attn.q` |
+
+**Where the committed data stop.** `attn.q`, `attn.k` and `attn.v` are identical in shape, position
+and parameter count, and differ only in what their outputs feed — the score computation for q and k,
+the value path for v. Their bowls differ reproducibly (`attn.q` is shallowest in 4 of 5 panels), and
+**no committed field distinguishes them.** Explaining that ordering requires measurements the archive
+does not contain, not further analysis of it.
+
+**Net contribution to the charter question.** A firm negative: the between-type component of C's bowl
+is not geometric. Combined with iteration 253 (concentration explains ~half the bowl) and iteration
+254 (the unexplained half is `mlp.fc`'s), the remaining target is a role-dependent, non-geometric
+property that varies among matrices of identical size.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2978,3 +3034,6 @@ correlation looks mild -- relaxing it case by case is how circular results retur
 Before registering a prediction, check that it discriminates: verify the observable it uses is
 actually correlated with the quantity the hypothesis concerns. A prediction that passes while being
 uncorrelated with the mechanism provides no support and should be recorded as a failed design.
+Enumerate every grouping before privileging the one you noticed: a split that looks meaningful may
+rank mid-pack among alternatives, and its close competitors may be restatements of the same fact.
+Check a continuous predictor's number of distinct values before quoting its correlation.
