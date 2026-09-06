@@ -1,6 +1,6 @@
 # Experiment requests
 
-Active queue for the `jerry-agent` branch. Next request number: **REQ-056**.
+Active queue for the `jerry-agent` branch. Next request number: **REQ-057**.
 
 The findings are consolidated in [FINDINGS.md](FINDINGS.md). Update that file when evidence changes;
 keep this queue for runnable specifications, concise status updates, and result links.
@@ -15,6 +15,7 @@ keep this queue for runnable specifications, concise status updates, and result 
 | 4 | [REQ-053](#req-053-what-makes-mlpproj-different--expansion-ratio-vs-nonlinearity) | OPEN | Separate the ReLU² input from the fan-in shape as the source of `mlp.proj`'s excess elasticity. |
 | 5 | [REQ-054](#req-054-annealed-single-ema-matched-to-k-maxwells-scheduled-memory-age) | OPEN | Test whether a matched single-memory schedule explains K-Maxwell’s gain. |
 | With 054 | [REQ-055](#req-055-downhill-alignment-and-loss-curvature-of-the-actual-post-muon-update) | OPEN | Measure actual update alignment, directional curvature, and loss along the step. |
+| 6 | [REQ-056](#req-056-test-k-maxwell-memory-in-standard-adam) | OPEN | Compare Adam with K-Maxwell and an age-matched single EMA. |
 
 These are queue states; no GPU execution handle has been supplied. Do not interrupt running work.
 Run the REQ-051 pilot first, then coordinate REQ-052 while each base checkpoint is available.
@@ -773,6 +774,76 @@ Commit the capture/probe implementation and checks, scalar raw measurements, per
 paired tables, derivative-versus-finite-difference checks, loss-scan plots, and a README under
 `logs/kmaxwell/req055_post_muon_update_geometry/`. Reuse REQ-054's provenance; do not commit model,
 optimizer, gradient, or update tensors.
+
+## REQ-056: test K-Maxwell memory in standard Adam
+
+- status: **OPEN**
+- requested: Jack, 2026-09-06 PDT
+- priority and dependencies: after REQ-054/055; reuse their memory-age checks and update probes
+- resource limit: **two nodes fleet-wide**
+
+### Question and implementation
+
+Does K-Maxwell improve **standard Adam**, which scales each parameter's update using its recent
+squared gradients? Replace only Adam's **first moment** (its running average of gradients) with
+the scheduled K-Maxwell mixture. Keep Adam's **second moment** (its running average of squared
+gradients), denominator, epsilon, and learning-rate schedule unchanged across paired arms.
+
+The existing `train_gpt_adamh_kmaxwell.py` is an **AdamH** experiment with an additional
+scale-invariant update rule; it does not settle this standard-Adam question. Use its memory code
+only after checking initialization and bias correction. Do not add Muon's polar transformation,
+its outer Nesterov gradient blend, or AdamH's extra update normalization.
+
+Compare three arms:
+
+1. **Adam:** ordinary single first-moment EMA, `beta1=0.9`.
+2. **K-Maxwell Adam:** the same scheduled decays/weights as REQ-054, mixing correctly
+   bias-corrected first-moment streams in Adam's numerator.
+3. **Age-matched Adam:** one first-moment EMA following K-Maxwell's scheduled average age,
+   using REQ-054's schedule and finite-history verification.
+
+Use `beta2=0.999`, `eps=1e-8`, and **zero weight decay** in all three arms for this initial test;
+record these choices explicitly. This is Adam, not an unlabeled AdamW variant. Apply the memory
+intervention to the same **72 transformer matrices** as the Muon experiments. Use ordinary Adam
+for all remaining parameters, with identical group settings across arms. Record the exact scope.
+
+Bias correction must reflect the **actual buffer history**: for zero-initialized variable-decay
+memory the mass is `1 - product_t beta(t)`, not `1 - beta(t)^t`. For copied/warm buffers, propagate
+normalization mass and age moments from their real initial state. Verify that a one-stream,
+constant-decay configuration reproduces ordinary Adam updates within numerical tolerance.
+
+### Paired training and measurements
+
+Use the existing ablation model/data protocol, **1× batch (524,288 tokens), microbatch 64**, and
+**three independent training seeds**, with a step-1000 fork and endpoint **3250**. Train each base
+with ordinary Adam; accumulate the alternate first-moment buffers in shadow from initialization
+without changing the base trajectory. At the fork, all arms share identical weights, Adam second
+moments, scheduler, RNG state, and data cursor; each memory arm loads its documented shadow
+history. Use K-Maxwell's approximately **58 → 26** age schedule over steps **1000–3250**.
+This is a standard-Adam continuation experiment; do not initialize from a Muon-trained base.
+
+First run a baseline-only LR pilot on a separate seed at **{0.0001, 0.0003, 0.001}**, using the
+same horizon and schedule. Select the finite run with lowest endpoint validation loss and freeze
+that LR for the three-seed paired comparison. If none trains stably, report the failure and repair
+the baseline before expanding. Record the pilot's full results and cost separately. Primary runs
+are **three bases plus nine continuations**; benchmark memory use and step time as well as loss.
+
+Report validation curves, loss versus processed tokens and wall time, per-seed endpoint differences
+(K-Maxwell minus Adam, age-matched minus Adam, K-Maxwell minus age-matched), and across-seed
+uncertainty. Reuse **0.0005 loss** as the practical-equivalence margin and allow INCONCLUSIVE when
+uncertainty is broad. A fixed-LR benefit establishes improvement at that shared setting; a claim
+about best-tuned Adam requires equal-budget LR tuning for every arm and fresh evaluation seeds.
+
+Reuse REQ-055's actual-update alignment and directional-curvature probe at **1000, 2050, and
+3249**, adapted to the actual Adam displacement after denominator scaling and LR. Keep training
+and held-out measurements distinct, verify probes do not alter training state, and report probe
+cost separately. Track scheduled and realized first-moment ages, numerator/denominator norms,
+update norms, and nonfinite values. An advantage over fixed-beta Adam alone does not establish
+that multiple timescales are necessary; the age-matched arm tests that distinction.
+
+Commit implementation and parity/state checks, configs, pilot results, base/history manifests,
+raw logs, paired loss tables, memory-age traces, update measurements, plots, and a README under
+`logs/kmaxwell/req056_adam_kmaxwell/`. Record code SHA and data cursors; keep tensor states local.
 
 ## Template
 
