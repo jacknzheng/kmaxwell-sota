@@ -2790,6 +2790,60 @@ its first cross-run and cross-step test, provided they commit `trace_est` and `t
 already specify the per-matrix curvature probe; this is recorded as an explicit requirement that
 those two fields be committed, not merely computed.
 
+## A registered prediction that passed without being informative (2026-09-05)
+
+Iteration 259 established the concentration account has no cross-run test in committed data. This
+iteration tried to find one indirectly: the account says concentration removes 57–80% of four types'
+bowls and 0% of `mlp.fc`'s, so a consequence expressible in `lam` and `g` alone — available in all
+five panels — is that `mlp.fc`'s raw bowl should be unusually deep. **Registered before computing:**
+`mlp.fc` among the deepest in every panel.
+
+**It passed, and it does not matter.** `mlp.fc` ranks 3rd, 3rd, 2nd, 3rd, 3rd — never worse than 3rd
+of 6. But the prediction does not discriminate: `attn.proj` and `mlp.proj` both average rank **1.60**,
+deeper than `mlp.fc`'s 2.80. More decisively, the raw bowl ordering is **uncorrelated with how much
+concentration explains**: corr(raw depth, share removed) = **+0.285** across the six types.
+
+**This is recorded as a failed test design, not as support.** A type can have a deep raw bowl for
+reasons unrelated to whether concentration accounts for it, so the raw ordering was never a proxy for
+the residual-after-control statement the account actually makes. Iteration 259's conclusion stands
+unchanged: **the concentration account has no cross-run replication available from committed data.**
+
+## The per-type bowl ordering is highly stable across runs (2026-09-05)
+
+The attempt produced a different result worth keeping. Per-type quadratic depth coefficients across
+five panels differing in run, configuration and step:
+
+| type | mean `a2` | sd | cv | ranks across panels |
+|---|---|---|---|---|
+| `attn.proj` | **+0.0220** | 0.0031 | **0.14** | 1, 1, 3, 2, 1 |
+| `mlp.proj` | **+0.0219** | 0.0034 | 0.16 | 2, 2, 1, 1, 2 |
+| `mlp.fc` | +0.0178 | 0.0043 | 0.24 | 3, 3, 2, 3, 3 |
+| `attn.k` | +0.0108 | 0.0072 | 0.66 | 4, 4, 4, 5, 5 |
+| `attn.v` | +0.0070 | 0.0028 | 0.39 | 5, 5, 6, 4, 4 |
+| `attn.q` | +0.0019 | 0.0070 | 3.64 | 6, 6, 5, 6, 6 |
+
+**Kendall's W = 0.886** over six types and five panels, against a permutation null with mean 0.199,
+95th percentile 0.410 and maximum 0.735 over 20,000 draws — **p = 0.00000**.
+
+**It survives the step change.** REQ-036 is measured at step 2250, every other panel at 2750; its
+ordering correlates **+0.762** with the mean of the 2750 panels.
+
+**The ordering follows the residual-writer split.** `attn.proj` and `mlp.proj` — the two matrices
+that write to the residual stream — are the two deepest bowls, averaging **+0.0219** against
+**+0.0094** for the other four, and they are the top two in **4 of 5 panels**.
+
+**This must be stated carefully**, because the campaign **refuted** the writer grouping for a
+different phenomenon: iteration 239 found it fails to explain `mlp.proj`'s excess λ–g elasticity,
+where `attn.proj` sits at the opposite extreme. The two results are compatible and concern different
+quantities — bowl **depth** here, elasticity **level** there — but the grouping's reappearance is not
+evidence for the earlier refuted claim, and no conclusion should be carried between them.
+
+**What this adds to the charter question.** The depth bowl's *magnitude* is a stable per-type property
+of the architecture, reproducible across runs, steps and configurations, and ordered by whether a
+matrix writes to the residual stream. That is a cross-run result about the bowl — the strongest class
+of evidence available here — but it is a description of *which matrices* have deep bowls, not of
+*what makes* them deep.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2921,3 +2975,6 @@ magnitude before quoting any share.
 Test a rule's application rather than invoking it: measure whether the barred quantity is actually
 entangled with the outcome, and record the cost of obeying. A provenance rule still binds when the
 correlation looks mild -- relaxing it case by case is how circular results return.
+Before registering a prediction, check that it discriminates: verify the observable it uses is
+actually correlated with the quantity the hypothesis concerns. A prediction that passes while being
+uncorrelated with the mechanism provides no support and should be recorded as a failed design.
