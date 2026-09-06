@@ -165,6 +165,22 @@ Register these predictions:
 Report the quadratic-free residual correlation as well (observed +0.421, 4/4 seeds): it is what
 separates a real relationship from two curves that happen to share a bowl of similar size.
 
+**Amended iteration 257 — the effect is architecture-level, so score it that way.** Joining
+REQ-047's `a_eff_rank` to REQ-048's `log C` with **mismatched** seeds removes **93%** of `mlp.fc`'s
+residual bowl, against **91%** for the matched join, and the **seed-averaged** `a_eff_rank` profile
+alone removes **93%**. `a_eff_rank` therefore contributes a fixed depth curve, not run-specific
+information (its between-block variation is 7.63x its seed-to-seed variation).
+
+- Score **H2-share and H2-slope on the seed-averaged profile**, not per seed. Per-seed scoring would
+  imply run-specific information the committed data do not support.
+- The join is **exonerated**: a cross-archive join that performs identically under mismatched seeds
+  cannot be manufacturing a spurious match.
+- It remains the **right** curve, not merely a curve: at identical degrees-of-freedom cost the next
+  best field is `grad_rank1_frac` at 75%, then `d_eff_rank` 58%, with most fields at 9–16%.
+- **The open causal question for REQ-051:** does *perturbing* activation effective rank move the
+  bowl? Nothing in the committed data tests that, and it is the step from a matching curve to a
+  mechanism.
+
 **Expect the RAW slopes to look null.** The type-by-depth effect is **suppressed** in `log C`: each
 type's direct curvature drift with depth is largely offset by its concentration drifting the other
 way. Across the six types, sd(direct) = 0.0219 against sd(total) = 0.0098. Without a concentration

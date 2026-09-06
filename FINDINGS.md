@@ -2621,6 +2621,67 @@ quantities relate to C differently in different matrices, and it explains why ev
 in this campaign has understated the explanation. Direction remains unestablished for both controls,
 and `a_eff_rank` is available in one archive only.
 
+## The `a_eff_rank` result is architecture-level, not per-run — H2 amended (2026-09-05)
+
+H2 rests on a cross-archive join: `a_eff_rank` lives only in REQ-047, its outcome `log C` in REQ-048,
+and iteration 246 showed those runs differ **systematically** (gradient disagreement sd 0.075 dex,
+30.9% type-structured, 20.3% block-structured). Rule 52 requires that join to be checked before the
+result is relied on.
+
+**The seed-shuffle test.** The join pairs REQ-047 seed *s* with REQ-048 seed *s*. Repeating it with
+**mismatched** seeds (all nine derangements) gives:
+
+| pairing | share of `mlp.fc`'s residual bowl removed |
+|---|---|
+| matched seeds (the actual join) | **91%** |
+| mismatched seeds (9 derangements) | **93%** (range 92–94%) |
+
+**Mismatched seeds do as well as matched ones**, and the test had power to detect otherwise:
+`a_eff_rank`'s between-block variation is **7.63×** its seed-to-seed variation for `mlp.fc`
+(cross-seed profile correlation +0.986).
+
+**Two consequences, one weakening and one strengthening.**
+
+*Weakening.* This is **not** evidence that a run's own activation rank sets its own curvature bowl.
+The strictest baseline confirms it: controlling the **seed-averaged** `a_eff_rank` profile — which
+carries no seed or run information at all — removes **93%**, matching own-seed's 91%. `a_eff_rank`
+contributes a **fixed depth curve**. The "4-seed replication" is therefore not replication in the
+usual sense; any seed's profile works, because they are nearly identical.
+
+*Strengthening.* The cross-archive join is **exonerated**. A join that performs identically under
+mismatched seeds cannot be manufacturing a spurious per-seed match, so rule 52's concern does not
+apply here.
+
+**It is still the right curve, not merely a curve.** Comparing every REQ-047 field at identical
+degrees-of-freedom cost, each entered as its seed-averaged depth profile:
+
+| field | share of `mlp.fc`'s residual bowl removed |
+|---|---|
+| **`a_eff_rank`** | **93%** |
+| `grad_rank1_frac` | 75% |
+| `d_eff_rank` | 58% |
+| `weight_frob` | 45% |
+| `da_cos_mean` | 43% |
+| `d_frob`, `d_rms` | 16% |
+| `a_frob`, `a_rms` | 14% |
+| `grad_frob`, `align_ratio` | 9% |
+
+**H2 as registered is amended.** Its share and slope criteria stand, but two of its framings were
+wrong:
+
+- **H2-share and H2-slope should be scored on the seed-averaged profile**, not per seed. Per-seed
+  scoring implies run-specific information the data do not support.
+- **The claim is architecture-level**: the depth profile of input activation effective rank has the
+  same shape as `mlp.fc`'s concentration-adjusted curvature bowl, in every seed and both archives.
+  Whether a *perturbation* to activation rank moves the bowl is untested and is what REQ-051's
+  activation probes should answer.
+
+**Why this still matters for the charter question.** An architecture-level explanation is weaker
+causally but is exactly the right kind of object for "what sets the between-layer difference in C":
+the bowl's location and shape are properties of the architecture, reproducible across five runs
+(iteration 248), and `a_eff_rank`'s depth profile is the closest measured match to the part
+concentration cannot explain.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2743,3 +2804,6 @@ whether the two agree AFTER the shared shape is removed from both.
 A pooled model with one slope per predictor understates an explanation whose slopes differ by
 subgroup: check per-subgroup fits before concluding a predictor is weak overall, and price the
 extra parameters with a random-control null carrying the same structure.
+Test a cross-dataset join by deliberately mismatching the join key: if a mismatched join performs
+as well, the effect carries no per-unit information and must be described at the level that does
+survive -- and the join itself is exonerated of manufacturing the result.
