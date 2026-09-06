@@ -2510,6 +2510,56 @@ phenomena; the campaign should not conflate them. `mlp.fc`'s residual bowl is a 
 bears directly on the charter question, whereas `mlp.proj`'s elasticity was found to be largely
 orthogonal to depth (iteration 240).
 
+## `mlp.fc`'s unexplained bowl is tracked by activation effective rank (2026-09-05)
+
+Iteration 254 localised the unexplained half of C's bowl to `mlp.fc`, where concentration removes 0%
+of it. Testing REQ-047's activation and backward fields against that residual — admissible here, and
+with g-family fields flagged separately since `g` sits in `log C`'s denominator — gives one strong
+candidate:
+
+| field | g-family? | share of `mlp.fc`'s residual bowl removed |
+|---|---|---|
+| **`a_eff_rank`** | **no** | **91%** |
+| `grad_rank1_frac` | yes | 75% |
+| `d_eff_rank` | no | 58% |
+| `weight_frob` | no | 45% |
+| `da_cos_mean` | no | 43% |
+| `grad_frob`, `align_ratio` | yes | 9% |
+
+`a_eff_rank` — the effective rank of the input activations — removes **91%**, consistently across all
+four seeds (residual a2 falls to +0.001–+0.002). Against a random depth-varying control the null mean
+is **9.1%** (95th percentile 21.3%, max 39.9%): **p = 0.0000**.
+
+**The guard that nearly killed it.** `a_eff_rank`'s own depth profile has a quadratic coefficient of
+**+0.0158**, almost exactly matching `mlp.fc`'s residual bowl of **+0.0163**. Controlling one
+parabola with another of the same size removes it close to by construction, so the 91% is **not
+evidence on its own**. Three tests distinguish coincidence from structure:
+
+1. **The fitted slope is stable and near unity**: +0.816, +1.010, +1.005, +0.938 — mean **+0.942**,
+   sd 0.091, coefficient of variation **0.10**. An arbitrary curve-match would not produce a
+   consistent coefficient across seeds.
+2. **It holds at matrix level**, not only between two 12-point profiles: within `mlp.fc`'s 48 rows the
+   partial correlation is **+0.853** raw, **+0.856** with seed dummies, **+0.878** adding linear depth.
+3. **They agree beyond the shared parabola.** Removing the quadratic from *both* series and
+   correlating the leftovers gives **+0.319, +0.414, +0.317, +0.634** — mean **+0.421**, positive in
+   4/4 seeds. Two curves that merely happened to share a bowl size would leave uncorrelated
+   remainders.
+
+**The placebo is also informative rather than uniform.** `a_eff_rank` does not remove every type's
+bowl: 95% for `attn.v`, 91% for `mlp.fc`, 80% for `attn.k`, but **0%** for `mlp.proj` and *negative*
+shares for `attn.proj` and `attn.q`. It is not a generic depth proxy.
+
+**Why this is plausible for `mlp.fc` specifically.** `mlp.fc` reads the residual stream and expands
+it; the effective rank of its input activations is a direct measure of how many independent
+directions that input occupies. The near-unit slope (+0.942) says a one-dex change in input effective
+rank moves the concentration-adjusted `log C` by about one dex.
+
+**What is not established.** Direction: `a_eff_rank` and the curvature are measured at the same step,
+so this is co-variation. It is also a within-type result on **one archive** (REQ-047 × REQ-048 joined,
+4 seeds, 48 rows), not the five-panel cross-run evidence available for the bowl itself — REQ-047 is
+the only archive with activation fields. Registering it as **hypothesis H2** for REQ-051, which
+already commits to activation probes.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2626,3 +2676,6 @@ profile has no meaningful extremum, so relocation is only a finding if amplitude
 A control removes a shape only if the control itself has that shape along the same axis: check the
 control's own profile per subgroup before concluding it fails there. A matrix-level association can
 be strong while the control is flat along the axis being explained.
+When a control removes most of a shape, check whether the control has that same shape at a similar
+magnitude: if so the removal is near-automatic. Distinguish coincidence from structure by testing
+whether the two agree AFTER the shared shape is removed from both.

@@ -143,6 +143,28 @@ REQ-050 tests H1 across training steps (does the interaction appear with the bow
 REQ-051 tests it causally, since it varies per-type LR directly. Neither requires more than the
 two-node ceiling already in force.
 
+### Pre-registered hypothesis H2, added iteration 255 -- activation effective rank and `mlp.fc`'s bowl
+
+The unexplained half of C's depth bowl is almost entirely `mlp.fc`'s (iteration 254): concentration
+removes 57-80% of the other types' bowls and **0%** of `mlp.fc`'s, because `mlp.fc`'s own `n_eff`
+rises monotonically with depth rather than arching. Within `mlp.fc`, **`a_eff_rank` (input activation
+effective rank) removes 91%** of that residual bowl, against a random-control null of 9.1%
+(p = 0.0000).
+
+Register these predictions:
+
+1. **H2-share:** in new data, controlling `log a_eff_rank` removes ≥50% of `mlp.fc`'s
+   concentration-adjusted depth bowl, judged within each seed.
+2. **H2-slope:** the fitted slope of `mlp.fc`'s concentration-adjusted `log C` on `log a_eff_rank` is
+   near **+0.94** (observed +0.816 to +1.010, cv 0.10).
+3. **H2-specificity:** the effect is **not** uniform across types — it should fail or reverse for
+   `mlp.proj` (observed 0%), `attn.proj` and `attn.q` (observed negative).
+4. **Falsifier:** if `a_eff_rank` removes a comparable share of *every* type's bowl, it is a generic
+   depth proxy and H2 is wrong.
+
+Report the quadratic-free residual correlation as well (observed +0.421, 4/4 seeds): it is what
+separates a real relationship from two curves that happen to share a bowl of similar size.
+
 **Expect the RAW slopes to look null.** The type-by-depth effect is **suppressed** in `log C`: each
 type's direct curvature drift with depth is largely offset by its concentration drifting the other
 way. Across the six types, sd(direct) = 0.0219 against sd(total) = 0.0098. Without a concentration
