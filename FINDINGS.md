@@ -2452,6 +2452,64 @@ iteration 245 (reproducible per-matrix curvature structure that type, depth and 
 unexplained), now located specifically in the bowl's quadratic component rather than in variance
 generally.
 
+## The unexplained half of the bowl is real, reproducible, and concentrated in `mlp.fc` (2026-09-05)
+
+Iteration 253 left half of C's bowl unexplained after controlling concentration. Characterising that
+residual gives a specific target rather than a vague remainder.
+
+**It is a genuine, reproducible bowl.** Across the four REQ-048 seeds the residual depth profile has
+mean pairwise correlation **+0.759** (range +0.676 to +0.840), quadratic coefficients of +0.0053,
++0.0036, +0.0083, +0.0086 with **t = +4.20, +2.36, +4.44, +3.92** — significant in 4/4 seeds. Its
+shape differs from the concentration-explained half: block 2 is the deepest point (mean z −1.54) and
+block 11 the highest (+1.68), against the explained component's minimum at blocks 6–8.
+
+**It lives overwhelmingly in `mlp.fc`.** Per-type quadratic coefficients of the residual: `mlp.fc`
+**+0.0162**, `mlp.proj` +0.0083, `attn.v` +0.0068, `attn.proj` +0.0044, `attn.k` +0.0028, `attn.q`
++0.0002. `mlp.fc`'s residual bowl is significant in every seed (t = +4.2, +7.7, +8.7, +5.0).
+
+**The pre-control check is what makes this interesting.** `mlp.fc` ranks only **3rd of 6** on its raw
+bowl (a2 = +0.0162) but **1st of 6** after control — because concentration removes **0%** of it:
+
+| type | a2 before | a2 after | **share removed** |
+|---|---|---|---|
+| `attn.proj` | +0.0219 | +0.0044 | **80%** |
+| `attn.k` | +0.0116 | +0.0028 | 76% |
+| `attn.q` | +0.0006 | +0.0002 | 65% |
+| `mlp.proj` | +0.0193 | +0.0083 | 57% |
+| **`mlp.fc`** | +0.0162 | **+0.0162** | **0%** |
+| `attn.v` | +0.0043 | +0.0068 | **−58%** |
+
+## Both anomalies have a mechanical explanation (2026-09-05)
+
+A control that removes nothing from one type and *deepens* another's bowl is a warning sign, so both
+were diagnosed before the result was recorded. The explanation is in `n_eff_bulk`'s own **depth
+profile** per type — not in its matrix-level relationship with C:
+
+| type | a2 of `n_eff` depth profile | corr(C, `n_eff`) across depth | share removed |
+|---|---|---|---|
+| `attn.proj` | **−0.0305** | −0.792 | 80% |
+| `attn.k` | −0.0152 | −0.634 | 76% |
+| `mlp.proj` | −0.0192 | −0.831 | 57% |
+| `attn.q` | −0.0007 | −0.309 | 65% |
+| **`mlp.fc`** | **−0.0000** | −0.107 | **0%** |
+| **`attn.v`** | **+0.0044** | +0.082 | **−58%** |
+
+**`mlp.fc`'s concentration has no arch at all** — its `n_eff` depth profile rises almost monotonically
+(z from −1.37 at block 0 to +1.57 at block 10), so its quadratic coefficient is zero and controlling
+it **cannot** remove a bowl, however strong the matrix-level association. **`attn.v` is the only type
+whose `n_eff` has positive depth curvature**, so removing it deepens rather than flattens the bowl.
+
+**The sharpened claim.** Concentration explains C's bowl in the four types where `n_eff` itself has an
+arch across depth (57–80% removed), and explains none of it in `mlp.fc`, where `n_eff` rises
+monotonically instead. The unexplained half of C's bowl is therefore not a uniform remainder — it is
+**almost entirely `mlp.fc`'s bowl**, and it is unexplained for a specific, identified reason.
+
+**Note on the two MLP matrices.** `mlp.fc` now carries the unexplained bowl, while `mlp.proj` carries
+the excess λ–g elasticity (iteration 238, c = +0.578). These are different matrices and different
+phenomena; the campaign should not conflate them. `mlp.fc`'s residual bowl is a **depth** result and
+bears directly on the charter question, whereas `mlp.proj`'s elasticity was found to be largely
+orthogonal to depth (iteration 240).
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2565,3 +2623,6 @@ optimum coinciding with an independently measured quantity, not the improvement 
 Explaining a profile's variance is not explaining its shape: test the shape parameter directly.
 And when a control moves a profile's extremum, check the residual amplitude first -- a flattened
 profile has no meaningful extremum, so relocation is only a finding if amplitude survives.
+A control removes a shape only if the control itself has that shape along the same axis: check the
+control's own profile per subgroup before concluding it fails there. A matrix-level association can
+be strong while the control is flat along the axis being explained.
