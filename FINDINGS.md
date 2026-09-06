@@ -3004,6 +3004,56 @@ information beyond concentration in `mlp.proj` alone, and the standing account i
 that type, spectral concentration remains the dominant predictor. Recorded so the field is not
 re-tested a third time.
 
+## What sets `n_eff`'s own depth profile — trace or bulk, and it differs by type (2026-09-05)
+
+The concentration account works through `n_eff`'s own depth profile: iteration 254 showed it explains
+a type's bowl only where `n_eff` itself arches. That profile had never been decomposed. It is an
+exact identity — `log n_eff_bulk = 2·log trace(H) − log S`, where `S = trace(H²) − lam²` — so the
+apportionment assumes nothing. The identity closes to **0.00e+00**.
+
+| type | `a2(log n_eff)` | 2·`a2(log trace)` | −`a2(log S)` | dominant |
+|---|---|---|---|---|
+| `attn.k` | −0.0152 | **−0.0197** | +0.0044 | trace |
+| `attn.q` | −0.0007 | −0.0116 | +0.0110 | trace |
+| `mlp.fc` | −0.0000 | −0.0059 | +0.0059 | trace |
+| `attn.proj` | −0.0305 | +0.0052 | **−0.0358** | bulk |
+| `mlp.proj` | −0.0192 | +0.0124 | **−0.0315** | bulk |
+| `attn.v` | +0.0044 | −0.0114 | +0.0158 | bulk |
+
+**The six types split three-three.** In `attn.k`, `attn.q` and `mlp.fc` the arch comes from
+**total curvature** peaking mid-network; in `attn.proj`, `mlp.proj` and `attn.v` it comes from the
+**bulk of the spectrum**. These are physically different statements, and the components are stable
+across seeds — `attn.proj`'s bulk term is +0.0409, +0.0379, +0.0284, +0.0359 (4/4 same sign);
+`mlp.proj`'s is +0.0354, +0.0280, +0.0319, +0.0308.
+
+**`mlp.fc` explained.** Its trace and bulk terms are **−0.0059 and +0.0059** — they cancel exactly,
+leaving `a2(log n_eff) = −0.0000`. That is why concentration removes 0% of `mlp.fc`'s bowl
+(iteration 254): not because concentration is irrelevant there, but because its two components
+offset. This is a mechanical account of the campaign's most-discussed anomaly.
+
+## Withdrawn before use: a correlation of −0.977 that is an arithmetic identity (2026-09-05)
+
+The decomposition suggested testing whether `n_eff`'s arch predicts how much of each type's bowl
+concentration removes. It does, spectacularly — **corr = −0.977**, exact permutation **p = 0.0125**,
+the smallest value six types permit, with the bulk term carrying it (−0.848, p = 0.0125) and the
+trace term not (+0.491, p = 0.331).
+
+**That number is not evidence and is withdrawn.** Controlling a variable with quadratic coefficient
+`q` changes the outcome's quadratic by `beta·q` where `beta` is the fitted slope, so
+`absolute removal = beta × arch` **by construction**. Checked directly, `beta × arch` reproduces the
+actual removal in **6 of 6 types** (largest discrepancy 0.0004). The correlation restates the
+identity; it does not test the mechanism.
+
+What the −0.977 actually reflects is that `beta` is *not* constant across types — mean −0.284, sd
+0.253, **cv 0.89** — so even the residual reading is weak.
+
+**What survives.** The decomposition itself, which is an exact identity applied to independently
+measured profiles rather than a fitted relationship. It converts iteration 254's observation
+("concentration fails for `mlp.fc` because its `n_eff` doesn't arch") into an account of *why* it
+doesn't arch: **its trace and bulk terms cancel**. And it establishes that the concentration
+mechanism operates through two physically distinct routes in different matrix types, which is a new
+structural fact about the account rather than a new predictor of C.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -3148,3 +3198,6 @@ reporting either.
 When a predictor is nearly constant within a group, a model omitting group dummies is testing the
 group means, not the predictor: report both specifications and treat the within-group test as the
 informative one.
+A correlation between 'how much a control removes' and 'the control's own shape' is mechanical:
+the removal equals the fitted slope times that shape by construction. Verify the identity
+reproduces the measurement before reporting such a correlation as evidence.
