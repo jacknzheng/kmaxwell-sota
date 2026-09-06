@@ -2560,6 +2560,67 @@ so this is co-variation. It is also a within-type result on **one archive** (REQ
 the only archive with activation fields. Registering it as **hypothesis H2** for REQ-051, which
 already commits to activation probes.
 
+## Two quantities explain 80% of C's bowl — but only with per-type coefficients (2026-09-05)
+
+Concentration and activation effective rank looked complementary across iterations 254–255.
+Testing them jointly gives a result that at first appeared contradictory and turned out to be the
+finding.
+
+**Per type, the pair is nearly complete:**
+
+| type | raw `a2` | `\| n_eff` | `\| a_rank` | **`\| both`** | joint share |
+|---|---|---|---|---|---|
+| `mlp.fc` | +0.0162 | +0.0163 | +0.0019 | **+0.0005** | **97%** |
+| `attn.v` | +0.0043 | +0.0036 | +0.0002 | +0.0002 | 95% |
+| `attn.proj` | +0.0219 | +0.0050 | +0.0154 | +0.0013 | 94% |
+| `attn.k` | +0.0116 | +0.0034 | +0.0026 | +0.0008 | 93% |
+| `mlp.proj` | +0.0193 | +0.0110 | +0.0099 | +0.0109 | 44% |
+| `attn.q` | +0.0006 | +0.0002 | +0.0003 | +0.0011 | −90% |
+
+Note `attn.q`'s raw bowl is +0.0006 — essentially absent — so its share is arithmetic noise on a
+near-zero denominator, not a failure.
+
+**Pooled, the same two controls remove only 47%** — and `a_eff_rank` alone removes **2%**, against 91%
+within `mlp.fc`. **The gap is a specification artifact, not a limit on the explanation.** A pooled
+regression fits one coefficient per control for all six types; allowing per-type slopes lifts the
+share to **80%**:
+
+| model | mean `a2` | share removed |
+|---|---|---|
+| raw `log C` | +0.0123 | — |
+| + common slopes (2 controls) | +0.0065 | 47% |
+| **+ per-type slopes (12 controls)** | **+0.0025** | **80%** |
+
+Priced against a null using two *random* controls with the same per-type-slope structure: null mean
+**18.0%**, 95th percentile 26.2%, max 35.4%, against an observed 80% — **p = 0.0000**. The extra
+degrees of freedom do not account for it.
+
+**The per-type heterogeneity is real, and it is what forces this specification.**
+
+| type | `n_eff` slope | seed sd | `a_eff_rank` slope | seed sd |
+|---|---|---|---|---|
+| `mlp.fc` | −0.464 | 0.440 | **+1.016** | **0.139** |
+| `attn.proj` | −1.160 | 0.527 | +0.541 | 0.431 |
+| `attn.k` | −0.380 | 0.119 | +0.414 | 0.422 |
+| `attn.v` | −0.207 | 0.335 | +0.411 | 0.113 |
+| `mlp.proj` | −0.462 | 0.100 | **+0.024** | **0.075** |
+| `attn.q` | −0.197 | 0.304 | −0.137 | 0.456 |
+
+Between-type spread exceeds within-type (seed) spread for both controls: F-like ratios **5.42**
+(`n_eff`) and **8.90** (`a_eff_rank`). The sharpest contrast, `mlp.fc` minus `attn.q` on
+`a_eff_rank`, is **+1.153** (sd 0.512, **t = +4.51**, same sign 4/4).
+
+**`n_eff`'s slope is negative for every type** — concentration relates to C the same way everywhere,
+differing only in magnitude. **`a_eff_rank`'s slope is not**: it ranges from +1.016 (`mlp.fc`) to
++0.024 (`mlp.proj`) to −0.137 (`attn.q`). The two MLP matrices have the *most stable* `a_eff_rank`
+slopes across seeds (sd 0.139 and 0.075) and sit at opposite ends of its range — consistent with H2's
+registered specificity prediction, which requires the effect to fail for `mlp.proj`.
+
+**What this does not establish.** That slopes differ by type is not a mechanism. It says the two
+quantities relate to C differently in different matrices, and it explains why every pooled analysis
+in this campaign has understated the explanation. Direction remains unestablished for both controls,
+and `a_eff_rank` is available in one archive only.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2679,3 +2740,6 @@ be strong while the control is flat along the axis being explained.
 When a control removes most of a shape, check whether the control has that same shape at a similar
 magnitude: if so the removal is near-automatic. Distinguish coincidence from structure by testing
 whether the two agree AFTER the shared shape is removed from both.
+A pooled model with one slope per predictor understates an explanation whose slopes differ by
+subgroup: check per-subgroup fits before concluding a predictor is weak overall, and price the
+extra parameters with a random-control null carrying the same structure.
