@@ -99,6 +99,23 @@ and commit each repeat separately rather than pre-averaging. Rationale:
 If probe cost makes 3 repeats at all six steps infeasible under the two-node ceiling, prefer
 **3 repeats at steps 0 and 1500** (the two the criteria actually compare) over one repeat everywhere.
 
+**Commit `trace_est` and `trace_sq_est`, not only `top_eigenvalue` (added iteration 259).** An audit
+of all five committed panels found that **only REQ-048 carries the Hutchinson moments**; REQ-036,
+REQ-037, REQ-045 and Arm A carry `alphas`, `offdiags` and `residual_tail` only, all derived from the
+same Lanczos tridiagonal as `lam_top` and therefore barred by the hard rule. The consequence is that
+**the concentration account has no cross-run replication and none is obtainable from committed
+data** — the five-panel bowl evidence works only because it needs `top_eigenvalue` and
+`gradient_block_norm`, which every panel has.
+
+`residual_tail` was tested as a possible substitute and fails twice: it is tridiagonal-derived
+(provenance), and it correlates only **+0.189** with the admissible concentration measure, so it is
+not a usable proxy in any case.
+
+Therefore both REQ-050 and REQ-051 must **commit** `trace_est` and `trace_sq_est` per matrix at every
+measurement point, alongside `top_eigenvalue` and `gradient_block_norm`. Computing them is not
+enough; they must appear in the committed JSON. Without them these runs will reproduce the existing
+limitation and the concentration account will remain single-run.
+
 **Judge the registered criteria within seeds.** Criterion 1 asks for a cubic
 R² and a correlation with the late profile; do **not** additionally require cross-seed sign or
 threshold agreement as corroboration. In this design the `log C` residual is **76% shared across

@@ -2738,6 +2738,58 @@ downstream of a common architectural cause; (iii) all three are different views 
 Distinguishing them requires perturbing one and observing the others — **REQ-051** for the LR side,
 **REQ-053** for an architecture change.
 
+## The concentration account cannot be tested across runs from committed data (2026-09-05)
+
+Iteration 258 left the five-panel cross-run evidence as the campaign's only replication that tests
+more than initialisation. That evidence established **the bowl**; whether it can also test the
+**explanation** of the bowl turns on which archives carry concentration fields.
+
+**They do not.** Auditing all five panels:
+
+| archive | concentration fields |
+|---|---|
+| **REQ-048** | `trace_est`, `trace_sq_est`, `participation_ratio`, `pr_per_probe_vHv`, + tridiagonal |
+| REQ-036, REQ-037, REQ-045, Arm A | `alphas`, `offdiags`, `residual_tail` **only** |
+
+The four other panels carry **only** tridiagonal-derived quantities — the same Lanczos run that
+produces `lam_top` — which the hard rule rejects as predictors of `lam_top`, and hence of `log C`.
+
+**The rule is doing real work here, not being applied ritually.** Measured on REQ-048, where both
+admissible and forbidden fields exist:
+
+| field | corr with `log lam` | R² with type + block |
+|---|---|---|
+| Ritz spread | **+0.964** | 0.986 |
+| 2nd Ritz value | **+0.958** | 0.963 |
+| `residual_tail` | −0.366 | 0.626 |
+| `n_eff_bulk` (Hutchinson, admissible) | −0.524 | 0.783 |
+
+The Ritz statistics are arithmetically entangled with the outcome (iteration 224 already measured
+`ritz1 = lam_top` to 7.2e-16).
+
+**`residual_tail` was tested rather than rejected on sight**, since its entanglement is weaker. Two
+independent findings, and it fails on both:
+
+1. **Provenance.** `lam_top` adds only +0.050 to +0.144 R² beyond type and block, so `residual_tail`
+   is *not* a deterministic function of the outcome — but it is still computed from the same
+   tridiagonal, and the hard rule is a provenance rule, not a correlation threshold. Relaxing it case
+   by case is how this campaign's earlier circular results arose.
+2. **It is not a usable proxy anyway.** `residual_tail` correlates only **+0.189** with the
+   admissible concentration measure (+0.156 to +0.215 per seed). Even setting provenance aside it
+   would not stand in for `n_eff`.
+
+**The consequence, stated precisely.** The concentration account rests on **REQ-048 alone** — one run
+configuration, one step (2750), four seeds whose depth profiles are 89.6% shared (iteration 258). It
+has **no cross-run replication and none is obtainable from committed data.** The five-panel evidence
+covers the bowl's existence, location and shape, because those need only `top_eigenvalue` and
+`gradient_block_norm`, which every panel has.
+
+This is a limitation of the archive, not of the analysis, and it sharpens what the open requests buy:
+**REQ-050** (six measurement points) and **REQ-051** (LR arms) would give the concentration account
+its first cross-run and cross-step test, provided they commit `trace_est` and `trace_sq_est`. Both
+already specify the per-matrix curvature probe; this is recorded as an explicit requirement that
+those two fields be committed, not merely computed.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2866,3 +2918,6 @@ survive -- and the join itself is exonerated of manufacturing the result.
 Prefer absolute changes to ratio-of-effect statistics when the denominator can be small: a
 'share removed' explodes on weak effects and can invert a conclusion. Check the denominator's
 magnitude before quoting any share.
+Test a rule's application rather than invoking it: measure whether the barred quantity is actually
+entangled with the outcome, and record the cost of obeying. A provenance rule still binds when the
+correlation looks mild -- relaxing it case by case is how circular results return.
