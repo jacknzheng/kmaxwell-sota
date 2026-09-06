@@ -2397,6 +2397,61 @@ measured elasticity), and it is **run-independent** (iteration 248, five differe
 the curvature bowl itself remains the open question, with concentration explaining 63–73% of its
 depth variance (iteration 240).
 
+## Concentration produces about half the bowl, and the half it produces is a bowl (2026-09-05)
+
+Iteration 240 recorded that concentration explains 63–73% of `log lam`'s depth **variance**. That is
+not the same as explaining the **bowl**: a predictor can absorb most of a profile's variance while
+leaving its quadratic shape intact. Testing the quadratic directly gives a sharper answer.
+
+Controlling `log n_eff_bulk` at matrix level (Hutchinson, `lam` excluded algebraically, so the hard
+rule is satisfied), then refitting the quadratic depth coefficient:
+
+| quantity | mean `a2` | mean t | mean R² | argmins (4 seeds) |
+|---|---|---|---|---|
+| `log lam` | +0.0116 | +2.43 | 0.402 | 7, 6, 9, 6 |
+| `log lam \| n_eff_bulk` | **+0.0076** | +2.06 | 0.384 | 10, 2, 9, 1 |
+| `log C` | +0.0123 | +5.54 | 0.736 | **6, 6, 6, 7** |
+| `log C \| n_eff_bulk` | **+0.0064** | +3.73 | 0.656 | 2, 2, 6, 2 |
+
+**The reduction is significant and consistent.** Paired across four seeds: `log lam` loses **+0.0039**
+(sd 0.0011, **t = +7.16**, 4/4 seeds) — **34%** of its bowl; `log C` loses **+0.0059** (sd 0.0017,
+**t = +6.93**, 4/4) — **48%** of its bowl.
+
+**The residual is not flat, so the argmin shift is real.** `log C`'s depth amplitude falls from 0.555
+to 0.336 dex — a ratio of **0.61**, not a collapse. A profile retaining 61% of its amplitude still has
+a well-defined minimum, so the argmin moving from a tight **[6, 6, 6, 7]** to a scattered
+**[2, 2, 6, 2]** is a genuine relocation rather than the degeneracy of a flattened curve.
+**Concentration explains where the minimum sits, not only how deep it is.**
+
+**And the part concentration explains is itself a bowl.** Extracting the fitted component
+`n_eff_bulk`'s contribution to `log C` and taking its depth profile:
+
+| seed | `a2` of the explained component | argmin | amplitude |
+|---|---|---|---|
+| 0 | +0.0075 | 8 | 0.291 dex |
+| 1 | +0.0058 | 6 | 0.289 dex |
+| 2 | +0.0035 | 7 | 0.269 dex |
+| 3 | +0.0067 | 8 | 0.361 dex |
+
+The explained component is a positive-curvature bowl with its minimum at blocks **6–8**, closely
+matching C's own **6–7**. So concentration does not merely correlate with C across depth — the part
+of C it accounts for has the same shape and nearly the same minimum location as the phenomenon being
+explained.
+
+**Where this leaves the charter question.** The account is now:
+
+1. C's bowl **originates in curvature** and survives removing the gradient (iteration 252).
+2. It is **sharpened and location-stabilised** by dividing by g², optimally near the measured λ–g
+   elasticity (iteration 252).
+3. **About half of it is spectral concentration** — 34% of curvature's bowl, 48% of C's — and the
+   concentration-explained component is itself an interior bowl at blocks 6–8.
+4. It is **run-independent** across five different runs (iteration 248).
+
+The remaining half of the bowl has no admissible explanation. This is the same target identified in
+iteration 245 (reproducible per-matrix curvature structure that type, depth and concentration leave
+unexplained), now located specifically in the bowl's quadratic component rather than in variance
+generally.
+
 ## Validation rules to retain
 
 Validate matrix names and block indices before joining panels: expect blocks 0–11 and 72 matrices
@@ -2507,3 +2562,6 @@ inside the sampling error and the predictors are themselves correlated.
 When an adjustment improves a statistic, sweep the adjustment past its intended value: if the
 statistic keeps improving monotonically the gain may be mechanical, and the evidence is an interior
 optimum coinciding with an independently measured quantity, not the improvement itself.
+Explaining a profile's variance is not explaining its shape: test the shape parameter directly.
+And when a control moves a profile's extremum, check the residual amplitude first -- a flattened
+profile has no meaningful extremum, so relocation is only a finding if amplitude survives.
