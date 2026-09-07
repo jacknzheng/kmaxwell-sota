@@ -14,7 +14,7 @@ keep this queue for runnable specifications, concise status updates, and result 
 | With 051 | [REQ-052](#req-052-matched-uniform-versus-mixed-lr-controls-for-req-051) | OPEN | Compare mixed, uniform-Muon, and full-global LR using the same bases. |
 | 4 | [REQ-053](#req-053-what-makes-mlpproj-different--expansion-ratio-vs-nonlinearity) | OPEN | Separate the ReLU² input from the fan-in shape as the source of `mlp.proj`'s excess elasticity. |
 | 5 | [REQ-054](#req-054-annealed-single-ema-matched-to-k-maxwells-scheduled-memory-age) | OPEN | Test whether a matched single-memory schedule explains K-Maxwell’s gain. |
-| With 054 | [REQ-055](#req-055-downhill-alignment-and-loss-curvature-of-the-actual-post-muon-update) | OPEN | Measure actual update alignment, directional curvature, and loss along the step. |
+| With 054 | [REQ-055](#req-055-downhill-alignment-and-loss-curvature-of-the-actual-post-muon-update) | DONE | NULL: K-Maxwell's realized Muon step is geometrically indistinguishable from the age-matched single EMA (align/curvature/uphill all null); its REQ-054 advantage is trajectory-level, not per-step. |
 | 6 | [REQ-056](#req-056-test-k-maxwell-memory-in-standard-adam) | OPEN | Compare Adam with K-Maxwell and an age-matched single EMA. |
 
 These are queue states; no GPU execution handle has been supplied. Do not interrupt running work.
@@ -754,7 +754,22 @@ raw logs, per-step memory-age traces, paired result tables, plots, and a reprodu
 
 ## REQ-055: downhill alignment and loss curvature of the actual post-Muon update
 
-- status: **OPEN**
+- status: **DONE** (2026-09-07) — deliverable in `logs/kmaxwell/req055_post_muon_update_geometry/`.
+  **Verdict: NULL — no per-step geometric advantage.** On the paired REQ-054 fork (seed 0, dumps at
+  2050/2250/2500/2749), K-Maxwell's realized Muon step (δ_muon = δ_full − δ_wd, decoupled-WD separated,
+  reconstruction residual ~1e-8) is indistinguishable from the age-matched single EMA: downhill alignment
+  kmax−agema = −0.0011 (null), directional curvature vᵀHv = −0.79 on a ~30–66 scale with sign flips (null),
+  uphill-matrix fraction = 0.000 (null). So K-Maxwell's ~0.010 val edge over the age-matched EMA (REQ-054)
+  is a **trajectory-level / accumulated** effect, not a better-aligned or flatter individual step.
+  Method: curvature via two independent finite differences (gradient central-FD HVP, cross-matrix terms
+  kept, + loss-scan 2nd diff — an autograd HVP is impossible, flash-attn has no double-backward) agreeing
+  <6% at 2050/2250/2500 and diverging ~45% at 2749 where the α-scan exposes anharmonicity; loss scan tracks
+  the quadratic prediction to α≈1. **Shared finding (both arms):** the Muon step overshoots its own
+  direction ~2× (loss-scan min at α≈0.25–0.5, realized α=1 near baseline) — an edge-of-stability signature,
+  a Muon property not a kernel one. Weight decay ~10% of ‖δ_muon‖; non-Muon (embed/proj) displacement
+  (~306–714) dwarfs the Muon step. Scoped: n=1 seed, held-out probe only (training-batch alignment not
+  collected). Probe hardened after catching 3 defects (flash-HVP crash, non-reproducible L(x_S), a
+  double-base-run corruption); `ΔL(0.0)=0` verified on all 8 probes. Ran under the ≤2 ceiling.
 - requested: Jack, 2026-09-06 PDT
 - priority and dependencies: implement before REQ-054's pilot; collect on its paired runs
 - resource limit: **two nodes fleet-wide**; no separate training arms by default
