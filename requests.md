@@ -9,11 +9,11 @@ keep this queue for runnable specifications, concise status updates, and result 
 
 | Order | Request | Status | Work |
 |---|---|---|---|
-| 1 | [REQ-050](#req-050-curvature-at-initialisation-and-early-training) | OPEN | Establish when the depth-curvature profile appears. |
-| 2 | [REQ-051](#req-051-decompose-why-each-matrix-has-a-different-lr-to-curvature-response) | OPEN | Measure LR-response components across four seeds and six matrix LR levels. |
-| With 051 | [REQ-052](#req-052-matched-uniform-versus-mixed-lr-controls-for-req-051) | OPEN | Compare mixed, uniform-Muon, and full-global LR using the same bases. |
-| 4 | [REQ-053](#req-053-what-makes-mlpproj-different--expansion-ratio-vs-nonlinearity) | OPEN | Separate the ReLU² input from the fan-in shape as the source of `mlp.proj`'s excess elasticity. |
-| 5 | [REQ-054](#req-054-annealed-single-ema-matched-to-k-maxwells-scheduled-memory-age) | OPEN | Test whether a matched single-memory schedule explains K-Maxwell’s gain. |
+| 1 | [REQ-050](#req-050-curvature-at-initialisation-and-early-training) | DONE | Establish when the depth-curvature profile appears. |
+| 2 | [REQ-051](#req-051-decompose-why-each-matrix-has-a-different-lr-to-curvature-response) | DONE | Measure LR-response components across four seeds and six matrix LR levels. |
+| With 051 | [REQ-052](#req-052-matched-uniform-versus-mixed-lr-controls-for-req-051) | DONE | Compare mixed, uniform-Muon, and full-global LR using the same bases. |
+| 4 | [REQ-053](#req-053-what-makes-mlpproj-different--expansion-ratio-vs-nonlinearity) | DONE | Separate the ReLU² input from the fan-in shape as the source of `mlp.proj`'s excess elasticity. |
+| 5 | [REQ-054](#req-054-annealed-single-ema-matched-to-k-maxwells-scheduled-memory-age) | DONE | Test whether a matched single-memory schedule explains K-Maxwell’s gain. |
 | With 054 | [REQ-055](#req-055-downhill-alignment-and-loss-curvature-of-the-actual-post-muon-update) | DONE | NULL: K-Maxwell's realized Muon step is geometrically indistinguishable from the age-matched single EMA (align/curvature/uphill all null); its REQ-054 advantage is trajectory-level, not per-step. |
 | 6 | [REQ-056](#req-056-test-k-maxwell-memory-in-standard-adam) | DONE | K-Maxwell does NOT reliably help standard Adam (KM−Adam inconclusive +0.006±0.009, n=3); age-matched EMA regresses Adam; multi-timescale beats single age-matched EMA. |
 
