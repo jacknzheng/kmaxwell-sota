@@ -626,7 +626,14 @@ and the same matrix-type columns. Commit no checkpoints, model/optimizer tensors
 
 ## REQ-053: what makes `mlp.proj` different — expansion ratio vs nonlinearity
 
-- status: **OPEN (low priority)**
+- status: **DONE 2026-09-07 (n=2/arm)** → `logs/kmaxwell/req053_mlpproj_mechanism/`
+- **RESULT — both H-B and H-C fail; mechanism unidentified.** c (mlp.proj excess elasticity) is stable
+  across every architecture: c(2x)=+0.446, c(4x)=+0.514[REQ-051], c(8x)=+0.506, c(GELU@4x)=+0.419.
+  Arm1: FLAT across 4x fan-in range => H-C (fan-in shape) REFUTED. Arm2: GELU keeps c=+0.42 (~18% lower,
+  within n=2 noise, not eliminated) => H-B (ReLU^2) NOT supported. With residual-writer already refuted,
+  all 3 proposed mechanisms fail — c invariant to expansion ratio & nonlinearity. n=2 caveat (arm1 flatness
+  is the stronger refutation). Per-matrix LR intervention at each arch, matrix FE, curvature@2750.
+- (was) status: **OPEN (low priority)**
 - requested: iteration 239, 2026-09-05
 - priority: **after REQ-050, REQ-051 and REQ-052.** This answers a mechanism question about one
   matrix type, not the C-profile question the campaign is chartered on. Do not displace the queue.
