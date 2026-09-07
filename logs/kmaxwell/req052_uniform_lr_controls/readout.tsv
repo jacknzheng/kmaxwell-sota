@@ -1,0 +1,7 @@
+# REQ-052 (n=4) LR-response contrasts @2750. k=-d log lam/d log(uniform mult). REQ-023 mixed: writer/internal +0.92/+1.17, v-qk neg. REQ-035 global: writer/internal -0.19..-0.20, v-qk +0.36..+0.46.
+uniform_Muon	writers-internal	perseed=[0.087, 0.071, -0.04, -0.004]	mean=+0.028	sd=0.052
+uniform_Muon	v-(q,k)	perseed=[0.414, 0.299, 0.231, 0.25]	mean=+0.298	sd=0.071
+full_global	writers-internal	perseed=[0.06, 0.015, 0.209, 0.146]	mean=+0.108	sd=0.075
+full_global	v-(q,k)	perseed=[0.618, 0.217, 0.519, 0.306]	mean=+0.415	sd=0.161
+# FINDING: writer/internal contrast COLLAPSES to ~0 under uniform (+0.03) & full-global (+0.11) LR — NOT the +0.9..1.2 of REQ-023 mixed LR => band-67 writer/internal effect is mixed-LR-specific, does not transfer to global LR (its 4-seed criterion fails here).
+# v-(q,k) is POSITIVE under uniform(+0.30)/full-global(+0.42), matching REQ-035 global (+0.36..+0.46), opposite REQ-023 mixed (neg) — sign is LR-design-dependent, global sign reproduced n=4.

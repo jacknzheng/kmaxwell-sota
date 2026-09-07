@@ -472,7 +472,14 @@ These clarifications are part of REQ-051 and do not add training arms:
 
 ## REQ-052: matched uniform-versus-mixed LR controls for REQ-051
 
-- status: **OPEN**
+- status: **DONE 2026-09-07 (n=4)** → `logs/kmaxwell/req052_uniform_lr_controls/`
+- **RESULT — band-67 writer/internal contrast is MIXED-LR-ONLY.** Under uniform-Muon LR: writers-internal
+  =+0.028, v-(q,k)=+0.298; under full-global: +0.108 / +0.415. The writer/internal contrast COLLAPSES to ~0
+  (nowhere near REQ-023 mixed's +0.92/+1.17) => band 67 is specific to the mixed per-matrix LR design, does
+  not transfer to uniform/global LR; its untested 4-seed criterion is not met here. v-(q,k) is POSITIVE
+  under both (matching REQ-035 global +0.36..+0.46, opposite REQ-023 mixed neg) — sign is LR-design-dependent,
+  global sign reproduced n=4. 5 arms (u065/u100/u170 + fg065/fg170), 4 distinct bases, combined probe @2050&2750.
+- (was) status: **OPEN**
 - requested: Jack, 2026-09-05 PDT, continuing the LR/sharpness experiment goal
 - priority: coordinate with REQ-051 while its four base checkpoints are live; REQ-050 and already
   running work retain priority. Do not interrupt or duplicate a running job.
