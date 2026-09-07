@@ -1,0 +1,23 @@
+# REQ-055 post-Muon update geometry: kmax (K-Maxwell) vs agema (age-matched single EMA), seed 0, SHA 365c392d.
+# Probe measure_step_geometry.py on consecutive dumps x_S,x_{S+1} (S -> S+1, labeled; NO step trained past the stop).
+# Analysis direction = delta_muon = delta_full - delta_wd, delta_wd = -(lr_eff*wd)*x_S (lr=0.025*eta(S), wd=0.05,
+#   cool_down linear frac0.7 train_steps3250: eta=0.5275/0.4396/0.3297/0.2202 at 2050/2250/2500/2749).
+# 3 fixed held-out probe minibatches (32768 tok), model.eval(), exact param reset (dL(0.0)=0 verified).
+# align = -g.delta_muon/(||g|| ||delta_muon||) (higher=downhill); vHv = delta_muon^T H delta_muon/||delta_muon||^2.
+# vHv_fd = gradient central-FD HVP (eps=0.01, local at x_S, cross-matrix terms kept); vHv_scan = loss-scan 2nd diff over +-0.5 delta.
+step	arm	L0_raw	align_joint	g_dot_delta	vHv_fd	vHv_scan	uphill_frac	d_muon_norm	d_wd_norm	d_nonmuon_norm	recon_resid	scan_a0.5	scan_a1.0	full_a1
+2050	kmax	80185	0.0119	-3651	50.87	49.14	0.042	3.785	0.389	713.89	3.4e-08	-86.7	6.71	86.01
+2050	agema	80618	0.0155	-4809	65.58	65.61	0.000	3.783	0.391	714.48	3.5e-08	-121.2	-13.06	55.00
+2250	kmax	79533	0.0107	-2727	49.31	50.61	0.000	3.154	0.338	593.36	2.8e-08	-66.2	-17.12	22.81
+2250	agema	79930	0.0106	-2688	40.73	38.56	0.000	3.154	0.349	593.72	2.9e-08	-78.6	-56.25	-33.32
+2500	kmax	78228	0.0052	-1006	34.80	35.06	0.042	2.366	0.248	452.35	2.0e-08	-24.3	-1.70	19.49
+2500	agema	78616	0.0063	-1224	35.45	29.54	0.069	2.366	0.263	452.75	2.1e-08	-35.9	-19.69	-7.86
+2749	kmax	77175	0.0027	-350	30.14	44.14	0.097	1.581	0.159	305.89	1.3e-08	-4.7	6.41	12.76
+2749	agema	77331	0.0026	-337	26.51	38.48	0.111	1.581	0.171	305.72	1.3e-08	-4.9	5.05	16.94
+#
+# ACROSS-STEP MEAN of (kmax - agema):  align_joint=-0.0011 (NULL)  vHv_fd=-0.79 (NULL: per-step -15/+8.6/-0.65/+3.6, sign flips, scale ~30-66)  uphill_frac=+0.0000 (NULL)
+# VERDICT: the realized MUON step of K-Maxwell is geometrically indistinguishable from the age-matched single EMA.
+# Decomposition: weight decay = ~10-11% of ||delta_muon|| every step; non-Muon (embed/proj) displacement (~306-714) dwarfs the Muon step (~1.6-3.8); reconstruction residual ~1e-8 (fp32).
+# Curvature cross-check: FD vs loss-scan agree <6% at 2050/2250/2500(kmax); diverge ~45% at 2749 (smallest ||delta||, anharmonic - quadratic breaks down, per the alpha-scan's purpose).
+# Overshoot (BOTH arms): loss-scan min at alpha~0.25-0.5, realized alpha=1 near baseline -> Muon step is ~2x its along-direction optimum (edge of stability); shrinks by 2749.
+# kmax reaches lower held-out L0 at every step (REQ-054 consistent) but NOT via a better-aligned/flatter single step.
