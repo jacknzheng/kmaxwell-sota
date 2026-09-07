@@ -1,0 +1,31 @@
+seed	step	n_pos_lambda	cubicR2	argmin	corr_with_1500
+0	0	0	ZERO(init)	-	-
+0	125	12	0.987	6	-0.117
+0	250	12	0.961	8	+0.176
+0	500	12	0.779	7	+0.544
+0	1000	12	0.705	7	+0.861
+0	1500	12	0.649	1	+1.000
+1	0	0	ZERO(init)	-	-
+1	125	12	0.954	7	+0.445
+1	250	12	0.922	9	+0.594
+1	500	12	0.916	7	+0.747
+1	1000	12	0.796	8	+0.899
+1	1500	12	0.591	8	+1.000
+2	0	0	ZERO(init)	-	-
+2	125	12	0.965	9	+0.628
+2	250	12	0.942	7	+0.824
+2	500	12	0.832	7	+0.834
+2	1000	12	0.687	9	+0.698
+2	1500	12	0.605	7	+1.000
+3	0	0	ZERO(init)	-	-
+3	125	12	0.910	6	+0.889
+3	250	12	0.914	6	+0.932
+3	500	12	0.864	9	+0.674
+3	1000	12	0.868	9	+0.950
+3	1500	12	0.863	6	+1.000
+#
+# band-55 within-seed verdict: {0: 'LEARNED-EARLY', 1: 'LEARNED-EARLY', 2: 'LEARNED-EARLY', 3: 'LEARNED-EARLY'}
+# step 0: top_eigenvalue==0 for ALL 72 Muon matrices, ALL seeds — the output projection proj.weight is zero-initialised
+#   (norm 0.0), so loss=ln(vocab)=10.826 and the gradient/curvature to every block matrix is identically zero at init.
+# => the depth-curvature bowl is STRUCTURALLY ABSENT at init and LEARNED-EARLY: present + bowl-shaped by step 125
+#   (cubic R2 0.91-0.99, mid-depth argmin), aligning with the step-1500 profile by ~step 1000 (corr +0.70..+0.95).
