@@ -1,0 +1,7 @@
+# REQ-053 (n=2/arm) mlp.proj excess elasticity c vs architecture. REQ-051 baseline: 4x ReLU^2 c=+0.514 (n=4).
+2x width	fanin=1536	c_perseed=[0.39, 0.502]	c_mean=+0.446
+8x width	fanin=6144	c_perseed=[0.517, 0.496]	c_mean=+0.506
+GELU @4x	fanin=3072	c_perseed=[0.335, 0.503]	c_mean=+0.419
+# arm1 (expansion): c(2x)=+0.446, c(4x)=+0.514, c(8x)=+0.506 — FLAT across 4x fan-in range => H-C (fan-in shape) REFUTED.
+# arm2 (nonlinearity): c(GELU)=+0.419 vs c(ReLU^2)=+0.514 — ~18% lower, within n=2 noise, NOT eliminated => H-B (ReLU^2) NOT supported.
+# CONCLUSION: neither surviving hypothesis explains mlp.proj's excess elasticity. c is stable ~0.42-0.51 across 2x/4x/8x width and ReLU^2/GELU. Mechanism remains unidentified (residual-writer already refuted). n=2 caveat: arms 1&2 weaker than REQ-051 n=4.
