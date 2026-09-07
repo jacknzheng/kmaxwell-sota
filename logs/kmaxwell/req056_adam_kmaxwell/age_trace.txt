@@ -1,0 +1,16 @@
+  step | scheduled_age | realized_age_ema | realized_age_mixture |  ema-mix
+  1000 |        58.000 |           58.000 |               58.000 |   +0.000
+  1250 |        54.444 |           55.220 |               54.444 |   +0.775
+  1500 |        50.889 |           51.623 |               50.889 |   +0.734
+  1750 |        47.333 |           48.016 |               47.333 |   +0.683
+  2000 |        43.778 |           44.409 |               43.778 |   +0.632
+  2250 |        40.222 |           40.803 |               40.222 |   +0.580
+  2500 |        36.667 |           37.196 |               36.667 |   +0.529
+  2750 |        33.111 |           33.589 |               33.111 |   +0.478
+  3000 |        29.556 |           29.982 |               29.556 |   +0.426
+  3250 |        26.000 |           26.375 |               26.000 |   +0.375
+
+Check: scheduled_age 1000->3250 = 58.00 -> 26.00 (expect 58.0 -> 26.0)
+The age-matched EMA's realized age tracks the mixture's realized age (ema-mix small) => the single
+EMA is genuinely age-matched to the K-Maxwell mixture (finite-history), so KM-agema isolates kernel
+SHAPE (multi-timescale) from average memory age.

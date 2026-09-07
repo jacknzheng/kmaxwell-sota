@@ -15,7 +15,7 @@ keep this queue for runnable specifications, concise status updates, and result 
 | 4 | [REQ-053](#req-053-what-makes-mlpproj-different--expansion-ratio-vs-nonlinearity) | OPEN | Separate the ReLU² input from the fan-in shape as the source of `mlp.proj`'s excess elasticity. |
 | 5 | [REQ-054](#req-054-annealed-single-ema-matched-to-k-maxwells-scheduled-memory-age) | OPEN | Test whether a matched single-memory schedule explains K-Maxwell’s gain. |
 | With 054 | [REQ-055](#req-055-downhill-alignment-and-loss-curvature-of-the-actual-post-muon-update) | DONE | NULL: K-Maxwell's realized Muon step is geometrically indistinguishable from the age-matched single EMA (align/curvature/uphill all null); its REQ-054 advantage is trajectory-level, not per-step. |
-| 6 | [REQ-056](#req-056-test-k-maxwell-memory-in-standard-adam) | OPEN | Compare Adam with K-Maxwell and an age-matched single EMA. |
+| 6 | [REQ-056](#req-056-test-k-maxwell-memory-in-standard-adam) | DONE | K-Maxwell does NOT reliably help standard Adam (KM−Adam inconclusive +0.006±0.009, n=3); age-matched EMA regresses Adam; multi-timescale beats single age-matched EMA. |
 
 These are queue states; no GPU execution handle has been supplied. Do not interrupt running work.
 Run the REQ-051 pilot first, then coordinate REQ-052 while each base checkpoint is available.
@@ -829,7 +829,21 @@ optimizer, gradient, or update tensors.
 
 ## REQ-056: test K-Maxwell memory in standard Adam
 
-- status: **OPEN**
+- status: **DONE** (2026-09-07) — deliverable in `logs/kmaxwell/req056_adam_kmaxwell/`.
+  **Verdict: K-Maxwell does NOT reliably improve standard Adam.** New `KMaxwellAdam` optimizer replaces only
+  Adam's first moment (β2=0.999, eps=1e-8, zero wd, intervention on the 72 blocks matrices, ordinary Adam
+  elsewhere); parity to torch.optim.Adam = 4.4e-16 (adam-mode & 1-stream-0.9); age schedule 58→26 with
+  finite-history realized-age match; variable-decay mass 1−∏β(t) for the age arm; no nonfinite. LR pilot
+  (1e-4/3e-4/1e-3 → 4.64/3.84/3.73) froze lr=1e-3. 3 seeds, step-1000 fork→3250, shadow buffers accumulated
+  in the ordinary-Adam base. Endpoint val, per-seed paired diffs (n=3): **K-Maxwell − Adam = +0.0065 ± 0.0094
+  → INCONCLUSIVE / no improvement** (sign flips: s0 −0.007, s1/s2 +0.010/+0.016; |mean|<std; fails the
+  0.0005 margin); **age-matched − Adam = +0.0141 → REGRESSION** (all 3 seeds — a slow scheduled first moment
+  hurts Adam); **K-Maxwell − agema = −0.0077 ± 0.0006 → IMPROVEMENT** (all 3 seeds — multiple timescales beat
+  a single age-matched EMA, echoing REQ-054). So the Muon K-Maxwell benefit does not transfer to Adam's first
+  moment; β1=0.9 is already competitive. Reused the REQ-055 geometry probe on the realized Adam step (seed 0,
+  wd=0): plain Adam's step is the most downhill and largest at 1000, K-Maxwell no better; step-3248 flagged
+  undefined (‖δ‖→0 at the LR cooldown tail). K-Maxwell costs ~5–8% step time (8 shadow streams). Ran under
+  the ≤2 ceiling.
 - requested: Jack, 2026-09-06 PDT
 - priority and dependencies: after REQ-054/055; reuse their memory-age checks and update probes
 - resource limit: **two nodes fleet-wide**
