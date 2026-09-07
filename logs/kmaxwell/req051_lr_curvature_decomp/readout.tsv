@@ -1,0 +1,7 @@
+# REQ-051 (n=4). Targets 1&2 = matrix-FE regression log lam ~ b*log g + c*[mlp.proj]*log g.
+step2050	T2_causal_k	mean=+1.357	sd=0.281	perseed=[1.226, 1.679, 0.965, 1.56]
+step2050	T1_mlpproj_c	mean=+0.986	sd=0.251	c>0=4/4	perseed=[1.017, 0.678, 1.367, 0.88]
+step2750	T2_causal_k	mean=+1.681	sd=0.088	perseed=[1.727, 1.551, 1.787, 1.659]
+step2750	T1_mlpproj_c	mean=+0.514	sd=0.085	c>0=4/4	perseed=[0.507, 0.572, 0.378, 0.599]
+step2750	T3_kg_decomp	k_a=+0.733 k_d=+0.035 k_rho=+0.010 -> k_g(sum)=+0.778
+# T1 (mlp.proj c>0 all seeds, ~+0.5) CONFIRMED; T2 causal k~+1.68 (< gauge 2, near REQ-045/036 +2.24/+1.92, far below observational +3.17) => gauge violation confirmed n=4.

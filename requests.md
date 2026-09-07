@@ -191,7 +191,14 @@ Therefore, when scoring H1:
 
 ## REQ-051: decompose why each matrix has a different LR-to-curvature response
 
-- status: **OPEN**
+- status: **DONE 2026-09-07 (n=4)** → `logs/kmaxwell/req051_lr_curvature_decomp/`
+- **RESULT — T1 & T2 CONFIRMED.** T1 mlp.proj interaction c=+0.514±0.085, c>0 in 4/4 seeds (predicted ~+0.6)
+  — excess curvature-gradient elasticity of mlp.proj replicates causally. T2 causal k=+1.681±0.088 — below
+  gauge value 2, near REQ-045/036 (+2.24/+1.92), far below observational +3.17 => gauge violation confirmed
+  n=4. T3 decomposition: k_g=+0.778 dominated by k_a=+0.733 (activation), k_d=+0.035, k_rho=+0.010 — the
+  gradient's LR-response is ~94% the forward-activation channel. 6-level Latin square {0.5..1.7}, 4 distinct
+  bases, combined curv+act probe @2050&2750, matrix FE. (2050 early: k=1.36,c=0.99.)
+- (was) status: **OPEN**
 - requested: Jack / Codex, 2026-09-05 PDT
 - priority: **high, after the already-open REQ-050; do not interrupt work already running**
 - repo: `https://github.com/jacknzheng/kmaxwell-sota`, branch `jerry-agent`
