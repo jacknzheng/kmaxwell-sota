@@ -1,0 +1,11 @@
+# REQ-054 (n=4): does K-Maxwell need multiple memory timescales, or does one age-matched EMA suffice?
+# age-matched single-EMA decay = A(t)/(1+A(t)), A(t)=K-Maxwell scheduled avg age (validated 57.96->26.0, matches spec 58->26).
+seed	base_val2000	kmax_2750	agema_2750	kmax_minus_agema
+0	3.44460	3.34061	3.35027	-0.00966
+1	3.44245	3.34017	3.35015	-0.00998
+2	3.44382	3.34213	3.35103	-0.00890
+3	3.44319	3.34154	3.35187	-0.01033
+# mean(kmax-agema)=-0.00972 sd=0.00053  all-negative=True/4
+# => K-Maxwell BEATS the age-matched single EMA by ~0.0097 in every seed (>>~2e-4 noise). The benefit is the
+#    MULTI-TIMESCALE MIXTURE (multi-pole expressivity), NOT merely the scheduled average memory age. A single EMA
+#    with the identical age schedule does not reproduce K-Maxwell. age schedule validated 58->26 (AgeMatchedEmaMuon).

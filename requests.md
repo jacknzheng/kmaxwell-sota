@@ -681,7 +681,16 @@ is the binding limitation on every elasticity in this file.
 
 ## REQ-054: annealed single EMA matched to K-Maxwell’s scheduled memory age
 
-- status: **OPEN**
+- status: **DONE 2026-09-07 (n=4)** → `logs/kmaxwell/req054_agematched_ema/`
+- **RESULT — K-Maxwell needs the MIXTURE, not just the average age.** Age-matched single-EMA
+  (β(t)=A(t)/(1+A(t)), A(t)=K-Maxwell scheduled avg age; validated 57.96→26.0 = spec's 58→26) UNDERPERFORMS
+  K-Maxwell by mean −0.00972 ± 0.00053 val@2750, negative in 4/4 seeds (~50× noise). kmax: 3.3406/3.3402/
+  3.3421/3.3415; agema: 3.3503/3.3502/3.3510/3.3519. So the benefit is multi-timescale/multi-pole
+  expressivity, not merely the scheduled memory age — a single EMA with the identical age schedule leaves
+  ~0.010 on the table. New optimizer AgeMatchedEmaMuon. CAVEAT: schedule-matched (instantaneous stationary
+  age), not finite-history realized-age-matched; gap is stable+large so multi-timescale reading holds; exact
+  finite-history control = cheap follow-up.
+- (was) status: **OPEN**
 - requested: Jack, 2026-09-06 PDT
 - priority and dependencies: after the existing REQ-050–053 queue; instrument with REQ-055 before
   launching so its measurements do not require another training campaign
