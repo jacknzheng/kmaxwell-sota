@@ -1,0 +1,2875 @@
+{
+ "0": {
+  "step": 0,
+  "tokens": 131072,
+  "matrices": {
+   "blocks.0.attn.q.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.1.attn.v.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.2.mlp.fc.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     3072,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.4.attn.q.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.5.attn.v.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.6.mlp.fc.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     3072,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.8.attn.q.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.9.attn.v.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.10.mlp.fc.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     3072,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "embed.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": null,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     50304,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 38633472,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [],
+    "curvature_along_weight": null,
+    "curvature_along_random": null
+   },
+   "blocks.0.attn.k.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.1.attn.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.2.mlp.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     3072
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.4.attn.k.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.5.attn.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.6.mlp.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     3072
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.8.attn.k.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.9.attn.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.10.mlp.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     3072
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "proj.weight": {
+    "top_eigenvalue": 325.93317327652414,
+    "residual_tail": 0.0266225758388169,
+    "curvature_along_gradient": 199.62484741210938,
+    "curvature_along_polar": null,
+    "gradient_block_norm": 227293.109375,
+    "alphas": [
+     199.62484741210938,
+     150.6830596923828,
+     149.97052001953125,
+     194.89456176757812,
+     151.20797729492188,
+     134.12826538085938,
+     134.61427307128906,
+     167.37899780273438
+    ],
+    "offdiags": [
+     118.77395629882812,
+     63.93852615356445,
+     79.3469467163086,
+     107.74103546142578,
+     56.731170654296875,
+     60.93478012084961,
+     78.255126953125
+    ],
+    "shape": [
+     50304,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 38633472,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [],
+    "curvature_along_weight": null,
+    "curvature_along_random": null
+   },
+   "blocks.0.attn.v.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.1.mlp.fc.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     3072,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.3.attn.q.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.4.attn.v.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.5.mlp.fc.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     3072,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.7.attn.q.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.8.attn.v.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.9.mlp.fc.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     3072,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.11.attn.q.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.0.attn.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.1.mlp.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     3072
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.3.attn.k.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.4.attn.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.5.mlp.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     3072
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.7.attn.k.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.8.attn.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.9.mlp.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     3072
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.11.attn.k.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.0.mlp.fc.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     3072,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.2.attn.q.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.3.attn.v.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.4.mlp.fc.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     3072,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.6.attn.q.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.7.attn.v.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.8.mlp.fc.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     3072,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.10.attn.q.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.11.attn.v.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.0.mlp.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     3072
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.2.attn.k.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.3.attn.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.4.mlp.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     3072
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.6.attn.k.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.7.attn.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.8.mlp.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     3072
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.10.attn.k.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.11.attn.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.1.attn.q.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.2.attn.v.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.3.mlp.fc.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     3072,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.5.attn.q.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.6.attn.v.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.7.mlp.fc.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     3072,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.9.attn.q.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.10.attn.v.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.11.mlp.fc.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     3072,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.1.attn.k.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.2.attn.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.3.mlp.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     3072
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.5.attn.k.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.6.attn.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.7.mlp.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     3072
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.9.attn.k.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": 0.0,
+    "curvature_along_random": 0.0
+   },
+   "blocks.10.attn.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     768
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 589824,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   },
+   "blocks.11.mlp.proj.weight": {
+    "top_eigenvalue": 0.0,
+    "residual_tail": 1.0,
+    "curvature_along_gradient": 0.0,
+    "curvature_along_polar": 0.0,
+    "gradient_block_norm": 0.0,
+    "alphas": [
+     0.0
+    ],
+    "offdiags": [],
+    "shape": [
+     768,
+     3072
+    ],
+    "trace_est": 0.0,
+    "trace_sq_est": 0.0,
+    "n_params": 2359296,
+    "participation_ratio": null,
+    "pr_per_probe_vHv": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "curvature_along_weight": null,
+    "curvature_along_random": 0.0
+   }
+  }
+ }
+}

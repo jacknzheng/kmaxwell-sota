@@ -50,7 +50,14 @@ and the linked experiment directories, rather than this queue.
 
 ## REQ-050: curvature at initialisation and early training
 
-- status: **OPEN**
+- status: **DONE 2026-09-07 (n=4)** → `logs/kmaxwell/req050_curvature_at_init/`
+- **RESULT — LEARNED-EARLY, 4/4 seeds.** Step 0: curvature IDENTICALLY ZERO for all 72 Muon matrices, all
+  seeds — proj.weight (unembed) is zero-init (‖·‖=0), so loss=ln(vocab)=10.826 and gradient/curvature to
+  every block matrix is exactly 0 at init. The bowl is structurally absent at init, present + bowl-shaped by
+  step 125 (cubic R² 0.91-0.99, mid-depth argmin 6-9), aligning with the step-1500 profile by ~step 1000
+  (corr +0.70..+0.95). INHERITED criterion decisively false. 3 Hutchinson repeats/step, trace_est/trace_sq_est
+  committed (independently sampled). Steps 0/125/250/500/1000/1500; ~450-630s/probe.
+- (was) status: **OPEN**
 - requested: 2026-09-04; cost premise corrected in iteration 193
 - priority: first; at most two nodes fleet-wide
 - question: Is the depth-curvature profile visible at initialization, or does it emerge during early training?
