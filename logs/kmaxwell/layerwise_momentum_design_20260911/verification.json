@@ -1,0 +1,157 @@
+{
+  "audited_branch_sha": "98c92ea718ba15a7d11c1f6079c9cdca2e583c21",
+  "torch_version": "2.13.0",
+  "scope": "CPU arithmetic and toy checks only",
+  "req054_kmax_minus_scheduled_ema": {
+    "n": 4,
+    "differences": [
+      -0.009660000000000224,
+      -0.0099800000000001,
+      -0.00890000000000013,
+      -0.010329999999999728
+    ],
+    "mean": -0.009717500000000046,
+    "sample_sd": 0.0006098292110636336,
+    "t95": [
+      -0.010687874359801985,
+      -0.008747125640198106
+    ]
+  },
+  "req056_kmax_minus_adam": {
+    "n": 3,
+    "differences": [
+      -0.006510000000000016,
+      0.010180000000000078,
+      0.015670000000000073
+    ],
+    "mean": 0.006446666666666712,
+    "sample_sd": 0.011551685302731134,
+    "t95": [
+      -0.022249310429198917,
+      0.035142643762532344
+    ]
+  },
+  "req051_probe_pairs": 48,
+  "req051_token_count_pairs": [
+    [
+      32768,
+      8192
+    ]
+  ],
+  "req051_mismatched_pairs": 48,
+  "req051_provenance": [
+    {
+      "seed": "0",
+      "base_val2000": "3.44282",
+      "state_hash16": "3dc4335e0cdb0372"
+    },
+    {
+      "seed": "1",
+      "base_val2000": "3.44362",
+      "state_hash16": "2b9260d2f565b3f2"
+    },
+    {
+      "seed": "2",
+      "base_val2000": "3.44396",
+      "state_hash16": "b8cd56def9ca8478"
+    },
+    {
+      "seed": "3",
+      "base_val2000": "3.44496",
+      "state_hash16": "0dba6c49b8ca91e4"
+    }
+  ],
+  "req052_provenance": [
+    {
+      "seed": "0",
+      "base_val2000": "3.44319",
+      "state_hash16": "c57598c3a6cf53b6"
+    },
+    {
+      "seed": "1",
+      "base_val2000": "3.44300",
+      "state_hash16": "bb21ffde44d1c7e4"
+    },
+    {
+      "seed": "2",
+      "base_val2000": "3.44383",
+      "state_hash16": "431d4d8b56587d81"
+    },
+    {
+      "seed": "3",
+      "base_val2000": "3.44336",
+      "state_hash16": "62d0e8fa3497c398"
+    }
+  ],
+  "req055_late_fd_disagreement": [
+    {
+      "file": "geom_agema_s0_step2749.json",
+      "relative_difference": 0.4514222947063924
+    },
+    {
+      "file": "geom_kmax_s0_step2749.json",
+      "relative_difference": 0.46444605891332513
+    }
+  ],
+  "existing_fw_tests": {
+    "test_frank_wolfe_objective_is_vHv": "PASS",
+    "test_fw_matches_closed_form_max_convex_box": "PASS",
+    "test_fw_monotone_on_concave_instance": "PASS",
+    "test_init_v_matches_seed_device_and_dtype": "PASS",
+    "test_joint_hvp_has_cross_block_terms": "PASS",
+    "test_joint_hvp_matches_dense_matmul_generic": "PASS",
+    "test_polar_lmo_maximizes_over_the_ball": "PASS",
+    "test_polar_lmo_spectral_norm_and_nuclear_duality": "PASS"
+  },
+  "same_euclidean_spectrum": [
+    0.1,
+    0.1,
+    0.1,
+    1.1
+  ],
+  "different_spectral_sharpness": [
+    1.2000000000000002,
+    2.1999999999999993
+  ],
+  "cross_layer_example": {
+    "isolated_sum": 2.0,
+    "joint": 3.8
+  },
+  "negative_identity_example": {
+    "euclidean_sphere_max": -1.0,
+    "ball_max": 0.0
+  },
+  "loss_scaling": [
+    {
+      "scale": 0.1,
+      "spectral_ratio": 0.7329262651180465,
+      "old_ratio": 2.178217821782178
+    },
+    {
+      "scale": 1.0,
+      "spectral_ratio": 0.7329262651180466,
+      "old_ratio": 0.21782178217821785
+    },
+    {
+      "scale": 10.0,
+      "spectral_ratio": 0.7329262651180465,
+      "old_ratio": 0.02178217821782178
+    }
+  ],
+  "momentum_alignment_counterexample": {
+    "true_gradient_nuclear": 3.0,
+    "downhill_alignment": -1.0
+  },
+  "cloned_muon_age_toy": {
+    "max_exact_age_error": 1.4210854715202004e-14,
+    "max_mass_difference": 1.7763568394002505e-15,
+    "beta_range": [
+      0.9615043615568907,
+      0.9809610574073063
+    ],
+    "max_stationary_control_age_error": 2.6039525696373715,
+    "note": "Scalar clone-history replay, normalized published weights; not an inspection of saved optimizer tensors."
+  },
+  "quadratic_loss_identity_error": 2.7755575615628914e-17,
+  "status": "PASS"
+}

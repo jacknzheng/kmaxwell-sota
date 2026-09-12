@@ -1,6 +1,6 @@
 # Experiment requests
 
-Active queue for the `jerry-agent` branch. Next request number: **REQ-057**.
+Active queue for the `jerry-agent` branch. Next request number: **REQ-061**.
 
 The findings are consolidated in [FINDINGS.md](FINDINGS.md). Update that file when evidence changes;
 keep this queue for runnable specifications, concise status updates, and result links.
@@ -10,15 +10,27 @@ keep this queue for runnable specifications, concise status updates, and result 
 | Order | Request | Status | Work |
 |---|---|---|---|
 | 1 | [REQ-050](#req-050-curvature-at-initialisation-and-early-training) | DONE | Establish when the depth-curvature profile appears. |
-| 2 | [REQ-051](#req-051-decompose-why-each-matrix-has-a-different-lr-to-curvature-response) | DONE | Measure LR-response components across four seeds and six matrix LR levels. |
-| With 051 | [REQ-052](#req-052-matched-uniform-versus-mixed-lr-controls-for-req-051) | DONE | Compare mixed, uniform-Muon, and full-global LR using the same bases. |
+| 2 | [REQ-051](#req-051-decompose-why-each-matrix-has-a-different-lr-to-curvature-response) | DONE; audited | Four-seed LR responses delivered; the combined decomposition uses mismatched probe batches. |
+| With 051 | [REQ-052](#req-052-matched-uniform-versus-mixed-lr-controls-for-req-051) | DONE; audited | LR-scope comparison delivered; recorded bases differ from REQ-051, so exact pairing remains unverified. |
 | 4 | [REQ-053](#req-053-what-makes-mlpproj-different--expansion-ratio-vs-nonlinearity) | DONE | Separate the ReLU² input from the fan-in shape as the source of `mlp.proj`'s excess elasticity. |
-| 5 | [REQ-054](#req-054-annealed-single-ema-matched-to-k-maxwells-scheduled-memory-age) | DONE | Test whether a matched single-memory schedule explains K-Maxwell’s gain. |
-| With 054 | [REQ-055](#req-055-downhill-alignment-and-loss-curvature-of-the-actual-post-muon-update) | DONE | NULL: K-Maxwell's realized Muon step is geometrically indistinguishable from the age-matched single EMA (align/curvature/uphill all null); its REQ-054 advantage is trajectory-level, not per-step. |
-| 6 | [REQ-056](#req-056-test-k-maxwell-memory-in-standard-adam) | DONE | K-Maxwell does NOT reliably help standard Adam (KM−Adam inconclusive +0.006±0.009, n=3); age-matched EMA regresses Adam; multi-timescale beats single age-matched EMA. |
+| 5 | [REQ-054](#req-054-annealed-single-ema-matched-to-k-maxwells-scheduled-memory-age) | DONE; audited | K-Maxwell beats the scheduled EMA at 1×; exact realized-age and larger-batch controls remain open. |
+| With 054 | [REQ-055](#req-055-downhill-alignment-and-loss-curvature-of-the-actual-post-muon-update) | DONE; audited | One-seed geometry delivered; equivalence and per-step-mechanism claims remain unresolved. See REQ-057/058. |
+| 6 | [REQ-056](#req-056-test-k-maxwell-memory-in-standard-adam) | DONE; audited | K-Maxwell vs ordinary Adam is inconclusive (n=3); gain over the scheduled EMA does not isolate exact-age kernel shape. |
+| Next | [REQ-057](#req-057-validate-layer-wise-spectral-sharpness-and-cross-layer-coupling) | OPEN | Validate isolated and joint shape-weighted spectral sharpness and actual-update geometry. |
+| After 057 | [REQ-058](#req-058-test-whether-layer-sharpness-predicts-the-response-to-momentum) | OPEN; gated | Selectively vary layer memory at fixed LR; test held-out prediction and exact-age controls. |
+| After 058 | [REQ-059](#req-059-verify-a-sharpness-guided-layer-wise-momentum-policy) | OPEN; gated | Fresh-seed policy trial against global, Euclidean, type/depth, shuffled and reversed controls. |
+| Secondary | [REQ-060](#req-060-identify-loss-cubic-feedback-separately-from-muon-normalization) | OPEN; gated | Separate loss-cubic feedback from nonlinear polar-map effects. |
 
 These are queue states; no GPU execution handle has been supplied. Do not interrupt running work.
-Run the REQ-051 pilot first, then coordinate REQ-052 while each base checkpoint is available.
+**Run REQ-057's measurement pilot next.** REQ-058/059 are conditional on the preceding validation
+gates; REQ-060 is secondary. Check live jobs and for newly delivered overlapping artifacts on pickup.
+
+**September 11 audit:** the project target is useful **layer-wise momentum**, requiring a reliable
+predictive measurement rather than another description of the Euclidean curvature bowl. Existing
+DONE labels mean artifacts were delivered; they do not certify every requested control or mechanism
+claim. The [audit](logs/kmaxwell/layerwise_momentum_design_20260911/README.md) records the REQ-051
+probe mismatch, REQ-052 base mismatch, incomplete REQ-054 age control and limits of REQ-055/056.
+Historical result paragraphs below are retained as delivered; use the audit's narrower conclusions.
 
 ## Operating constraints
 
@@ -910,6 +922,373 @@ that multiple timescales are necessary; the age-matched arm tests that distincti
 Commit implementation and parity/state checks, configs, pilot results, base/history manifests,
 raw logs, paired loss tables, memory-age traces, update measurements, plots, and a README under
 `logs/kmaxwell/req056_adam_kmaxwell/`. Record code SHA and data cursors; keep tensor states local.
+
+## Continuation protocol shared by REQ-057–060
+
+Keep the REQ-054 baseline model/data/optimizer recipe when regenerating bases. Base checkpoints
+are ordinary baseline-Muon trajectories through the stated fork step; do not substitute a
+previously diverged treatment state. Use `start_step=F`, `stop_after_step=F+horizon`, and retain
+the original 3250-step LR schedule independently of the shorter stop. For a fork at F, set the
+mixture switch to F and its anneal end to F+750, as in REQ-054; a 64-update replay sees only the
+first part of that same anneal. Thus REQ-058 at F=2000 and REQ-059 share the schedule through
+their common steps. Record data availability and cursor before every launch; no silent corpus
+repetition. Save local windows required by the downstream requests before releasing each base.
+
+## REQ-057: validate layer-wise spectral sharpness and cross-layer coupling
+
+- status: **OPEN**
+- requested: Jack / 2026-09-11 PDT
+- priority: **next; measurement gate for REQ-058/059**
+- resource limit: **two nodes fleet-wide; do not interrupt existing work**
+- artifacts: `logs/kmaxwell/req057_layerwise_spectral_sharpness/`
+
+**Question:** Can we measure a reproducible, optimizer-relevant sharpness for each of the 72
+Muon matrices, and how much information is lost by treating them independently? The project
+objective is a useful layer-wise momentum rule. Explaining a Euclidean curvature profile is
+insufficient unless it helps choose momentum and improve validation loss.
+
+**Prior-work check:** REQ-019 already implemented joint block-spectral Frank-Wolfe (FW) sharpness
+at two checkpoints. Reuse its `impl/measure_generalized_sharpness_fw.py`; do not re-request that
+calibration as a new result. Its unit radii, Frobenius gradient norms, single global output, and
+unprojected final FW iterates do not supply the measurements below. REQ-048 measures Euclidean
+spectral concentration, not matrix-spectral sharpness. REQ-055's per-matrix fields include
+cross-matrix terms and are not isolated block curvatures. See the
+[branch audit and rationale](logs/kmaxwell/layerwise_momentum_design_20260911/README.md).
+
+### Definitions and implementation
+
+Use the true loss Hessian H, with a **mean loss per nonignored token**. A Hessian-vector product
+(HVP) computes H times a direction without storing H. Publish the conversion from the old
+`BATCH_TOKENS=524288` sum scale; never combine fields from different token sets or loss reductions.
+Here a "matrix" is one named parameter; a "transformer block" contains six matrices. Report both
+groupings rather than calling both a layer.
+
+For a fixed state, factor the actual Muon step size as `eta(t) * r_i(t)`, where r_i includes the
+implemented shape factor `sqrt(max(1, rows_i/cols_i))` and any relative LR multiplier. Log the
+actual values; if the trainer implementation differs, derive them from that implementation.
+Hold non-Muon parameters fixed in spectral probes, and label this the Muon subspace.
+
+```text
+N_r(D) = max_i ||D_i||_op / r_i
+S_joint = max <D, H[D]> subject to N_r(D) = 1
+S_i = max <D_i, H_ii[D_i]> subject to ||D_i||_op = r_i
+G_i = r_i * ||g_i||_nuclear; G_joint = sum_i G_i
+Z_i = eta * S_i / (2 * G_i); Z_joint = eta * S_joint / (2 * G_joint)
+```
+
+The operator norm `||D||_op` is the largest singular value; the nuclear norm is their sum.
+The Frobenius norm is the square root of the sum of squared entries. These are different
+measurements of matrix size. S_i is a restricted, isolated-matrix maximum; it is not a
+decomposition of S_joint. Include analogous 12 transformer-block maxima only if the pilot
+cost permits; they retain all six within-block interactions.
+
+For comparison, retain eight-iteration Lanczos estimates `lambda_i`, `lambda_i/||g_i||_F²`,
+gradient-polar directional curvature, and actual momentum-update curvature. Preserve the
+eight-iteration convention and report residuals/restart sensitivity; unresolved Lanczos
+estimates must not be treated as exact reference values.
+
+The definitions of S follow [Islamov et al., v3, Definition 2.2 and Eq. 19](https://arxiv.org/html/2603.05002v3).
+The gradient normalization follows Section 4. **Z is a candidate diagnostic for ideal normalized
+spectral descent without momentum, not a proved K-Maxwell stability boundary.** The paper leaves
+stochastic/momentum extensions open. `lambda/||g||_F²` is not this normalized spectral statistic.
+At a fixed state and fixed radii, S is independent of which memory kernel is being evaluated.
+
+### Pilot and required checks
+
+1. Recover the training implementation at `365c392d695f95dc9a4fb89095e85a6a7b5d551e` plus the
+   committed experiment patches, or document an equivalent pinned successor with update parity.
+   The current artifact branch does not contain that harness at its tip. Archive the precise
+   retrieval command, resolved SHA, patch hashes and final diff before launch. Reuse valid local
+   states if available; otherwise regenerate one seed-0 base, retaining full state locally at
+   steps 1500, 2000 and 2500. Preserve model, optimizer, scheduler, RNG and token cursor together.
+2. Pilot at step 2000 on **18 matrices: all six types in blocks 0, 6, 11**. Use three disjoint
+   diagnostic training subsets of 8192 tokens, committed hashes/offsets, plus one nested 32768-token
+   sensitivity check. The three subsets are probe replicates, not three model seeds. Accumulate
+   by actual valid-token counts. Use independent held-out diagnostic tokens for transfer checks;
+   keep final validation tokens out of feature selection.
+3. Compute isolated S_i, joint S_joint and their G denominators on exactly the same objective.
+   FW: exact SVD polar oracle, shape-weighted radii, K=20/50 and five starts (one gradient-polar,
+   four random). Save every objective trace, constraint norms, the best feasible value, and the
+   best value after radial normalization `D/N_r(D)` with an independently recomputed HVP.
+   Distinguish the sphere definition from its ball relaxation for negative curvature. Never
+   report an interior zero as the sphere maximum of a negative-definite problem. Use the best
+   feasible restart, not their mean, as the sharpness estimate; neither is a global certificate.
+4. Validate isolated and joint HVPs against dense float64 toy Hessians with known off-diagonal
+   terms, and against central gradient differences on the model. For actual-step directions,
+   use relative step multipliers 0.005/0.01/0.02/0.04 and report the representable parameter change.
+   Require a plateau across at least two sizes and agreement with differentiable HVPs to 5%
+   where the signal exceeds roundoff; otherwise mark the measurement unresolved. Check the
+   math-attention diagnostic forward/gradient against the production forward/gradient first.
+   Benchmark FP32 references and production precision separately.
+5. Independently capture the trainer's post-polar update before the parameter write. Compare it
+   to the serialized before/after displacement after accounting for decay, AdamW and rounding.
+   Do not use an algebraically defined subtraction as the sole reconstruction check. Save the
+   raw gradient before the optimizer's in-place `grad.lerp_` mutation. Probes must leave all
+   training states, RNG and data cursors unchanged; verify this by hashes and one-step replay.
+6. At shared states, for signed displacement d, record `b = -<g,d>`,
+   `c = <d,H[d]>`, predicted loss change `-b+c/2`, and measured finite-step change separately.
+   Use `c/(2*b)` only when b is positively resolved. Also record the exact remainder
+   `R = L(W+d)-L(W)+b`; `R/b` describes this step retrospectively, so it cannot count as an
+   independent prediction of its own loss increase or as evidence of long-run instability.
+   Training-batch and held-out evaluations must have separate labels.
+7. Decompose joint curvature: `c_diag = sum_i <d_i,H_ii[d_i]>`,
+   `c_cross = c-c_diag`, and `c_i_joint = <d_i,(H[d])_i>`.
+   Compare isolated S_i to joint contributions at the FW direction and actual step. Contributions
+   can be negative. At the pilot state compute the 18-by-18 projected interaction matrix
+   `Q_ij=<d_i,H_ij[d_j]>` using embedded isolated directions; verify symmetry and the joint sum.
+   Report signed cancellation and absolute off-diagonal row sums. REQ-045's aggregate neighbor-LR
+   result is not evidence that these interactions vanish.
+8. Loss-scale check with factors 0.1/1/10: exact-polar updates and S/G are invariant when gradients,
+   HVPs and inherited buffers are scaled consistently. Raw S and G each scale linearly;
+   `lambda/||g||_F²` scales inversely. Quantify departures for the finite-precision polar map.
+
+### Expansion and decisions
+
+Pilot budget: at most **4 node-hours including regeneration**, with costs broken into training,
+HVPs and SVD/FW. If it passes, measure all 72 matrices at the three retained steps on seeds 0,1,2;
+reuse each live base and three separate probe subsets. Start with the validated cheapest FW
+budget; repeat K=50/five-start checks on the 18 sentinel matrices. Full stage cap: **24 additional
+node-hours**. Stop at the cap with partial coverage documented; do not silently reduce accuracy.
+
+Pass measurement reliability only if (a) at least 90% of positively resolved sentinel S_i values
+change by at most 5% from K=20 to K=50 after normalization, and (b) the median pairwise rank
+correlation of S_i/G_i across independent probe subsets is at least 0.8 at each assessed state.
+Report individual failures and confidence ranges; do not drop difficult matrices to pass.
+If more iterations/tokens are necessary, finish calibration within the cap and record the
+validated budget before expanding. Values near zero have an explicit unresolved flag, not a
+hidden epsilon or a logarithm of a negative number.
+
+Report whether spectral normalization changes the within-type depth ordering relative to Euclidean
+sharpness. Similar ordering is a legitimate result. Report joint-versus-diagonal discrepancies
+without asserting that any one cross-term percentage proves layer separability. REQ-058 tests
+whether those interactions actually spoil momentum predictions. **No bowl-fitting criterion alone
+passes this experiment.** Deliver runnable probe/config commands, raw per-repeat JSON/TSV,
+convergence/precision checks, update-parity checks, state manifests, costs and a reproducible README.
+
+## REQ-058: test whether layer sharpness predicts the response to momentum
+
+- status: **OPEN — gated on REQ-057 measurement validation**
+- requested: Jack / 2026-09-11 PDT
+- priority: after REQ-057; reuse its live bases
+- resource limit: **two nodes fleet-wide**
+- artifacts: `logs/kmaxwell/req058_layerwise_momentum_response/`
+
+**Question:** Does a layer's pre-intervention sharpness predict whether shorter or longer memory
+helps it? Measuring curvature is useful for this project only if it predicts an intervention.
+Do not assume that sharper layers should receive more momentum. REQ-019/023/045/051 vary LR;
+REQ-044/054 vary memory globally. None of their committed artifacts supplies this selective,
+same-state layer-momentum response test.
+
+### Exact treatments and controls
+
+Use the REQ-054 positive eight-stream K-Maxwell kernel, its published normalized weight schedule,
+outer blend `nu=0.95`, shape scaling, weight decay and actual LR schedule. Change only the selected
+matrix's stream decays using `beta_k(a) = beta_k^(1/a)`, with `a in {0.5,1,2}`. This halves or
+doubles exponential decay times while preserving the mixture weights. Nu is distinct from each
+stream's beta. Record kernel mass, realized age in steps and tokens, age variance, and response
+to constant/alternating inputs. This is a memory intervention, not a pre-polar scalar multiplier.
+
+Primary initialization: the production cloned-buffer switch used by REQ-054, with identical
+inherited tensors in all arms. Log exactly which update first changes (the existing switch has
+a baseline update before the mixed update), both pre/post counters, and any metadata conversion.
+Do not reset buffers in one arm only. Validate the scalar age recurrence including inherited
+history; a small six-matrix, zero-buffer sensitivity replay may follow, with all arms reset
+identically and results labeled separately.
+
+At each base, use the same 18 sentinel matrices as REQ-057. Run **36 selective continuations**:
+for each matrix, a=0.5 or 2 there, and a=1 on every other matrix. Other layers continue training
+normally. A single fresh a=1-all control is shared within that base, not counted 18 times as
+independent evidence. Also run a=0.5-all and a=2-all, plus no-momentum Muon and a single-EMA
+control matched to the a=1 mixture's **realized** age: **41 continuations per base**.
+
+For the exact-age control, track raw buffer mass M and unnormalized first age moment P:
+
+```text
+M_new = beta*M + (1-beta)
+P_new = beta*(P+M)
+q_mass = (1-nu) + nu*M_new; q_age = nu*P_new/q_mass
+```
+
+For the mixture sum the streams' masses and moments using the actual weights, including their
+initialization. Solve the scalar recurrence to match the mixture's q_age at every step; verify
+the solution in [0,1) without clipping. Record q_mass too and match it if finite-history mass is
+not negligible, documenting any required positive buffer rescaling. Match mass and first moment
+at initialization; preserve the actual buffer vector where the clone protocol permits it.
+The schedule `beta=A/(1+A)` alone is insufficient. If an exact feasible match cannot be made,
+label it unresolved and do not claim a kernel-shape effect. This completes the missing relevant
+REQ-054 control; it is not a repetition of its schedule-only comparison.
+
+### Bounded sequence and outcomes
+
+- Pilot seed 0 / step 2000 / 1× batch / **64 updates**, one matrix of each type, short and long
+  memory plus the five global controls (17 continuations). Limit pilot to 4 node-hours; benchmark
+  probe and training costs separately and verify the intervention reaches the post-polar direction.
+- If valid, complete all 18 matrices at that base, then seed 0 / step 1500 for development;
+  use seeds 1 and 2 / step 2000 as untouched prediction tests: **four base states, 164 total
+  continuations including the completed pilot arms**. Use 1× = 524288 tokens/update and the
+  existing microbatch size 64. Keep the original LR schedule; the fresh shared control captures
+  normal improvement over the same 64 updates. Cap the expanded stage at 24 additional node-hours.
+- Reset model, all optimizer state, RNG and token cursor to the exact same serialized base for
+  every fork. Validate parity before the first affected update. Reuse existing bases only when
+  their whole-state provenance passes, not just when their seed labels match.
+- Measure pre-treatment features once. Record actual-step telemetry at offsets 0,1,8,32,64,
+  target-layer S/G at 0/64, and loss on a fixed, disjoint **131072-token selection set** at
+  0,8,32,64. Save each of three diagnostic probe repeats independently. The main response is
+  the paired selection-loss difference at update 64. Early loss increase and curvature drift
+  are secondary; do not optimize against the exact remainder of the same step.
+- At the fork evaluate all candidate directions against the same W, raw gradient and diagnostic
+  objective using cloned buffers. Also report on-trajectory changes separately. Include full
+  joint updates with unchanged auxiliary updates, not only a frozen-layer loss scan.
+
+### Registered prediction test
+
+Fit only on seed 0, with matrix type and depth as baseline features. Compare a small, regularized
+linear response model for each treatment using: (1) type/depth only; (2) plus Euclidean lambda
+and `lambda/||g||_F²`; (3) plus S_i/G_i; (4) plus candidate actual-direction alignment, HVP
+curvature and REQ-057 interaction summaries. Fix transformations, missing-value handling and
+regularization on development data. Any tuning uses whole transformer blocks/time windows as
+groups, never random matrix-row splits. Do not feed an endpoint quantity into a baseline predictor.
+
+Before opening seeds 1/2 outcomes, commit the fitted models and predictions. Report errors within
+each held-out seed, per-treatment signs, type/depth residual associations and rank correlations.
+Promotion requires **at least 10% lower response RMSE than the stronger of the type/depth and
+Euclidean baselines on each held-out seed**, with no deterioration in choosing the better memory
+direction. Require the selected policy to predict heterogeneous choices and a benefit over the
+best global kernel, rather than merely recommending longer memory everywhere. Small or noisy
+treatment differences yield INCONCLUSIVE; 72 matrix rows do not create 72 independent seeds.
+
+If only the interaction/actual-update model passes, say isolated sharpness is insufficient; a
+policy using that richer measurement may advance, clearly labeled. If no model passes, stop
+before REQ-059. Do not invent a monotone sharpness-to-beta formula. Preserve all negative results.
+Large-batch completion of REQ-054 remains a separate open question, not a prerequisite for this
+first layer-wise test. Publish raw curves, exact-age traces, named matrix assignments, manifests,
+fitted models, preregistered predictions, uncertainty and the runnable analysis.
+
+## REQ-059: verify a sharpness-guided layer-wise momentum policy
+
+- status: **OPEN — conditional on REQ-058 held-out prediction gate**
+- requested: Jack / 2026-09-11 PDT
+- priority: primary project outcome after measurement and prediction pass
+- resource limit: **two nodes fleet-wide**
+- artifacts: `logs/kmaxwell/req059_sharpness_guided_momentum/`
+
+**Question:** Does correctly assigning memory to layers improve training compared with the best
+tested global memory setting? REQ-036 changed per-type LR and failed to improve loss; it does not
+test this momentum-only policy. Do not change LR, shape scaling, outer blend, decay, architecture
+or token budget while testing the new rule.
+
+Freeze the mapping learned in REQ-058 before fresh seeds **3,4,5,6**. From each seed's common
+step-2000 base, run to step **2750** at 1× batch. Measure features once at the fork and hold each
+matrix's selected timescale multiplier fixed throughout the continuation. The ordinary mixture
+weight anneal remains identical across arms. This first trial tests a static allocation;
+an online feedback controller is a subsequent experiment, not an unregistered change mid-run.
+
+Eight primary arms per seed (32 continuations):
+
+1. Global a=0.5.
+2. Global a=1, the fresh K-Maxwell control.
+3. Global a=2.
+4. **Guided** allocation from the passing REQ-058 model, using spectral features (and interactions
+   only if their inclusion was required and registered).
+5. Allocation from the strongest Euclidean-feature model trained on exactly the same development
+   outcomes and with the same tuning budget.
+6. Allocation from the type/depth-only model, to test whether measured sharpness adds information.
+7. Guided assignments shuffled **within matrix type**, preserving each type's exact histogram;
+   commit one permutation per seed before training.
+8. Reversed guided allocation: swap a=0.5 and a=2; a=1 stays fixed.
+
+For arms 4–8 use a common balanced allocation: **four matrices per type at each a**, optimizing
+the frozen model's summed predicted responses under that constraint. This yields 24 matrices
+at each timescale and preserves nominal memory resources. If the development results do not
+support this constrained policy, do not launch; record the failed premise. A ninth global arm
+is mandatory if the exact-age EMA or no-momentum control beats all three global mixtures in
+REQ-058; select which one using development results only. Report all global comparisons, not
+just whichever baseline happens to lose. Including the registered global winner in fresh seeds
+prevents claiming a layer-wise gain from an inferior global reference.
+
+Keep all buffer-state conversion and actual first-affected-step semantics identical to REQ-058.
+Do not reset or replace a stream during a run. Hash complete source states and log every
+`parameter name -> type -> depth -> a -> beta vector` assignment and actual LR. Cache identical
+pre-treatment features across paired arms without letting probes mutate their state.
+
+Use the existing 10485760-token final validation set, entirely excluded from fitting/selection.
+Report validation at 2000/2125/2250/2375/2500/2625/2750; endpoint 2750 is primary, the average of
+the last three listed evaluations is secondary. Show all four seed differences and paired 95%
+intervals. A practical win requires the guided policy's mean loss at least **0.0005 lower than
+every primary control**, and paired uncertainty excluding zero after Holm correction across the
+seven primary comparisons (eight if the ninth arm is required). Broad intervals are INCONCLUSIVE;
+failure to beat shuffle/type-depth means no demonstrated value from sharpness-specific assignment.
+Do not use an older experiment's noise estimate instead of these fresh paired differences.
+
+Record NaNs, loss spikes, gradient/update norms, same-objective geometry at fork/2250/2750, and
+the kernel-age distribution. Endpoint probing uses three independent diagnostic subsets and
+does not retune the policy. Report tokens, training wall time, feature/probe cost, peak memory
+and total end-to-end time. A token-efficiency gain is distinct from a wall-time gain. Include
+the allocation's one-time cost even if features were cached for the controlled comparison.
+
+Pilot one seed before the other three, with a 4-node-hour pilot cap and 24-node-hour expanded cap;
+check only implementation and resource validity, not whether the preliminary loss looks favorable.
+Do not stop early for apparent success. No 8×/16× fleet, architecture sweep, online controller,
+or extra LR tuning is authorized by this request. Deliver configs, raw logs, assignment tables,
+state manifests, paired uncertainty calculations, costs, plots and a reproducible README.
+
+## REQ-060: identify loss-cubic feedback separately from Muon normalization
+
+- status: **OPEN — secondary, gated on REQ-057 and usable REQ-058 trajectories**
+- requested: Jack / 2026-09-11 PDT
+- priority: mechanism follow-up; does not block a valid REQ-059 policy test
+- resource limit: **two nodes fleet-wide; 8 node-hours maximum**
+- artifacts: `logs/kmaxwell/req060_cubic_vs_polar_feedback/`
+
+**Question:** When memory changes curvature, is the change consistent with the loss's third
+derivatives, or with Muon's nonlinear normalization, or both? The local investigation's
+`(1/2) T:Sigma` mechanism is a hypothesis, not something measured by REQ-054/055. A larger
+oscillation variance or lower endpoint loss alone does not establish it.
+
+Reuse matched a=0.5/1/2 trajectories from REQ-058, seeds 0,1,2, around offsets 32 and 64. Retain
+short local state windows for this purpose; do not commit tensors. Estimate centers and
+fluctuations using detrended windows of 8/16/32 updates; report sensitivity so steady drift is
+not counted as oscillation. On identical diagnostic data compute
+
+```text
+e_loss(c,delta) = [g(c+delta)+g(c-delta)]/2 - g(c)
+```
+
+Use displacement scales 1/0.5/0.25 and check approximately quadratic scaling above the numerical
+noise floor. Project onto the calibrated sharp directions and compare ordinary gradient drift
+with the proposed feedback. For FW-based sharpness, keep the measured maximizing directions and
+radii fixed while differentiating their quadratic form. A gradient of that fixed-direction
+surrogate is not automatically a gradient of the exact global maximum when maximizers switch.
+Report S and its gradient denominator separately when interpreting changes in S/G.
+
+Separate the two nonlinearities at the same center and frozen optimizer buffers. Let Phi be the
+implemented polar/shape map, q0 its center input, and c0 the coefficient of the current gradient
+in the actual mixture after its buffer update. Compute q+ and q- from g(c±delta), then compare
+
+```text
+E_total = [Phi(q+)+Phi(q-)]/2 - Phi(q0)
+E_map = [Phi(q0+c0*H[delta])+Phi(q0-c0*H[delta])]/2 - Phi(q0)
+E_loss_residual = E_total - E_map
+```
+
+For a smooth local map, the leading loss term is `D Phi(q0)[c0*e_loss]`; E_map can exist on a
+purely quadratic loss. Validate that separation on quadratic and weakly cubic float64 toys,
+then compare with the production finite-precision map. Finite-scale residuals also contain
+higher-order interactions and must not be labeled pure cubic force without the scale test.
+Distinguish this frozen-buffer diagnostic from a replay of the full evolving buffer history.
+
+If that signal is resolved, run a bounded **16-update**, same-state replay removing the measured
+even-gradient contribution before the full memory/polar update, with an untouched control and
+a norm-matched orthogonal perturbation control. Replay all buffer states and identical data;
+verify that the intervention changes the predicted projection, then compare future sharpness,
+loss and oscillation changes on separate diagnostic data. It is a mechanism intervention,
+not a candidate training algorithm. Nonlocal fluctuations, precision floors, nonunique sharp
+directions or a large Taylor residual permit an INCONCLUSIVE result.
+
+Commit same-state/scale checks, raw projections, covariance summaries, predicted-versus-observed
+drift, normalization-only controls, replay outcomes, manifests and costs. Report what remains
+unidentified. Do not claim that momentum multiplies the third-derivative tensor at fixed weights.
+
 
 ## Template
 

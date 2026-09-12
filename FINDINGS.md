@@ -1,8 +1,24 @@
 # Learning rate and sharpness: consolidated findings
 
-Updated 2026-09-05. This is the campaign's findings summary; [requests.md](requests.md) contains
+Updated 2026-09-11 with an audit addendum. This is the campaign's findings summary; [requests.md](requests.md) contains
 the active experiments. Historical discussions and retractions remain in
 [the pre-cleanup record](https://github.com/jacknzheng/kmaxwell-sota/blob/28d00746aa80d71caf1fb8cb38b2e336b4c5d2d9/requests.md).
+
+## September 11 audit and project direction
+
+The current objective is a validated **layer-wise momentum** allocation. The
+[September 11 review](logs/kmaxwell/layerwise_momentum_design_20260911/README.md) audits the
+REQ-019–056 evidence and records CPU verification. REQ-019 already measured global spectral
+sharpness; the missing test is whether accurate layer-wise spectral measurements predict the
+response to changing memory at fixed LR. REQ-057–060 in [requests.md](requests.md) specify the
+measurement, causal response, policy and secondary cubic-feedback experiments.
+
+REQ-054's endpoint table supports a K-Maxwell advantage over its scheduled EMA control, but
+realized age was not matched. REQ-055 does not establish geometric equivalence or rule out a
+per-step mechanism. REQ-056 versus ordinary Adam is inconclusive. REQ-051 has mismatched probe
+batches and REQ-052 has mismatched base states; their stronger combined interpretations remain
+unverified. See the review for exact evidence and limitations. No new GPU experiment was run
+for this audit. Older queue-status statements below are historical snapshots, not current status.
 
 ## What we can currently explain
 
