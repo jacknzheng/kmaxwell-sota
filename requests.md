@@ -1,6 +1,6 @@
 # Experiment requests
 
-Active queue for the `jerry-agent` branch. Next request number: **REQ-061**.
+Active queue for the `jerry-agent` branch. Next request number: **REQ-062**.
 
 The findings are consolidated in [FINDINGS.md](FINDINGS.md). Update that file when evidence changes;
 keep this queue for runnable specifications, concise status updates, and result links.
@@ -20,6 +20,7 @@ keep this queue for runnable specifications, concise status updates, and result 
 | After 057 | [REQ-058](#req-058-test-whether-layer-sharpness-predicts-the-response-to-momentum) | OPEN; gated | Selectively vary layer memory at fixed LR; test held-out prediction and exact-age controls. |
 | After 058 | [REQ-059](#req-059-verify-a-sharpness-guided-layer-wise-momentum-policy) | OPEN; gated | Fresh-seed policy trial against global, Euclidean, type/depth, shuffled and reversed controls. |
 | Secondary | [REQ-060](#req-060-identify-loss-cubic-feedback-separately-from-muon-normalization) | OPEN; gated | Separate loss-cubic feedback from nonlinear polar-map effects. |
+| Available capacity | [REQ-061](#req-061-tau-bench-gold-and-step_hint-with-and-without-sod-through-step-500) | OPEN | Tau-bench gold and step_hint, each with SOD on/off, through training step 500. |
 
 These are queue states; no GPU execution handle has been supplied. Do not interrupt running work.
 **Run REQ-057's measurement pilot next.** REQ-058/059 are conditional on the preceding validation
@@ -1288,6 +1289,61 @@ directions or a large Taylor residual permit an INCONCLUSIVE result.
 Commit same-state/scale checks, raw projections, covariance summaries, predicted-versus-observed
 drift, normalization-only controls, replay outcomes, manifests and costs. Report what remains
 unidentified. Do not claim that momentum multiplies the third-derivative tensor at fixed weights.
+
+
+## REQ-061: tau-bench gold and step_hint with and without SOD through step 500
+
+- status: **OPEN**
+- requested: Jack / 2026-09-12 PDT
+- repo: https://github.com/jacknzheng/async-sdpo
+- pinned SHA: `1e84424623f8a074ba3c9015d1ec84c8756c3874` (`main` at request time)
+- priority and dependencies: Independent of REQ-057–060; use available capacity while preserving
+  the existing queue priority and running jobs.
+- resource limit: **At most two nodes fleet-wide**, including other experiments. Use the standard
+  8×H100 setup per run (four rollout GPUs and four trainer GPUs); run in waves as capacity permits.
+
+Run the full 2×2 comparison below through **absolute training step 500**. Here, 500 means trainer
+updates (`trainer.total_steps=500`), not the number of actions allowed within a tau-bench episode.
+SOD is the step-wise reweighting controlled by `trainer.algorithm.use_sod`.
+
+| Arm | Teacher feedback (`generator.hint.prompt`) | `trainer.algorithm.use_sod` | Final training step |
+|---|---|---|---:|
+| gold-sod | `gold` | `true` | 500 |
+| gold-no-sod | `gold` | `false` | 500 |
+| step-hint-sod | `step_hint` | `true` | 500 |
+| step-hint-no-sod | `step_hint` | `false` | 500 |
+
+Use `Qwen/Qwen3-8B`, the same initial model, training seed `1234`, data split seed `0`, and the
+standard banking_knowledge/retail/airline task mixture for all four arms. Hold all other settings
+fixed at the pinned defaults, including episode limits, optimizer, batch size, sampling and hint
+model. Keep `sod_eps=1e-6` and `sod_delta=0.2` for the SOD-enabled arms. Record resolved configs and
+verify the requested SOD value before each launch.
+
+```bash
+LOG_DIR=/log/req061/gold-sod bash scripts/run_taubench.sh gold trainer.total_steps=500 trainer.algorithm.use_sod=true
+LOG_DIR=/log/req061/gold-no-sod bash scripts/run_taubench.sh gold trainer.total_steps=500 trainer.algorithm.use_sod=false
+LOG_DIR=/log/req061/step-hint-sod bash scripts/run_taubench.sh step_hint trainer.total_steps=500 trainer.algorithm.use_sod=true
+LOG_DIR=/log/req061/step-hint-no-sod bash scripts/run_taubench.sh step_hint trainer.total_steps=500 trainer.algorithm.use_sod=false
+```
+
+These are four separate jobs, scheduled within the node limit. REQ-032's gold and step-hint runs
+were stopped near steps 215/220; they did not reach 500. Reuse a checkpoint only if its code,
+model, data, seed, full training state and treatment settings match this request and it can be
+resumed faithfully. Otherwise start fresh. Never switch SOD on or off partway through an arm,
+and never add 500 more updates to a resumed run: stop at total step 500.
+
+Evaluate on the same held-out tasks at step 0, every 25 training steps, and step 500; retain the
+default checkpoint interval of 50. Report overall and per-domain pass^1 (fraction of tasks solved
+on one attempt), learning curves, and the SOD-on minus SOD-off difference separately for gold and
+step_hint. This is one seed per arm; report the observed comparison without claiming multi-seed
+certainty. A flat learning curve is still a completed run; if a run fails, report its actual final
+step and failure reason rather than marking a partial run as reaching 500.
+
+Follow the queue's live-handle and 20-minute monitoring requirements. Commit configs, launch
+commands, code/data provenance, scalar logs, evaluation curves and a four-arm summary under
+`logs/async_sdpo_req061/`, with wall time, GPU-hours and API cost where available. Keep checkpoints
+on the execution host; do not commit weights or secrets. Update this block with per-arm status
+and result links, and add the final findings to `FINDINGS.md`.
 
 
 ## Template
