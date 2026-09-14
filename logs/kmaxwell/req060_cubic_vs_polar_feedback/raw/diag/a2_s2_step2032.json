@@ -1,0 +1,454 @@
+{
+ "step": 2032,
+ "base_scale": 0.01,
+ "tokens": 98304,
+ "eloss_scale_norms": {
+  "1.0": 0.06316847010544863,
+  "0.5": 0.021257762565712768,
+  "0.25": 0.010143318504684784
+ },
+ "eloss_scale_ratios": {
+  "0.5/1": 0.33652489177316913,
+  "0.25/1": 0.16057565566733373
+ },
+ "eloss_proj_on_sharp": -1.5531520606018603,
+ "E_total_joint": 62.88406992235792,
+ "E_map_joint": 44.06617892443138,
+ "E_residual_joint": 46.50067203815446,
+ "residual_frac": 0.7394666422763061,
+ "map_frac": 0.7007526545091511,
+ "per_matrix": {
+  "blocks.0.attn.q.weight": {
+   "e_loss_norm": 0.0052935234270989895,
+   "E_total": 9.5625,
+   "E_map": 7.0,
+   "E_residual": 6.46875
+  },
+  "blocks.0.attn.k.weight": {
+   "e_loss_norm": 0.005320157390087843,
+   "E_total": 10.5,
+   "E_map": 7.375,
+   "E_residual": 7.34375
+  },
+  "blocks.0.attn.v.weight": {
+   "e_loss_norm": 0.010689923539757729,
+   "E_total": 9.3125,
+   "E_map": 6.125,
+   "E_residual": 6.71875
+  },
+  "blocks.0.attn.proj.weight": {
+   "e_loss_norm": 0.008578270673751831,
+   "E_total": 9.5625,
+   "E_map": 6.28125,
+   "E_residual": 7.09375
+  },
+  "blocks.0.mlp.fc.weight": {
+   "e_loss_norm": 0.006994080264121294,
+   "E_total": 11.0625,
+   "E_map": 5.03125,
+   "E_residual": 9.625
+  },
+  "blocks.0.mlp.proj.weight": {
+   "e_loss_norm": 0.01606801338493824,
+   "E_total": 6.1875,
+   "E_map": 3.109375,
+   "E_residual": 5.0625
+  },
+  "blocks.1.attn.q.weight": {
+   "e_loss_norm": 0.005558868404477835,
+   "E_total": 9.625,
+   "E_map": 6.28125,
+   "E_residual": 7.0625
+  },
+  "blocks.1.attn.k.weight": {
+   "e_loss_norm": 0.004768910352140665,
+   "E_total": 11.0625,
+   "E_map": 6.6875,
+   "E_residual": 8.5
+  },
+  "blocks.1.attn.v.weight": {
+   "e_loss_norm": 0.009767071343958378,
+   "E_total": 10.0,
+   "E_map": 6.28125,
+   "E_residual": 7.46875
+  },
+  "blocks.1.attn.proj.weight": {
+   "e_loss_norm": 0.008899695239961147,
+   "E_total": 9.3125,
+   "E_map": 6.125,
+   "E_residual": 6.8125
+  },
+  "blocks.1.mlp.fc.weight": {
+   "e_loss_norm": 0.00836887676268816,
+   "E_total": 11.625,
+   "E_map": 5.3125,
+   "E_residual": 9.8125
+  },
+  "blocks.1.mlp.proj.weight": {
+   "e_loss_norm": 0.014054435305297375,
+   "E_total": 5.78125,
+   "E_map": 3.109375,
+   "E_residual": 4.65625
+  },
+  "blocks.2.attn.q.weight": {
+   "e_loss_norm": 0.005065170116722584,
+   "E_total": 9.0625,
+   "E_map": 6.3125,
+   "E_residual": 6.625
+  },
+  "blocks.2.attn.k.weight": {
+   "e_loss_norm": 0.0045318822376430035,
+   "E_total": 10.875,
+   "E_map": 7.0625,
+   "E_residual": 8.25
+  },
+  "blocks.2.attn.v.weight": {
+   "e_loss_norm": 0.010769449174404144,
+   "E_total": 8.75,
+   "E_map": 5.84375,
+   "E_residual": 6.3125
+  },
+  "blocks.2.attn.proj.weight": {
+   "e_loss_norm": 0.00905667245388031,
+   "E_total": 8.125,
+   "E_map": 5.84375,
+   "E_residual": 5.59375
+  },
+  "blocks.2.mlp.fc.weight": {
+   "e_loss_norm": 0.005718236789107323,
+   "E_total": 9.1875,
+   "E_map": 4.90625,
+   "E_residual": 7.59375
+  },
+  "blocks.2.mlp.proj.weight": {
+   "e_loss_norm": 0.017250582575798035,
+   "E_total": 4.84375,
+   "E_map": 2.921875,
+   "E_residual": 3.765625
+  },
+  "blocks.3.attn.q.weight": {
+   "e_loss_norm": 0.00930355116724968,
+   "E_total": 8.5625,
+   "E_map": 5.75,
+   "E_residual": 6.03125
+  },
+  "blocks.3.attn.k.weight": {
+   "e_loss_norm": 0.009239357896149158,
+   "E_total": 9.0625,
+   "E_map": 5.96875,
+   "E_residual": 6.46875
+  },
+  "blocks.3.attn.v.weight": {
+   "e_loss_norm": 0.011475401930510998,
+   "E_total": 8.1875,
+   "E_map": 5.84375,
+   "E_residual": 5.6875
+  },
+  "blocks.3.attn.proj.weight": {
+   "e_loss_norm": 0.007359795272350311,
+   "E_total": 8.0,
+   "E_map": 5.9375,
+   "E_residual": 5.46875
+  },
+  "blocks.3.mlp.fc.weight": {
+   "e_loss_norm": 0.007705797906965017,
+   "E_total": 9.0625,
+   "E_map": 5.4375,
+   "E_residual": 7.25
+  },
+  "blocks.3.mlp.proj.weight": {
+   "e_loss_norm": 0.013262799009680748,
+   "E_total": 4.84375,
+   "E_map": 3.171875,
+   "E_residual": 3.71875
+  },
+  "blocks.4.attn.q.weight": {
+   "e_loss_norm": 0.0050069116987288,
+   "E_total": 8.4375,
+   "E_map": 6.3125,
+   "E_residual": 5.5625
+  },
+  "blocks.4.attn.k.weight": {
+   "e_loss_norm": 0.0046037836000323296,
+   "E_total": 9.5,
+   "E_map": 7.15625,
+   "E_residual": 6.15625
+  },
+  "blocks.4.attn.v.weight": {
+   "e_loss_norm": 0.010987899266183376,
+   "E_total": 7.84375,
+   "E_map": 5.96875,
+   "E_residual": 5.375
+  },
+  "blocks.4.attn.proj.weight": {
+   "e_loss_norm": 0.0074974908493459225,
+   "E_total": 7.5,
+   "E_map": 5.8125,
+   "E_residual": 5.21875
+  },
+  "blocks.4.mlp.fc.weight": {
+   "e_loss_norm": 0.006494426634162664,
+   "E_total": 8.125,
+   "E_map": 4.84375,
+   "E_residual": 6.71875
+  },
+  "blocks.4.mlp.proj.weight": {
+   "e_loss_norm": 0.009457853622734547,
+   "E_total": 4.40625,
+   "E_map": 2.921875,
+   "E_residual": 3.4375
+  },
+  "blocks.5.attn.q.weight": {
+   "e_loss_norm": 0.005427489522844553,
+   "E_total": 7.9375,
+   "E_map": 5.84375,
+   "E_residual": 5.4375
+  },
+  "blocks.5.attn.k.weight": {
+   "e_loss_norm": 0.0061646453104913235,
+   "E_total": 8.75,
+   "E_map": 6.4375,
+   "E_residual": 6.0625
+  },
+  "blocks.5.attn.v.weight": {
+   "e_loss_norm": 0.009895742870867252,
+   "E_total": 7.34375,
+   "E_map": 5.8125,
+   "E_residual": 4.96875
+  },
+  "blocks.5.attn.proj.weight": {
+   "e_loss_norm": 0.006701679900288582,
+   "E_total": 7.09375,
+   "E_map": 5.65625,
+   "E_residual": 4.9375
+  },
+  "blocks.5.mlp.fc.weight": {
+   "e_loss_norm": 0.006020351313054562,
+   "E_total": 7.625,
+   "E_map": 4.8125,
+   "E_residual": 6.3125
+  },
+  "blocks.5.mlp.proj.weight": {
+   "e_loss_norm": 0.007032922003418207,
+   "E_total": 4.0,
+   "E_map": 2.6875,
+   "E_residual": 3.09375
+  },
+  "blocks.6.attn.q.weight": {
+   "e_loss_norm": 0.005387488286942244,
+   "E_total": 7.625,
+   "E_map": 5.75,
+   "E_residual": 5.15625
+  },
+  "blocks.6.attn.k.weight": {
+   "e_loss_norm": 0.00555365951731801,
+   "E_total": 8.5,
+   "E_map": 6.71875,
+   "E_residual": 5.4375
+  },
+  "blocks.6.attn.v.weight": {
+   "e_loss_norm": 0.008737540803849697,
+   "E_total": 7.03125,
+   "E_map": 5.71875,
+   "E_residual": 4.90625
+  },
+  "blocks.6.attn.proj.weight": {
+   "e_loss_norm": 0.006109023466706276,
+   "E_total": 6.6875,
+   "E_map": 5.40625,
+   "E_residual": 4.8125
+  },
+  "blocks.6.mlp.fc.weight": {
+   "e_loss_norm": 0.005574468523263931,
+   "E_total": 7.1875,
+   "E_map": 4.46875,
+   "E_residual": 6.03125
+  },
+  "blocks.6.mlp.proj.weight": {
+   "e_loss_norm": 0.006730832625180483,
+   "E_total": 3.609375,
+   "E_map": 2.390625,
+   "E_residual": 2.921875
+  },
+  "blocks.7.attn.q.weight": {
+   "e_loss_norm": 0.003347982419654727,
+   "E_total": 7.0,
+   "E_map": 5.25,
+   "E_residual": 4.75
+  },
+  "blocks.7.attn.k.weight": {
+   "e_loss_norm": 0.0032544094137847424,
+   "E_total": 7.65625,
+   "E_map": 5.78125,
+   "E_residual": 5.125
+  },
+  "blocks.7.attn.v.weight": {
+   "e_loss_norm": 0.0075615933164954185,
+   "E_total": 6.34375,
+   "E_map": 5.3125,
+   "E_residual": 4.4375
+  },
+  "blocks.7.attn.proj.weight": {
+   "e_loss_norm": 0.0045434655621647835,
+   "E_total": 6.21875,
+   "E_map": 5.15625,
+   "E_residual": 4.375
+  },
+  "blocks.7.mlp.fc.weight": {
+   "e_loss_norm": 0.005046900361776352,
+   "E_total": 6.71875,
+   "E_map": 4.21875,
+   "E_residual": 5.71875
+  },
+  "blocks.7.mlp.proj.weight": {
+   "e_loss_norm": 0.0060518234968185425,
+   "E_total": 3.34375,
+   "E_map": 2.296875,
+   "E_residual": 2.78125
+  },
+  "blocks.8.attn.q.weight": {
+   "e_loss_norm": 0.004390350077301264,
+   "E_total": 7.40625,
+   "E_map": 5.59375,
+   "E_residual": 5.21875
+  },
+  "blocks.8.attn.k.weight": {
+   "e_loss_norm": 0.004965152591466904,
+   "E_total": 8.125,
+   "E_map": 6.15625,
+   "E_residual": 5.75
+  },
+  "blocks.8.attn.v.weight": {
+   "e_loss_norm": 0.008653469383716583,
+   "E_total": 6.53125,
+   "E_map": 5.46875,
+   "E_residual": 4.71875
+  },
+  "blocks.8.attn.proj.weight": {
+   "e_loss_norm": 0.005961905233561993,
+   "E_total": 6.09375,
+   "E_map": 5.0625,
+   "E_residual": 4.4375
+  },
+  "blocks.8.mlp.fc.weight": {
+   "e_loss_norm": 0.005785112734884024,
+   "E_total": 6.25,
+   "E_map": 3.890625,
+   "E_residual": 5.4375
+  },
+  "blocks.8.mlp.proj.weight": {
+   "e_loss_norm": 0.006309784483164549,
+   "E_total": 3.09375,
+   "E_map": 2.09375,
+   "E_residual": 2.5625
+  },
+  "blocks.9.attn.q.weight": {
+   "e_loss_norm": 0.003071836894378066,
+   "E_total": 6.625,
+   "E_map": 5.21875,
+   "E_residual": 4.4375
+  },
+  "blocks.9.attn.k.weight": {
+   "e_loss_norm": 0.003279917174950242,
+   "E_total": 7.40625,
+   "E_map": 5.8125,
+   "E_residual": 4.90625
+  },
+  "blocks.9.attn.v.weight": {
+   "e_loss_norm": 0.0059208800084888935,
+   "E_total": 5.8125,
+   "E_map": 5.15625,
+   "E_residual": 4.21875
+  },
+  "blocks.9.attn.proj.weight": {
+   "e_loss_norm": 0.003988965880125761,
+   "E_total": 5.09375,
+   "E_map": 4.40625,
+   "E_residual": 3.78125
+  },
+  "blocks.9.mlp.fc.weight": {
+   "e_loss_norm": 0.006784619297832251,
+   "E_total": 5.8125,
+   "E_map": 3.84375,
+   "E_residual": 5.0625
+  },
+  "blocks.9.mlp.proj.weight": {
+   "e_loss_norm": 0.007941017858684063,
+   "E_total": 2.734375,
+   "E_map": 1.9609375,
+   "E_residual": 2.265625
+  },
+  "blocks.10.attn.q.weight": {
+   "e_loss_norm": 0.002879997482523322,
+   "E_total": 6.40625,
+   "E_map": 5.03125,
+   "E_residual": 4.40625
+  },
+  "blocks.10.attn.k.weight": {
+   "e_loss_norm": 0.0029597629327327013,
+   "E_total": 7.21875,
+   "E_map": 5.65625,
+   "E_residual": 4.78125
+  },
+  "blocks.10.attn.v.weight": {
+   "e_loss_norm": 0.005663542076945305,
+   "E_total": 5.5625,
+   "E_map": 4.84375,
+   "E_residual": 4.0625
+  },
+  "blocks.10.attn.proj.weight": {
+   "e_loss_norm": 0.003461813786998391,
+   "E_total": 4.90625,
+   "E_map": 4.3125,
+   "E_residual": 3.578125
+  },
+  "blocks.10.mlp.fc.weight": {
+   "e_loss_norm": 0.005901958327740431,
+   "E_total": 5.3125,
+   "E_map": 3.671875,
+   "E_residual": 4.6875
+  },
+  "blocks.10.mlp.proj.weight": {
+   "e_loss_norm": 0.0068579972721636295,
+   "E_total": 2.375,
+   "E_map": 1.765625,
+   "E_residual": 1.9453125
+  },
+  "blocks.11.attn.q.weight": {
+   "e_loss_norm": 0.0018072602106258273,
+   "E_total": 6.0,
+   "E_map": 4.78125,
+   "E_residual": 3.96875
+  },
+  "blocks.11.attn.k.weight": {
+   "e_loss_norm": 0.0017070205649361014,
+   "E_total": 6.90625,
+   "E_map": 5.46875,
+   "E_residual": 4.34375
+  },
+  "blocks.11.attn.v.weight": {
+   "e_loss_norm": 0.0040552024729549885,
+   "E_total": 5.03125,
+   "E_map": 4.46875,
+   "E_residual": 3.703125
+  },
+  "blocks.11.attn.proj.weight": {
+   "e_loss_norm": 0.00450296001508832,
+   "E_total": 4.4375,
+   "E_map": 3.921875,
+   "E_residual": 3.375
+  },
+  "blocks.11.mlp.fc.weight": {
+   "e_loss_norm": 0.006218325346708298,
+   "E_total": 5.0,
+   "E_map": 3.515625,
+   "E_residual": 4.5
+  },
+  "blocks.11.mlp.proj.weight": {
+   "e_loss_norm": 0.009186477400362492,
+   "E_total": 2.25,
+   "E_map": 1.7109375,
+   "E_residual": 1.84375
+  }
+ }
+}

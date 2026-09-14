@@ -1,0 +1,23 @@
+# REQ-060 readout — is the memory->curvature change loss-cubic feedback, Muon's polar-map nonlinearity, or both?
+# Node 3ypd5k3 (1x8 H100), SHA 365c392d, venv019 torch2.10+cu128. Reused a=0.5/1/2 trajectories (regen: 3 bases + 9 continuations),
+# seeds 0,1,2, states at offsets 32 (step 2032) and 64 (step 2064). Diagnostic: 3 fixed val minibatches, mean-token gradients, base_scale=0.01.
+# e_loss(c,delta)=[g(c+d)+g(c-d)]/2-g(c) along the spectral-polar sharp direction; scale test delta*{1,0.5,0.25} (cubic ideal 0.5/1=0.25).
+# Phi=zeropower_via_newtonschulz5*sqrt(max(1,rows/cols)); E_total=[Phi(g+/-)]/2-Phi(g0); E_map=[Phi(g0+/-Hd)]/2-Phi(g0) (Hd=odd part~H[delta]);
+#   E_residual=E_total-E_map. map_frac=||E_map||/||E_total||, residual_frac=||E_residual||/||E_total|| (joint over 72 matrices). Frozen-buffer diagnostic at the gradient-polar center (c0=1), not a full evolving-buffer replay.
+#
+# === per (arm, offset), mean over seeds 0,1,2 ===
+arm	offset	eloss_scale_0.5/1	map_frac	residual_frac	eloss_norm
+a05	2032	0.314	0.788	0.660	5.004e-02
+a05	2064	0.314	0.792	0.664	5.748e-02
+a1	2032	0.342	0.770	0.683	5.191e-02
+a1	2064	0.305	0.796	0.670	5.562e-02
+a2	2032	0.313	0.772	0.686	5.452e-02
+a2	2064	0.360	0.795	0.688	5.923e-02
+#
+# === VERDICT: BOTH mechanisms contribute (polar-map somewhat larger); loss-cubic real but NOT purely cubic ===
+# 1. BOTH: map_frac ~0.77-0.80 (Muon polar-map nonlinearity) AND residual_frac ~0.66-0.69 (loss-cubic feedback) are large at every state (not orthogonal -> don't sum to 1). Neither exclusively explains the curvature change; the polar map is the larger single contributor.
+# 2. NOT pure cubic: the e_loss scale ratio (0.5/1) is ~0.30-0.36 across all states, above the cubic ideal 0.25 -> consistent HIGHER-ORDER contamination at finite scale. Per the request, the loss-cubic residual must NOT be labeled a pure third-derivative force; it contains higher-order interactions.
+# 3. Memory weakly modulates the cubic feedback: e_loss_norm and residual_frac rise slightly with longer memory (a2 > a1 >= a05; ~5-10% in e_loss_norm, resid_frac 0.66->0.69) -> real but small, within the higher-order-contamination uncertainty.
+#
+# The optional 16-update even-gradient-removal replay was NOT run: the request gates it on the signal being "resolved," and the scale-ratio contamination (~0.31 vs 0.25) + the weak/small memory modulation are explicit INCONCLUSIVE conditions ("a large Taylor residual permits an INCONCLUSIVE result"). The both-mechanisms attribution is the resolved qualitative answer; a clean pure-cubic isolation is NOT established.
+# Caveats: frozen-buffer gradient-polar-center diagnostic (c0=1 simplification, not the exact evolving mixture center); base_scale=0.01; joint over 72 matrices; do NOT claim momentum multiplies the 3rd-derivative tensor at fixed weights.
