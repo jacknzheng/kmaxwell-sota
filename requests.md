@@ -18,7 +18,7 @@ keep this queue for runnable specifications, concise status updates, and result 
 | 6 | [REQ-056](#req-056-test-k-maxwell-memory-in-standard-adam) | DONE; audited | K-Maxwell vs ordinary Adam is inconclusive (n=3); gain over the scheduled EMA does not isolate exact-age kernel shape. |
 | Next | [REQ-057](#req-057-validate-layer-wise-spectral-sharpness-and-cross-layer-coupling) | DONE | Spectral sharpness is reliable (cross-seed Spearman ~0.95, both pilot gates PASS) but ~97% of joint curvature is cross-layer coupling — isolated S_i captures only ~3%. |
 | After 057 | [REQ-058](#req-058-test-whether-layer-sharpness-predicts-the-response-to-momentum) | DONE | Sharpness predicts memory response, generalizes held-out (Spearman +0.60 dev → +0.59 seeds1,2): sharper matrices prefer shorter memory. Gate PASSED → REQ-059 unblocked. |
-| After 058 | [REQ-059](#req-059-verify-a-sharpness-guided-layer-wise-momentum-policy) | OPEN (unblocked; REQ-058 gate passed) | Fresh-seed policy trial against global, Euclidean, type/depth, shuffled and reversed controls. |
+| After 058 | [REQ-059](#req-059-verify-a-sharpness-guided-layer-wise-momentum-policy) | DONE | NO practical win: balanced sharpness-guided policy loses to global all-shorter-memory, ties Euclidean/barely beats type-depth (no value from spectral-specific assignment). Negative primary outcome. |
 | Secondary | [REQ-060](#req-060-identify-loss-cubic-feedback-separately-from-muon-normalization) | OPEN; gated | Separate loss-cubic feedback from nonlinear polar-map effects. |
 | Available capacity | [REQ-061](#req-061-tau-bench-gold-and-step_hint-with-and-without-sod-through-step-500) | OPEN | Tau-bench gold and step_hint, each with SOD on/off, through training step 500. |
 
@@ -1192,7 +1192,19 @@ fitted models, preregistered predictions, uncertainty and the runnable analysis.
 
 ## REQ-059: verify a sharpness-guided layer-wise momentum policy
 
-- status: **OPEN — conditional on REQ-058 held-out prediction gate**
+- status: **DONE** (2026-09-14) — deliverable in `logs/kmaxwell/req059_sharpness_guided_momentum/`. **VERDICT:
+  NO PRACTICAL WIN (negative primary outcome).** Fresh seeds 3,4,5,6; base@2000->2750; 9 arms/seed (36
+  continuations) with per-seed spectral S_i + Euclidean lambda_i probes; balanced 24/24/24 guided allocation
+  (sharpest-per-type -> a=0.5 per REQ-058), Holm-corrected paired stats on the held-out 10.5M-tok val set.
+  Guided (endpoint 2750): LOSES to global a=0.5-all by +0.0091 (balanced constraint worse than shortening
+  everything); TIES the Euclidean-feature allocation (-0.00012, CI incl 0) and only barely beats the
+  type/depth prior (-0.00018, below the 0.0005 margin) -> **no demonstrated value from spectral-SPECIFIC
+  assignment**; does beat shuffled (-0.00057)/reversed (-0.0017)/global a2/nomom, so the assignment direction
+  is real but tiny and captured by cheaper features. REQ-057 (measurement) and REQ-058 (held-out prediction)
+  held but do NOT convert to a useful static layer-wise momentum policy under equal memory resources. Valid
+  negative result; favored arm not retuned. Does not rule out an online controller or non-balanced allocation
+  (out of scope). Node stopped after delivery.
+- status_orig: **OPEN — conditional on REQ-058 held-out prediction gate**
 - requested: Jack / 2026-09-11 PDT
 - priority: primary project outcome after measurement and prediction pass
 - resource limit: **two nodes fleet-wide**

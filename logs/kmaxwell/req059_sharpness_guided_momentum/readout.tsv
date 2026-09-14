@@ -1,0 +1,35 @@
+# REQ-059 readout — sharpness-guided layer-wise momentum policy vs controls. VERDICT: NO PRACTICAL WIN.
+# Node w7r58o3 (1x8 H100), SHA 365c392d, venv019 torch2.10+cu128. Fresh seeds 3,4,5,6; base@2000->2750 (750 updates), 1x batch.
+# 9 arms/seed = 36 continuations + per-seed base regen + spectral S_i probe (72) + Euclidean lambda_i probe (72). ~4.4 node-hrs total (pilot+expand).
+# Frozen REQ-058 rule: sharper matrices prefer shorter memory -> guided gives the 4 sharpest per type a=0.5, 4 least a=2, mid a=1 (balanced 24/24/24).
+# Controls: global a0.5/a1/a2 (all 72 same a); euclidean (rank by Lanczos lambda_i); typedepth (rank by dev-mean S_i(type,block) prior);
+#   shuffled (guided permuted within type); reversed (swap a0.5<->a2); nomom (no-momentum Muon, the mandatory 9th since it beat globals in REQ-058's 64-update window).
+# Final val = 10485760 tokens (held out from fitting/selection). Endpoint 2750 primary; mean of last 3 (2500/2625/2750) secondary.
+#
+# === ENDPOINT (2750) per seed, per arm ===
+seed	guided	global_a05	global_a1	global_a2	euclidean	typedepth	shuffled	reversed	nomom
+3	3.33784	3.32874	3.33728	3.35082	3.33792	3.33803	3.33854	3.33953	3.34280
+4	3.33892	3.32977	3.33824	3.35156	3.33922	3.33908	3.33940	3.34044	3.34365
+5	3.33941	3.33022	3.33869	3.35249	3.33937	3.33957	3.34012	3.34105	3.34416
+6	3.33808	3.32898	3.33759	3.35110	3.33822	3.33827	3.33848	3.34000	3.34285
+#
+# === PAIRED guided - control (endpoint 2750, n=4 seeds; negative=guided better; margin=0.0005; Holm across 8) ===
+contrast	mean_diff	CI95_low	CI95_high	Holm_p	beats(>=0.0005 & CI<0)?
+guided-global_a05	+0.00914	+0.00907	+0.00920	0.000	NO (guided WORSE — all-shorter global wins)
+guided-global_a1	+0.00061	+0.00044	+0.00078	0.000	NO (guided slightly worse)
+guided-global_a2	-0.01293	-0.01324	-0.01262	0.000	BEATS
+guided-euclidean	-0.00012	-0.00035	+0.00011	0.090	NO (tie — spectral adds nothing over Euclidean)
+guided-typedepth	-0.00018	-0.00020	-0.00015	0.000	NO (<0.0005 margin — barely beats the type/depth prior)
+guided-shuffled	-0.00057	-0.00082	-0.00032	0.000	BEATS
+guided-reversed	-0.00169	-0.00196	-0.00143	0.000	BEATS
+guided-nomom	-0.00480	-0.00497	-0.00463	0.000	BEATS
+# secondary (mean of last 3) gives the same verdict: guided-global_a05 +0.0109, guided-euclidean -0.00001 (tie), guided-typedepth -0.00020, guided-shuffled -0.00051.
+#
+# === VERDICT: NO PRACTICAL WIN for the sharpness-guided policy ===
+# 1. The balanced 24/24/24 allocation LOSES to global all-shorter-memory (a=0.5-all) by ~+0.009 — forcing some matrices to long memory is worse than shortening everything (REQ-058 consistent).
+# 2. Guided is INDISTINGUISHABLE from the Euclidean-feature allocation (-0.00012, CI incl 0) and barely beats the type/depth prior (-0.00018, below margin) -> NO demonstrated value from SPECTRAL-SPECIFIC assignment.
+# 3. Guided DOES beat shuffled (-0.00057), reversed (-0.0017) and the worse globals -> the assignment DIRECTION is not random (sharpness-informed > scrambled), but the effect is tiny and cheaper features capture it.
+# Per the request's own criterion ("failure to beat shuffle/type-depth means no demonstrated value from sharpness-specific assignment"): guided beats shuffle but not type/depth/euclidean at the practical margin.
+# The measurement (REQ-057) and prediction (REQ-058) held, but they do NOT convert to a useful static layer-wise momentum policy under equal memory resources. A tie/regression is a valid result; the favored arm was not retuned.
+#
+# Caveats: within-seed arm differences are near-deterministic (shared base+data cursor) -> tiny CIs; n=4 seeds. 750-update horizon. No online controller / LR retune (out of scope).
