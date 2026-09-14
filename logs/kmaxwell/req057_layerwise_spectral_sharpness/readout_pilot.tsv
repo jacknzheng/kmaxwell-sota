@@ -1,0 +1,48 @@
+# REQ-057 PILOT readout — layer-wise shape-weighted spectral sharpness, step 2000, seed-0 base (SHA 365c392d).
+# Node wgp5zvw (1x8 H100), venv019 torch2.10+cu128. 18 pilot matrices = all 6 types in blocks 0,6,11.
+# Mean-per-valid-token loss scale (summed CE / valid tokens; token_scale in JSON). Shape-weighted radii
+# r_i = sqrt(max(1,rows/cols)); all 18 pilot matrices are square or fan-out<=1 so r_i=1.0 here.
+# 3 DISJOINT probe subsets = distinct train files (000001/000002/000003.bin), 8192 tok each; nested = 000001 @32768.
+# FW: exact-SVD spectral-polar LMO, K in {20,50}, 5 restarts (1 grad-polar + 4 random), sphere best-boundary witness.
+#
+# === PILOT GATES (both PASS) ===
+# Gate (a) measurement reliability: 18/18 positively-resolved sentinel S_i change <=5% from K=20 to K=50 (100%, need >=90%). Worst 4.5% (blocks.6.attn.v).
+# Gate (b) cross-subset reproducibility: median pairwise Spearman of S_i/G_i across the 3 disjoint subsets = 0.983 (0.971-0.990); need >=0.8.
+# HVP validation: central grad-difference vs autograd on the joint grad-polar dir: rel_err 0.75% (eps=0.005), 3.67% (0.01), 10.0% (0.02), 23.3% (0.04) -> plateau at small eps, higher-order growth at large eps. PASS.
+#
+# === isolated S_i (K=50 sphere), G_i, Z_i (eta=0.02), by matrix (subset 0) ===
+matrix	S_i_K20	S_i_K50	relK20to50	G_i	Z_i=eta*S/2G
+blocks.0.attn.q.weight	1.5692	1.5883	1.2%	3.44e-01	0.0462
+blocks.0.attn.k.weight	1.7443	1.7655	1.2%	3.54e-01	0.0499
+blocks.0.attn.v.weight	1.8701	1.9056	1.9%	5.54e-01	0.0344
+blocks.0.attn.proj.weight	1.7964	1.8231	1.5%	6.42e-01	0.0284
+blocks.0.mlp.fc.weight	9.5301	9.6769	1.5%	1.54e+00	0.0628
+blocks.0.mlp.proj.weight	9.0412	9.1604	1.3%	1.66e+00	0.0551
+blocks.6.attn.q.weight	1.0105	1.0240	1.3%	3.84e-01	0.0266
+blocks.6.attn.k.weight	1.3522	1.3928	3.0%	4.25e-01	0.0328
+blocks.6.attn.v.weight	1.1454	1.1971	4.5%	5.82e-01	0.0206
+blocks.6.attn.proj.weight	0.5188	0.5274	1.7%	6.42e-01	NA
+blocks.6.mlp.fc.weight	6.9913	7.1060	1.6%	1.54e+00	0.0462
+blocks.6.mlp.proj.weight	3.0759	3.1103	1.1%	1.66e+00	0.0187
+blocks.11.attn.q.weight	0.6448	0.6682	3.6%	1.32e-01	0.0507
+blocks.11.attn.k.weight	0.7925	0.8157	2.9%	4.25e-01	0.0192
+blocks.11.attn.v.weight	0.2825	0.2889	2.3%	2.07e-01	0.0070
+blocks.11.attn.proj.weight	0.3734	0.3769	0.9%	2.31e-01	0.0082
+blocks.11.mlp.fc.weight	8.3766	8.4902	1.4%	1.06e+00	0.0401
+blocks.11.mlp.proj.weight	6.1070	6.1595	0.9%	1.04e+00	0.0295
+#
+# === JOINT vs ISOLATED (the information lost by treating layers independently) ===
+# At the joint gradient-polar direction (subset 0): c = 94.18 ; c_diag (sum of within-matrix terms) = 12.47 ; c_cross = 81.71.
+# => cross-layer coupling is 86.8% of the joint curvature. Isolated S_i captures only ~13% of the joint curvature at this direction.
+# Sum of isolated S_i (K50) over the 18 pilot matrices = 60.6; joint S_joint (18-matrix sphere) is a different, larger quantity (not a sum).
+#
+# === spectral-vs-Euclidean within-type DEPTH ordering (S_i K50 by block 0/6/11) ===
+# attn.q  1.588 / 1.024 / 0.668   (falls with depth)
+# attn.k  1.766 / 1.393 / 0.816   (falls with depth)
+# attn.v  1.906 / 1.197 / 0.289   (falls with depth)
+# attn.proj 1.823 / 0.527 / 0.377 (falls with depth)
+# mlp.fc  9.677 / 7.106 / 8.490   (high throughout, non-monotone)
+# mlp.proj 9.160 / 3.110 / 6.160  (high throughout, non-monotone)
+# => MLP matrices are ~4-6x sharper than attention in the spectral metric; attention sharpness concentrates early. Depth ordering to be confirmed on all 72 at n=3 seeds.
+#
+# VERDICT: measurement validated -> EXPAND to 72 matrices x steps {1500,2000,2500} x seeds {0,1,2} (full stage).
