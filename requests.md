@@ -17,8 +17,8 @@ keep this queue for runnable specifications, concise status updates, and result 
 | With 054 | [REQ-055](#req-055-downhill-alignment-and-loss-curvature-of-the-actual-post-muon-update) | DONE; audited | One-seed geometry delivered; equivalence and per-step-mechanism claims remain unresolved. See REQ-057/058. |
 | 6 | [REQ-056](#req-056-test-k-maxwell-memory-in-standard-adam) | DONE; audited | K-Maxwell vs ordinary Adam is inconclusive (n=3); gain over the scheduled EMA does not isolate exact-age kernel shape. |
 | Next | [REQ-057](#req-057-validate-layer-wise-spectral-sharpness-and-cross-layer-coupling) | DONE | Spectral sharpness is reliable (cross-seed Spearman ~0.95, both pilot gates PASS) but ~97% of joint curvature is cross-layer coupling — isolated S_i captures only ~3%. |
-| After 057 | [REQ-058](#req-058-test-whether-layer-sharpness-predicts-the-response-to-momentum) | OPEN; gated | Selectively vary layer memory at fixed LR; test held-out prediction and exact-age controls. |
-| After 058 | [REQ-059](#req-059-verify-a-sharpness-guided-layer-wise-momentum-policy) | OPEN; gated | Fresh-seed policy trial against global, Euclidean, type/depth, shuffled and reversed controls. |
+| After 057 | [REQ-058](#req-058-test-whether-layer-sharpness-predicts-the-response-to-momentum) | DONE | Sharpness predicts memory response, generalizes held-out (Spearman +0.60 dev → +0.59 seeds1,2): sharper matrices prefer shorter memory. Gate PASSED → REQ-059 unblocked. |
+| After 058 | [REQ-059](#req-059-verify-a-sharpness-guided-layer-wise-momentum-policy) | OPEN (unblocked; REQ-058 gate passed) | Fresh-seed policy trial against global, Euclidean, type/depth, shuffled and reversed controls. |
 | Secondary | [REQ-060](#req-060-identify-loss-cubic-feedback-separately-from-muon-normalization) | OPEN; gated | Separate loss-cubic feedback from nonlinear polar-map effects. |
 | Available capacity | [REQ-061](#req-061-tau-bench-gold-and-step_hint-with-and-without-sod-through-step-500) | OPEN | Tau-bench gold and step_hint, each with SOD on/off, through training step 500. |
 
@@ -1081,7 +1081,19 @@ convergence/precision checks, update-parity checks, state manifests, costs and a
 
 ## REQ-058: test whether layer sharpness predicts the response to momentum
 
-- status: **OPEN — gated on REQ-057 measurement validation**
+- status: **DONE** (2026-09-14) — deliverable in `logs/kmaxwell/req058_layerwise_momentum_response/`.
+  Memory intervention β_k(a)=β_k^(1/a) (a∈{0.5,1,2}) on the REQ-054 K-Maxwell kernel via the cloned-buffer
+  switch; 4 base states × 41 continuations (164), 64 updates, response = paired selection-loss diff @fork+64
+  vs a=1 control. **RESULT: layer spectral sharpness (REQ-057 S_i) predicts the memory response and
+  GENERALIZES out-of-sample** — Spearman(S_i, longer-memory penalty) = +0.604 dev(seed0) → **+0.591 held-out
+  (seeds 1,2)**, same sign+magnitude; sharper matrices are hurt more by longer memory (prefer shorter);
+  high-sharpness tertile penalty ~2.5× the low. **Held-out prediction gate PASSED → REQ-059 unblocked**, with
+  direction: shorten memory on high-sharpness layers. Global controls (all 4 bases, consistent): shorter-all
+  −0.03 / longer-all +0.05 / no-momentum −0.03 (best) / exact-age-matched-EMA +0.006 ≈ mixture (age dominates,
+  shape adds little — REQ-054/057 consistent). Built + validated the missing REQ-054 exact-realized-age control
+  (matches mixture q_age to 1.42e-14). Caveats: 64-update horizon; per-matrix effects small in abs loss (rank
+  corr is the robust signal); val_tokens 524288 (harness min; 131072 infeasible at mbs64/world8). Node stopped
+  after delivery.
 - requested: Jack / 2026-09-11 PDT
 - priority: after REQ-057; reuse its live bases
 - resource limit: **two nodes fleet-wide**

@@ -1,0 +1,32 @@
+# REQ-058 readout — does layer spectral sharpness predict the momentum (memory) response?
+# Node qj9epjw (1x8 H100), SHA 365c392d, venv019 torch2.10+cu128. 4 base states x 41 continuations = 164, ~2.4 node-hrs.
+# Intervention: perturb a matrix's K-Maxwell stream decays beta_k(a)=beta_k^(1/a), a in {0.5 (shorter memory),1,2 (longer)};
+#   mixture weights unchanged. Cloned-buffer switch at the fork; all arms inherit identical streams. 64 updates.
+# Response = paired selection-loss diff @ (fork+64) vs the a1all control, on a disjoint 524288-tok val set
+#   (spec asked 131072 but the harness validation requires >= world*mbs*seq = 8*64*1024 = 524288; documented).
+# Sharpness S_i = REQ-057 isolated shape-weighted spectral sharpness at the SAME (seed, fork-step).
+# Exact-age matched-EMA control = single EMA whose realized age matches the mixture's (the missing REQ-054 control).
+#
+# === GLOBAL CONTROLS: selection-loss@fork+64 minus a1all (negative = better) ===
+base	a1all	a05all(shorter)	a2all(longer)	nomom	matched_EMA
+s0_f2000	3.45981	-0.02909	+0.05171	-0.03003	+0.00613
+s0_f1500	3.55324	-0.03645	+0.05984	-0.03823	+0.00559
+s1_f2000	3.46077	-0.02912	+0.05166	-0.02997	+0.00625
+s2_f2000	3.45905	-0.02890	+0.05433	-0.03062	+0.00626
+# -> Over 64 updates at these states: shorter memory HELPS (a05all ~ -0.03), longer memory HURTS (a2all ~ +0.05),
+#    no-momentum is best (~ -0.03). The K-Maxwell mixture (a1all) is WORSE than shorter memory / no momentum here.
+#    Exact-age matched single EMA ~ mixture (+0.006), i.e. realized age dominates; kernel shape adds little (REQ-054/057 consistent).
+#
+# === CHARTER: per-matrix sharpness predicts the memory response (Spearman, 18 sentinel matrices x forks) ===
+set	n	Spearman(S_i, longer-mem penalty a2)	Spearman(S_i, shorter-mem resp a05)	low-sharp a2-penalty	high-sharp a2-penalty
+DEV_seed0	36	+0.604	-0.344	+0.00044	+0.00106
+HELDOUT_seeds1,2	36	+0.591	-0.524	+0.00057	+0.00144
+# -> POSITIVE and GENERALIZES: sharper matrices are hurt MORE by longer memory (rank corr +0.60 dev -> +0.59 held-out,
+#    same sign+magnitude). High-sharpness matrices' longer-memory penalty is ~2-2.5x the low-sharpness ones'.
+#    Shorter-memory benefit also rises with sharpness (a05 corr negative). HELD-OUT PREDICTION GATE PASSED -> REQ-059 unblocked.
+#
+# === caveats ===
+# - 64-update horizon (short response window per the request); "shorter memory better" is over this window, not proven long-run.
+# - Per-matrix effects small in absolute loss (~0.0005-0.0015) but rank-consistent; the strong signal is the RANK correlation (0.6), held-out-replicated.
+# - The direction is that a sharpness-GUIDED rule should SHORTEN memory on sharp layers; REQ-059 tests such a policy against controls.
+# - val_tokens deviation (524288 vs requested 131072) documented above; paired within-base comparison unaffected.
