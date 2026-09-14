@@ -1,6 +1,6 @@
 # Experiment requests
 
-Active queue for the `jerry-agent` branch. Next request number: **REQ-062**.
+Active queue for the `jerry-agent` branch. Next request number: **REQ-063**.
 
 The findings are consolidated in [FINDINGS.md](FINDINGS.md). Update that file when evidence changes;
 keep this queue for runnable specifications, concise status updates, and result links.
@@ -1374,6 +1374,111 @@ and result links, and add the final findings to `FINDINGS.md`.
 ## Template
 
 ```md
+## REQ-062: second seed of six momentum-kernel runs that each test one property
+
+- status: OPEN
+- requested: Codex for Jeffrey Cheng / 2026-09-14 UTC
+- priority: independent of REQ-057 to REQ-061; use available capacity without displacing them
+- resource limit: **one node; 6 node-hours maximum**
+
+Self-contained. This uses none of the K-Maxwell code, states, or vocabulary from REQ-054/057/058.
+It is a separate codebase with its own harness, its own kernels, and its own data path.
+
+Every claim in our momentum work rests on one run per configuration against a run-to-run spread
+measured on different hardware. This request supplies a second seed so each claim has two runs and
+a spread measured on yours.
+
+### Source and setup
+
+```bash
+git clone https://github.com/jeffreycider/muoff
+cd muoff && git checkout 3634020          # branch jcheng/momentum-kernel-schedules
+bash boxlogs/jstudy/pod_bootstrap.sh      # MANDATORY, see below
+python3 data/cached_fineweb10B.py         # 103 shards -> data/fineweb10B/
+```
+
+**The bootstrap script is mandatory and blocking.** torch 2.7.0 deadlocks inside the
+ProcessGroupNCCL watchdog: one rank stops posting collectives and the rest wait until a timer kills
+the job. That bug cost us about a third of our attempts this week. The script picks a torch wheel
+matching your driver, builds a virtual environment, refuses to continue if it resolves to 2.7, and
+runs a 30-step eight-rank smoke test with every NCCL workaround flag unset. **If the smoke test
+fails, stop and report. Do not tune NCCL environment variables** — we spent a week doing that and
+none of it touched the cause.
+
+Data: `data/cached_fineweb10B.py` fetches the 103 shards the configs expect at
+`data/fineweb10B/fineweb_{train,val}_*.bin`.
+
+### What to run
+
+Seven runs, all at **seed 1**. The seed is the top-level `seed:` key in each yaml; it is `0` in the
+committed files and is the only field to change. Change nothing else.
+
+**Run this one first — the other six fork from its step-1500 dump and cannot start until it has
+written that dump.**
+
+1. `efconfigs/lr_sweep/e2_prod_dump1500.yaml` — 3250 steps; writes the fork state `s4fork_1500_prod`
+   at step 1500 and supplies the seed-1 reference loss.
+
+Then these six, in any order among themselves:
+
+2. `efconfigs/lr_sweep/decouple_L90_k15.yaml`
+3. `efconfigs/lr_sweep/lowrec_L24_k15.yaml`
+4. `efconfigs/lr_sweep/notch_p000.yaml`
+5. `efconfigs/lr_sweep/notch_p003.yaml`
+6. `efconfigs/lr_sweep/notch_p006.yaml`
+7. `efconfigs/lr_sweep/overshoot_k6.yaml`
+
+Runner:
+
+```bash
+bash boxlogs/jstudy/run_batch_v4.sh e2_prod_dump1500
+bash boxlogs/jstudy/run_batch_v4.sh decouple_L90_k15 lowrec_L24_k15 notch_p000 \
+                                    notch_p003 notch_p006 overshoot_k6
+```
+
+Each run is 3250 steps, about 20 minutes at 0.35 s/step on eight A100s.
+
+One inconsistency to know about: `run_batch_v4.sh` still exports `NCCL_P2P_LEVEL=NVL` by default,
+and its header comments still describe that as a fix. It is not one. It was our mistaken diagnosis
+of the torch deadlock and the comments are stale. With the bootstrap venv the flag does nothing;
+leave it or unset it, and tell us if unsetting it changes anything.
+
+### Success criteria
+
+- The smoke test passes, and no run needs an NCCL workaround flag beyond the stale default noted above.
+- Run 1 completes 3250 steps. Its final validation loss within 0.003 of 3.2726 is expected; a larger
+  difference is a useful result, so report it rather than retrying.
+- Runs 2 to 7 each complete 3250 steps and log validation loss at every 250-step boundary.
+- A run that stops early is reported as failed. Do not score a partial log.
+
+### Required artifacts
+
+```text
+logs/muoff/req062_second_seed/
+  README.md            hardware, torch version from the bootstrap, runtimes, attempts, deviations
+  results.csv          config, seed, final_val_loss, status, duration_sec
+  trajectories.tsv     config, step, val_loss at every 250-step boundary
+  run logs             the full stdout of every run, including its `dacf step:` lines
+  smoke.log            bootstrap smoke-test output
+```
+
+**Do not return the fork dumps.** They are about 178 GB each and we do not need them.
+
+The number we want most is your own spread: if you can afford one repeat of run 1, its two values
+give us a floor measured on your hardware, which is what every claim below is quoted against.
+
+### What each run decides
+
+Runs 2 and 3 move one property each of the kernel the schedule ends on — memory length, and the
+weight on the newest gradient — with the others matched by construction, to find which one sets
+final loss. Runs 4 to 6 vary the kernel's response at period two across 0, 0.03 and 0.06 with
+everything else matched, to settle two archived experiments of ours that disagree by sixty times the
+spread. Run 7 pushes the stability threshold below the range we have tested.
+
+### Not included
+
+No secrets. No new code beyond what is in the commit. No dependency on any K-Maxwell state or result.
+
 ## REQ-NNN: short title
 
 - status: OPEN
