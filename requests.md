@@ -19,7 +19,7 @@ keep this queue for runnable specifications, concise status updates, and result 
 | Next | [REQ-057](#req-057-validate-layer-wise-spectral-sharpness-and-cross-layer-coupling) | DONE | Spectral sharpness is reliable (cross-seed Spearman ~0.95, both pilot gates PASS) but ~97% of joint curvature is cross-layer coupling — isolated S_i captures only ~3%. |
 | After 057 | [REQ-058](#req-058-test-whether-layer-sharpness-predicts-the-response-to-momentum) | DONE | Sharpness predicts memory response, generalizes held-out (Spearman +0.60 dev → +0.59 seeds1,2): sharper matrices prefer shorter memory. Gate PASSED → REQ-059 unblocked. |
 | After 058 | [REQ-059](#req-059-verify-a-sharpness-guided-layer-wise-momentum-policy) | DONE | NO practical win: balanced sharpness-guided policy loses to global all-shorter-memory, ties Euclidean/barely beats type-depth (no value from spectral-specific assignment). Negative primary outcome. |
-| Secondary | [REQ-060](#req-060-identify-loss-cubic-feedback-separately-from-muon-normalization) | OPEN; gated | Separate loss-cubic feedback from nonlinear polar-map effects. |
+| Secondary | [REQ-060](#req-060-identify-loss-cubic-feedback-separately-from-muon-normalization) | DONE | Both mechanisms: Muon polar-map nonlinearity (map_frac~0.79) AND loss-cubic feedback (resid_frac~0.68); loss-cubic real but not purely cubic (scale ratio ~0.31 vs 0.25); memory weakly modulates it. | Separate loss-cubic feedback from nonlinear polar-map effects. |
 | Available capacity | [REQ-061](#req-061-tau-bench-gold-and-step_hint-with-and-without-sod-through-step-500) | OPEN | Tau-bench gold and step_hint, each with SOD on/off, through training step 500. |
 
 These are queue states; no GPU execution handle has been supplied. Do not interrupt running work.
@@ -1272,7 +1272,17 @@ state manifests, paired uncertainty calculations, costs, plots and a reproducibl
 
 ## REQ-060: identify loss-cubic feedback separately from Muon normalization
 
-- status: **OPEN — secondary, gated on REQ-057 and usable REQ-058 trajectories**
+- status: **DONE** (2026-09-14) — deliverable in `logs/kmaxwell/req060_cubic_vs_polar_feedback/`. **VERDICT:
+  BOTH mechanisms contribute.** Reused a=0.5/1/2 trajectories (regen, seeds 0,1,2, offsets 32/64); e_loss
+  even-gradient-difference + E_map/E_residual separation on the real polar map (CPU-validated core, 4/4). At
+  every state Muon's polar-map nonlinearity (map_frac ~0.77-0.80) AND the loss-cubic feedback (residual_frac
+  ~0.66-0.69) are both large -> neither exclusively explains the memory->curvature change; the polar map is
+  the larger single contributor. The loss-cubic part is REAL but NOT purely cubic (e_loss scale ratio 0.5/1
+  ~0.30-0.36 vs the cubic ideal 0.25 -> higher-order contamination; not labeled a pure third-derivative force
+  per the request). Memory length weakly modulates the cubic feedback (a2 >~ a1 >~ a05, ~5-10%). Optional
+  16-update replay NOT run: signal not cleanly resolved (scale-ratio contamination + weak modulation are
+  explicit INCONCLUSIVE conditions). Frozen-buffer gradient-polar-center diagnostic (c0=1). Node stopped.
+- status_orig: **OPEN — secondary, gated on REQ-057 and usable REQ-058 trajectories**
 - requested: Jack / 2026-09-11 PDT
 - priority: mechanism follow-up; does not block a valid REQ-059 policy test
 - resource limit: **two nodes fleet-wide; 8 node-hours maximum**
