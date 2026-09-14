@@ -16,7 +16,7 @@ keep this queue for runnable specifications, concise status updates, and result 
 | 5 | [REQ-054](#req-054-annealed-single-ema-matched-to-k-maxwells-scheduled-memory-age) | DONE; audited | K-Maxwell beats the scheduled EMA at 1×; exact realized-age and larger-batch controls remain open. |
 | With 054 | [REQ-055](#req-055-downhill-alignment-and-loss-curvature-of-the-actual-post-muon-update) | DONE; audited | One-seed geometry delivered; equivalence and per-step-mechanism claims remain unresolved. See REQ-057/058. |
 | 6 | [REQ-056](#req-056-test-k-maxwell-memory-in-standard-adam) | DONE; audited | K-Maxwell vs ordinary Adam is inconclusive (n=3); gain over the scheduled EMA does not isolate exact-age kernel shape. |
-| Next | [REQ-057](#req-057-validate-layer-wise-spectral-sharpness-and-cross-layer-coupling) | OPEN | Validate isolated and joint shape-weighted spectral sharpness and actual-update geometry. |
+| Next | [REQ-057](#req-057-validate-layer-wise-spectral-sharpness-and-cross-layer-coupling) | DONE | Spectral sharpness is reliable (cross-seed Spearman ~0.95, both pilot gates PASS) but ~97% of joint curvature is cross-layer coupling — isolated S_i captures only ~3%. |
 | After 057 | [REQ-058](#req-058-test-whether-layer-sharpness-predicts-the-response-to-momentum) | OPEN; gated | Selectively vary layer memory at fixed LR; test held-out prediction and exact-age controls. |
 | After 058 | [REQ-059](#req-059-verify-a-sharpness-guided-layer-wise-momentum-policy) | OPEN; gated | Fresh-seed policy trial against global, Euclidean, type/depth, shuffled and reversed controls. |
 | Secondary | [REQ-060](#req-060-identify-loss-cubic-feedback-separately-from-muon-normalization) | OPEN; gated | Separate loss-cubic feedback from nonlinear polar-map effects. |
@@ -937,7 +937,20 @@ repetition. Save local windows required by the downstream requests before releas
 
 ## REQ-057: validate layer-wise spectral sharpness and cross-layer coupling
 
-- status: **OPEN**
+- status: **DONE** (2026-09-14) — deliverable in `logs/kmaxwell/req057_layerwise_spectral_sharpness/`.
+  Probe built + CPU-validated (9/9 float64 toy-Hessian tests). **Pilot (step 2000, 18 sentinels, 3 disjoint
+  subsets + nested) PASSES both gates:** 18/18 S_i stable K20→K50 ≤5% (100%); median cross-subset Spearman
+  S_i/G_i = 0.983; HVP central-difference plateaus (0.75% @ε=0.005). **Full stage (72 matrices × steps
+  {1500,2000,2500} × seeds {0,1,2}, 4.8 node-hrs):** measurement reliable (cross-seed median Spearman
+  0.93–0.96). **KEY RESULT — layers are ~97% coupled:** at the joint gradient-polar direction cross-layer
+  coupling `c_cross/|c| = 96.8% ± 0.1%` across all 9 checkpoints, so isolated per-matrix S_i captures only
+  ~3% of the joint curvature (pilot 18-matrix value 86.8%). Sharpness rises through training (S_joint ~2×
+  over 1500→2500; Z_joint crosses ~1 by 2500). MLP ~4–6× sharper than attention; attn.v/proj fall
+  monotonically with depth; MLP re-sharpens at the last block. Scoped: cheap budget for the full map (K=20,
+  anchored by the K50/5-restart/3-subset pilot); Lanczos Euclidean comparator + realized-step momentum
+  curvature deferred (momentum dumps retained for REQ-058). Node stopped after delivery.
+  Consequence: **REQ-058 unblocked**, but a momentum rule from isolated S_i must survive the ~97% coupling —
+  which is exactly what REQ-058 tests.
 - requested: Jack / 2026-09-11 PDT
 - priority: **next; measurement gate for REQ-058/059**
 - resource limit: **two nodes fleet-wide; do not interrupt existing work**

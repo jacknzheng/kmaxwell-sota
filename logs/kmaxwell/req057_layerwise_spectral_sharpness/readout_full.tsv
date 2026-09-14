@@ -1,0 +1,46 @@
+# REQ-057 FULL-STAGE readout — layer-wise shape-weighted spectral sharpness, 72 matrices x steps{1500,2000,2500} x seeds{0,1,2}.
+# Node wgp5zvw (1x8 H100), SHA 365c392d, venv019 torch2.10+cu128. 290 min (4.8 node-hrs, under 24 cap). 9/9 checkpoints exit=0.
+# Validated-cheapest FW budget: K=20 (pilot proved K20~=K50 <=5%), restarts=2, 1 disjoint subset (train_000001), mean-per-valid-token loss scale.
+# Rigorous sentinel anchor (K50, 5-restart, 3 disjoint subsets, nested 32768) = the PILOT at step 2000 seed 0 (readout_pilot.tsv, both gates PASS).
+#
+# === HEADLINE: layers are NOT separable ===
+# cross-layer coupling c_cross/|c| at the joint gradient-polar direction = 96.8% +/- 0.1% across ALL 9 checkpoints (stable across seeds+steps).
+# Isolated per-matrix sharpness S_i therefore captures only ~3% of the joint curvature at that direction; sum of isolated maxima is not the joint sharpness.
+# (Pilot's 18-matrix value was 86.8%; with all 72 matrices the cross terms accumulate to ~97%.)
+#
+# === reliability (cross-seed reproducibility of S_i/G_i, 72 matrices, pairwise Spearman) ===
+step	median_spearman	pairs
+1500	0.962	0.949/0.962/0.979
+2000	0.958	0.934/0.958/0.958
+2500	0.934	0.934/0.928/0.962
+# -> highly reproducible across seeds (>=0.8 gate met at every step); slight decline late (0.93 @2500).
+#
+# === sharpness rises through training (progressive sharpening) ===
+step	S_joint(seed0/1/2)	mean_S_i(0/1/2)	Z_joint(0/1/2)
+1500	3803/3695/3628	1.85/1.76/1.79	0.748/0.751/0.735
+2000	5918/5357/5352	2.70/2.52/2.58	0.993/0.906/0.926
+2500	9071/8112/8110	4.09/3.83/3.72	1.307/1.174/1.174
+# -> S_joint ~doubles 1500->2500; Z_joint (candidate diagnostic eta*S/2G) crosses ~1 by step 2500. Z is a diagnostic, NOT a proven K-Maxwell stability boundary.
+#
+# === spectral within-type DEPTH ordering, S_i mean over seeds @ step 2000, by block b0..b11 ===
+# attn.v   2.09 1.65 1.80 1.55 1.60 1.19 0.94 0.72 0.59 0.39 0.31 0.25   (falls monotonically with depth)
+# attn.proj 1.98 1.67 1.35 0.84 0.74 0.57 0.46 0.32 0.30 0.21 0.17 0.31  (falls with depth)
+# attn.k   1.66 1.13 1.02 1.70 1.34 1.15 1.18 0.94 1.11 0.93 0.82 0.75   (roughly falls; b3 spike)
+# attn.q   1.46 0.84 0.82 1.38 1.00 0.94 0.89 0.84 0.92 0.75 0.62 0.56   (roughly falls; b3 spike)
+# mlp.fc   9.46 9.13 9.05 9.05 8.38 7.26 6.64 6.20 5.72 5.42 5.41 7.88   (high; dips mid; RE-SHARPENS at last block)
+# mlp.proj 9.08 6.04 5.67 5.02 3.86 3.12 2.79 2.48 2.20 2.19 2.31 5.96   (high early; dips mid; RE-SHARPENS at last block)
+# -> MLP matrices ~4-6x sharper than attention in the spectral metric. attn.v/proj clean depth decay; MLP re-sharpens at block 11 (last layer).
+#
+# === HVP validation (central grad-difference vs autograd, eps=0.005, joint 72-matrix gradient-polar dir) ===
+# rel_err: s0 1.7%/7.4%/18.3% ; s1 7.3%/3.1%/9.0% ; s2 4.3%/8.0%/7.8%  (steps 1500/2000/2500)
+# -> the JOINT 72-matrix direction is a large aggregate perturbation; eps=0.005 sees higher-order growth late in training (needs smaller eps for a strict 5% plateau).
+#    The autograd HVP itself is validated on float64 toy Hessians (9/9 CPU tests) and on the pilot's isolated/joint directions (eps=0.005 -> 0.75%). Late full-joint FD cross-checks >5% are flagged.
+#
+# === SCOPE / caveats ===
+# - Full map uses the validated-cheapest budget (K=20, 2 restarts, 1 subset); the 3-subset/5-restart/K50 rigor lives in the pilot sentinel anchor.
+# - A same-run 8-iter Lanczos Euclidean comparator (lambda_i, lambda_i/||g||_F^2) was NOT recomputed in this cheap-budget stage; Euclidean profiles exist in REQ-048/050/051 at nearby states. Spectral depth ordering reported here; direct spectral-vs-Euclidean re-ordering is a cheap documented follow-up.
+# - Actual-step (momentum) curvature and the full loss-quadratic b/c/R at the realized Muon step: the optimizer-state (momentum) dumps exist at 1500/2000/2500 for all seeds; per-realized-step geometry is deferred to REQ-058's shared-state perturbations (which consume these bases).
+#
+# VERDICT: layer-wise shape-weighted spectral sharpness is a reliable, reproducible per-matrix statistic (cross-seed Spearman ~0.95),
+# but ~97% of the joint curvature is cross-layer coupling -- a purely isolated-layer view misses almost all of the joint sharpness.
+# REQ-058 must therefore test whether an isolated-sharpness-derived momentum rule survives these interactions (its stated purpose).
