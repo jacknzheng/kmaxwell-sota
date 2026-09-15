@@ -1,0 +1,39 @@
+### base
+### nomom_buggy
+resumed training state from step 2000 in req063_state_s0_f2000, skipped 2000 batches
+step:2064/3250 val_loss:3.43117 train_time:12.783s step_avg:153.68ms
+### nomom_fixed
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+req063 restore: reapplied declared hyperparams to Muon: mu=0.0
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+resumed training state from step 2000 in req063_state_s0_f2000, skipped 2000 batches
+step:2064/3250 val_loss:3.39216 train_time:19.820s step_avg:154.07ms
+### ordmuon095_fixed
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+req063 restore: reapplied declared hyperparams to Muon: mu=0.95
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+resumed training state from step 2000 in req063_state_s0_f2000, skipped 2000 batches
+step:2064/3250 val_loss:3.43106 train_time:13.129s step_avg:153.87ms
+### a1all_fixed
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+req063 restore: reapplied declared hyperparams to AnnealedWeightsMuon: mu=0.95
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+resumed training state from step 2000 in req063_state_s0_f2000, skipped 2000 batches
+step:2064/3250 val_loss:3.46263 train_time:27.065s step_avg:162.33ms
+### a1all_rep
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+req063 restore: reapplied declared hyperparams to AnnealedWeightsMuon: mu=0.95
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+resumed training state from step 2000 in req063_state_s0_f2000, skipped 2000 batches
+step:2064/3250 val_loss:3.46257 train_time:14.588s step_avg:164.64ms
+### matched_fixed
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+req063 restore: reapplied declared hyperparams to ExactAgeMatchedMuon: mu=0.95
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+resumed training state from step 2000 in req063_state_s0_f2000, skipped 2000 batches
+step:2064/3250 val_loss:3.46835 train_time:21.802s step_avg:162.28ms
