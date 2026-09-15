@@ -22,7 +22,7 @@ keep this queue for runnable specifications, concise status updates, and result 
 | Secondary | [REQ-060](#req-060-identify-loss-cubic-feedback-separately-from-muon-normalization) | DELIVERED; mechanism unresolved | Simplified gradient-centered nonlinearities measured; actual-buffer causal attribution and removal replay not established. |
 | Available capacity | [REQ-061](#req-061-tau-bench-gold-and-step_hint-with-and-without-sod-through-step-500) | OPEN | Tau-bench gold and step_hint, each with SOD on/off, through training step 500. |
 | Available capacity | [REQ-062](#req-062-second-seed-of-six-momentum-kernel-runs-that-each-test-one-property) | OPEN | Independent muoff second-seed study; preserve its existing priority and limits. |
-| Next | [REQ-063](#req-063-verify-restored-optimizer-controls-and-repair-the-returned-evidence) | OPEN | Recover evidence, repair restore/endpoint/statistical checks, calibrate verified global controls. |
+| Next | [REQ-063](#req-063-verify-restored-optimizer-controls-and-repair-the-returned-evidence) | Stage A + Stage B CPU DONE | Evidence repaired (corrected REQ-059 stats keep the negative; REQ-058 fork-1500 relabeled 60-update); nomom mu-overwrite reproduced + fixed; exact-age EMA / name-resolution / a=1 verified. B6 probe-replay + verified control pilot = GPU pending. |
 | After 063 | [REQ-064](#req-064-predict-local-memory-improvements-beyond-a-strong-global-setting) | OPEN; gated | Normalized sharpness and actual-update prediction near the best global memory; prospective unused seeds. |
 | After 064 | [REQ-065](#req-065-test-an-unconstrained-layer-wise-policy-against-the-strongest-globals) | OPEN; gated | Unconstrained frozen policy, fresh seeds, full 3250-step endpoint and strong global/cheap controls. |
 
@@ -1534,7 +1534,16 @@ No secrets. No new code beyond what is in the commit. No dependency on any K-Max
 
 ## REQ-063: verify restored optimizer controls and repair the returned evidence
 
-- status: **OPEN — run first; CPU audit before GPU work**
+- status: **Stage A DONE + Stage B CPU (B1–B5) DONE 2026-09-15; B6 GPU pilot pending** →
+  `logs/kmaxwell/req063_verified_momentum_controls/`. Stage A: corrected REQ-059 inference (paired t,
+  df=3, Holm cumulative-max) keeps the negative outcome (guided loses to global_a05 +0.00914); REQ-058
+  fork-1500 relabeled 60-update (53/53) and excluded from the 64-update analysis; retrospective features
+  (raw S_i / type-depth positive on held-out seeds, S_i/G_i weak; Euclidean + actual-direction deferred
+  to REQ-064); recovery manifest (committed vs UNVERIFIED node-local). Stage B (real restore hooks +
+  optimizer at 365c392d): **nomom mu-overwrite reproduced** (`load_state_dict` sets nomom mu 0→0.95) and
+  **fixed** (reapply declared treatment after load; `impl/apply_req063_restorefix.py`); exact-age EMA,
+  72/72 & 1/72 name resolution, and a=1==mixture all verified. B6 (probe replay + verified control pilot
+  incl. named ordinary-Muon mu=0.95) provisioning next under the two-node ceiling.
 - requested: Jack / 2026-09-15 PDT
 - priority: next layer-wise momentum work; preserve REQ-061/062 and existing live jobs
 - resource limit: **two nodes fleet-wide; GPU pilot at most 2 node-hours, 10 node-hours total**
