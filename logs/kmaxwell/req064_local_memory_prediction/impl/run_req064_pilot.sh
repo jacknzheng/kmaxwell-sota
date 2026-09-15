@@ -25,9 +25,13 @@ $V/python make_req064_configs.py --out $CFG --seed 0 --pilot 2>&1 | tail -2
 
 tr(){ $V/torchrun --standalone --nproc_per_node=8 "$@"; }
 
-log "=== BASE seed 0: run to 2000, dump req064_state_s0 ==="
-tr $RP/run.py $CFG/base_s0.yaml > /root/req064_base_s0.log 2>&1 || true
-[ -d req064_state_s0 ] && log "BASE_DUMP_OK ($(ls req064_state_s0 | wc -l) files)" || { log "BASE_DUMP_MISSING"; tail -20 /root/req064_base_s0.log; exit 1; }
+if [ -d req064_state_s0 ] && [ "$(ls req064_state_s0 2>/dev/null | wc -l)" -ge 9 ]; then
+  log "=== BASE seed 0: reusing existing dump ($(ls req064_state_s0 | wc -l) files) ==="
+else
+  log "=== BASE seed 0: run to 2000, dump req064_state_s0 ==="
+  tr $RP/run.py $CFG/base_s0.yaml > /root/req064_base_s0.log 2>&1 || true
+  [ -d req064_state_s0 ] && log "BASE_DUMP_OK ($(ls req064_state_s0 | wc -l) files)" || { log "BASE_DUMP_MISSING"; tail -20 /root/req064_base_s0.log; exit 1; }
+fi
 
 log "=== FEATURE PROBE seed 0 (18 sentinels: S_i/G_i FW + Euclidean Lanczos) ==="
 tr /root/impl/measure_req064_features.py --state_dir req064_state_s0 --step 2000 --pilot \
