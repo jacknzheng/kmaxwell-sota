@@ -31,11 +31,13 @@ def _tridiag_top_eig(alphas: list[float], betas: list[float]) -> tuple[float, fl
     return float(evals[top]), float(abs(evecs[-1, top]))
 
 
-def lanczos_top_eig(matvec, shape, iters: int = 8, seed: int = 1337, dtype=torch.float64):
+def lanczos_top_eig(matvec, shape, iters: int = 8, seed: int = 1337, dtype=torch.float64, device="cpu"):
     """Top eigenvalue of a symmetric operator `matvec` (tensor of `shape` -> same shape), by Lanczos with
-    full reorthogonalization. Returns (lambda_top, ritz_history, ritz_residual, n_iters_run)."""
-    g = torch.Generator(device="cpu").manual_seed(seed)
-    q = torch.randn(*shape, generator=g, dtype=dtype)
+    full reorthogonalization. Vectors live on `device`/`dtype` (match the HVP: CUDA/float32 in production,
+    CPU/float64 in tests); only the tiny tridiagonal eig solve runs in CPU float64. Returns
+    (lambda_top, ritz_history, ritz_residual, n_iters_run)."""
+    g = torch.Generator(device=device).manual_seed(seed)
+    q = torch.randn(*shape, generator=g, dtype=dtype, device=device)
     q = q / (q.norm() + 1e-30)
     Q: list[Tensor] = []
     alphas: list[float] = []
@@ -46,7 +48,7 @@ def lanczos_top_eig(matvec, shape, iters: int = 8, seed: int = 1337, dtype=torch
     resid = float("inf")
     for k in range(iters):
         Q.append(q)
-        w = matvec(q).to(dtype)
+        w = matvec(q).to(device=device, dtype=dtype)
         alpha = _ip(w, q)
         alphas.append(alpha)
         w = w - alpha * q - beta * q_prev
@@ -68,7 +70,9 @@ def euclidean_lambda(diag_hvp_one_fn, i: int, grad_i: Tensor, iters: int = 8, se
     """Euclidean top curvature of matrix i: lambda_i (Lanczos on H_ii) and lambda_i/||g_i||_F^2.
     diag_hvp_one_fn(i, v) returns H_ii @ v as a tensor of matrix i's shape."""
     matvec = lambda v: diag_hvp_one_fn(i, v)
-    lam, hist, resid, nit = lanczos_top_eig(matvec, tuple(grad_i.shape), iters=iters, seed=seed)
+    wdtype = grad_i.dtype if grad_i.dtype.is_floating_point else torch.float32
+    lam, hist, resid, nit = lanczos_top_eig(matvec, tuple(grad_i.shape), iters=iters, seed=seed,
+                                            dtype=wdtype, device=grad_i.device)
     gF2 = float((grad_i.double() ** 2).sum())
     return {"lambda_i": lam, "lambda_over_gF2": (lam / gF2 if gF2 > 0 else float("nan")),
             "ritz_history": hist, "ritz_residual": resid, "iters": nit, "gF2": gF2,
