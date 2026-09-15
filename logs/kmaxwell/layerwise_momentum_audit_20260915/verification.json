@@ -1,0 +1,420 @@
+{
+  "audit_source": "dabff19",
+  "req058_coverage": [
+    {
+      "seed": 0,
+      "fork": 1500,
+      "arms": 41
+    },
+    {
+      "seed": 0,
+      "fork": 2000,
+      "arms": 41
+    },
+    {
+      "seed": 1,
+      "fork": 2000,
+      "arms": 41
+    },
+    {
+      "seed": 2,
+      "fork": 2000,
+      "arms": 41
+    }
+  ],
+  "req058_missing_requested_endpoints": [
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a1all_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05all_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2all_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/nomom_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/matched_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b0_attnq_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b0_attnk_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b0_attnv_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b0_attnproj_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b0_mlpfc_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b0_mlpproj_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b6_attnq_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b6_attnk_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b6_attnv_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b6_attnproj_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b6_mlpfc_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b6_mlpproj_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b11_attnq_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b11_attnk_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b11_attnv_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b11_attnproj_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b11_mlpfc_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a05_b11_mlpproj_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b0_attnq_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b0_attnk_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b0_attnv_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b0_attnproj_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b0_mlpfc_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b0_mlpproj_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b6_attnq_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b6_attnk_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b6_attnv_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b6_attnproj_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b6_mlpfc_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b6_mlpproj_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b11_attnq_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b11_attnk_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b11_attnv_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b11_attnproj_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b11_mlpfc_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    },
+    {
+      "file": "logs/kmaxwell/req058_layerwise_momentum_response/raw/full058/a2_b11_mlpproj_s0_f1500.tsv",
+      "expected": 1564,
+      "last_logged": 1560
+    }
+  ],
+  "req059_mean_losses": {
+    "typedepth": 3.3387375,
+    "global_a05": 3.3294275,
+    "reversed": 3.340255,
+    "euclidean": 3.3386825,
+    "shuffled": 3.339135,
+    "global_a2": 3.3514925,
+    "global_a1": 3.33795,
+    "guided": 3.3385625,
+    "nomom": 3.343365
+  },
+  "req059_corrected_contrasts": {
+    "typedepth": {
+      "differences": [
+        -0.00018999999999991246,
+        -0.00016000000000016001,
+        -0.00016000000000016001,
+        -0.00018999999999991246
+      ],
+      "mean": -0.00017500000000003624,
+      "ordinary_paired_ci95": [
+        -0.0002025607934653698,
+        -0.00014743920653470267
+      ],
+      "p_t_df3": 0.0002649310201665589,
+      "holm_p": 0.0013246551008327945
+    },
+    "global_a05": {
+      "differences": [
+        0.009100000000000108,
+        0.009149999999999991,
+        0.00918999999999981,
+        0.009100000000000108
+      ],
+      "mean": 0.009135000000000004,
+      "ordinary_paired_ci95": [
+        0.009065640190810333,
+        0.009204359809189676
+      ],
+      "p_t_df3": 2.9948605484442226e-08,
+      "holm_p": 2.395888438755378e-07
+    },
+    "reversed": {
+      "differences": [
+        -0.0016899999999999693,
+        -0.0015200000000001879,
+        -0.0016400000000000858,
+        -0.0019199999999996997
+      ],
+      "mean": -0.0016924999999999857,
+      "ordinary_paired_ci95": [
+        -0.001959198051339103,
+        -0.0014258019486608682
+      ],
+      "p_t_df3": 0.0002653634728886356,
+      "holm_p": 0.0013246551008327945
+    },
+    "euclidean": {
+      "differences": [
+        -8.000000000008001e-05,
+        -0.000300000000000189,
+        3.999999999981796e-05,
+        -0.000140000000000029
+      ],
+      "mean": -0.00012000000000012001,
+      "ordinary_paired_ci95": [
+        -0.00034503293632298616,
+        0.00010503293632274611
+      ],
+      "p_t_df3": 0.18825297880171188,
+      "holm_p": 0.18825297880171188
+    },
+    "shuffled": {
+      "differences": [
+        -0.000700000000000145,
+        -0.00048000000000003595,
+        -0.0007100000000002105,
+        -0.00039999999999995595
+      ],
+      "mean": -0.0005725000000000868,
+      "ordinary_paired_ci95": [
+        -0.0008215234578327409,
+        -0.00032347654216743275
+      ],
+      "p_t_df3": 0.005273744484902698,
+      "holm_p": 0.010547488969805396
+    },
+    "global_a2": {
+      "differences": [
+        -0.012980000000000214,
+        -0.012640000000000207,
+        -0.01307999999999998,
+        -0.013020000000000032
+      ],
+      "mean": -0.012930000000000108,
+      "ordinary_paired_ci95": [
+        -0.013244509861763912,
+        -0.012615490138236304
+      ],
+      "p_t_df3": 9.844720542107055e-07,
+      "holm_p": 6.8913043794749385e-06
+    },
+    "global_a1": {
+      "differences": [
+        0.000560000000000116,
+        0.0006800000000000139,
+        0.0007199999999998319,
+        0.0004900000000001015
+      ],
+      "mean": 0.0006125000000000158,
+      "ordinary_paired_ci95": [
+        0.0004434130408726881,
+        0.0007815869591273435
+      ],
+      "p_t_df3": 0.0014013882494539054,
+      "holm_p": 0.004204164748361716
+    },
+    "nomom": {
+      "differences": [
+        -0.0049600000000000755,
+        -0.004729999999999901,
+        -0.004750000000000032,
+        -0.004769999999999719
+      ],
+      "mean": -0.004802499999999932,
+      "ordinary_paired_ci95": [
+        -0.00497158695912757,
+        -0.004633413040872294
+      ],
+      "p_t_df3": 2.9848628841921965e-06,
+      "holm_p": 1.790917730515318e-05
+    }
+  },
+  "req059_primary_practical_win": false,
+  "req057_coupling": [
+    {
+      "file": "full_s0_step1500.json",
+      "cross_fraction_at_gradpolar": 0.9698795966630732,
+      "sum_isolated_over_joint_witness": 0.03494730303952168
+    },
+    {
+      "file": "full_s0_step2000.json",
+      "cross_fraction_at_gradpolar": 0.9689114440843624,
+      "sum_isolated_over_joint_witness": 0.03281958592262726
+    },
+    {
+      "file": "full_s0_step2500.json",
+      "cross_fraction_at_gradpolar": 0.9684919176194148,
+      "sum_isolated_over_joint_witness": 0.032465447597257786
+    },
+    {
+      "file": "full_s1_step1500.json",
+      "cross_fraction_at_gradpolar": 0.9670017608948692,
+      "sum_isolated_over_joint_witness": 0.034318250921537036
+    },
+    {
+      "file": "full_s1_step2000.json",
+      "cross_fraction_at_gradpolar": 0.9688821459447815,
+      "sum_isolated_over_joint_witness": 0.03387360475000201
+    },
+    {
+      "file": "full_s1_step2500.json",
+      "cross_fraction_at_gradpolar": 0.9670327993828379,
+      "sum_isolated_over_joint_witness": 0.03396547889518455
+    },
+    {
+      "file": "full_s2_step1500.json",
+      "cross_fraction_at_gradpolar": 0.9684100728104548,
+      "sum_isolated_over_joint_witness": 0.035427659839217085
+    },
+    {
+      "file": "full_s2_step2000.json",
+      "cross_fraction_at_gradpolar": 0.9667325673754158,
+      "sum_isolated_over_joint_witness": 0.034674102139127076
+    },
+    {
+      "file": "full_s2_step2500.json",
+      "cross_fraction_at_gradpolar": 0.9678282642841506,
+      "sum_isolated_over_joint_witness": 0.03304757256411917
+    }
+  ],
+  "nomom_reload": {
+    "status": "overwrite reproduced",
+    "source_sha": "365c392d695f95dc9a4fb89095e85a6a7b5d551e",
+    "torch": "2.13.0",
+    "mu_before_load": 0.0,
+    "mu_after_load": 0.95
+  }
+}

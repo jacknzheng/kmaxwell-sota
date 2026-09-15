@@ -1,8 +1,28 @@
 # Learning rate and sharpness: consolidated findings
 
-Updated 2026-09-11 with an audit addendum. This is the campaign's findings summary; [requests.md](requests.md) contains
+Updated 2026-09-15 with returned-result audit addenda. This is the campaign's findings summary; [requests.md](requests.md) contains
 the active experiments. Historical discussions and retractions remain in
 [the pre-cleanup record](https://github.com/jacknzheng/kmaxwell-sota/blob/28d00746aa80d71caf1fb8cb38b2e336b4c5d2d9/requests.md).
+
+## September 15 returned-result audit
+
+REQ-057–060 were delivered. The [audit and CPU reproduction](logs/kmaxwell/layerwise_momentum_audit_20260915/README.md)
+confirm repeatable spectral pilot rankings and a raw-sharpness/memory-sensitivity association.
+The balanced policy still loses to global shorter memory by **0.009135** mean endpoint loss;
+its spectral advantage over Euclidean assignment is unresolved and over type/depth is below
+the specified practical margin. The 96.8% cross-layer figure is for a gradient-polar diagnostic
+direction, not the realized momentum update. The cubic-feedback mechanism remains unresolved.
+
+REQ-058 did not deliver its registered incremental prediction gate. Its nominal no-momentum
+control is unverified: the committed restore path overwrites mu=0 with the saved mu=0.95;
+this is reproduced on the pinned Muon class. One response base lacks its requested endpoint.
+Correcting REQ-059's t/Holm implementation retains its negative result. Runtime assignment,
+state and disjoint validation manifests require recovery before stronger causal claims.
+
+[REQ-063–065](requests.md#req-063-verify-restored-optimizer-controls-and-repair-the-returned-evidence)
+first repair controls and calibrate global memory, then test normalized sharpness and actual
+update geometry on unused seeds, and only after a prospective gate test an unconstrained
+layer-wise policy through step 3250. No GPU experiment was run for this local audit.
 
 ## September 11 audit and project direction
 
