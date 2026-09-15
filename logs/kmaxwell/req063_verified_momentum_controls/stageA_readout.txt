@@ -1,0 +1,33 @@
+======================================================================
+(1) REQ-059 corrected paired stats (endpoint 2750, n=4 seeds 3-6, df=3)
+  control           mean                 95% CI        t   p(t,df3)     Holm  verdict
+  euclidean   -0.00012 [-0.00035,+0.00011]    -1.70   1.88e-01    0.188  no
+  global_a05  +0.00914 [+0.00907,+0.00920]   419.14   2.99e-08    0.000  no
+  global_a1   +0.00061 [+0.00044,+0.00078]    11.53   1.40e-03    0.004  no
+  global_a2   -0.01293 [-0.01324,-0.01262]  -130.84   9.84e-07    0.000  BEATS
+  nomom       -0.00480 [-0.00497,-0.00463]   -90.39   2.98e-06    0.000  BEATS
+  reversed    -0.00169 [-0.00196,-0.00143]   -20.20   2.65e-04    0.001  BEATS
+  shuffled    -0.00057 [-0.00082,-0.00032]    -7.32   5.27e-03    0.011  BEATS
+  typedepth   -0.00018 [-0.00020,-0.00015]   -20.21   2.65e-04    0.001  no
+  -> PRACTICAL WIN after Holm correction: NO (negative outcome preserved: guided loses to global_a05)
+======================================================================
+(2) REQ-058 endpoint audit + retrospective feature models
+  fork-1500 files ending <1564 (=60-update, EXCLUDED from 64-update analysis): 53/53
+  feature=rawSi: Spearman(feature, a2-penalty) fit-report per seed (64-update fork-2000 data)
+    seed0 (DEV): rho=+0.796 (n=18)
+    seed1 (TEST): rho=+0.474 (n=18)
+    seed2 (TEST): rho=+0.736 (n=18)
+  feature=Si_over_Gi: Spearman(feature, a2-penalty) fit-report per seed (64-update fork-2000 data)
+    seed0 (DEV): rho=+0.305 (n=18)
+    seed1 (TEST): rho=-0.036 (n=18)
+    seed2 (TEST): rho=+0.271 (n=18)
+  feature=typedepth: Spearman(feature, a2-penalty) fit-report per seed (64-update fork-2000 data)
+    seed0 (DEV): rho=+0.796 (n=18)
+    seed1 (TEST): rho=+0.470 (n=18)
+    seed2 (TEST): rho=+0.742 (n=18)
+  MISSING feature columns (deferred to REQ-064, prospective): Euclidean lambda_i, actual-update-direction curvature (not computed for REQ-058 seeds 0-2).
+======================================================================
+(3) Recovery manifest
+  COMMITTED (verifiable): impl generators+patches, raw selection-loss/JSON per arm, READMEs/readouts for REQ-057/058/059/060.
+  UNVERIFIED (node-local, lost — REQ-058/059/060 nodes qj9epjw/w7r58o3/3ypd5k3 stopped): stdout logs, resolved run configs, per-rank state/data manifests, named allocation JSONs on host.
+  Recovered harness SHA: 365c392d695f95dc9a4fb89095e85a6a7b5d551e + committed REQ-058/059 patches (apply_req058_opt.py / apply_req059_opt.py in the impl dirs).
