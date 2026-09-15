@@ -1674,7 +1674,7 @@ of which optimizer wins. Failed restore/intervention checks block REQ-064/065.
 
 ## REQ-064: predict local memory improvements beyond a strong global setting
 
-- status: **OPEN — gated on REQ-063 control/provenance PASS**
+- status: **RUNNING 2026-09-15 — REQ-063 gate PASSED; pre-registration frozen (a_star=0.5, dev seeds 0/1, prospective test seeds 7/8, H1 committed) in `logs/kmaxwell/req064_local_memory_prediction/PREREGISTRATION.md`; GPU base+feature+pilot next**
 - requested: Jack / 2026-09-15 PDT
 - priority: next measurement/prediction gate; no policy trial on a correlation-only pass
 - resource limit: **two nodes fleet-wide; pilot at most 4 node-hours, 24 node-hours total**
