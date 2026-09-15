@@ -15,11 +15,14 @@ import argparse, json, os, sys
 import torch
 import torch.distributed as dist
 
-# REQ-057 primitives module + driver helpers
-R57 = "/root/kmaxwell-sota/logs/kmaxwell/req057_layerwise_spectral_sharpness/impl"
-sys.path.insert(0, R57)
-sys.path.insert(0, "logs/kmaxwell/req057_layerwise_spectral_sharpness/impl")
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# REQ-057 primitives module + driver helpers, and the harness offline_analysis utility
+# (check_secant_direction_with_hvp: load_model_at_checkpoint, start_distributed_if_launched).
+for _p in ("/root/kmaxwell-sota/logs/kmaxwell/req057_layerwise_spectral_sharpness/impl",
+           "logs/kmaxwell/req057_layerwise_spectral_sharpness/impl",
+           "/root/kmaxwell-sota/records/track_3_optimization/offline_analysis",
+           "records/track_3_optimization/offline_analysis",
+           os.path.dirname(os.path.abspath(__file__))):
+    sys.path.insert(0, _p)
 import measure_layerwise_spectral_sharpness as M
 import measure_layerwise_pilot as P
 import req064_features as F
