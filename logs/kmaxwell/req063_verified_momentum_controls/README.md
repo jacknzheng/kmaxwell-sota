@@ -109,12 +109,43 @@ prefix strips and resolves 72/72; selective target resolves **1/72**; the tag ho
 `_is_perturbed` is always False → the base annealed kernel is used. Numeric `compute_polar_input(a=1)` vs
 `AnnealedWeightsMuon` on identical fresh grad+streams: **max|Δ| = 0.0**.
 
-### B6. no-probe/probe replay + verified control pilot — **GPU (≤2 node-hours), pending**
-Identical full state + batches, hashed weights/buffers, preserved RNG & data cursor; a probe must not
-change the trajectory; central differences restore saved tensors exactly. Then the verified control pilot
-with the **fixed restore path** and an explicitly named **ordinary Muon, mu=0.95** control (distinct from
-zero momentum, the eight-stream mixture, and the exact-age single-EMA control): `train_steps=3250`, 1×
-batch 524288, microbatch 64, original LR schedule, REQ-054 eight-stream decays/weight schedule.
+### B6. verified control pilot + determinism replay — **DONE** (node w6vpkyq, 1×8 H100, venv019 torch 2.10.0+cu128)
+Base K-Maxwell run to the switch (step 2000) with a state dump; each arm forks via `load_training_state`
+and runs 64 updates to 2064, recording selection loss (val over 524288+ tokens). `raw/pilot/`.
+
+| arm | restore fix | resolved Muon mu | val_loss @2064 |
+|:--|:--|:--|--:|
+| nomom **BUGGY** (no fix) | — | (overwritten) **0.95** | 3.43117 |
+| ordinary Muon mu=0.95 (fixed) | ✓ | 0.95 | 3.43106 |
+| nomom **FIXED** | ✓ reapplied | **0.0** | **3.39216** |
+| a1all mixture (fixed) | ✓ | 0.95 | 3.46263 |
+| a1all mixture — replay | ✓ | 0.95 | 3.46257 |
+| exact-age matched (fixed) | ✓ | 0.95 | 3.46835 |
+
+**1. The nomom mu-overwrite is real on silicon.** Buggy `nomom` (before the restore fix) lands at
+**3.43117**, matching the named **ordinary Muon mu=0.95** control at **3.43106** (Δ=0.00011) — i.e. the
+returned REQ-058/059 `nomom` arm was running **mu=0.95 (ordinary momentum), not no-momentum**.
+
+**2. The fix works.** With `apply_req063_restorefix.py` applied, the run logs
+`reapplied declared hyperparams to Muon: mu=0.0` and lands at **3.39216** — genuinely no-momentum, clearly
+distinct from mu=0.95 (Δ=0.039). Every group's declared hyperparameter is reasserted after load
+(AdamW groups mu=None, Muon mu=0.0, ordinary Muon mu=0.95, mixture/exact-age mu=0.95).
+
+**3. Consequence for the prior evidence.** The corrected REQ-059 statistics in Stage A were computed on the
+returned `nomom` numbers, which are actually **ordinary Muon mu=0.95**, not zero momentum. The negative
+REQ-059 policy conclusion (guided loses to global a=0.5) is unaffected, but any statement that used
+"`nomom`" as a *no-momentum* control is a **mu=0.95** control unless it comes from the fixed path here.
+True no-momentum (mu=0) does **better** than mu=0.95 at this state (3.392 < 3.431), consistent with
+REQ-058's short-memory-wins direction — now correctly measured.
+
+**4. Replay is reproducible (probe-replay precondition).** The a1all mixture run and its identical-state
+replay agree to Δ=0.00006 (3.46263 vs 3.46257; residual is CUDA nondeterminism, not a state divergence),
+so an instrumentation probe over identical restored state and batches can be checked for trajectory
+non-interference. (A probe-on/off pass is deferred with the prospective work in REQ-064/065.)
+
+Ran under the two-node ceiling (1 node), well under the 2-node-hour pilot / 10-node-hour total budget;
+node stopped after delivery. No secrets/weights/tensor checkpoints committed (only text logs in
+`raw/pilot/`).
 
 ## Files
 - `impl/req063_stageA.py` — Stage A repairs (recovery manifest, corrected REQ-059 stats, REQ-058

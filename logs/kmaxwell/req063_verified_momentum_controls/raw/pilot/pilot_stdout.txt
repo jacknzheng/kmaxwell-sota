@@ -1,0 +1,59 @@
+[pilot 17:47:23] apply REQ-058 optimizer patch (exact_age_matched_muon for the matched arm)
+hooks.py already patched
+OK registered: ['perturbed_annealed_weights_muon', 'exact_age_matched_muon']
+[pilot 17:47:29] generate pilot configs -> records/track_3_optimization/configs/req063
+wrote base + 4 pilot arms (incl. named ordinary-Muon mu=0.95) for seed0 fork2000 -> records/track_3_optimization/configs/req063
+[pilot 17:47:29] === BASE: run to switch step 2000, dump training state ===
+[pilot 17:54:03] BASE_DUMP_OK (9 files)
+[pilot 17:54:03] === nomom BUGGY (restore fix NOT yet applied): restored mu expected overwritten 0->0.95 ===
+step:2062/3250 train_time:12.466s step_avg:6.05ms
+step:2063/3250 train_time:12.619s step_avg:6.12ms
+step:2064/3250 train_time:12.771s step_avg:6.19ms
+step:2064/3250 val_loss:3.43117 train_time:12.783s step_avg:153.68ms
+step:2065/3250 train_time:12.926s step_avg:6.26ms
+[pilot 17:54:41] apply REQ-063 restore fix
+patched hooks.py:load_training_state with REQ-063 restore fix
+[pilot 17:54:41] === FIXED arms (nomom must log 'reapplied declared ... mu=0.0') ===
+[pilot 17:54:41] -- arm: nomom
+step:2062/3250 train_time:19.499s step_avg:9.46ms
+step:2063/3250 train_time:19.652s step_avg:9.53ms
+step:2064/3250 train_time:19.808s step_avg:9.60ms
+step:2064/3250 val_loss:3.39216 train_time:19.820s step_avg:154.07ms
+step:2065/3250 train_time:19.964s step_avg:9.67ms
+[pilot 17:55:25] -- arm: ordmuon095
+step:2062/3250 train_time:12.812s step_avg:6.21ms
+step:2063/3250 train_time:12.964s step_avg:6.28ms
+step:2064/3250 train_time:13.117s step_avg:6.36ms
+step:2064/3250 val_loss:3.43106 train_time:13.129s step_avg:153.87ms
+step:2065/3250 train_time:13.271s step_avg:6.43ms
+[pilot 17:56:02] -- arm: a1all
+step:2062/3250 train_time:26.742s step_avg:12.97ms
+step:2063/3250 train_time:26.903s step_avg:13.04ms
+step:2064/3250 train_time:27.065s step_avg:13.11ms
+step:2064/3250 val_loss:3.46263 train_time:27.065s step_avg:162.33ms
+step:2065/3250 train_time:27.230s step_avg:13.19ms
+[pilot 17:56:54] -- arm: matched
+step:2062/3250 train_time:21.476s step_avg:10.41ms
+step:2063/3250 train_time:21.637s step_avg:10.49ms
+step:2064/3250 train_time:21.802s step_avg:10.56ms
+step:2064/3250 val_loss:3.46835 train_time:21.802s step_avg:162.28ms
+step:2065/3250 train_time:21.966s step_avg:10.64ms
+[pilot 17:57:40] === determinism double-run (probe-replay precondition): a1all_fixed again, expect identical 2064 val ===
+step:2062/3250 train_time:14.260s step_avg:6.92ms
+step:2063/3250 train_time:14.424s step_avg:6.99ms
+step:2064/3250 train_time:14.587s step_avg:7.07ms
+step:2064/3250 val_loss:3.46257 train_time:14.588s step_avg:164.64ms
+step:2065/3250 train_time:14.752s step_avg:7.14ms
+[pilot 17:58:19] === SUMMARY: step:2064 val_loss per arm ===
+  base: 
+  nomom_buggy: step:2064/3250 val_loss:3.43117
+  nomom_fixed: step:2064/3250 val_loss:3.39216
+  ordmuon095_fixed: step:2064/3250 val_loss:3.43106
+  a1all_fixed: step:2064/3250 val_loss:3.46263
+  a1all_rep: step:2064/3250 val_loss:3.46257
+  matched_fixed: step:2064/3250 val_loss:3.46835
+=== restore-fix mu log lines (fixed arms) ===
+req063 restore: reapplied declared hyperparams to AdamW: mu=None
+req063 restore: reapplied declared hyperparams to Muon: mu=0.0
+req063 restore: reapplied declared hyperparams to Muon: mu=0.95
+PILOT_DONE
