@@ -64,9 +64,9 @@ def arm_config(seed, arm, alloc_file):
     win = [FORK, FORK + UPDATES]
     for h in c["setup"]:
         if h.get("name") == "validate_at_step_boundaries":
-            h["hyperparams"] = {"dense_window": win, "dense_every": 64}
+            h["hyperparams"] = {"dense_window": win, "dense_every": 16}
     c["post_optimizer"] = [{"name": "print_training_progress"},
-                           {"name": "validate_at_step_boundaries", "hyperparams": {"dense_window": win, "dense_every": 64}}]
+                           {"name": "validate_at_step_boundaries", "hyperparams": {"dense_window": win, "dense_every": 16}}]
     c["run_id"] = f"req064_{arm}_s{seed}"
     return c
 

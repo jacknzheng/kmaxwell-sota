@@ -29,7 +29,7 @@ import req064_features as F
 
 
 def run_subset_features(model, params, names, radii, args, rank, world, data, tokens, do_full_fw):
-    grads = P.block_grads_mean(model, params, data, tokens, args.mbs, rank, world)
+    grads, _seen = P.block_grads_mean(model, params, data, tokens, args.mbs, rank, world)
     Gi, Gjoint = M.G_denominators(grads, radii)
 
     def joint_hvp(v):
@@ -83,7 +83,7 @@ def main():
     assert torch.cuda.is_available()
 
     from check_secant_direction_with_hvp import load_model_at_checkpoint, start_distributed_if_launched
-    rank, world = (P.start_distributed_if_launched() if "RANK" in os.environ else (0, 1))
+    rank, world = (start_distributed_if_launched() if "RANK" in os.environ else (0, 1))
     all_names = M.muon_matrix_names()
     assert len(all_names) == 72, len(all_names)
     names = P.pilot_matrix_names(all_names) if args.pilot else all_names
