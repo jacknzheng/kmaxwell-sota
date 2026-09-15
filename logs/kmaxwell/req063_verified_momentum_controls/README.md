@@ -71,33 +71,50 @@ retrospective correlation is not a demonstrated allocation gain (REQ-059 already
 
 ---
 
-## Stage B — verify the optimizer after loading the checkpoint (in progress)
+## Stage B — verify the optimizer after loading the checkpoint
 
-Uses the **actual training setup + restore hooks**, not a bare constructor or standalone scalar solver.
-Checks, most CPU-reproducible against the real load path with a tiny model, GPU only where a real
-training step is required (probe replay, verified control pilot; ≤2 node-hours):
+Uses the **actual training setup + restore hooks** (`harness/hooks.py:load_training_state` and the real
+`Muon`/patched classes at `365c392d`), not a bare constructor or standalone scalar solver. CPU
+verifications (items 1–5) done against the real load path; item 6 + the pilot need a real training step.
 
-1. **nomom overwrite** — does `load_state_dict` change the no-momentum arm's `mu` 0→0.95? Restore model /
-   inherited buffers / counters first, then reapply only declared treatment hyperparameters; assert &
-   log resolved groups before the first affected update; verify zero momentum reaches the post-polar
-   update independent of an inherited momentum buffer at fixed gradient.
-2. **ordinary Muon, mu=0.95** — an explicitly named control, distinct from zero momentum, the
-   eight-stream mixture, and the exact-age single-EMA control.
-3. **name resolution** — 72/72 global, 1/72 selective, exact per-type counts for old allocations; abort
-   on missing/extra/empty/duplicate/`_orig_mod` mismatch; never silently leave a param at default.
-4. **a=1 reproduces the mixture**; changing a reaches the post-polar update; cloned-buffer transition,
-   counters, first affected update, LR schedule, weight decay, auxiliary optimizers all checked; common
-   baseline update preserved at the switch for every arm incl. zero momentum; treatments activate at the
-   same subsequent update; inherited buffers not reset in just one arm.
-5. **exact-age EMA** — implemented schedule / inherited mass / outer blend vs the *actual* mixture
-   recurrence after restoring counters; impulse / constant / alternating sequences; per-step mass, mean
-   age, age variance, beta through 750 updates; tol 1e-10 in CPU float64 + production precision.
-6. **no-probe/probe replay** — identical full state + batches, hashed weights/buffers, preserved RNG &
-   data cursor; a probe must not change the trajectory; central differences restore saved tensors
-   exactly rather than assuming add/subtract reverses FP rounding.
+### B1. nomom overwrite reproduced + fix + zero-momentum independence — **PASS** (`impl/req063_stageB_restore.py`)
+The restore path `for (_,built),sd in zip(...): built.load_state_dict(sd)` (`hooks.py:613-614`) uses
+torch's `Optimizer.load_state_dict`, which **overwrites the current param-group hyperparameters from the
+saved group**. Reproduced on the real `Muon`: a nomom arm (`mu=0.0`) loading a mixture checkpoint's group
+(`mu=0.95`) has its **`mu` silently overwritten 0.0 → 0.95** — so the returned REQ-058/059 `nomom` arm
+was *not* no-momentum. The audited fix: after `load_state_dict`, **reapply only the declared treatment
+hyperparameters** (here `mu=0`), keeping restored buffers/counters. Verified zero momentum then reaches
+the post-polar update **bit-independent of the inherited momentum buffer** at fixed gradient
+(max|Δ|=0.0 across two different inherited buffers; mu=0.95 differs by 1.48), equal to
+`zeropower(g)·scale` to one bf16 ULP.
 
-Then a verified control pilot: `train_steps=3250`, 1× batch 524288, microbatch 64, original LR schedule,
-REQ-054 eight-stream decays/weight schedule.
+### B2/B5. exact-age matched EMA — **PASS** (`impl/req063_stageB_exactage.py`, float64)
+Independent explicit lag-histograms vs the committed closed-form recurrence, after the real warm/clone
+convention (pre-switch plain Muon `mu=nu`, cloned to all 8 streams at the switch): single-EMA
+mass/mean-age agree to **2.4e-15 / 2.5e-13**; the mixture `target_age` to **1.6e-13**; and the solver's
+matching invariant is the **post-update ν-blended increment age** = target_age to **1.4e-14** (not
+`mom/mass`, not the pre-blend). Age **variance necessarily differs** (a single EMA cannot span 8
+timescales) — correct for an age-matched control. Realized buffer values verified under impulse / constant
+/ alternating gradients (max|Δ| 0 / 2.3e-15 / 9.7e-17). Per-step mass/mean-age/variance/beta through 750
+updates in the readout.
+
+### B3. parameter-name resolution — **PASS** (`impl/req063_stageB_names.py`, real 12-layer GPT)
+The real model has exactly **72 Muon matrices** (12 blocks × {attn.q,k,v,proj, mlp.fc,proj}, 12/type).
+Balanced allocation resolves **72/72**, unique keys, bins **24/24/24**, per-type **4/4/4**; `_orig_mod.`
+prefix strips and resolves 72/72; selective target resolves **1/72**; the tag hook **asserts** the target
+∈ model (aborts on a bogus name), never silently leaving a param at default.
+
+### B4. a=1 reproduces the mixture — **PASS** (same script)
+`PerturbedAnnealedWeightsMuon(perturb_a=1.0)`: `_perturbed_decays == decays` (bₖ^(1/1)=bₖ) and
+`_is_perturbed` is always False → the base annealed kernel is used. Numeric `compute_polar_input(a=1)` vs
+`AnnealedWeightsMuon` on identical fresh grad+streams: **max|Δ| = 0.0**.
+
+### B6. no-probe/probe replay + verified control pilot — **GPU (≤2 node-hours), pending**
+Identical full state + batches, hashed weights/buffers, preserved RNG & data cursor; a probe must not
+change the trajectory; central differences restore saved tensors exactly. Then the verified control pilot
+with the **fixed restore path** and an explicitly named **ordinary Muon, mu=0.95** control (distinct from
+zero momentum, the eight-stream mixture, and the exact-age single-EMA control): `train_steps=3250`, 1×
+batch 524288, microbatch 64, original LR schedule, REQ-054 eight-stream decays/weight schedule.
 
 ## Files
 - `impl/req063_stageA.py` — Stage A repairs (recovery manifest, corrected REQ-059 stats, REQ-058

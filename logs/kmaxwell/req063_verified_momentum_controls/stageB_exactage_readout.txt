@@ -1,0 +1,17 @@
+(A) single EMA closed-form vs independent histogram: max|mass|=2.44e-15  max|mean_age|=2.49e-13  (tol 1e-10)
+(B) mixture target_age closed-form vs independent per-stream histogram: max|diff|=1.56e-13  (tol 1e-10)
+(C) solver matching invariant vs mixture target_age (best of candidates): 'post nu-blend' max|diff|=1.42e-14  (tol 1e-10)
+    candidates: post mom/mass=2.43e+00, post nu-blend=1.42e-14, pre nu-blend=5.11e-01
+age VARIANCE (single vs mixture full buffer), sampled offsets:
+  off=  0 step=2001: beta=0.976790 | single mean=19.536 var=380.25 | mixture mean=18.581 var=378.57
+  off=100 step=2101: beta=0.980597 | single mean=46.462 var=1542.77 | mixture mean=3.921 var=107.40
+  off=300 step=2301: beta=0.977404 | single mean=44.922 var=2181.00 | mixture mean=1.045 var=3.76
+  off=500 step=2501: beta=0.972317 | single mean=36.617 var=1498.83 | mixture mean=0.953 var=0.15
+  off=749 step=2750: beta=0.961444 | single mean=26.000 var=764.57 | mixture mean=0.950 var=0.05
+  -> variance differs (single EMA cannot match the 8-timescale spread) = EXPECTED for an age-matched control
+realized buffer value vs histogram-weighted gradient sum (max abs diff over the run):
+  impulse    : max|hist - recurrence| = 0.00e+00
+  constant   : max|hist - recurrence| = 2.33e-15
+  alternating: max|hist - recurrence| = 9.71e-17
+
+VERDICT: single-EMA recurrence (mass 2.4e-15, age 2.5e-13), mixture target_age (1.6e-13), solver invariant realized==target (1.4e-14) all < 1e-10 float64; variance differs as expected => PASS
