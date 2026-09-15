@@ -1,0 +1,11 @@
+[dump] base mu=0.95, has momentum buffer, steps_seen=1500
+[pre-load] nomom declared mu=0.0
+[post-load] nomom mu=0.95  <-- BUG: overwritten from 0.0 to 0.95
+  => nomom mu-overwrite reproduced: True
+  inherited momentum buffer present after load: True
+[fixed] nomom mu=0.0 (declared treatment reapplied; momentum buffer kept=True, steps_seen=0 inherited)
+[mu=0]   update independent of inherited buffer: max|u_a-u_b|=0.00e+00 (expect ~0)
+[mu=0]   update == zeropower(g)*scale to bf16: max diff=7.81e-03 (expect <=1 bf16 ULP=7.8e-3)
+[mu=.95] update DEPENDS on inherited buffer: max|u_a-u_b|=1.48e+00 (expect >0)
+
+VERDICT: overwrite-reproduced=True, fix-restores-mu0=True, zero-mom-post-polar-independent-of-buffer=True  => PASS

@@ -1,0 +1,12 @@
+(3) Muon matrices in the real 12-layer model: 72 (expect 72)
+    types: ['attn.k', 'attn.proj', 'attn.q', 'attn.v', 'mlp.fc', 'mlp.proj'] ; per-type counts: [12, 12, 12, 12, 12, 12] (expect 12 each)
+    allocation: 72 entries, bins={0.5: 24, 1.0: 24, 2.0: 24} (expect 24/24/24), resolve 72/72, unique_keys=True
+    per-type 4/4/4: attn.q:{1.0: 4, 2.0: 4, 0.5: 4}, attn.k:{1.0: 4, 0.5: 4, 2.0: 4} ... (all types 4/4/4: True)
+    _orig_mod prefix strip resolves: 72/72
+(3) selective target 'blocks.2.mlp.proj.weight' resolves 1/72 (expect 1)
+    abort-on-missing guaranteed by tag hook assert (bogus name not in model=True)
+(4) perturb_a=1.0: _perturbed_decays == decays: True
+    _is_perturbed(p) with a=1 (perturb_all=True): False (expect False -> base path)
+    numeric compute_polar_input(a=1) vs base mixture: max|diff|=0.00e+00 (expect 0, same kernel)
+
+VERDICT: name-resolution (72/72, 24/24/24, 1/72, _orig_mod, abort-on-missing) PASS; a=1-reproduces-mixture PASS
