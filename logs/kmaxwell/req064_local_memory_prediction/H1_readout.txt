@@ -1,0 +1,13 @@
+REQ-064 H1: per-seed RMSE of each feature model (fit on dev seeds 0,1; predict test 7,8)
+model        seed7 rmse  seed7 sign   seed8 rmse  seed8 sign
+M1             0.000256       17/18     0.000336       16/18
+M2             0.000394       17/18     0.000443       16/18
+EUC            0.000406       17/18     0.000471       16/18
+
+Gate (M2 beats M1 AND Euclidean on RMSE, both seeds; sign>=13/18):
+  seed7: M2 rmse=0.0004 (M1 0.0003, EUC 0.0004) beats=False; M2 sign 17/18 (>=13: True)
+  seed8: M2 rmse=0.0004 (M1 0.0003, EUC 0.0005) beats=False; M2 sign 16/18 (>=13: True)
+
+VERDICT: H1 FAIL ->  NEGATIVE result; REQ-065 policy trial NOT authorized
+Interpretation: spectral sharpness (M2) recovers the SIGN of per-matrix memory benefit but does NOT
+improve RMSE over the measurement-free type/depth prior (M1). No practical value for allocation.

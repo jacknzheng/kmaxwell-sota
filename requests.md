@@ -1674,7 +1674,7 @@ of which optimizer wins. Failed restore/intervention checks block REQ-064/065.
 
 ## REQ-064: predict local memory improvements beyond a strong global setting
 
-- status: **RUNNING 2026-09-15 — REQ-063 gate PASSED; pre-registration frozen (a_star=0.5, dev seeds 0/1, prospective test seeds 7/8, H1 committed) in `logs/kmaxwell/req064_local_memory_prediction/PREREGISTRATION.md`; GPU base+feature+pilot next**
+- status: **DONE 2026-09-16 — NEGATIVE (H1 FAIL)**. 156/156 continuations (dev 0,1 / test 7,8). Measured sharpness (M2 S_i/G_i, per-seed RMSE 0.000394/0.000443) does NOT beat the free type/depth prior (M1, 0.000256/0.000336) or improve over Euclidean; all recover sign (~16-17/18) but sign is not the gate. Per the pre-registration, **REQ-065 policy trial NOT authorized** (no policy trial on a correlation-only pass). Consistent with REQ-059's negative. Box wlv5j0q stopped. See `logs/kmaxwell/req064_local_memory_prediction/` (README, PREREGISTRATION, PILOT_GATES, H1_readout).
 - requested: Jack / 2026-09-15 PDT
 - priority: next measurement/prediction gate; no policy trial on a correlation-only pass
 - resource limit: **two nodes fleet-wide; pilot at most 4 node-hours, 24 node-hours total**
