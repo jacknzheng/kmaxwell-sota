@@ -1,50 +1,27 @@
 # Experiment requests
 
-Active queue for the `jerry-agent` branch. Next request number: **REQ-066**.
+Active queue for the `jerry-agent` branch. Next request number: **REQ-068**.
 
-The findings are consolidated in [FINDINGS.md](FINDINGS.md). Update that file when evidence changes;
-keep this queue for runnable specifications, concise status updates, and result links.
+Use this file for pending experiments, execution status, and links to results. Consolidated
+findings belong in [FINDINGS.md](FINDINGS.md). Completed and blocked specifications are preserved
+in the [September 16 archive](requests_archive_20260916.md).
 
-## Run order and status
+## Active queue
 
-| Order | Request | Status | Work |
-|---|---|---|---|
-| 1 | [REQ-050](#req-050-curvature-at-initialisation-and-early-training) | DONE | Establish when the depth-curvature profile appears. |
-| 2 | [REQ-051](#req-051-decompose-why-each-matrix-has-a-different-lr-to-curvature-response) | DONE; audited | Four-seed LR responses delivered; the combined decomposition uses mismatched probe batches. |
-| With 051 | [REQ-052](#req-052-matched-uniform-versus-mixed-lr-controls-for-req-051) | DONE; audited | LR-scope comparison delivered; recorded bases differ from REQ-051, so exact pairing remains unverified. |
-| 4 | [REQ-053](#req-053-what-makes-mlpproj-different--expansion-ratio-vs-nonlinearity) | DONE | Separate the ReLU² input from the fan-in shape as the source of `mlp.proj`'s excess elasticity. |
-| 5 | [REQ-054](#req-054-annealed-single-ema-matched-to-k-maxwells-scheduled-memory-age) | DONE; audited | K-Maxwell beats the scheduled EMA at 1×; exact realized-age and larger-batch controls remain open. |
-| With 054 | [REQ-055](#req-055-downhill-alignment-and-loss-curvature-of-the-actual-post-muon-update) | DONE; audited | One-seed geometry delivered; equivalence and per-step-mechanism claims remain unresolved. See REQ-057/058. |
-| 6 | [REQ-056](#req-056-test-k-maxwell-memory-in-standard-adam) | DONE; audited | K-Maxwell vs ordinary Adam is inconclusive (n=3); gain over the scheduled EMA does not isolate exact-age kernel shape. |
-| Complete | [REQ-057](#req-057-validate-layer-wise-spectral-sharpness-and-cross-layer-coupling) | DONE; audited | Repeatable pilot rankings; ~97% coupling is at a diagnostic direction, not the realized momentum step. Some numerical checks remain open. |
-| Complete | [REQ-058](#req-058-test-whether-layer-sharpness-predicts-the-response-to-momentum) | DELIVERED; gate not established | Raw-S_i correlation replicated; registered incremental prediction test absent, nomom control unverified, one base lacks the 64-update endpoint. |
-| Complete | [REQ-059](#req-059-verify-a-sharpness-guided-layer-wise-momentum-policy) | DONE; negative, audited | Balanced raw-S_i policy loses to global a=0.5; corrected statistics retain that result. Control/provenance repairs in REQ-063. |
-| Secondary | [REQ-060](#req-060-identify-loss-cubic-feedback-separately-from-muon-normalization) | DELIVERED; mechanism unresolved | Simplified gradient-centered nonlinearities measured; actual-buffer causal attribution and removal replay not established. |
-| Available capacity | [REQ-061](#req-061-tau-bench-gold-and-step_hint-with-and-without-sod-through-step-500) | OPEN | Tau-bench gold and step_hint, each with SOD on/off, through training step 500. |
-| Available capacity | [REQ-062](#req-062-second-seed-of-six-momentum-kernel-runs-that-each-test-one-property) | OPEN | Independent muoff second-seed study; preserve its existing priority and limits. |
-| Done | [REQ-063](#req-063-verify-restored-optimizer-controls-and-repair-the-returned-evidence) | DONE 2026-09-15 | Evidence repaired (corrected REQ-059 stats keep the negative; REQ-058 fork-1500 relabeled 60-update). nomom mu-overwrite reproduced + fixed in CPU and **on silicon**: returned "nomom" was mu=0.95 (==ordinary Muon), true mu=0 is distinct + best. Exact-age EMA / names / a=1 verified; replay reproducible. Box stopped. |
-| After 063 | [REQ-064](#req-064-predict-local-memory-improvements-beyond-a-strong-global-setting) | OPEN; gated | Normalized sharpness and actual-update prediction near the best global memory; prospective unused seeds. |
-| After 064 | [REQ-065](#req-065-test-an-unconstrained-layer-wise-policy-against-the-strongest-globals) | OPEN; gated | Unconstrained frozen policy, fresh seeds, full 3250-step endpoint and strong global/cheap controls. |
+| Request | Status | Work and dependencies |
+|---|---|---|
+| [REQ-061](#req-061-tau-bench-gold-and-step_hint-with-and-without-sod-through-step-500) | OPEN | Existing tau-bench gold/step_hint × SOD comparison; preserve its priority. |
+| [REQ-062](#req-062-second-seed-of-six-momentum-kernel-runs-that-each-test-one-property) | OPEN | Existing independent muoff second-seed study; preserve its priority and limits. |
+| [REQ-066](#req-066-adapt-step-size-with-gradient-direction-consistency) | OPEN | Test the multiplicative 1 + cos θ step-size rule with recent displacement references. |
+| [REQ-067](#req-067-use-a-100-step-reference-in-prodigys-step-size-estimator) | OPEN | Compare Prodigy's fixed w₀ reference with exact rolling wₜ₋₁₀₀ in rₜ. Independent of REQ-066's outcome. |
 
-These are queue states; no GPU execution handle has been supplied. Do not interrupt running work.
-**Run REQ-063 Stage A first (CPU/recovery), then its verified control pilot.** REQ-064 requires
-REQ-063's correctness checks; REQ-065 requires REQ-064's registered prospective prediction pass.
-Do not rerun REQ-057's completed pilot or advance on REQ-058's correlation-only label. Check
-live jobs and newly delivered overlapping artifacts on pickup; preserve REQ-061/062 work.
+**Pickup:** check live jobs and newly delivered artifacts before scheduling; do not interrupt
+running work. REQ-066/067 use available capacity without displacing REQ-061/062. REQ-063's
+control repair and REQ-064's prediction experiment have been delivered; do not rerun them
+because of old scheduling text. **REQ-065 is BLOCKED: REQ-064 reported H1 FAIL.** The new
+step-size experiments do not depend on that failed layer-wise momentum gate.
 
-**September 15 audit:** the [returned-results review](logs/kmaxwell/layerwise_momentum_audit_20260915/README.md)
-records reproducible measurement/response evidence, the surviving negative policy result, the
-post-load no-momentum control issue, missing endpoints and corrected statistics. Historical
-result paragraphs below remain as delivered; their audit notes take precedence over stronger
-PASS/mechanism claims. New requests repair missing controls and test useful prediction near a
-strong global setting before another policy trial.
-
-**September 11 audit:** the project target is useful **layer-wise momentum**, requiring a reliable
-predictive measurement rather than another description of the Euclidean curvature bowl. Existing
-DONE labels mean artifacts were delivered; they do not certify every requested control or mechanism
-claim. The [audit](logs/kmaxwell/layerwise_momentum_design_20260911/README.md) records the REQ-051
-probe mismatch, REQ-052 base mismatch, incomplete REQ-054 age control and limits of REQ-055/056.
-Historical result paragraphs below are retained as delivered; use the audit's narrower conclusions.
+This cleanup records requests only; it does not report new training runs or a live job handle.
 
 ## Operating constraints
 
@@ -58,7 +35,7 @@ Historical result paragraphs below are retained as delivered; use the audit's na
   start time in UTC, progress/log location, and eventually the terminal exit state.
 - Monitor every **20 minutes** as requested by Jack. A status label alone does not verify a live job.
 - Reuse a live base between dependent experiments; benchmark training and probe costs separately.
-- Use the interpretation and validation safeguards in REQ-051 and [FINDINGS.md](FINDINGS.md).
+- Use the interpretation and validation safeguards in archived REQ-051 and [FINDINGS.md](FINDINGS.md).
 - Append new numbered requests; update existing status in place. Do not prepend iteration diaries
   or duplicate historical status tables.
 
@@ -66,6 +43,7 @@ Historical result paragraphs below are retained as delivered; use the audit's na
 
 | Request | State | Disposition |
 |---|---|---|
+| REQ-065 | BLOCKED | REQ-064 reported H1 FAIL on September 16. Do not launch the conditional policy trial. [Preserved specification](requests_archive_20260916.md#req-065-test-an-unconstrained-layer-wise-policy-against-the-strongest-globals). |
 | REQ-049 | OPTIONAL | Four-seed replication of the crossed per-matrix LR test; does not displace 050–052. Original specification remains in the history linked below. |
 | REQ-042 | BLOCKED | 32×/64× batch runs exceed the available corpus. Requires a data or run-length decision; no looping/repetition is authorized by this cleanup. |
 | REQ-035 B/C/D | NOT RUN | Arm A is complete. Preserve as deferred work; do not dispatch automatically. |
@@ -74,1303 +52,29 @@ Historical result paragraphs below are retained as delivered; use the audit's na
 include the deferred designs. Completed results and retractions belong in [FINDINGS.md](FINDINGS.md)
 and the linked experiment directories, rather than this queue.
 
-## REQ-050: curvature at initialisation and early training
-
-- status: **DONE 2026-09-07 (n=4)** → `logs/kmaxwell/req050_curvature_at_init/`
-- **RESULT — LEARNED-EARLY, 4/4 seeds.** Step 0: curvature IDENTICALLY ZERO for all 72 Muon matrices, all
-  seeds — proj.weight (unembed) is zero-init (‖·‖=0), so loss=ln(vocab)=10.826 and gradient/curvature to
-  every block matrix is exactly 0 at init. The bowl is structurally absent at init, present + bowl-shaped by
-  step 125 (cubic R² 0.91-0.99, mid-depth argmin 6-9), aligning with the step-1500 profile by ~step 1000
-  (corr +0.70..+0.95). INHERITED criterion decisively false. 3 Hutchinson repeats/step, trace_est/trace_sq_est
-  committed (independently sampled). Steps 0/125/250/500/1000/1500; ~450-630s/probe.
-- (was) status: **OPEN**
-- requested: 2026-09-04; cost premise corrected in iteration 193
-- priority: first; at most two nodes fleet-wide
-- question: Is the depth-curvature profile visible at initialization, or does it emerge during early training?
-
-Use the existing `measure_per_matrix_curvature.py` probe at **steps 0, 125, 250, 500, 1000,
-and 1500**. Start with one seed; expand to four independent seeds if the measured cost permits,
-as in the original request. Each run from step 0 passes through all six measurement points.
-Earlier checkpoints are not retained: regenerate the training state rather than assuming a probe-only run.
-
-The recorded training-time estimate is about **4 minutes per seed / 16.2 minutes for four seeds**
-at 0.162 seconds per step. This excludes probing and setup; benchmark and report those separately.
-
-Preserved registered criteria (band 55):
-
-1. **INHERITED:** at step 0, cubic profile R² ≥ 0.70, minimum in blocks 4–8, and correlation
-   ≥ +0.70 with the late step-2750 profile.
-2. **LEARNED-EARLY:** step 0 has cubic R² < 0.30 or an edge minimum, but the profile is present
-   by steps 500–1500.
-
-Keep the raw profiles and report cases meeting neither criterion as inconclusive; the original
-claim that ambiguity was impossible was narrative, not a third numerical criterion.
-Include the exact measurement steps, per-seed evidence, initialization provenance, code, and
-result location when updating this request. Observing early structure alone does not prove its cause.
-
-### Probe and scoring requirements
-
-- Run **at least 3 probe repeats per measurement step**, using different probe seeds; commit every
-  repeat separately. Existing single-probe curvature noise is large enough to attenuate the
-  registered profile correlations. Report measured cost per repeat. If the budget cannot cover
-  all six steps, prioritize three repeats at steps **0 and 1500** and document missing coverage.
-- Commit `trace_est` and `trace_sq_est` per matrix alongside `top_eigenvalue` and
-  `gradient_block_norm`, for **both REQ-050 and REQ-051**. Use independently sampled Hutchinson
-  moments; Lanczos-derived fields such as `residual_tail` are not substitutes. The concentration
-  finding still needs new-run replication with these moments recorded.
-- Judge the registered profile criteria **within each seed**, with block-clustered standard errors.
-  Seeds test robustness to initialization; cross-seed sign agreement across the same architecture
-  is not independent evidence for a structural relationship. Report all within-seed effect sizes.
-
-### Pre-registered hypothesis H1 — test on REQ-050/051 data, not on REQ-048
-
-A **type-by-depth interaction** accounts for ~31% of the reproducible
-residual in `log C` after type, block and `log n_eff` are absorbed. Per-type depth slopes of that
-residual (dex per block, REQ-048, 4 seeds):
-
-| `mlp.proj` | `attn.q` | `mlp.fc` | `attn.k` | `attn.proj` | `attn.v` |
-|---|---|---|---|---|---|
-| **+0.0298** | +0.0127 | +0.0111 | −0.0051 | −0.0212 | **−0.0274** |
-
-The grouping that separates this ordering cleanly is **the attention output path (`attn.v`,
-`attn.proj`) negative vs all others positive-or-zero**. That grouping was read off these slopes, so
-it is a hypothesis generated by the data and **must not** be scored on REQ-048.
-
-**Register these predictions before the new runs, and report them whether they pass or fail:**
-
-1. **H1-sign:** in new data, `attn.v` and `attn.proj` have negative residual-vs-depth slopes and
-   `mlp.proj` has a positive one, judged **within each seed** (rule 32), not by cross-seed sign
-   counting.
-2. **H1-size:** the per-type slope spread is at least 0.03 dex/block (observed 0.057; half is a
-   conservative floor).
-3. **H1-share:** per-type depth slopes recover an R² gain of at least 0.15 on the residual within
-   each seed (observed 0.288-0.468).
-4. **Falsifier:** if the standing **writer-vs-internal** split (`attn.proj` + `mlp.proj` together)
-   separates the new slopes better than the attention-output-path grouping, H1 is wrong. On REQ-048
-   it fails outright -- the two writers sit at opposite extremes.
-
-REQ-050 tests H1 across training steps (does the interaction appear with the bowl, or later?).
-REQ-051 tests it causally, since it varies per-type LR directly. Neither requires more than the
-two-node ceiling already in force.
-
-### Pre-registered hypothesis H2, added iteration 255 -- activation effective rank and `mlp.fc`'s bowl
-
-The unexplained half of C's depth bowl is almost entirely `mlp.fc`'s (iteration 254): concentration
-removes 57-80% of the other types' bowls and **0%** of `mlp.fc`'s, because `mlp.fc`'s own `n_eff`
-rises monotonically with depth rather than arching. Within `mlp.fc`, **`a_eff_rank` (input activation
-effective rank) removes 91%** of that residual bowl, against a random-control null of 9.1%
-(p = 0.0000).
-
-Register these predictions:
-
-1. **H2-share:** in new data, controlling `log a_eff_rank` removes ≥50% of `mlp.fc`'s
-   concentration-adjusted depth bowl, scored on the seed-averaged profile as specified below.
-2. **H2-slope:** the fitted slope of `mlp.fc`'s concentration-adjusted `log C` on `log a_eff_rank` is
-   near **+0.94** (observed +0.816 to +1.010, cv 0.10).
-3. **H2-specificity:** the effect is **not** uniform across types — it should fail or reverse for
-   `mlp.proj` (observed 0%), `attn.proj` and `attn.q` (observed negative).
-4. **Falsifier:** if `a_eff_rank` removes a comparable share of *every* type's bowl, it is a generic
-   depth proxy and H2 is wrong.
-
-Report the quadratic-free residual correlation as well (observed +0.421, 4/4 seeds): it is what
-separates a real relationship from two curves that happen to share a bowl of similar size.
-
-**Scoring: use the architecture-level, seed-averaged profile.** Joining
-REQ-047's `a_eff_rank` to REQ-048's `log C` with **mismatched** seeds removes **93%** of `mlp.fc`'s
-residual bowl, against **91%** for the matched join, and the **seed-averaged** `a_eff_rank` profile
-alone removes **93%**. `a_eff_rank` therefore contributes a fixed depth curve, not run-specific
-information (its between-block variation is 7.63x its seed-to-seed variation).
-
-- Score **H2-share and H2-slope on the seed-averaged profile**, not per seed. Per-seed scoring would
-  imply run-specific information the committed data do not support.
-- The join is **exonerated**: a cross-archive join that performs identically under mismatched seeds
-  cannot be manufacturing a spurious match.
-- It remains the **right** curve, not merely a curve: at identical degrees-of-freedom cost the next
-  best field is `grad_rank1_frac` at 75%, then `d_eff_rank` 58%, with most fields at 9–16%.
-- **The open causal question for REQ-051:** does *perturbing* activation effective rank move the
-  bowl? Nothing in the committed data tests that, and it is the step from a matching curve to a
-  mechanism.
-
-**Expect the RAW slopes to look null.** The type-by-depth effect is **suppressed** in `log C`: each
-type's direct curvature drift with depth is largely offset by its concentration drifting the other
-way. Across the six types, sd(direct) = 0.0219 against sd(total) = 0.0098. Without a concentration
-control the R² gain is only 0.065; with one it is 0.44–0.50. (An earlier `corr(via, direct) = −0.920`
-was quoted here as evidence of the cancellation and is **retracted** — see the bullet below.)
-
-Therefore, when scoring H1:
-
-- Evaluate the slope criteria on residuals **after** controlling concentration, exactly as H1 states.
-  A near-null raw `log C` slope is **consistent with H1 being true** and must not be reported as a
-  refutation.
-- Report the decomposition `total = beta x (slope of log n_eff) + direct` per type as a
-  **description**, and publish all three columns. But do **not** score cancellation from a
-  correlation between `via` and `direct`, or from the identity closing: `direct` is defined as
-  `total - via`, so that correlation is mechanically negative (mean −0.81 even for independent
-  components) and the identity holds for any data. That error was made once here and is retracted.
-- Score cancellation with a **pairing permutation** instead: hold each type's curvature-depth slope
-  and each type's concentration-depth slope fixed, permute which concentration profile pairs with
-  which type, and compare the observed sd(total) to that null. On REQ-048 this gives p = 0.004-0.034
-  across seeds, with breaking the pairing roughly doubling the spread.
-- A `lam`-free control (`n_eff_bulk = trace(H)²/(trace(H²) − lam²)`, or `participation_ratio`) gives
-  the same answer on REQ-048 (0.437 / 0.460 vs 0.446) and is preferred where available, since it
-  shares no term with the outcome.
-
-## REQ-051: decompose why each matrix has a different LR-to-curvature response
-
-- status: **DONE 2026-09-07 (n=4)** → `logs/kmaxwell/req051_lr_curvature_decomp/`
-- **RESULT — T1 & T2 CONFIRMED.** T1 mlp.proj interaction c=+0.514±0.085, c>0 in 4/4 seeds (predicted ~+0.6)
-  — excess curvature-gradient elasticity of mlp.proj replicates causally. T2 causal k=+1.681±0.088 — below
-  gauge value 2, near REQ-045/036 (+2.24/+1.92), far below observational +3.17 => gauge violation confirmed
-  n=4. T3 decomposition: k_g=+0.778 dominated by k_a=+0.733 (activation), k_d=+0.035, k_rho=+0.010 — the
-  gradient's LR-response is ~94% the forward-activation channel. 6-level Latin square {0.5..1.7}, 4 distinct
-  bases, combined curv+act probe @2050&2750, matrix FE. (2050 early: k=1.36,c=0.99.)
-- (was) status: **OPEN**
-- requested: Jack / Codex, 2026-09-05 PDT
-- priority: **high, after the already-open REQ-050; do not interrupt work already running**
-- repo: `https://github.com/jacknzheng/kmaxwell-sota`, branch `jerry-agent`
-- implementation base: use the committed per-matrix-LR machinery from REQ-023/045 and the
-  activation/backward probes from REQ-043/047; record the exact final code SHA
-- resource constraint: **at most 2 nodes total**
-
-### Registered targets
-
-Three quantities to report, all per seed with within-seed effect sizes and block-clustered standard
-errors. Derivations, retractions and the evidence behind each benchmark are in
-[FINDINGS.md](FINDINGS.md); only the live predictions are restated here.
-
-**Target 1 — the `mlp.proj` interaction (primary).** Fit per seed
-
-    d(log lam) = a + b·d(log g) + c·[mlp.proj]·d(log g)
-
-cluster-robust by block. On the three committed intervention designs `c` is +0.467 (REQ-045),
-+0.536 (REQ-036) and +1.149 (REQ-037) — significant in each separately, pooling to
-**c = +0.578, se 0.075, t = +7.72**; a six-way placebo shows `mlp.proj` is the only type positive in
-all three. **Registered prediction: `c > 0` in each of the four seeds, pooled estimate near +0.6.**
-
-This replaces an earlier per-type *rank* statistic, which was weak and unstable — the ranking churns
-because the attention types' estimates are volatile, not because `mlp.proj` moves.
-
-**Target 2 — the causal elasticity `k = d(log lam)/d(log g)`.** `k = 2` is the gauge-invariant value:
-a reparametrisation `W = c·V` moves `lam` by c² and `g` by c, leaving `C = lam/g²` untouched.
-Benchmarks, all single-seed, which is why REQ-051's four seeds matter:
-
-| source | lever | pooled k | `mlp.proj` k |
-|---|---|---|---|
-| REQ-045 | per-matrix LR | **+2.237** (t vs 2 = +2.77) | +2.504 |
-| REQ-036 | per-type LR | **+1.922** (t vs 2 = −1.01) | +2.287 |
-| REQ-037 | batch size | +0.557 | +1.432 |
-| REQ-048 | *observational* | +3.173 | — |
-
-Compare the causal k against **+2.237 and +1.922**, never against the observational +3.173: 81% of
-that gap is dataset rather than estimator. The per-matrix/per-type divergence is itself a target — a
-per-type rule moves all twelve matrices of a type together and cannot break the confounds that
-independently-drawn per-matrix multipliers do. Report per-type k, and whether `mlp.proj` exceeds 2
-(true under both LR levers, false under batch). Treat this as secondary to Target 1, which is
-level-free: 85% of k's variance is between designs.
-
-**Target 3 — the moment ladder.** Under the same gauge, **all** spectral moments must have elasticity
-+2 wrt `log g`. Observationally on REQ-048 they do not, and deviate in strict order: `trace(H)`
-**+1.107**, `sqrt(trace(H²))` **+2.424**, `lam_top` **+3.173** (within-seed differences `lam − trace`
-+2.066, `lam − rms` +0.749, `rms − trace` +1.317, all 4/4 seeds; permutation null p = 0.0000).
-Physically: matrices with larger gradients hold their curvature in fewer directions. Report the three
-elasticities under causal LR variation. Both outcomes are informative — the ladder survives, or it
-collapses toward +2 and the observational ladder was confounded.
-
-### Measurement requirements
-
-- **Commit ≥3 probe repeats** at every measurement point, for `gradient_block_norm` as well as the
-  curvature moments, with different probe seeds and each repeat committed separately. The pilot's
-  within-matrix signal in `log g` is 0.0948 dex against ~0.115 dex per-probe noise — a
-  signal-to-noise ratio of **0.82**. `lam` and `g` share a probe batch, so their errors are
-  correlated and no clean disattenuation is available after the fact.
-- **Do not use REQ-035 Arm A as a seed check.** Its `s060/s100/s170` labels are probe repeats of one
-  checkpoint, not arms; its within-matrix k of +2.843 is inflated by that shared probe batch, and its
-  independent-error estimate (+2.837) matches the observational family rather than any intervention.
-- Every archive with `top_eigenvalue` and `gradient_block_norm` under a real intervention is
-  single-seed. **REQ-051's four seeds are the first opportunity to seed-replicate any causal k**,
-  which is the main reason it should run before further observational analysis.
-
-### Question
-
-REQ-023 and REQ-045 establish that a matrix's own LR changes its equilibrium top curvature with a
-pooled elasticity near `-1.16`, while the separately identified neighbour-LR coefficient is null.
-REQ-043/047 explain the q/k weight-gradient deficit as a backward-magnitude plus token-alignment
-effect. What remains unanswered is **why the own-LR curvature elasticity differs across matrices,
-types, and blocks**.
-
-Use the repository's current notation throughout:
-
-- `lambda` = per-matrix `top_eigenvalue`;
-- `g` = raw same-minibatch weight-gradient Frobenius norm;
-- `C_gauge = lambda / g^2` — call this `C_gauge`, not merely `C`, to avoid confusing it with the
-  older power-law intercept;
-- `rho = g / (||a||_F ||d||_F)` = REQ-043's `align_ratio`;
-- for any positive quantity `x`, `k_x = -d log(x) / d log(own LR multiplier)`.
-
-Two decompositions must be evaluated on **the same state and the same minibatch**:
-
-```text
-k_lambda = 2*k_g + k_C_gauge
-k_g      = k_a + k_d + k_rho
-
-therefore:
-k_lambda = 2*(k_a + k_d + k_rho) + k_C_gauge
-```
-
-The first follows from `C_gauge = lambda/g^2`. The second follows exactly from
-`g = ||a||_F ||d||_F rho` for the hooked bias-free Linear. These are accounting identities, not by
-themselves causal mechanisms; their value is that they reveal **which measured component carries the
-between-matrix variation in LR response**.
-
-### Design: six-level, within-matrix LR curves on four independent bases
-
-Train **four genuinely independent seeds** to a serialized fork at step 2000. From each base, run six
-750-step continuation arms to step 2750. Use per-matrix multipliers
-
-```text
-{0.50, 0.65, 0.85, 1.00, 1.30, 1.70}
-```
-
-with a cyclic Latin assignment across arms:
-
-- every one of the 72 Muon matrices receives every multiplier exactly once across the six arms;
-- within each arm, each multiplier is assigned to exactly 12 matrices;
-- stratify within matrix type: each of the six types contributes exactly two matrices to every
-  multiplier in every arm;
-- redraw/rotate the block-to-level mapping independently by seed;
-- keep the full-network multiplier histogram identical in every arm, so the experiment changes a
-  matrix's own LR without changing the network-wide LR distribution;
-- write the effective LR multiplier explicitly into every output row.
-
-Within each seed, all six arms must load the exact same serialized model, optimizer, scheduler, and
-data cursor, then consume the same post-fork minibatch sequence; only the per-matrix LR assignment may
-differ. Record and verify the base-state hash. Across seeds, the four base hashes must be distinct.
-
-REQ-045 has already identified the neighbour channel as null. Still report each matrix's others-mean
-multiplier and the mechanical own/others correlation; do not reinterpret this balanced ladder as a new
-neighbour-effect test.
-
-Save checkpoints at **2050 and 2750**. Step 2050 is a mandatory early-response measurement, not a
-conditional branch. Step 2750 is the planned endpoint; establish stationarity before calling it
-equilibrium. Full checkpoints may be retained locally for the probes but must not be committed.
-
-### Measurements
-
-At both 2050 and 2750, on one fixed, recorded validation minibatch shared across all arms within a
-seed, run a combined same-state probe that records per matrix:
-
-- `a_frob`, `a_rms`, `a_eff_rank`;
-- `d_frob`, `d_rms`, `d_eff_rank`;
-- raw `grad_frob` and `align_ratio`;
-- REQ-047's `d_token_participation`, `da_cos_mean`, and `grad_rank1_frac`;
-- `weight_frob`;
-- momentum/polar-input norm, post-polar update Frobenius norm and spectral norm;
-- realized relative update `effective_lr * ||polar_update||_F / ||W||_F`.
-
-At 2750 also record, from the same loss scaling and token batch:
-
-- `top_eigenvalue`;
-- `gradient_block_norm`, plus an explicit equality/scale check against `grad_frob`;
-- `curvature_along_polar`;
-- the usual Lanczos convergence diagnostics.
-
-Do not add another uniform pre-polar gradient multiplier: REQ-046 already proves that Muon's polar map
-normalizes that intervention away. Do not mix REQ-043 gradients from one minibatch with curvature from
-another; if the curvature code and hook code cannot share one pass, record the exact normalization
-factor and require the per-matrix `gradient_block_norm`/`grad_frob` ratio to be constant across arms.
-
-### Analyses and registered decisions
-
-1. **Own-LR inverse law.** Fit each matrix's six-point `log lambda ~ log multiplier` curve separately,
-   then summarize by seed, type, and block. The inverse-law hypothesis passes if, in every seed,
-   at least 90% of matrices have `k_lambda > 0` and the seed-median `k_lambda` lies in `[0.9, 1.5]`.
-   Report disagreement rather than pooling it away.
-
-2. **Power law versus saturation.** For each matrix compare
-   `lambda=A*m^(-k)` against `lambda=lambda_floor+A*m^(-k)` using leave-one-LR-level-out prediction.
-   Call saturation supported only if the positive-floor model reduces held-out RMSE by at least 15%
-   in at least three of four seeds. Otherwise retain the simpler power law. Report which types/blocks,
-   if any, support a floor.
-
-3. **Exact response accounting.** Require maximum absolute residual below `1e-5` for both
-   `k_lambda-(2*k_g+k_C_gauge)` and `k_g-(k_a+k_d+k_rho)`, after documenting log base and normalization.
-   A larger residual is a probe mismatch and must be fixed before interpretation.
-
-4. **Gauge-restoration hypothesis.** The prior prediction is that the LR response is carried almost
-   entirely by `g`, with `C_gauge` nearly restored. It passes if each seed has
-   `|mean(k_C_gauge)| < 0.15` and the pooled magnitude of `k_C_gauge` is less than 15% of
-   `k_lambda`. Failure means the small pooled REQ-023/045 result hides systematic matrix-level
-   heterogeneity and must be revised.
-
-5. **Which part of the gradient response differs by layer?** Within each seed, remove matrix-type
-   means and report the variance/covariance decomposition of `k_g = k_a+k_d+k_rho` across blocks.
-   Also report type-specific values. The registered q/k/v prediction is that `attn.v` has larger
-   `k_lambda` than the mean of q/k in at least three of four seeds. Do not call the largest component
-   causal; label it the component carrying the response variation.
-
-6. **Early prediction of final sharpness response.** Predict the step-2750 `k_lambda` using only
-   step-2050 response features (`k_a`, `k_d`, `k_rho`, early `k_g`, effective relative update,
-   effective-rank and token-coherence responses), with one entire seed held out. Compare against the
-   existing matrix-type prior (`R^2=0.217`, RMSE `0.427`). The early-response hypothesis passes if
-   held-out-seed `R^2 >= 0.32` and RMSE `<= 0.40`; otherwise conclude that the first 50 steps do not
-   predict equilibrium reaction well enough.
-
-7. **Depth discipline.** Fit depth only within type and seed. Compare linear depth, free block effects,
-   and type-by-depth models under held-out-seed evaluation. No pooled “deep layers react more” claim is
-   allowed unless its sign holds in all six types and at least three of four seeds.
-
-### Required artifacts
-
-Write code, configs, logs, and results to:
-
-`logs/kmaxwell/req051_lr_elasticity_decomposition/`
-
-Include:
-
-- `README.md` with design, provenance, results, caveats, and explicit pass/fail for all seven decisions;
-- `assignments.json` with seed/arm/matrix/type/block/multiplier and balance checks;
-- `manifest.tsv` with independent-base state hashes, checkpoint steps, data cursor, node, config, SHA,
-  and exit status;
-- `per_matrix_measurements.tsv` for the same-state 2050/2750 fields;
-- `elasticities.tsv` containing every per-matrix `k_lambda`, `k_g`, `k_C_gauge`, `k_a`, `k_d`, and
-  `k_rho` plus identity residuals;
-- `model_comparison.tsv` for power versus saturation and the held-out-seed early predictor;
-- raw JSONs, config generator, combined probe, and analysis script;
-- figures showing all 12 blocks together, unified by metric: per-type/per-seed `k_lambda`, the
-  `k_a/k_d/k_rho/k_C_gauge` decomposition, six-level LR curves with held-out predictions, and early
-  predicted versus final `k_lambda`.
-
-Commit no model weights, optimizer tensors, secrets, or full checkpoints. Preserve disagreement across
-seeds and matrices in the tables; do not report only pooled averages.
-
-### Execution and interpretation addendum — 2026-09-05, before execution
-
-Jack has requested continued execution and monitoring every 20 minutes until the LR-response question
-is resolved. Please acknowledge this request when picked up. On starting REQ-050/051, record the live
-scheduler job ID or host/session/process handle, start time in UTC, current seed/arm/step, and a concise
-log location. On completion or failure, record the terminal exit state. A queue status alone is not
-proof that a process is running. Preserve the fleet-wide two-node ceiling and existing running work.
-
-These clarifications are part of REQ-051 and do not add training arms:
-
-- **Scientific scope.** The balanced ladder estimates own-LR response under reassignment of the other
-  matrices' LRs. A fixed multiplier histogram does not hold the other weights or trajectories fixed.
-  REQ-045 failed to detect its particular aggregate neighbour channel; it did not prove that every
-  cross-layer effect is zero. Carry that limitation into the per-matrix response interpretation.
-- **No theorem about LR invariance.** `C_gauge=lambda/g^2` is a defined ratio. Its small response is an
-  empirical hypothesis; changing LR is not a parameter-coordinate transformation. Uniformly scaling
-  the loss also scales both its Hessian and gradient linearly, so it does not leave this ratio
-  unchanged. Do not label a restored ratio a proof of general gauge invariance or gradient mediation.
-- **Shared operator and normalization.** Record whether curvature is the true block Hessian, GGN,
-  or another operator; record loss reduction, token count, batch hash, dtype, and probe seed. Do not
-  log-transform nonpositive eigenvalues or signed directional curvature silently. Record exclusions.
-  Separate actual training-update telemetry from a hypothetical polar update recomputed on eval data.
-  Hooking the eval probe must not mutate the training optimizer or momentum state.
-- **Accounting checks are unit checks.** Fit every component with identical observations, regressors,
-  weights, and masks. Since `rho` and `C_gauge` are defined using `g` and `lambda`, the two slope
-  identities are algebraically guaranteed. Independently verify `sum_t d_t a_t^T` against the autograd
-  gradient before computing `rho`; passing the slope identities alone cannot verify hook correctness.
-- **Mean restoration versus matrix restoration.** Retain decision 4 as the *pooled* test, but additionally
-  report the distribution of `k_C_gauge`, its RMS, type means, and seed consistency at every block.
-  Large positive and negative responses may cancel. A small pooled coefficient establishes only a
-  small mean response. Report uncertain heterogeneous effects without declaring them absent.
-- **Prediction comparison on the new data.** The old `R2=0.217`/`RMSE=0.427` came from REQ-035's global
-  three-level LR ladder and are historical context. Refit mean-only, type-only, and type-plus-block
-  baselines using exactly the new training folds. Require the early-feature predictor to reduce RMSE
-  by at least 10% relative to the strongest of these baselines, with improvement in at least three
-  held-out seeds; also report the originally specified absolute thresholds. Any regularization or
-  feature selection must use training seeds only. Separate baseline-only prediction from prediction
-  after observing the six early treatment responses; the latter requires calibration interventions.
-  Use separate fixed eval minibatches for early features and final outcomes to reduce shared probe
-  noise; all fields within an identity must still use the same minibatch and state.
-- **Dependence and uncertainty.** Four seeds are four independent network replicates, not 288.
-  Report four held-out errors, four per-seed effects, and probe/fit uncertainty. Do not manufacture
-  narrow confidence intervals by treating blocks, arms, or checkpoints as independent networks.
-  For saturation compare error in log-lambda, constrain floor >= 0, A > 0, k >= 0, and report
-  boundary/failed fits. Six points may not identify a floor; an inconclusive outcome is allowed.
-- **Budget and stopping gate.** This is 4 regenerated bases plus 24 continuation arms, 48 inexpensive
-  signal-probe states and 24 endpoint curvature-probe states. Benchmark one base/arm/probe first,
-  report training and probing time separately, and repair any operator/hook/state mismatch before
-  launching the remaining arms. Do not assume endpoint probing is cheap because training is short.
-  Call step 2750 the planned endpoint; establish stationarity from available late training/probe
-  diagnostics before calling it equilibrium. If those diagnostics are insufficient, flag that
-  limitation and propose a bounded follow-up instead of extrapolating a time course from one point.
-
-## REQ-052: matched uniform-versus-mixed LR controls for REQ-051
-
-- status: **DONE 2026-09-07 (n=4)** → `logs/kmaxwell/req052_uniform_lr_controls/`
-- **RESULT — band-67 writer/internal contrast is MIXED-LR-ONLY.** Under uniform-Muon LR: writers-internal
-  =+0.028, v-(q,k)=+0.298; under full-global: +0.108 / +0.415. The writer/internal contrast COLLAPSES to ~0
-  (nowhere near REQ-023 mixed's +0.92/+1.17) => band 67 is specific to the mixed per-matrix LR design, does
-  not transfer to uniform/global LR; its untested 4-seed criterion is not met here. v-(q,k) is POSITIVE
-  under both (matching REQ-035 global +0.36..+0.46, opposite REQ-023 mixed neg) — sign is LR-design-dependent,
-  global sign reproduced n=4. 5 arms (u065/u100/u170 + fg065/fg170), 4 distinct bases, combined probe @2050&2750.
-- (was) status: **OPEN**
-- requested: Jack, 2026-09-05 PDT, continuing the LR/sharpness experiment goal
-- priority: coordinate with REQ-051 while its four base checkpoints are live; REQ-050 and already
-  running work retain priority. Do not interrupt or duplicate a running job.
-- branch: `jerry-agent`; resource ceiling: **two nodes fleet-wide**
-- incremental scope: **five control arms per seed, four seeds, 20 continuations total**;
-  reuse the four serialized REQ-051 step-2000 bases and probe implementation
-
-### Evidence motivating the test
-
-The newly proposed writer/internal sensitivity difference (band 67) holds in REQ-023, but does not
-transfer to REQ-035's global LR experiment. An independent raw-data audit of the two REQ-023 forks
-and all four REQ-035 seed archives gives the following. Writers are `attn.proj` and `mlp.proj`;
-internal matrices are q, k, v and mlp.fc. Each group has equal representation at all 12 blocks.
-
-| design / state | mean k(writers) minus mean k(internal) | mean k(v) minus equal-type mean k(q,k) |
-|---|---:|---:|
-| REQ-023 mixed LR, fork1500, endpoint2250 | +0.924 | -0.085 |
-| REQ-023 mixed LR, fork2000, endpoint2750 | +1.165 | -0.500 |
-| REQ-035 global LR, seed0, endpoint2250 | -0.194 | +0.367 |
-| REQ-035 global LR, seed1, endpoint2250 | -0.125 | +0.400 |
-| REQ-035 global LR, seed2, endpoint2250 | -0.006 | +0.455 |
-| REQ-035 global LR, seed3, endpoint2250 | -0.199 | +0.356 |
-
-Method: for each matrix at the stated checkpoint, fit `k=-OLS_slope(log lambda,log multiplier)`
-over 0.6/1.0/1.7 using assignments.tsv for REQ-023 and the LR tag for REQ-035; then average within
-the prespecified groups. Averaging the REQ-035 late 2250-2750 lambda values first also gives negative
-writer/internal contrasts in all four seeds (-0.277,-0.163,-0.157,-0.162). REQ-023's window-mean
-log-lambda contrasts are positive at both forks (+0.758,+0.899). Thus a simple endpoint mismatch
-does not resolve the discrepancy. Different code, initialization, optimizer treatment scope, and
-training protocols remain possible explanations; this comparison alone does not establish causality.
-
-Five checkpoints from one REQ-023 continuation are dependent measurements, not five independent seeds.
-The four-seed criterion in band 67 is untested by that experiment. Preserve the original claim as a
-hypothesis rather than marking its seed-replication criterion satisfied.
-
-### Exact added arms and controls
-
-For every REQ-051 seed, load its exact step-2000 model/optimizer/scheduler/data-cursor state and run:
-
-1. all 72 Muon matrix multipliers = **0.65**;
-2. all 72 Muon matrix multipliers = **1.00**;
-3. all 72 Muon matrix multipliers = **1.70**.
-
-Use the **same per_matrix_lr_muon implementation** as REQ-051, with all 72 entries equal in these
-three arms. Keep embedding/output/other AdamW learning rates fixed for the Muon-only arms.
-
-**Runtime audit resolved the historical scope question before launch (2026-09-05).** REQ-019's
-`eos_f1500_s{060,100,170}/train-log.txt`, `learning_rates step:1500`, records:
-
-| multiplier | embedding AdamW | output AdamW | Muon | other AdamW |
-|---|---:|---:|---:|---:|
-| 0.60 | 0.42 | 0.0024 | 0.015 | 0.009 |
-| 1.00 | 0.70 | 0.0040 | 0.025 | 0.015 |
-| 1.70 | 1.19 | 0.0068 | 0.0425 | 0.0255 |
-
-REQ-023's runtime traces keep the AdamW entries at 0.70/0.004/0.015 across assignments. The
-REQ-035 README describes reuse of the REQ-019 ladder, but does not commit its runtime LR traces;
-the directly verified all-optimizer scope is REQ-019. Its writer/internal contrasts are also
-negative at both matched endpoints: -0.345 (fork1500,2250) and -0.330 (fork2000,2750), while
-v-minus-qk is +0.325 and +0.317. Thus the same ranking reversal is present in a global dataset
-whose actual LR treatment is directly logged.
-
-To separate uniform Muon scope from non-Muon LR changes, add just **two further arms per seed**:
-
-4. **full_global065:** all 72 Muon multipliers = 0.65 AND all non-Muon optimizer group LRs = 0.65x
-   their reference values;
-5. **full_global170:** all 72 Muon multipliers = 1.70 AND all non-Muon optimizer group LRs = 1.70x
-   their reference values.
-
-Reuse arm 2 (all multipliers 1.00, reference non-Muon LRs) as the shared full-global 1.00 control.
-Do not duplicate it. In full-global arms apply the Muon scale exactly once: set per-matrix entries
-to s with the base Muon LR unchanged, and separately scale non-Muon groups. Verify actual traces
-after restoring optimizer state and applying hooks, since loading state can overwrite YAML LRs.
-
-All arms keep weight-decay coefficients, kernel/momentum, batch, data order, and stop step fixed.
-Changing LR also changes realized decoupled weight decay; log its update separately from the
-gradient-driven update and do not describe the result as isolating those two channels.
-Record actual per-group runtime LR traces and full base-state hashes.
-
-Measure early features at **2050** and endpoint curvature plus signal features at **2750**, with the
-same REQ-051 operator, normalization, minibatch pairing, checkpoint semantics, and no-state-mutation
-checks. The all-1 arm supplies a common reference trajectory. Training is 20x750 extra steps; the
-40 signal-probe states and 20 endpoint curvature-probe states must be costed separately using the
-REQ-051 pilot. Do not omit the probe cost or assume old checkpoints exist.
-
-Execution order: once a seed's base is generated, schedule its six mixed arms and five control arms
-within the fleet ceiling before releasing that base. REQ-051's measured pilot must pass first. If
-REQ-051 has already released its bases when picked up, record that condition and the full regeneration
-cost before proceeding; do not silently treat these as free probe-only runs.
-
-### Registered analysis
-
-Primary comparisons use **the same three LR levels** in each design: 0.65, 1.00, 1.70. For each
-matrix select its corresponding three REQ-051 mixed-arm observations, fit k_mixed, and fit k_uniform
-from the three Muon-only controls. Also fit k_full_global from full_global065, shared all-1,
-and full_global170. The six-point REQ-051 fits remain secondary for this comparison.
-
-Report per seed and block:
-
-- `D_m = k_uniform,m - k_mixed,m`;
-- writer/internal contrast in each design and their paired difference;
-- v-versus-q/k contrast in each design and their paired difference;
-- corresponding k_g, k_C_gauge, k_a, k_d and k_rho changes, using the same identity safeguards.
-
-Repeat these contrasts for full-global minus uniform-Muon and full-global minus mixed. The
-full-global-minus-uniform-Muon contrast holds each Muon LR fixed at a given level and changes
-only the non-Muon LR group. Its effect identifies sensitivity to those accompanying LR changes
-in this matched setup; it does not identify which individual non-Muon parameter caused it.
-Apply the same practical threshold/seed-sign criteria below separately to each contrast and
-report all three comparisons. The direction of the intermediate uniform-Muon condition is open.
-The historical directional prediction primarily concerns **full-global versus mixed** scope.
-
-The candidate prediction is that the writer/internal contrast is **larger in mixed than uniform**
-LR, and the v-versus-q/k contrast is **larger in uniform than mixed** LR. Register support for a
-contrast only if its paired difference has the predicted sign in at least 3/4 seeds and the
-four-seed mean magnitude exceeds **0.20 in k**. Report each seed, the difference magnitude, and
-uncertainty; this threshold is a practical effect criterion, not a manufactured significance test.
-If signs disagree or uncertainty is broad, report INCONCLUSIVE. If either contrast reverses with
-similar consistency and magnitude, report the directional prediction refuted.
-
-Fit a pooled predictor of k from type/block and a second with three-way design-by-type terms. Evaluate on a
-whole held-out seed using training-only tuning. Require at least **10% lower pooled held-out RMSE**
-and improvement in at least **3/4 held-out seeds** to call intervention scope predictively useful.
-This is separate from testing whether raw differences are statistically distinguishable from zero.
-
-Interpretation: a reproducible matched difference means response depends on which other matrices
-are perturbed, or on the resulting collective state, despite an earlier null aggregate neighbour
-coefficient. It does not identify a particular off-diagonal Hessian block or prove that one layer's
-curvature itself causes another's. If the difference disappears in this matched implementation,
-the old writer/global mismatch is protocol-dependent; retire it as evidence for a network mechanism.
-The current power law may remain useful in either outcome, but k must be indexed by intervention
-scope if the difference persists.
-
-If the reversal appears only in full-global and not uniform-Muon, attribute the matched contrast to
-the accompanying non-Muon LR intervention, not to an established Muon-neighbour curvature channel.
-
-### Deliverables
-
-Commit under `logs/kmaxwell/req052_matched_lr_scope/`: configurations/generator, base/runtime-LR
-manifest, raw JSON, per-matrix paired response table, per-seed contrast table, reproducible analysis,
-held-out prediction table, and README with explicit supported/refuted/inconclusive outcomes.
-Include one figure per metric with all 12 blocks, uniform/mixed curves distinguished consistently,
-and the same matrix-type columns. Commit no checkpoints, model/optimizer tensors, or secrets.
-
-## REQ-053: what makes `mlp.proj` different — expansion ratio vs nonlinearity
-
-- status: **DONE 2026-09-07 (n=2/arm)** → `logs/kmaxwell/req053_mlpproj_mechanism/`
-- **RESULT — both H-B and H-C fail; mechanism unidentified.** c (mlp.proj excess elasticity) is stable
-  across every architecture: c(2x)=+0.446, c(4x)=+0.514[REQ-051], c(8x)=+0.506, c(GELU@4x)=+0.419.
-  Arm1: FLAT across 4x fan-in range => H-C (fan-in shape) REFUTED. Arm2: GELU keeps c=+0.42 (~18% lower,
-  within n=2 noise, not eliminated) => H-B (ReLU^2) NOT supported. With residual-writer already refuted,
-  all 3 proposed mechanisms fail — c invariant to expansion ratio & nonlinearity. n=2 caveat (arm1 flatness
-  is the stronger refutation). Per-matrix LR intervention at each arch, matrix FE, curvature@2750.
-- (was) status: **OPEN (low priority)**
-- requested: iteration 239, 2026-09-05
-- priority: **after REQ-050, REQ-051 and REQ-052.** This answers a mechanism question about one
-  matrix type, not the C-profile question the campaign is chartered on. Do not displace the queue.
-- resource constraint: **at most 2 nodes fleet-wide**, same ceiling as everything else in this file.
-
-### Question
-
-`mlp.proj` has an excess curvature-to-gradient elasticity of **c = +0.578** (se 0.075, t = +7.72,
-block-clustered) over the other five matrix types, positive in all three committed intervention
-designs (+0.467 REQ-045, +0.536 REQ-036, +1.149 REQ-037) and the only type positive in all three.
-**Why that matrix?** Two hypotheses survive and **cannot be separated from committed data**, because
-in this architecture they select exactly the same rows:
-
-- **H-B — the ReLU² input.** `mlp.proj` is the only matrix whose input is the squared-ReLU expansion.
-- **H-C — the fan-in shape.** `mlp.proj` (768, 3072) is the only matrix with fan-in > fan-out.
-
-A third hypothesis, the residual-writer role, is **refuted**: `attn.proj` is also a writer and has
-c = −0.171, and pooling the two writers *dilutes* the effect (+0.395 vs +0.578).
-
-A within-`mlp.proj` depth test returned a null (pooled d(k)/d(block) = +0.018, p = 0.27) but detects
-only swings ≥ 0.511 in k — 88% of the effect itself — so it discriminates nothing at realistic sizes.
-
-### Arms
-
-Both are single-config training runs to the existing endpoint, with the standard per-matrix curvature
-probe. Run **arm 1 first**; it is the cleaner discriminator.
-
-1. **Expansion-ratio arm.** MLP hidden width at **2×** and **8×** instead of 4×, ReLU² unchanged.
-   - H-C predicts c scales with the fan-in ratio (larger at 8×, smaller at 2×).
-   - H-B predicts c is unchanged across all three widths.
-2. **Nonlinearity arm.** Replace ReLU² with GELU at the unchanged 4× width.
-   - H-B predicts c changes materially.
-   - H-C predicts c is unchanged.
-
-### Reporting
-
-Fit per seed and report `c` from `d(log lam) = a + b·d(log g) + c·[mlp.proj]·d(log g)`,
-cluster-robust by block, exactly as in the REQ-051 scoring note. Include the six-way placebo (the
-same interaction run for every matrix type) — on committed data `mlp.proj` is the only type positive
-in all three designs, and that specificity is part of the claim being tested.
-
-Commit **≥3 probe repeats** per measurement point for `gradient_block_norm` as well as the curvature
-moments; the committed archives' within-matrix signal-to-noise on the gradient side is ~0.82, which
-is the binding limitation on every elasticity in this file.
-
-## REQ-054: annealed single EMA matched to K-Maxwell’s scheduled memory age
-
-- status: **DONE 2026-09-07 (n=4)** → `logs/kmaxwell/req054_agematched_ema/`
-- **RESULT — K-Maxwell needs the MIXTURE, not just the average age.** Age-matched single-EMA
-  (β(t)=A(t)/(1+A(t)), A(t)=K-Maxwell scheduled avg age; validated 57.96→26.0 = spec's 58→26) UNDERPERFORMS
-  K-Maxwell by mean −0.00972 ± 0.00053 val@2750, negative in 4/4 seeds (~50× noise). kmax: 3.3406/3.3402/
-  3.3421/3.3415; agema: 3.3503/3.3502/3.3510/3.3519. So the benefit is multi-timescale/multi-pole
-  expressivity, not merely the scheduled memory age — a single EMA with the identical age schedule leaves
-  ~0.010 on the table. New optimizer AgeMatchedEmaMuon. CAVEAT: schedule-matched (instantaneous stationary
-  age), not finite-history realized-age-matched; gap is stable+large so multi-timescale reading holds; exact
-  finite-history control = cheap follow-up.
-- (was) status: **OPEN**
-- requested: Jack, 2026-09-06 PDT
-- priority and dependencies: after the existing REQ-050–053 queue; instrument with REQ-055 before
-  launching so its measurements do not require another training campaign
-- resource limit: **two nodes fleet-wide**
-
-### Question and control
-
-Does K-Maxwell need a mixture of memory timescales, or does one exponential moving average (EMA)
-perform as well when its average memory age follows the same schedule? An EMA blends the new
-gradient with a fraction of its previous value; its average age describes how far into the past
-it looks. The fixed `mu=0.95` control in REQ-044 does not answer this scheduled-memory question.
-
-Add a single-buffer control alongside `annealed_weights_muon`. At each step use the **actual
-normalized K-Maxwell weights and decays** from the paired configuration:
-
-```text
-A(t) = sum_i w_i(t) * beta_i / (1 - beta_i)
-beta_single(t) = A(t) / (1 + A(t))
-m(t) = beta_single(t) * m(t-1) + (1 - beta_single(t)) * g(t)
-```
-
-Here `A(t)` is the scheduled average memory age in optimizer steps (approximately **58 → 26**
-in the existing anneal). Derive it from the configuration rather than rounded endpoints.
-Keep the outer gradient/memory blend fixed at the K-Maxwell value (currently `mu=0.95`): change
-only the single buffer's decay, not that outer coefficient. Match polar normalization, shape
-scaling, LR schedule, weight decay, switch timing, and buffer initialization at the fork.
-
-**Finite-history check.** The formula matches the instantaneous stationary age, not automatically
-the realized age of a changing EMA. Track scalar kernel mass and first age moment through the
-actual initialization and recurrence for both arms, including inherited momentum and the outer
-blend. Commit scheduled and realized ages and their difference. If transient/schedule mismatch
-persists, report the comparison as schedule-matched only; add an exact finite-history age-matched
-control before attributing a remaining gap to kernel shape.
-Document its moment recurrence and verify valid decays without silently clipping them.
-
-### Paired experiment
-
-Reuse REQ-044's fork-at-2000, stop-at-2750 protocol, compressing the same K-Maxwell anneal into
-that 750-step window. This tests that continuation protocol, not the original switch-at-1000 run.
-Use **three independent base seeds**, batches **1×, 8×, 16×** (1× = 524,288 tokens), and three arms
-per seed/batch: **K-Maxwell, age-scheduled single EMA, and Muon with no momentum**. That is three
-base trainings plus **27 continuations** before any justified finite-history follow-up.
-
-Within each seed/batch, load the same serialized model, optimizer, scheduler, and data cursor;
-consume identical minibatches. Keep `microbatch_sequences=64`, the existing non-Muon optimizers,
-and validation protocol fixed. Verify the usable-batch budget for 16× before launch. Regenerate
-missing bases and fresh paired controls; historical results are context, not substitute controls.
-Pilot one seed at 1×, including REQ-055's probes, before expanding; report training/probe cost
-separately and keep the existing fleet ceiling.
-
-Report per-seed validation curves and paired endpoint differences: single EMA minus K-Maxwell,
-and each minus no momentum. Use **0.0005 validation loss** as the predeclared practical-equivalence
-margin; show across-seed uncertainty and label broad intervals inconclusive. Equality within a
-well-resolved margin supports the scheduled-age explanation in this protocol; a reproducible gap
-with verified age matching supports an additional kernel-shape contribution. Neither outcome
-alone establishes a general mechanism. Report 8× and 16× separately from the 1× reference.
-
-Commit configs, implementation and schedule/initialization checks, state-hash/data-cursor manifest,
-raw logs, per-step memory-age traces, paired result tables, plots, and a reproducible README under
-`logs/kmaxwell/req054_age_matched_single_ema/`. Keep tensor checkpoints local only.
-
-## REQ-055: downhill alignment and loss curvature of the actual post-Muon update
-
-- status: **DONE** (2026-09-07) — deliverable in `logs/kmaxwell/req055_post_muon_update_geometry/`.
-  **Verdict: NULL — no per-step geometric advantage.** On the paired REQ-054 fork (seed 0, dumps at
-  2050/2250/2500/2749), K-Maxwell's realized Muon step (δ_muon = δ_full − δ_wd, decoupled-WD separated,
-  reconstruction residual ~1e-8) is indistinguishable from the age-matched single EMA: downhill alignment
-  kmax−agema = −0.0011 (null), directional curvature vᵀHv = −0.79 on a ~30–66 scale with sign flips (null),
-  uphill-matrix fraction = 0.000 (null). So K-Maxwell's ~0.010 val edge over the age-matched EMA (REQ-054)
-  is a **trajectory-level / accumulated** effect, not a better-aligned or flatter individual step.
-  Method: curvature via two independent finite differences (gradient central-FD HVP, cross-matrix terms
-  kept, + loss-scan 2nd diff — an autograd HVP is impossible, flash-attn has no double-backward) agreeing
-  <6% at 2050/2250/2500 and diverging ~45% at 2749 where the α-scan exposes anharmonicity; loss scan tracks
-  the quadratic prediction to α≈1. **Shared finding (both arms):** the Muon step overshoots its own
-  direction ~2× (loss-scan min at α≈0.25–0.5, realized α=1 near baseline) — an edge-of-stability signature,
-  a Muon property not a kernel one. Weight decay ~10% of ‖δ_muon‖; non-Muon (embed/proj) displacement
-  (~306–714) dwarfs the Muon step. Scoped: n=1 seed, held-out probe only (training-batch alignment not
-  collected). Probe hardened after catching 3 defects (flash-HVP crash, non-reproducible L(x_S), a
-  double-base-run corruption); `ΔL(0.0)=0` verified on all 8 probes. Ran under the ≤2 ceiling.
-- requested: Jack, 2026-09-06 PDT
-- priority and dependencies: implement before REQ-054's pilot; collect on its paired runs
-- resource limit: **two nodes fleet-wide**; no separate training arms by default
-
-### Question and measurements
-
-Does K-Maxwell help because the step it actually takes points more directly downhill, encounters
-less upward curvature, or both? Capture the **actual parameter displacement** after momentum,
-Muon’s polar transformation, shape scaling, and effective LR. Capture the raw training gradient
-before any in-place optimizer mutation. A pre-Muon momentum vector or a new polar update formed
-from validation gradients does not measure the actual training step.
-
-At steps **2000, 2050, 2250, 2500, and 2749**, capture the next applied update from each REQ-054
-arm and evaluate it at its **pre-update state**. Explicitly label whether each record describes
-`step → step+1`; do not imply that an update after the stopping point was trained. Separate the
-Muon gradient-driven displacement `delta`, decoupled weight decay, non-Muon displacement, and the
-full realized model displacement. Verify their sum reconstructs the parameter change within a
-recorded dtype-appropriate tolerance, including any rounding residual.
-
-For the Muon displacement, let `v = delta / ||delta||`. On the training batch and on **three fixed
-held-out probe minibatches** paired across arms within a seed, measure:
-
-- **Downhill alignment:** `-g·delta / (||g|| ||delta||)`; positive means the update points downhill.
-  Also report `g·delta`, `||g||`, `||delta||`, and the fraction of uphill steps/matrices.
-- **Directional curvature:** `vᵀ H v`, using the true loss Hessian at the same state and on the
-  same batch as `g`. Keep its sign. A largest eigenvalue or a positive-semidefinite approximation
-  cannot substitute for curvature along this step.
-- **Loss along the actual step:** evaluate `L(theta + alpha*delta) - L(theta)` for
-  `alpha = {-0.5, 0, 0.25, 0.5, 1, 1.5, 2}`. Compare with the local prediction
-  `alpha*g·delta + 0.5*alpha²*deltaᵀ H delta`. Also report the alpha=1 loss change for the full
-  realized displacement, so weight decay and non-Muon updates are visible.
-
-Report alignment and block-direction curvature for each of the 72 Muon matrices, grouped by type
-and depth, plus the **joint Muon direction**. The joint Hessian product must retain cross-matrix
-terms; a sum of diagonal-block curvatures is not the joint curvature. Compute the full loss scan
-for the joint direction; per-matrix scans are optional if the pilot's measured cost permits.
-Flag zero-norm directions as undefined, and retain negative curvature rather than logging it away.
-
-### Validation and interpretation
-
-Use Hessian-vector products and a small symmetric finite-difference check at multiple step sizes
-to validate directional derivatives; the larger alpha scan tests where the quadratic approximation
-breaks down. Record loss/token normalization, batch hashes, dtype, code SHA, probe seeds, update
-conventions, and measured overhead. Restore model, optimizer, RNG, and data-cursor state after
-probing; verify a short instrumented run matches the uninstrumented trajectory within tolerance.
-
-Compare paired arms at matching seed/batch/step. Separate training-batch alignment from held-out
-alignment, and direction quality from step magnitude. These are measurements along each arm's
-own trajectory; they are not a same-state causal swap of optimizers. Report all seed-level
-results and uncertainty, with inconclusive outcomes allowed. Use REQ-054's validation differences
-to assess whether improved alignment or directional curvature accompanies an actual loss benefit.
-
-Commit the capture/probe implementation and checks, scalar raw measurements, per-matrix and joint
-paired tables, derivative-versus-finite-difference checks, loss-scan plots, and a README under
-`logs/kmaxwell/req055_post_muon_update_geometry/`. Reuse REQ-054's provenance; do not commit model,
-optimizer, gradient, or update tensors.
-
-## REQ-056: test K-Maxwell memory in standard Adam
-
-- status: **DONE** (2026-09-07) — deliverable in `logs/kmaxwell/req056_adam_kmaxwell/`.
-  **Verdict: K-Maxwell does NOT reliably improve standard Adam.** New `KMaxwellAdam` optimizer replaces only
-  Adam's first moment (β2=0.999, eps=1e-8, zero wd, intervention on the 72 blocks matrices, ordinary Adam
-  elsewhere); parity to torch.optim.Adam = 4.4e-16 (adam-mode & 1-stream-0.9); age schedule 58→26 with
-  finite-history realized-age match; variable-decay mass 1−∏β(t) for the age arm; no nonfinite. LR pilot
-  (1e-4/3e-4/1e-3 → 4.64/3.84/3.73) froze lr=1e-3. 3 seeds, step-1000 fork→3250, shadow buffers accumulated
-  in the ordinary-Adam base. Endpoint val, per-seed paired diffs (n=3): **K-Maxwell − Adam = +0.0065 ± 0.0094
-  → INCONCLUSIVE / no improvement** (sign flips: s0 −0.007, s1/s2 +0.010/+0.016; |mean|<std; fails the
-  0.0005 margin); **age-matched − Adam = +0.0141 → REGRESSION** (all 3 seeds — a slow scheduled first moment
-  hurts Adam); **K-Maxwell − agema = −0.0077 ± 0.0006 → IMPROVEMENT** (all 3 seeds — multiple timescales beat
-  a single age-matched EMA, echoing REQ-054). So the Muon K-Maxwell benefit does not transfer to Adam's first
-  moment; β1=0.9 is already competitive. Reused the REQ-055 geometry probe on the realized Adam step (seed 0,
-  wd=0): plain Adam's step is the most downhill and largest at 1000, K-Maxwell no better; step-3248 flagged
-  undefined (‖δ‖→0 at the LR cooldown tail). K-Maxwell costs ~5–8% step time (8 shadow streams). Ran under
-  the ≤2 ceiling.
-- requested: Jack, 2026-09-06 PDT
-- priority and dependencies: after REQ-054/055; reuse their memory-age checks and update probes
-- resource limit: **two nodes fleet-wide**
-
-### Question and implementation
-
-Does K-Maxwell improve **standard Adam**, which scales each parameter's update using its recent
-squared gradients? Replace only Adam's **first moment** (its running average of gradients) with
-the scheduled K-Maxwell mixture. Keep Adam's **second moment** (its running average of squared
-gradients), denominator, epsilon, and learning-rate schedule unchanged across paired arms.
-
-The existing `train_gpt_adamh_kmaxwell.py` is an **AdamH** experiment with an additional
-scale-invariant update rule; it does not settle this standard-Adam question. Use its memory code
-only after checking initialization and bias correction. Do not add Muon's polar transformation,
-its outer Nesterov gradient blend, or AdamH's extra update normalization.
-
-Compare three arms:
-
-1. **Adam:** ordinary single first-moment EMA, `beta1=0.9`.
-2. **K-Maxwell Adam:** the same scheduled decays/weights as REQ-054, mixing correctly
-   bias-corrected first-moment streams in Adam's numerator.
-3. **Age-matched Adam:** one first-moment EMA following K-Maxwell's scheduled average age,
-   using REQ-054's schedule and finite-history verification.
-
-Use `beta2=0.999`, `eps=1e-8`, and **zero weight decay** in all three arms for this initial test;
-record these choices explicitly. This is Adam, not an unlabeled AdamW variant. Apply the memory
-intervention to the same **72 transformer matrices** as the Muon experiments. Use ordinary Adam
-for all remaining parameters, with identical group settings across arms. Record the exact scope.
-
-Bias correction must reflect the **actual buffer history**: for zero-initialized variable-decay
-memory the mass is `1 - product_t beta(t)`, not `1 - beta(t)^t`. For copied/warm buffers, propagate
-normalization mass and age moments from their real initial state. Verify that a one-stream,
-constant-decay configuration reproduces ordinary Adam updates within numerical tolerance.
-
-### Paired training and measurements
-
-Use the existing ablation model/data protocol, **1× batch (524,288 tokens), microbatch 64**, and
-**three independent training seeds**, with a step-1000 fork and endpoint **3250**. Train each base
-with ordinary Adam; accumulate the alternate first-moment buffers in shadow from initialization
-without changing the base trajectory. At the fork, all arms share identical weights, Adam second
-moments, scheduler, RNG state, and data cursor; each memory arm loads its documented shadow
-history. Use K-Maxwell's approximately **58 → 26** age schedule over steps **1000–3250**.
-This is a standard-Adam continuation experiment; do not initialize from a Muon-trained base.
-
-First run a baseline-only LR pilot on a separate seed at **{0.0001, 0.0003, 0.001}**, using the
-same horizon and schedule. Select the finite run with lowest endpoint validation loss and freeze
-that LR for the three-seed paired comparison. If none trains stably, report the failure and repair
-the baseline before expanding. Record the pilot's full results and cost separately. Primary runs
-are **three bases plus nine continuations**; benchmark memory use and step time as well as loss.
-
-Report validation curves, loss versus processed tokens and wall time, per-seed endpoint differences
-(K-Maxwell minus Adam, age-matched minus Adam, K-Maxwell minus age-matched), and across-seed
-uncertainty. Reuse **0.0005 loss** as the practical-equivalence margin and allow INCONCLUSIVE when
-uncertainty is broad. A fixed-LR benefit establishes improvement at that shared setting; a claim
-about best-tuned Adam requires equal-budget LR tuning for every arm and fresh evaluation seeds.
-
-Reuse REQ-055's actual-update alignment and directional-curvature probe at **1000, 2050, and
-3249**, adapted to the actual Adam displacement after denominator scaling and LR. Keep training
-and held-out measurements distinct, verify probes do not alter training state, and report probe
-cost separately. Track scheduled and realized first-moment ages, numerator/denominator norms,
-update norms, and nonfinite values. An advantage over fixed-beta Adam alone does not establish
-that multiple timescales are necessary; the age-matched arm tests that distinction.
-
-Commit implementation and parity/state checks, configs, pilot results, base/history manifests,
-raw logs, paired loss tables, memory-age traces, update measurements, plots, and a README under
-`logs/kmaxwell/req056_adam_kmaxwell/`. Record code SHA and data cursors; keep tensor states local.
-
-## Continuation protocol shared by REQ-057–060
-
-Keep the REQ-054 baseline model/data/optimizer recipe when regenerating bases. Base checkpoints
-are ordinary baseline-Muon trajectories through the stated fork step; do not substitute a
-previously diverged treatment state. Use `start_step=F`, `stop_after_step=F+horizon`, and retain
-the original 3250-step LR schedule independently of the shorter stop. For a fork at F, set the
-mixture switch to F and its anneal end to F+750, as in REQ-054; a 64-update replay sees only the
-first part of that same anneal. Thus REQ-058 at F=2000 and REQ-059 share the schedule through
-their common steps. Record data availability and cursor before every launch; no silent corpus
-repetition. Save local windows required by the downstream requests before releasing each base.
-
-## REQ-057: validate layer-wise spectral sharpness and cross-layer coupling
-
-**September 15 audit:** pilot repeatability passes; full-map validation is partial. The 96.8%
-figure concerns gradient-polar diagnostic curvature, not the realized momentum update or a
-universal decomposition of S_joint. See the [audit](logs/kmaxwell/layerwise_momentum_audit_20260915/README.md)
-and REQ-064 for the missing actual-direction/precision checks.
-
-- status: **DONE** (2026-09-14) — deliverable in `logs/kmaxwell/req057_layerwise_spectral_sharpness/`.
-  Probe built + CPU-validated (9/9 float64 toy-Hessian tests). **Pilot (step 2000, 18 sentinels, 3 disjoint
-  subsets + nested) PASSES both gates:** 18/18 S_i stable K20→K50 ≤5% (100%); median cross-subset Spearman
-  S_i/G_i = 0.983; HVP central-difference plateaus (0.75% @ε=0.005). **Full stage (72 matrices × steps
-  {1500,2000,2500} × seeds {0,1,2}, 4.8 node-hrs):** measurement reliable (cross-seed median Spearman
-  0.93–0.96). **KEY RESULT — layers are ~97% coupled:** at the joint gradient-polar direction cross-layer
-  coupling `c_cross/|c| = 96.8% ± 0.1%` across all 9 checkpoints, so isolated per-matrix S_i captures only
-  ~3% of the joint curvature (pilot 18-matrix value 86.8%). Sharpness rises through training (S_joint ~2×
-  over 1500→2500; Z_joint crosses ~1 by 2500). MLP ~4–6× sharper than attention; attn.v/proj fall
-  monotonically with depth; MLP re-sharpens at the last block. Scoped: cheap budget for the full map (K=20,
-  anchored by the K50/5-restart/3-subset pilot); Lanczos Euclidean comparator + realized-step momentum
-  curvature deferred (momentum dumps retained for REQ-058). Node stopped after delivery.
-  Consequence: **REQ-058 unblocked**, but a momentum rule from isolated S_i must survive the ~97% coupling —
-  which is exactly what REQ-058 tests.
-- requested: Jack / 2026-09-11 PDT
-- priority: **next; measurement gate for REQ-058/059**
-- resource limit: **two nodes fleet-wide; do not interrupt existing work**
-- artifacts: `logs/kmaxwell/req057_layerwise_spectral_sharpness/`
-
-**Question:** Can we measure a reproducible, optimizer-relevant sharpness for each of the 72
-Muon matrices, and how much information is lost by treating them independently? The project
-objective is a useful layer-wise momentum rule. Explaining a Euclidean curvature profile is
-insufficient unless it helps choose momentum and improve validation loss.
-
-**Prior-work check:** REQ-019 already implemented joint block-spectral Frank-Wolfe (FW) sharpness
-at two checkpoints. Reuse its `impl/measure_generalized_sharpness_fw.py`; do not re-request that
-calibration as a new result. Its unit radii, Frobenius gradient norms, single global output, and
-unprojected final FW iterates do not supply the measurements below. REQ-048 measures Euclidean
-spectral concentration, not matrix-spectral sharpness. REQ-055's per-matrix fields include
-cross-matrix terms and are not isolated block curvatures. See the
-[branch audit and rationale](logs/kmaxwell/layerwise_momentum_design_20260911/README.md).
-
-### Definitions and implementation
-
-Use the true loss Hessian H, with a **mean loss per nonignored token**. A Hessian-vector product
-(HVP) computes H times a direction without storing H. Publish the conversion from the old
-`BATCH_TOKENS=524288` sum scale; never combine fields from different token sets or loss reductions.
-Here a "matrix" is one named parameter; a "transformer block" contains six matrices. Report both
-groupings rather than calling both a layer.
-
-For a fixed state, factor the actual Muon step size as `eta(t) * r_i(t)`, where r_i includes the
-implemented shape factor `sqrt(max(1, rows_i/cols_i))` and any relative LR multiplier. Log the
-actual values; if the trainer implementation differs, derive them from that implementation.
-Hold non-Muon parameters fixed in spectral probes, and label this the Muon subspace.
-
-```text
-N_r(D) = max_i ||D_i||_op / r_i
-S_joint = max <D, H[D]> subject to N_r(D) = 1
-S_i = max <D_i, H_ii[D_i]> subject to ||D_i||_op = r_i
-G_i = r_i * ||g_i||_nuclear; G_joint = sum_i G_i
-Z_i = eta * S_i / (2 * G_i); Z_joint = eta * S_joint / (2 * G_joint)
-```
-
-The operator norm `||D||_op` is the largest singular value; the nuclear norm is their sum.
-The Frobenius norm is the square root of the sum of squared entries. These are different
-measurements of matrix size. S_i is a restricted, isolated-matrix maximum; it is not a
-decomposition of S_joint. Include analogous 12 transformer-block maxima only if the pilot
-cost permits; they retain all six within-block interactions.
-
-For comparison, retain eight-iteration Lanczos estimates `lambda_i`, `lambda_i/||g_i||_F²`,
-gradient-polar directional curvature, and actual momentum-update curvature. Preserve the
-eight-iteration convention and report residuals/restart sensitivity; unresolved Lanczos
-estimates must not be treated as exact reference values.
-
-The definitions of S follow [Islamov et al., v3, Definition 2.2 and Eq. 19](https://arxiv.org/html/2603.05002v3).
-The gradient normalization follows Section 4. **Z is a candidate diagnostic for ideal normalized
-spectral descent without momentum, not a proved K-Maxwell stability boundary.** The paper leaves
-stochastic/momentum extensions open. `lambda/||g||_F²` is not this normalized spectral statistic.
-At a fixed state and fixed radii, S is independent of which memory kernel is being evaluated.
-
-### Pilot and required checks
-
-1. Recover the training implementation at `365c392d695f95dc9a4fb89095e85a6a7b5d551e` plus the
-   committed experiment patches, or document an equivalent pinned successor with update parity.
-   The current artifact branch does not contain that harness at its tip. Archive the precise
-   retrieval command, resolved SHA, patch hashes and final diff before launch. Reuse valid local
-   states if available; otherwise regenerate one seed-0 base, retaining full state locally at
-   steps 1500, 2000 and 2500. Preserve model, optimizer, scheduler, RNG and token cursor together.
-2. Pilot at step 2000 on **18 matrices: all six types in blocks 0, 6, 11**. Use three disjoint
-   diagnostic training subsets of 8192 tokens, committed hashes/offsets, plus one nested 32768-token
-   sensitivity check. The three subsets are probe replicates, not three model seeds. Accumulate
-   by actual valid-token counts. Use independent held-out diagnostic tokens for transfer checks;
-   keep final validation tokens out of feature selection.
-3. Compute isolated S_i, joint S_joint and their G denominators on exactly the same objective.
-   FW: exact SVD polar oracle, shape-weighted radii, K=20/50 and five starts (one gradient-polar,
-   four random). Save every objective trace, constraint norms, the best feasible value, and the
-   best value after radial normalization `D/N_r(D)` with an independently recomputed HVP.
-   Distinguish the sphere definition from its ball relaxation for negative curvature. Never
-   report an interior zero as the sphere maximum of a negative-definite problem. Use the best
-   feasible restart, not their mean, as the sharpness estimate; neither is a global certificate.
-4. Validate isolated and joint HVPs against dense float64 toy Hessians with known off-diagonal
-   terms, and against central gradient differences on the model. For actual-step directions,
-   use relative step multipliers 0.005/0.01/0.02/0.04 and report the representable parameter change.
-   Require a plateau across at least two sizes and agreement with differentiable HVPs to 5%
-   where the signal exceeds roundoff; otherwise mark the measurement unresolved. Check the
-   math-attention diagnostic forward/gradient against the production forward/gradient first.
-   Benchmark FP32 references and production precision separately.
-5. Independently capture the trainer's post-polar update before the parameter write. Compare it
-   to the serialized before/after displacement after accounting for decay, AdamW and rounding.
-   Do not use an algebraically defined subtraction as the sole reconstruction check. Save the
-   raw gradient before the optimizer's in-place `grad.lerp_` mutation. Probes must leave all
-   training states, RNG and data cursors unchanged; verify this by hashes and one-step replay.
-6. At shared states, for signed displacement d, record `b = -<g,d>`,
-   `c = <d,H[d]>`, predicted loss change `-b+c/2`, and measured finite-step change separately.
-   Use `c/(2*b)` only when b is positively resolved. Also record the exact remainder
-   `R = L(W+d)-L(W)+b`; `R/b` describes this step retrospectively, so it cannot count as an
-   independent prediction of its own loss increase or as evidence of long-run instability.
-   Training-batch and held-out evaluations must have separate labels.
-7. Decompose joint curvature: `c_diag = sum_i <d_i,H_ii[d_i]>`,
-   `c_cross = c-c_diag`, and `c_i_joint = <d_i,(H[d])_i>`.
-   Compare isolated S_i to joint contributions at the FW direction and actual step. Contributions
-   can be negative. At the pilot state compute the 18-by-18 projected interaction matrix
-   `Q_ij=<d_i,H_ij[d_j]>` using embedded isolated directions; verify symmetry and the joint sum.
-   Report signed cancellation and absolute off-diagonal row sums. REQ-045's aggregate neighbor-LR
-   result is not evidence that these interactions vanish.
-8. Loss-scale check with factors 0.1/1/10: exact-polar updates and S/G are invariant when gradients,
-   HVPs and inherited buffers are scaled consistently. Raw S and G each scale linearly;
-   `lambda/||g||_F²` scales inversely. Quantify departures for the finite-precision polar map.
-
-### Expansion and decisions
-
-Pilot budget: at most **4 node-hours including regeneration**, with costs broken into training,
-HVPs and SVD/FW. If it passes, measure all 72 matrices at the three retained steps on seeds 0,1,2;
-reuse each live base and three separate probe subsets. Start with the validated cheapest FW
-budget; repeat K=50/five-start checks on the 18 sentinel matrices. Full stage cap: **24 additional
-node-hours**. Stop at the cap with partial coverage documented; do not silently reduce accuracy.
-
-Pass measurement reliability only if (a) at least 90% of positively resolved sentinel S_i values
-change by at most 5% from K=20 to K=50 after normalization, and (b) the median pairwise rank
-correlation of S_i/G_i across independent probe subsets is at least 0.8 at each assessed state.
-Report individual failures and confidence ranges; do not drop difficult matrices to pass.
-If more iterations/tokens are necessary, finish calibration within the cap and record the
-validated budget before expanding. Values near zero have an explicit unresolved flag, not a
-hidden epsilon or a logarithm of a negative number.
-
-Report whether spectral normalization changes the within-type depth ordering relative to Euclidean
-sharpness. Similar ordering is a legitimate result. Report joint-versus-diagonal discrepancies
-without asserting that any one cross-term percentage proves layer separability. REQ-058 tests
-whether those interactions actually spoil momentum predictions. **No bowl-fitting criterion alone
-passes this experiment.** Deliver runnable probe/config commands, raw per-repeat JSON/TSV,
-convergence/precision checks, update-parity checks, state manifests, costs and a reproducible README.
-
-## REQ-058: test whether layer sharpness predicts the response to momentum
-
-**September 15 audit — delivered, registered gate NOT established:** raw-S_i correlation is
-reproducible, but the required S_i/G_i versus type/depth/Euclidean prediction comparison and
-pre-outcome predictions are absent. The nomom arm is unverified after optimizer restore;
-seed-0/fork-1500 logs end at 1560 and the analysis substitutes that for 1564. REQ-063 repairs
-these issues; REQ-064 uses new test seeds. The historical PASS statement below is not a gate.
-
-- status: **DONE** (2026-09-14) — deliverable in `logs/kmaxwell/req058_layerwise_momentum_response/`.
-  Memory intervention β_k(a)=β_k^(1/a) (a∈{0.5,1,2}) on the REQ-054 K-Maxwell kernel via the cloned-buffer
-  switch; 4 base states × 41 continuations (164), 64 updates, response = paired selection-loss diff @fork+64
-  vs a=1 control. **RESULT: layer spectral sharpness (REQ-057 S_i) predicts the memory response and
-  GENERALIZES out-of-sample** — Spearman(S_i, longer-memory penalty) = +0.604 dev(seed0) → **+0.591 held-out
-  (seeds 1,2)**, same sign+magnitude; sharper matrices are hurt more by longer memory (prefer shorter);
-  high-sharpness tertile penalty ~2.5× the low. **Held-out prediction gate PASSED → REQ-059 unblocked**, with
-  direction: shorten memory on high-sharpness layers. Global controls (all 4 bases, consistent): shorter-all
-  −0.03 / longer-all +0.05 / no-momentum −0.03 (best) / exact-age-matched-EMA +0.006 ≈ mixture (age dominates,
-  shape adds little — REQ-054/057 consistent). Built + validated the missing REQ-054 exact-realized-age control
-  (matches mixture q_age to 1.42e-14). Caveats: 64-update horizon; per-matrix effects small in abs loss (rank
-  corr is the robust signal); val_tokens 524288 (harness min; 131072 infeasible at mbs64/world8). Node stopped
-  after delivery.
-- requested: Jack / 2026-09-11 PDT
-- priority: after REQ-057; reuse its live bases
-- resource limit: **two nodes fleet-wide**
-- artifacts: `logs/kmaxwell/req058_layerwise_momentum_response/`
-
-**Question:** Does a layer's pre-intervention sharpness predict whether shorter or longer memory
-helps it? Measuring curvature is useful for this project only if it predicts an intervention.
-Do not assume that sharper layers should receive more momentum. REQ-019/023/045/051 vary LR;
-REQ-044/054 vary memory globally. None of their committed artifacts supplies this selective,
-same-state layer-momentum response test.
-
-### Exact treatments and controls
-
-Use the REQ-054 positive eight-stream K-Maxwell kernel, its published normalized weight schedule,
-outer blend `nu=0.95`, shape scaling, weight decay and actual LR schedule. Change only the selected
-matrix's stream decays using `beta_k(a) = beta_k^(1/a)`, with `a in {0.5,1,2}`. This halves or
-doubles exponential decay times while preserving the mixture weights. Nu is distinct from each
-stream's beta. Record kernel mass, realized age in steps and tokens, age variance, and response
-to constant/alternating inputs. This is a memory intervention, not a pre-polar scalar multiplier.
-
-Primary initialization: the production cloned-buffer switch used by REQ-054, with identical
-inherited tensors in all arms. Log exactly which update first changes (the existing switch has
-a baseline update before the mixed update), both pre/post counters, and any metadata conversion.
-Do not reset buffers in one arm only. Validate the scalar age recurrence including inherited
-history; a small six-matrix, zero-buffer sensitivity replay may follow, with all arms reset
-identically and results labeled separately.
-
-At each base, use the same 18 sentinel matrices as REQ-057. Run **36 selective continuations**:
-for each matrix, a=0.5 or 2 there, and a=1 on every other matrix. Other layers continue training
-normally. A single fresh a=1-all control is shared within that base, not counted 18 times as
-independent evidence. Also run a=0.5-all and a=2-all, plus no-momentum Muon and a single-EMA
-control matched to the a=1 mixture's **realized** age: **41 continuations per base**.
-
-For the exact-age control, track raw buffer mass M and unnormalized first age moment P:
-
-```text
-M_new = beta*M + (1-beta)
-P_new = beta*(P+M)
-q_mass = (1-nu) + nu*M_new; q_age = nu*P_new/q_mass
-```
-
-For the mixture sum the streams' masses and moments using the actual weights, including their
-initialization. Solve the scalar recurrence to match the mixture's q_age at every step; verify
-the solution in [0,1) without clipping. Record q_mass too and match it if finite-history mass is
-not negligible, documenting any required positive buffer rescaling. Match mass and first moment
-at initialization; preserve the actual buffer vector where the clone protocol permits it.
-The schedule `beta=A/(1+A)` alone is insufficient. If an exact feasible match cannot be made,
-label it unresolved and do not claim a kernel-shape effect. This completes the missing relevant
-REQ-054 control; it is not a repetition of its schedule-only comparison.
-
-### Bounded sequence and outcomes
-
-- Pilot seed 0 / step 2000 / 1× batch / **64 updates**, one matrix of each type, short and long
-  memory plus the five global controls (17 continuations). Limit pilot to 4 node-hours; benchmark
-  probe and training costs separately and verify the intervention reaches the post-polar direction.
-- If valid, complete all 18 matrices at that base, then seed 0 / step 1500 for development;
-  use seeds 1 and 2 / step 2000 as untouched prediction tests: **four base states, 164 total
-  continuations including the completed pilot arms**. Use 1× = 524288 tokens/update and the
-  existing microbatch size 64. Keep the original LR schedule; the fresh shared control captures
-  normal improvement over the same 64 updates. Cap the expanded stage at 24 additional node-hours.
-- Reset model, all optimizer state, RNG and token cursor to the exact same serialized base for
-  every fork. Validate parity before the first affected update. Reuse existing bases only when
-  their whole-state provenance passes, not just when their seed labels match.
-- Measure pre-treatment features once. Record actual-step telemetry at offsets 0,1,8,32,64,
-  target-layer S/G at 0/64, and loss on a fixed, disjoint **131072-token selection set** at
-  0,8,32,64. Save each of three diagnostic probe repeats independently. The main response is
-  the paired selection-loss difference at update 64. Early loss increase and curvature drift
-  are secondary; do not optimize against the exact remainder of the same step.
-- At the fork evaluate all candidate directions against the same W, raw gradient and diagnostic
-  objective using cloned buffers. Also report on-trajectory changes separately. Include full
-  joint updates with unchanged auxiliary updates, not only a frozen-layer loss scan.
-
-### Registered prediction test
-
-Fit only on seed 0, with matrix type and depth as baseline features. Compare a small, regularized
-linear response model for each treatment using: (1) type/depth only; (2) plus Euclidean lambda
-and `lambda/||g||_F²`; (3) plus S_i/G_i; (4) plus candidate actual-direction alignment, HVP
-curvature and REQ-057 interaction summaries. Fix transformations, missing-value handling and
-regularization on development data. Any tuning uses whole transformer blocks/time windows as
-groups, never random matrix-row splits. Do not feed an endpoint quantity into a baseline predictor.
-
-Before opening seeds 1/2 outcomes, commit the fitted models and predictions. Report errors within
-each held-out seed, per-treatment signs, type/depth residual associations and rank correlations.
-Promotion requires **at least 10% lower response RMSE than the stronger of the type/depth and
-Euclidean baselines on each held-out seed**, with no deterioration in choosing the better memory
-direction. Require the selected policy to predict heterogeneous choices and a benefit over the
-best global kernel, rather than merely recommending longer memory everywhere. Small or noisy
-treatment differences yield INCONCLUSIVE; 72 matrix rows do not create 72 independent seeds.
-
-If only the interaction/actual-update model passes, say isolated sharpness is insufficient; a
-policy using that richer measurement may advance, clearly labeled. If no model passes, stop
-before REQ-059. Do not invent a monotone sharpness-to-beta formula. Preserve all negative results.
-Large-batch completion of REQ-054 remains a separate open question, not a prerequisite for this
-first layer-wise test. Publish raw curves, exact-age traces, named matrix assignments, manifests,
-fitted models, preregistered predictions, uncertainty and the runnable analysis.
-
-## REQ-059: verify a sharpness-guided layer-wise momentum policy
-
-**September 15 audit:** raw endpoint differences confirm the negative outcome for the balanced
-raw-S_i policy. Correct paired t/Holm inference retains it. The no-momentum control and runtime
-allocation/data manifests need verification in REQ-063. This was not the requested fitted
-S_i/G_i policy, and REQ-058's stated gate was not established. Keep the result, with this scope.
-
-- status: **DONE** (2026-09-14) — deliverable in `logs/kmaxwell/req059_sharpness_guided_momentum/`. **VERDICT:
-  NO PRACTICAL WIN (negative primary outcome).** Fresh seeds 3,4,5,6; base@2000->2750; 9 arms/seed (36
-  continuations) with per-seed spectral S_i + Euclidean lambda_i probes; balanced 24/24/24 guided allocation
-  (sharpest-per-type -> a=0.5 per REQ-058), Holm-corrected paired stats on the held-out 10.5M-tok val set.
-  Guided (endpoint 2750): LOSES to global a=0.5-all by +0.0091 (balanced constraint worse than shortening
-  everything); TIES the Euclidean-feature allocation (-0.00012, CI incl 0) and only barely beats the
-  type/depth prior (-0.00018, below the 0.0005 margin) -> **no demonstrated value from spectral-SPECIFIC
-  assignment**; does beat shuffled (-0.00057)/reversed (-0.0017)/global a2/nomom, so the assignment direction
-  is real but tiny and captured by cheaper features. REQ-057 (measurement) and REQ-058 (held-out prediction)
-  held but do NOT convert to a useful static layer-wise momentum policy under equal memory resources. Valid
-  negative result; favored arm not retuned. Does not rule out an online controller or non-balanced allocation
-  (out of scope). Node stopped after delivery.
-- status_orig: **OPEN — conditional on REQ-058 held-out prediction gate**
-- requested: Jack / 2026-09-11 PDT
-- priority: primary project outcome after measurement and prediction pass
-- resource limit: **two nodes fleet-wide**
-- artifacts: `logs/kmaxwell/req059_sharpness_guided_momentum/`
-
-**Question:** Does correctly assigning memory to layers improve training compared with the best
-tested global memory setting? REQ-036 changed per-type LR and failed to improve loss; it does not
-test this momentum-only policy. Do not change LR, shape scaling, outer blend, decay, architecture
-or token budget while testing the new rule.
-
-Freeze the mapping learned in REQ-058 before fresh seeds **3,4,5,6**. From each seed's common
-step-2000 base, run to step **2750** at 1× batch. Measure features once at the fork and hold each
-matrix's selected timescale multiplier fixed throughout the continuation. The ordinary mixture
-weight anneal remains identical across arms. This first trial tests a static allocation;
-an online feedback controller is a subsequent experiment, not an unregistered change mid-run.
-
-Eight primary arms per seed (32 continuations):
-
-1. Global a=0.5.
-2. Global a=1, the fresh K-Maxwell control.
-3. Global a=2.
-4. **Guided** allocation from the passing REQ-058 model, using spectral features (and interactions
-   only if their inclusion was required and registered).
-5. Allocation from the strongest Euclidean-feature model trained on exactly the same development
-   outcomes and with the same tuning budget.
-6. Allocation from the type/depth-only model, to test whether measured sharpness adds information.
-7. Guided assignments shuffled **within matrix type**, preserving each type's exact histogram;
-   commit one permutation per seed before training.
-8. Reversed guided allocation: swap a=0.5 and a=2; a=1 stays fixed.
-
-For arms 4–8 use a common balanced allocation: **four matrices per type at each a**, optimizing
-the frozen model's summed predicted responses under that constraint. This yields 24 matrices
-at each timescale and preserves nominal memory resources. If the development results do not
-support this constrained policy, do not launch; record the failed premise. A ninth global arm
-is mandatory if the exact-age EMA or no-momentum control beats all three global mixtures in
-REQ-058; select which one using development results only. Report all global comparisons, not
-just whichever baseline happens to lose. Including the registered global winner in fresh seeds
-prevents claiming a layer-wise gain from an inferior global reference.
-
-Keep all buffer-state conversion and actual first-affected-step semantics identical to REQ-058.
-Do not reset or replace a stream during a run. Hash complete source states and log every
-`parameter name -> type -> depth -> a -> beta vector` assignment and actual LR. Cache identical
-pre-treatment features across paired arms without letting probes mutate their state.
-
-Use the existing 10485760-token final validation set, entirely excluded from fitting/selection.
-Report validation at 2000/2125/2250/2375/2500/2625/2750; endpoint 2750 is primary, the average of
-the last three listed evaluations is secondary. Show all four seed differences and paired 95%
-intervals. A practical win requires the guided policy's mean loss at least **0.0005 lower than
-every primary control**, and paired uncertainty excluding zero after Holm correction across the
-seven primary comparisons (eight if the ninth arm is required). Broad intervals are INCONCLUSIVE;
-failure to beat shuffle/type-depth means no demonstrated value from sharpness-specific assignment.
-Do not use an older experiment's noise estimate instead of these fresh paired differences.
-
-Record NaNs, loss spikes, gradient/update norms, same-objective geometry at fork/2250/2750, and
-the kernel-age distribution. Endpoint probing uses three independent diagnostic subsets and
-does not retune the policy. Report tokens, training wall time, feature/probe cost, peak memory
-and total end-to-end time. A token-efficiency gain is distinct from a wall-time gain. Include
-the allocation's one-time cost even if features were cached for the controlled comparison.
-
-Pilot one seed before the other three, with a 4-node-hour pilot cap and 24-node-hour expanded cap;
-check only implementation and resource validity, not whether the preliminary loss looks favorable.
-Do not stop early for apparent success. No 8×/16× fleet, architecture sweep, online controller,
-or extra LR tuning is authorized by this request. Deliver configs, raw logs, assignment tables,
-state manifests, paired uncertainty calculations, costs, plots and a reproducible README.
-
-## REQ-060: identify loss-cubic feedback separately from Muon normalization
-
-**September 15 audit — mechanism unresolved:** the delivered diagnostic measures nonlinearities
-at a gradient-centered surrogate, not the requested actual momentum-buffer center/trajectory
-fluctuations. Nonzero map/residual norms do not identify the cause of memory-induced sharpness
-change. Pure-cubic isolation and the causal replay remain unresolved; no expansion is queued.
-
-- status: **DONE** (2026-09-14) — deliverable in `logs/kmaxwell/req060_cubic_vs_polar_feedback/`. **VERDICT:
-  BOTH mechanisms contribute.** Reused a=0.5/1/2 trajectories (regen, seeds 0,1,2, offsets 32/64); e_loss
-  even-gradient-difference + E_map/E_residual separation on the real polar map (CPU-validated core, 4/4). At
-  every state Muon's polar-map nonlinearity (map_frac ~0.77-0.80) AND the loss-cubic feedback (residual_frac
-  ~0.66-0.69) are both large -> neither exclusively explains the memory->curvature change; the polar map is
-  the larger single contributor. The loss-cubic part is REAL but NOT purely cubic (e_loss scale ratio 0.5/1
-  ~0.30-0.36 vs the cubic ideal 0.25 -> higher-order contamination; not labeled a pure third-derivative force
-  per the request). Memory length weakly modulates the cubic feedback (a2 >~ a1 >~ a05, ~5-10%). Optional
-  16-update replay NOT run: signal not cleanly resolved (scale-ratio contamination + weak modulation are
-  explicit INCONCLUSIVE conditions). Frozen-buffer gradient-polar-center diagnostic (c0=1). Node stopped.
-- status_orig: **OPEN — secondary, gated on REQ-057 and usable REQ-058 trajectories**
-- requested: Jack / 2026-09-11 PDT
-- priority: mechanism follow-up; does not block a valid REQ-059 policy test
-- resource limit: **two nodes fleet-wide; 8 node-hours maximum**
-- artifacts: `logs/kmaxwell/req060_cubic_vs_polar_feedback/`
-
-**Question:** When memory changes curvature, is the change consistent with the loss's third
-derivatives, or with Muon's nonlinear normalization, or both? The local investigation's
-`(1/2) T:Sigma` mechanism is a hypothesis, not something measured by REQ-054/055. A larger
-oscillation variance or lower endpoint loss alone does not establish it.
-
-Reuse matched a=0.5/1/2 trajectories from REQ-058, seeds 0,1,2, around offsets 32 and 64. Retain
-short local state windows for this purpose; do not commit tensors. Estimate centers and
-fluctuations using detrended windows of 8/16/32 updates; report sensitivity so steady drift is
-not counted as oscillation. On identical diagnostic data compute
-
-```text
-e_loss(c,delta) = [g(c+delta)+g(c-delta)]/2 - g(c)
-```
-
-Use displacement scales 1/0.5/0.25 and check approximately quadratic scaling above the numerical
-noise floor. Project onto the calibrated sharp directions and compare ordinary gradient drift
-with the proposed feedback. For FW-based sharpness, keep the measured maximizing directions and
-radii fixed while differentiating their quadratic form. A gradient of that fixed-direction
-surrogate is not automatically a gradient of the exact global maximum when maximizers switch.
-Report S and its gradient denominator separately when interpreting changes in S/G.
-
-Separate the two nonlinearities at the same center and frozen optimizer buffers. Let Phi be the
-implemented polar/shape map, q0 its center input, and c0 the coefficient of the current gradient
-in the actual mixture after its buffer update. Compute q+ and q- from g(c±delta), then compare
-
-```text
-E_total = [Phi(q+)+Phi(q-)]/2 - Phi(q0)
-E_map = [Phi(q0+c0*H[delta])+Phi(q0-c0*H[delta])]/2 - Phi(q0)
-E_loss_residual = E_total - E_map
-```
-
-For a smooth local map, the leading loss term is `D Phi(q0)[c0*e_loss]`; E_map can exist on a
-purely quadratic loss. Validate that separation on quadratic and weakly cubic float64 toys,
-then compare with the production finite-precision map. Finite-scale residuals also contain
-higher-order interactions and must not be labeled pure cubic force without the scale test.
-Distinguish this frozen-buffer diagnostic from a replay of the full evolving buffer history.
-
-If that signal is resolved, run a bounded **16-update**, same-state replay removing the measured
-even-gradient contribution before the full memory/polar update, with an untouched control and
-a norm-matched orthogonal perturbation control. Replay all buffer states and identical data;
-verify that the intervention changes the predicted projection, then compare future sharpness,
-loss and oscillation changes on separate diagnostic data. It is a mechanism intervention,
-not a candidate training algorithm. Nonlocal fluctuations, precision floors, nonunique sharp
-directions or a large Taylor residual permit an INCONCLUSIVE result.
-
-Commit same-state/scale checks, raw projections, covariance summaries, predicted-versus-observed
-drift, normalization-only controls, replay outcomes, manifests and costs. Report what remains
-unidentified. Do not claim that momentum multiplies the third-derivative tensor at fixed weights.
-
+## Delivered work and interpretation
+
+DONE means artifacts were delivered, not that every requested control or mechanism was
+established. The [September 11 audit](logs/kmaxwell/layerwise_momentum_design_20260911/README.md)
+and [September 15 audit](logs/kmaxwell/layerwise_momentum_audit_20260915/README.md) take precedence
+over stronger historical claims. Original specifications, result paragraphs, and audit notes
+are retained in the archive; unresolved controls remain unresolved.
+
+| Request | Status | Result and limits |
+|---|---|---|
+| [REQ-050](requests_archive_20260916.md#req-050-curvature-at-initialisation-and-early-training) | DONE | Establish when the depth-curvature profile appears. |
+| [REQ-051](requests_archive_20260916.md#req-051-decompose-why-each-matrix-has-a-different-lr-to-curvature-response) | DONE; audited | Four-seed LR responses delivered; the combined decomposition uses mismatched probe batches. |
+| [REQ-052](requests_archive_20260916.md#req-052-matched-uniform-versus-mixed-lr-controls-for-req-051) | DONE; audited | LR-scope comparison delivered; recorded bases differ from REQ-051, so exact pairing remains unverified. |
+| [REQ-053](requests_archive_20260916.md#req-053-what-makes-mlpproj-different--expansion-ratio-vs-nonlinearity) | DONE | Separate the ReLU² input from the fan-in shape as the source of `mlp.proj`'s excess elasticity. |
+| [REQ-054](requests_archive_20260916.md#req-054-annealed-single-ema-matched-to-k-maxwells-scheduled-memory-age) | DONE; audited | K-Maxwell beats the scheduled EMA at 1×; exact realized-age and larger-batch controls remain open. |
+| [REQ-055](requests_archive_20260916.md#req-055-downhill-alignment-and-loss-curvature-of-the-actual-post-muon-update) | DONE; audited | One-seed geometry delivered; equivalence and per-step-mechanism claims remain unresolved. See REQ-057/058. |
+| [REQ-056](requests_archive_20260916.md#req-056-test-k-maxwell-memory-in-standard-adam) | DONE; audited | K-Maxwell vs ordinary Adam is inconclusive (n=3); gain over the scheduled EMA does not isolate exact-age kernel shape. |
+| [REQ-057](requests_archive_20260916.md#req-057-validate-layer-wise-spectral-sharpness-and-cross-layer-coupling) | DONE; audited | Repeatable pilot rankings; ~97% coupling is at a diagnostic direction, not the realized momentum step. Some numerical checks remain open. |
+| [REQ-058](requests_archive_20260916.md#req-058-test-whether-layer-sharpness-predicts-the-response-to-momentum) | DELIVERED; gate not established | Raw-S_i correlation replicated; registered incremental prediction test absent, nomom control unverified, one base lacks the 64-update endpoint. |
+| [REQ-059](requests_archive_20260916.md#req-059-verify-a-sharpness-guided-layer-wise-momentum-policy) | DONE; negative, audited | Balanced raw-S_i policy loses to global a=0.5; corrected statistics retain that result. Control/provenance repairs in REQ-063. |
+| [REQ-060](requests_archive_20260916.md#req-060-identify-loss-cubic-feedback-separately-from-muon-normalization) | DELIVERED; mechanism unresolved | Simplified gradient-centered nonlinearities measured; actual-buffer causal attribution and removal replay not established. |
+| [REQ-063](requests_archive_20260916.md#req-063-verify-restored-optimizer-controls-and-repair-the-returned-evidence) | DONE 2026-09-15 | Evidence repaired (corrected REQ-059 stats keep the negative; REQ-058 fork-1500 relabeled 60-update). nomom mu-overwrite reproduced + fixed in CPU and **on silicon**: returned "nomom" was mu=0.95 (==ordinary Muon), true mu=0 is distinct + best. Exact-age EMA / names / a=1 verified; replay reproducible. Box stopped. |
+| [REQ-064](requests_archive_20260916.md#req-064-predict-local-memory-improvements-beyond-a-strong-global-setting) | DONE 2026-09-16; negative | 156/156 continuations delivered; reported H1 FAIL. Sharpness did not beat the type/depth prior; REQ-065 remains blocked. [Results](logs/kmaxwell/req064_local_memory_prediction/README.md). |
 
 ## REQ-061: tau-bench gold and step_hint with and without SOD through step 500
 
@@ -1532,361 +236,171 @@ spread. Run 7 pushes the stability threshold below the range we have tested.
 
 No secrets. No new code beyond what is in the commit. No dependency on any K-Maxwell state or result.
 
-## REQ-063: verify restored optimizer controls and repair the returned evidence
+## REQ-066: adapt step size with gradient-direction consistency
 
-- status: **DONE 2026-09-15 (Stage A + Stage B B1–B6)** →
-  `logs/kmaxwell/req063_verified_momentum_controls/`. Stage A: corrected REQ-059 inference (paired t,
-  df=3, Holm cumulative-max) keeps the negative outcome (guided loses to global_a05 +0.00914); REQ-058
-  fork-1500 relabeled 60-update (53/53) and excluded from the 64-update analysis; retrospective features
-  (raw S_i / type-depth positive on held-out seeds, S_i/G_i weak; Euclidean + actual-direction deferred
-  to REQ-064); recovery manifest (committed vs UNVERIFIED node-local). Stage B (real restore hooks +
-  optimizer at 365c392d): **nomom mu-overwrite reproduced** (`load_state_dict` sets nomom mu 0→0.95) and
-  **fixed** (reapply declared treatment after load; `impl/apply_req063_restorefix.py`); exact-age EMA,
-  72/72 & 1/72 name resolution, and a=1==mixture all verified. **B6 verified control pilot (node w6vpkyq,
-  1×8 H100, stopped): on silicon the returned "nomom" (3.43117) == the named ordinary-Muon mu=0.95 control
-  (3.43106) — it was never no-momentum; the fixed path logs mu=0.0 and lands at 3.39216 (distinct + best).
-  a1all mixture replay reproducible to 6e-5 (probe-replay precondition; probe on/off deferred to REQ-064).**
-- requested: Jack / 2026-09-15 PDT
-- priority: next layer-wise momentum work; preserve REQ-061/062 and existing live jobs
-- resource limit: **two nodes fleet-wide; GPU pilot at most 2 node-hours, 10 node-hours total**
-- artifacts: `logs/kmaxwell/req063_verified_momentum_controls/`
+- status: **OPEN**
+- requested: Jack / 2026-09-16 PDT
+- priority and dependencies: new optimizer study; preserve REQ-061/062 and live jobs
+- resource limit: **two nodes fleet-wide**; benchmark the pilot and record a finite GPU-hour
+  budget before expansion
+- artifacts: `logs/kmaxwell/req066_direction_consistency/`
 
-**Question:** After restoring the same training state, which momentum kernel is actually being
-applied, and does shorter global memory still win against verified controls? The September 15
-[audit](logs/kmaxwell/layerwise_momentum_audit_20260915/README.md) reproduces the `nomom` parameter
-overwrite, missing REQ-058 endpoints and incorrect REQ-059 significance calculation. This request
-repairs those omissions; it is not an automatic repeat of all REQ-057–060 runs.
+**Question:** Can we take larger steps while recent gradients keep pointing downhill, and
+smaller steps when the direction changes, using a Prodigy-inspired step-size controller?
+Think of continuing confidently along a straight path, then slowing down at a turn.
 
-### Stage A: recover and verify existing artifacts, without training
+Source: Bernstein and Newhouse, [Old Optimizer, New Norm: An Anthology](https://arxiv.org/pdf/2409.20325),
+Story III, equations 24–30 and the discussion following equation 30. The paper interprets
+Prodigy's step size using gradient/displacement alignment and mentions a rule akin to
+ηₜ₊₁ = ηₜ × (1 + cos θ) in preliminary experiments. The precise comparisons below are our
+experimental choices, not a claimed reproduction of an established result.
 
-1. Recover the actual executed source patches, resolved configs, stdout, state/data manifests,
-   REQ-059 seed feature JSONs and named allocation JSONs from the prior execution hosts. Compare
-   against committed generators. Pin the recovered harness SHA and patch hashes; default source
-   is `365c392d695f95dc9a4fb89095e85a6a7b5d551e` plus the committed REQ-058/059 patches. Missing
-   runtime evidence is **UNVERIFIED**, not evidence that a favorable fix existed.
-2. Run the committed September 15 CPU verifier. Correct REQ-059 inference with paired t-tests
-   across its four seeds, df=3; Holm adjusted p-values must be the cumulative maximum of
-   `(m-rank+1)*p_sorted`, capped at 1. Label ordinary 95% paired CIs correctly. A success
-   decision must actually check the corrected p-value. Preserve the negative policy outcome.
-3. Do not replace missing target evaluations with the last row. REQ-058 seed-0/fork-1500 files
-   end at **1560**, not 1564. Recover the endpoint from complete logs/state if available;
-   otherwise label these 60-update observations and exclude them from the 64-update analysis.
-   Existing seeds 0–6 and their outcomes are now development/exploratory evidence, not new
-   untouched tests. Retain the original raw files and publish corrected derived tables.
-4. Where exact base/probe provenance permits, compute the missing retrospective REQ-058
-   comparisons: type/depth, plus Euclidean features, plus S_i/G_i, plus actual-direction
-   features if available. Fit on seed 0 and report seeds 1/2 individually; label this analysis
-   **retrospective**. Do not invent absent features, join merely by seed/step label, or spend
-   GPU time regenerating unavailable old probes in this stage. Document the missing columns
-   and defer their prospective comparison to REQ-064. Correlation sign is not the old gate.
+### Rule and comparisons
 
-### Stage B: verify the optimizer after loading the checkpoint
+Here wₜ means weights before optimizer update t, gₜ means that update's raw loss gradient,
+and ηₜ is the positive adaptive step-size scale. For a lookback of k completed optimizer
+updates, define:
 
-Use the **actual training setup and restore hooks**, rather than testing just an optimizer
-constructor or standalone scalar solver. Before a production launch:
+```text
+aₜ = wₘₐₓ₍₀,ₜ₋ₖ₎                   reference weights
+dₜ = aₜ − wₜ                       reverse of the recent weight displacement
+cₜ = dot(gₜ, dₜ) / (‖gₜ‖₂ × ‖dₜ‖₂) = cos θₜ
+ηₜ₊₁ = ηₜ × (1 + cₜ)
+```
 
-- Reproduce whether `load_state_dict` changes the nominal no-momentum arm's `mu` from 0 to
-  0.95. Restore model, inherited buffers and counters first, then explicitly reapply only
-  declared treatment hyperparameters. Assert the resolved groups and log them immediately
-  before the first affected update. Verify zero momentum reaches the post-polar update and
-  is independent of changes to an inherited momentum buffer when the current gradient is fixed.
-- Include an explicitly named **ordinary Muon, mu=0.95** control. It is distinct from zero
-  momentum, from the eight-stream mixture, and from its exact-age single-EMA control.
-- Verify every requested parameter name resolves exactly once: 72/72 for global changes,
-  1/72 for selective changes, and exactly the requested per-type counts for old allocations.
-  Abort on missing/extra names, empty maps, duplicated targets, or `_orig_mod` name mismatch;
-  do not silently leave an unrecognized parameter at the default treatment.
-- A nominal a=1 intervention must reproduce the original mixture's actual updates. Changing
-  a must reach the post-polar update. Check the cloned-buffer transition, counters, first
-  affected update, LR schedule, weight decay and all auxiliary optimizers. Preserve the
-  common baseline update at the switch for every arm, including zero momentum; activate all
-  treatments at the same subsequent update. Do not reset inherited buffers in just one arm.
-- For the exact-age EMA, verify the implemented schedule, inherited mass/first moment and
-  outer blend against the **actual** mixture recurrence, after restoring counters. Test
-  impulse, constant and alternating gradient sequences; publish per-step mass, mean age,
-  age variance and beta through 750 updates. Age/mass tolerance is 1e-10 in CPU float64;
-  separately report production precision. Preserve initial buffer vectors where compatible.
-- Test instrumentation with a no-probe/probe replay of identical full state and training
-  batches. Hash weights and buffers, preserve RNG and data cursor, and compare actual
-  updates; a probe must not change the training trajectory. Central differences must restore
-  saved tensors exactly instead of assuming add/subtract reverses floating-point rounding.
+The dot product measures how much two directions agree; ‖·‖₂ is their ordinary length.
+Use **reference minus current**, not current minus reference: cₜ > 0 should mean that
+continuing along the recent descent path still reduces loss locally. Positive cₜ increases
+the scale; zero leaves it unchanged; negative cₜ decreases it. This is gradient-versus-path
+consistency, not the cosine between gₜ and gₜ₋₁. Those coincide only for particular update rules.
 
-Keep `train_steps=3250`, 1× batch = 524288 tokens, microbatch 64, original LR schedule and
-REQ-054 eight-stream decays/weight schedule. The mixture intervention remains
-`beta_k(a)=beta_k^(1/a)` with fixed outer blend 0.95. All bases use ordinary Muon through the
-step-2000 switch; mixture weights anneal to their published endpoint at 2750.
+Start with one fixed, verified Muon recipe and its existing update direction, momentum,
+relative matrix scaling, auxiliary optimizers, weight decay, and training schedule. Freeze
+the exact recipe/code SHA before the pilot. Apply one global controller to the Muon matrix
+group; form the cosine by summing dot products and squared norms across that same group
+and all distributed shards. Preserve raw gradients before Muon's in-place transformations.
+Do not average per-matrix cosines or adapt each layer separately in this first test.
 
-For REQ-063–065, define a canonical counter of **completed optimizer updates**. Record its
-mapping to the harness loop counter, optimizer counter and checkpoint filename. Publish both
-absolute completed updates and updates since fork in every curve. Verify observations at
-the exact requested endpoint; do not relabel a `step 0` row as a fork without provenance.
+| Arm | Step-size rule | Reference |
+|---|---|---|
+| baseline | Existing scheduled LR; adaptive multiplier fixed at 1 | None |
+| cosine-1 | Multiplicative 1 + cₜ controller | wₜ₋₁ |
+| cosine-100 | Same controller | wₘₐₓ₍₀,ₜ₋₁₀₀₎ |
 
-Before running, publish hashed file/token ranges for three diagnostic subsets (8192 each,
-with a nested 32768 check), a **524288-token selection set**, and a separate
-**10485760-token final set**. They must be mutually disjoint except the intentional nested
-diagnostic check, and excluded from training. Implement and test the ranges in the loader:
-the old shared validation glob and differing token counts do not establish disjointness.
-Select unused available validation ranges; if there are too few, report the data limitation
-instead of silently overlapping, shrinking the final set, or looping the corpus. The final
-set is sealed until REQ-065 and never used for feature/model/kernel selection.
+Factor the actual LR as ηₜ × qₜ, where qₜ is the unchanged dimensionless warmup/cooldown
+schedule. Initialize η₀ to the baseline's nominal LR, use ηₜ for update t, and use cₜ to
+set ηₜ₊₁. Do not recursively multiply by qₜ or remove the schedule in just one arm. Keep
+the weight-decay displacement on the baseline schedule so adapting the loss-gradient step
+does not also change regularization strength. Document this separation in the resolved config.
 
-### Stage C: bounded corrected global comparison
+For zero gradient or zero displacement, hold η unchanged. Clamp finite numerical cosine
+values to [−1, 1]. Because exact cₜ = −1 would otherwise set η permanently to zero, and
+persistent positive cₜ can grow η exponentially, predeclare a positive η floor and finite
+ceiling shared by the cosine arms. Record both the raw candidate and applied η, plus bound
+hit rates. Label the training implementation as bounded 1 + cos θ. Any damping, smoothing,
+different initialization, or gradient-versus-gradient variant is a separately named follow-up;
+do not silently alter the registered arms after seeing their losses.
 
-After the CPU checks and an actual-setup GPU smoke test pass, use seeds **0,1,2**, fork 2000,
-continue to **2750**. These are calibration seeds, not new confirmation seeds. Run six arms:
+### Pilot, evaluation, and deliverables
 
-| Arm | Treatment after the common switch update |
-|---|---|
-| mixture_a025 | Eight streams, a=0.25 everywhere |
-| mixture_a05 | Eight streams, a=0.5 everywhere |
-| mixture_a1 | Original eight-stream mixture |
-| muon_mu0 | Verified zero-momentum Muon |
-| muon_mu095 | Ordinary Muon with mu=0.95 |
-| exact_age_a1 | Single EMA matching mixture_a1's realized age at every update |
+1. Verify the sign and update timing on tiny deterministic examples: aligned, perpendicular,
+   opposite, and zero directions. Check that disabling the controller reproduces the baseline.
+   Verify exact lookback, startup, and resumed-run parity, including distributed reductions.
+2. Pilot all three arms from the same initialization and token order on one development seed
+   through **500 completed updates**. Record validation loss at 0, 100, 250, and 500, stability,
+   bound hit rates, memory, and runtime. Freeze η bounds and any implementation fixes before
+   confirmation runs. A changed pilot is development evidence, not an independent replication.
+3. If correctness and measured cost permit, run all three frozen arms from initialization
+   through **3250 updates on three fresh paired seeds**, reserved before outcomes are opened.
+   Use the same evaluation tokens and evaluate every 250 updates and at 3250. The primary
+   comparison is each cosine arm minus baseline validation loss at 3250; comparing the two
+   windows is secondary. Do not select a favorable earlier endpoint or drop failed seeds.
 
-This is **18 continuations**, including the seed-0 pilot, with three common bases; reuse old
-full states only if code/state/data provenance passes. Evaluate selection loss at the fork,
-offsets **64,128,256**, and absolute **2500,2625,2750**. Save exact full-state snapshots at the
-fork and required probe points locally. Report paired differences, all seed effects, sample
-SDs and ordinary paired t CIs. Endpoint 2750 is primary; early/late comparisons distinguish a
-switch transient from a sustained advantage. One seed's unexpected result is not a retry rule.
+Publish every paired seed difference, their mean and uncertainty, train/validation curves,
+time to common loss thresholds, and total GPU-hours. Three seeds are a small comparison;
+report inconclusive results when uncertainty does not separate the methods. Log cₜ, ηₜ,
+actual LR, update norm, displacement norm, gradient norm, and bound/zero-direction events.
+Keep the seed/data/code manifests, configs, launch commands, and raw scalar logs. Report
+whether any gain survives the added runtime and memory cost. A gain with frequent bound hits
+is evidence for the bounded controller, not for the unrestricted recurrence.
 
-Choose **a_star** from {0.25,0.5,1} by lowest mean selection loss at 2750 across the three
-seeds; ties within 0.0005 prefer 0.5 if in the tied set, otherwise the smaller a. Freeze it
-before REQ-064. Also freeze the strongest of the three non-mixture controls by the same
-endpoint, ties preferring ordinary Muon, then zero momentum, then exact-age EMA. Publish
-whether any non-mixture control beats a_star; it remains a required policy comparator.
-Make these choices only from complete endpoints. A verified treatment that diverges is a
-failed treatment, not an omitted favorable seed; distinguish it from an infrastructure
-failure. If the reference/calibration comparison cannot be resolved within budget, leave
-a_star unset and do not start REQ-064.
+## REQ-067: use a 100-step reference in Prodigy's step-size estimator
 
-Do not rerun unaffected historical arms to fill missing paperwork. If recovered evidence
-already verifies an arm with exactly these states, ranges and endpoints, reuse it and count
-it once. Pilot cost includes setup/probes/base regeneration; stop if the 10-node-hour total
-cannot cover the bounded design. No layer-wise performance claim is made by this request.
+- status: **OPEN**
+- requested: Jack / 2026-09-16 PDT
+- priority and dependencies: independent of REQ-066's outcome; share correctness checks and
+  measurement conventions where applicable
+- resource limit: **two nodes fleet-wide**; benchmark memory/runtime and record a finite
+  GPU-hour budget before expansion
+- artifacts: `logs/kmaxwell/req067_prodigy_rolling_reference/`
 
-Deliver corrected analyses, post-load parameter assertions, update parity, age traces,
-resolved configs, manifests, raw stdout and curves, actual endpoint counts, costs, and the
-frozen a_star/non-mixture comparator. Correct the old status paragraphs with scoped audit
-notes; do not delete old data. **PASS means control/provenance checks passed**, irrespective
-of which optimizer wins. Failed restore/intervention checks block REQ-064/065.
+**Question:** Does Prodigy's step-size estimate become more useful during training if it
+compares the current weights with the weights exactly **100 optimizer updates ago**, instead
+of always comparing with initialization? The recent reference asks whether the last stretch
+of the path still points downhill, even after training has moved far from its starting point.
 
-## REQ-064: predict local memory improvements beyond a strong global setting
+Use the same [paper](https://arxiv.org/pdf/2409.20325), Story III, especially equations 24–27.
+The proposed change is the reference inside rₜ, the scalar running estimate used to choose
+the step size. With b = √β₂, its simplified notation is:
 
-- status: **DONE 2026-09-16 — NEGATIVE (H1 FAIL)**. 156/156 continuations (dev 0,1 / test 7,8). Measured sharpness (M2 S_i/G_i, per-seed RMSE 0.000394/0.000443) does NOT beat the free type/depth prior (M1, 0.000256/0.000336) or improve over Euclidean; all recover sign (~16-17/18) but sign is not the gate. Per the pre-registration, **REQ-065 policy trial NOT authorized** (no policy trial on a correlation-only pass). Consistent with REQ-059's negative. Box wlv5j0q stopped. See `logs/kmaxwell/req064_local_memory_prediction/` (README, PREREGISTRATION, PILOT_GATES, H1_readout).
-- requested: Jack / 2026-09-15 PDT
-- priority: next measurement/prediction gate; no policy trial on a correlation-only pass
-- resource limit: **two nodes fleet-wide; pilot at most 4 node-hours, 24 node-hours total**
-- artifacts: `logs/kmaxwell/req064_local_memory_prediction/`
+```text
+standard: rₜ = b × rₜ₋₁ + (1 − b) × ηₜ² × dot(gₜ, w₀ − wₜ)
+rolling:  rₜ = b × rₜ₋₁ + (1 − b) × ηₜ² × dot(gₜ, wₘₐₓ₍₀,ₜ₋₁₀₀₎ − wₜ)
+```
 
-**Question:** Around the calibrated global memory, does measured sharpness predict which
-individual matrices benefit from changing memory better than type/depth and Euclidean
-features? REQ-058 tested raw S_i correlations around a globally inferior setting; its test
-outcomes are already exposed. This request changes the reference, measures the missing
-normalized and actual-update features, lengthens the response window, and uses unused seeds.
+β₂ sets how quickly old information fades. **Replace only w₀ in this inner-product term.**
+Keep rₜ's smoothing, the sₜ accumulator and its norm, the moment updates, η initialization,
+schedule handling, stabilization, and all other Prodigy settings identical between arms.
+Pin and document the implementation and its mapping to the paper; the displayed equations
+omit implementation details and must not be substituted for a full production baseline.
 
-### States, treatments and endpoints
+| Arm | Optimizer | Reference in rₜ |
+|---|---|---|
+| prodigy-init | Verified standard Prodigy | w₀ |
+| prodigy-100 | Identical Prodigy except the reference term | wₘₐₓ₍₀,ₜ₋₁₀₀₎ |
 
-- Use REQ-063's verified recipe, data ranges, first-affected-update convention and frozen
-  a_star. Development bases: **seeds 0 and 1, fork 2000**. Prospective test bases:
-  **seeds 7 and 8, fork 2000**. Check branch/logs before pickup that 7/8 have not been used for
-  this task; if already exposed, reserve and record two next unused seeds before any outcome.
-- The global reference is the mixture with a=a_star everywhere. For each of the **18
-  sentinels** (six matrix types in blocks 0,6,11), change only that matrix to
-  **a_star/2** or **2*a_star**, retaining a_star on the other 71 matrices. The mixture weight
-  schedule, LR, weight decay, auxiliary updates and inherited state remain fixed.
-- Per base: 36 selective continuations and three shared global continuations (all-shorter,
-  all-reference, all-longer), **39 arms**, each **256 completed updates** after the fork.
-  Evaluate the selection set at offsets 0,64,128,256. Primary response is the paired loss
-  difference at **256** against the shared global reference; 64/128 are secondary.
-- Pilot: seed 0, block 6's six matrices × two changes plus three global controls = **15
-  arms**. If intervention, measurement and budget checks pass, expand to 39/base × four
-  bases = **156 total continuations**, including pilot arms. Do not replace missing 256
-  endpoints with earlier observations. Return failures with actual completed-update counts.
+Use the same parameter grouping and reference coverage in both arms. Keep the same model,
+data, initialization, token order, batch size, and schedule. REQ-066's Muon controller and
+this Prodigy comparison test different update rules; report their results separately.
 
-### Pretreatment measurements and numerical gates
+### Exact window and interpretation
 
-Measure features on each base **before its treatment outcomes**, at the shared state after
-the common baseline switch update and before the first affected update. All S/G, Euclidean,
-gradient and candidate-direction features must use those same weights and diagnostic ranges;
-log that state's completed-update count. Use 18 sentinels for fitting. Collect the cheap
-features for all 72 matrices and, if M3 is selected, its required actual-direction features
-for all 72 as well; other matrices do not become extra response examples. No missing-feature
-substitution when applying the selected model to the full network.
+- For t < 100 use w₀. Read wₜ₋₁₀₀ before update t; advance history after the update. Count
+  completed optimizer updates, not microbatches or gradient-accumulation passes.
+- Keep a rolling history that supplies the exact lagged weights. A snapshot refreshed every
+  100 steps has a varying age and is a different experiment. Account for the substantial
+  cost of retaining roughly 100 parameter snapshots; benchmark storage, precision, and any
+  CPU-transfer overhead before training. If exact history does not fit the budget, report
+  that limitation rather than silently using a stale or compressed approximation.
+- Do not reset rₜ or sₜ every 100 steps, truncate their smoothing, change the norm, or divide
+  the displacement by 100. Those would confound the reference replacement.
+- Standard Prodigy's ηₜ₊₁ = max(ηₜ, rₜ / ‖sₜ‖₁) keeps its adaptive scale nondecreasing.
+  Changing the reference alone therefore **cannot lower that scale**; it can slow or stop
+  further growth. An external cooldown schedule can still lower the actual LR. REQ-066
+  separately tests a controller whose scale can both increase and decrease.
 
-- Measure isolated shape-weighted spectral S_i, G_i=r_i*||g_i||nuclear and **S_i/G_i**;
-  retain raw S_i/G_i components, signed values and failure flags. Compare Euclidean
-  lambda_i (eight Lanczos iterations with convergence diagnostics) and lambda_i/||g_i||F²
-  **at that exact state and on the same token ranges**. Never substitute a nearby checkpoint
-  or a differently normalized historical profile. r_i includes the actual shape factor and
-  relative LR; log the actual current base LR separately. No claim that Z=1 is a proven
-  momentum stability threshold.
-- Validate the selected FW budget on the 18 sentinels with K20/K50 and five starts; retain
-  per-start traces and best radially normalized feasible witnesses. A cheaper two-start
-  budget needs its own comparison. On each of three independent diagnostic subsets, at
-  least 90% of positively resolved sentinel estimates must change at most 5% with increased
-  budget; median pairwise rank correlation of S_i/G_i across subsets must be at least 0.8.
-  Repeat the nested-token sensitivity check; report rank and absolute changes separately.
-- Capture the **actual post-polar, shape-scaled updates** with inherited buffers at a common
-  state immediately before the first affected update. Preserve the raw gradient before
-  Muon's in-place mutation. Compare candidate selective directions with cloned buffers at
-  identical W, g and data; include unchanged auxiliary optimizers in the full displacement.
-  Account for weight decay and parameter rounding when matching the observed displacement.
-- For the baseline displacement d and a candidate change h=d_candidate-d, record g·h,
-  d·Hh and h·Hh. The quadratic prediction of the candidate-minus-baseline loss change is
-  **g·h + d·Hh + 0.5*h·Hh**. This retains interactions with unchanged matrices. Also record
-  baseline/candidate b=-g·d, c=d·Hd, direction alignment, and diagonal versus cross-matrix
-  curvature at the **realized** direction. Do not substitute a gradient-polar direction.
-  A ratio c/(2b) is only interpreted when b is resolved and positive; keep signed b/c too.
-- Check HVPs against central gradient differences on actual directions at two or more
-  decreasing nonzero scales, agreement within 5% above a measured precision floor. Check
-  production versus float32 evaluation and math-attention parity, and the no-state-change
-  replay from REQ-063. Failure is a measurement failure, not evidence of a sharpness effect.
-  Record realized-update geometry at offsets 1,64,256 on the global controls separately as
-  trajectory diagnostics; these later measurements **must not enter pretreatment predictors**.
+### Pilot, evaluation, and deliverables
 
-### Registered incremental prediction test
+First check parity with the baseline when both references are w₀, including the startup
+period; then verify lag selection at updates 99, 100, 101, and 200 on a known trajectory.
+Check rₜ and η against a direct small-tensor calculation. Preserve the full rolling history
+and optimizer state on resume and check uninterrupted-versus-resumed parity. Handle a zero
+denominator exactly as the pinned baseline does; log signed rₜ and invalid-value events.
 
-Fit separate ridge-linear predictors of each selective treatment response. Use these nested
-feature sets, the same train/test rows and the same development-only preprocessing:
+Pilot both arms from initialization on one development seed through **500 updates**, with
+the REQ-066 evaluation points. Freeze the implementation and settings before running both
+arms on **three fresh paired seeds through 3250 updates** if correctness and cost permit.
+Evaluate every 250 updates and at 3250. Primary outcome: rolling-minus-initialization
+reference validation loss at 3250. Report all paired differences and uncertainty, failures,
+time to common loss thresholds, runtime, peak GPU/CPU memory, and history-transfer costs.
+Do not tune the 100-step window using confirmation outcomes.
 
-| Model | Features |
-|---|---|
-| M0 | Matrix type, block depth, depth², and type×depth terms |
-| M1 | M0 plus Euclidean lambda_i and lambda_i / grad_frob_i² |
-| M2 | M1 plus spectral S_i/G_i (raw S_i and G_i reported separately) |
-| M3 | M2 plus the pretreatment actual-direction and interaction measurements above |
-
-Standardize using development data only; use signed log1p transforms for signed geometric
-features, with scales fixed from development data. Select ridge strength from
-{0.01,0.1,1,10,100} using entire transformer blocks held out across both development seeds,
-never random matrix rows. Use development validation error to select **one** candidate, M2
-or M3, before opening test outcomes; M1/M0 remain explicit comparators. Publish coefficients,
-transforms, missing-value policy and dev errors. Mark unresolved geometry as unresolved;
-do not make a measurement gate pass by silently deleting difficult matrices.
-
-**Before launching the seed-7/8 response continuations**, commit the fitted models, chosen
-candidate and predictions for every test matrix/treatment; measuring their base features
-first is allowed. Do not refit or switch candidates after opening those losses. Apply the
-same per-matrix rule to all 72 matrices: choose the lowest predicted loss among reference
-(predicted response 0), shorter and longer; retain reference on ties or an unresolved feature.
-There is **no 24/24/24 constraint**, no assumption that sharper must mean shorter, and no
-automatic inversion of a correlation into beta. Publish predicted allocation histograms.
-
-Promotion to REQ-065 requires all of the following:
-
-1. Control and feature numerical gates pass. The preselected model reduces response RMSE
-   by **at least 10% versus the stronger of M0 and M1 on EACH test seed** (pooled over both
-   treatments within that seed); report per-treatment errors and signs as well.
-2. It makes nonuniform choices on each test base, with at least three of the 18 sentinels
-   at each of at least two memory settings. Choosing one global setting is not evidence
-   for layer-wise control.
-3. Score those frozen choices using the corresponding observed selective-arm outcomes
-   (reference response 0). On each test seed their mean response must be lower than each
-   constant selective choice (always reference/shorter/longer), and no worse than the
-   choices made by either M0 or M1. Report block-clustered uncertainty and all 18 effects;
-   two test seeds do not become 36 independent training runs. No resolved advantage means
-   INCONCLUSIVE, not a pass on rank correlation.
-
-These selective outcomes do not prove simultaneous changes combine additively; only REQ-065
-can test the joint policy. Also report actual global-arm losses: a newly stronger global
-setting must be included in that policy comparison. If only M3 passes, label the result
-**actual-update/interaction-assisted**, not a success of isolated sharpness alone. Run a
-retrospective M3 ablation without spectral features to describe whether geometry or spectral
-sharpness supplied the gain; it does not create another candidate selected on test data.
-
-If the gate fails, stop and return the prediction results; **do not launch REQ-065**. Save
-local full states needed by the conditional follow-up, without committing tensors. Commit
-all scalar features/repeats, predictions with pre-outcome commit SHA, assignments, full logs,
-curve coverage checks, provenance, fitting code and costs. No cubic-mechanism expansion here.
-
-## REQ-065: test an unconstrained layer-wise policy against the strongest globals
-
-- status: **OPEN — conditional on REQ-064's registered prediction gate**
-- requested: Jack / 2026-09-15 PDT
-- priority: final project-success test; do not run after a correlation-only or retrospective pass
-- resource limit: **two nodes fleet-wide; seed-9 pilot at most 4 node-hours, 24 node-hours total**
-- artifacts: `logs/kmaxwell/req065_unconstrained_layerwise_policy/`
-
-**Question:** Can a frozen, measured layer-wise memory allocation beat the strongest global
-and cheap-feature controls when it is free to leave any matrix at the global setting? This
-addresses REQ-059's forced-long-memory limitation and tests through the original training
-endpoint, not only the short response window. An online controller is outside this request.
-
-Use **fresh seeds 9,10,11,12**, fork at completed update **2000**, continue to **3250** with
-the unchanged 3250-step LR schedule and mixture weight annealing ending at 2750. Reserve
-unused replacement seeds before any measurements/outcomes if these are already exposed on
-pickup. All arms of a seed start from the same verified full state and training token cursor.
-Keep 1× batch, architecture, LR, weight decay, eight streams and actual switch convention.
-
-Before any test-seed continuation, freeze REQ-064's candidate model and both cheap baseline
-models; no refit on seeds 7/8 or 9–12. Measure the same 72-matrix features once at each seed's
-shared pre-treatment state defined in REQ-064. Freeze its allocation before evaluating any
-arm. The policy chooses per matrix from
-{a_star/2,a_star,2*a_star} using predicted response, retaining reference when unresolved or
-tied. No forced counts or use of the final-set loss to choose assignments.
-
-Run these arms on every seed:
-
-1. **Guided:** REQ-064's single preselected passing model (M2 or M3, accurately labeled).
-2. **Type/depth:** frozen M0 rule, same available memory values and default/tie handling.
-3. **Euclidean:** frozen M1 rule, same available values and handling.
-4. **Shuffled:** permute guided's assignments within each matrix type with a fixed recorded
-   permutation per seed. Preserve the guided histogram without forcing the other policies
-   to share it. If a type is uniform, report that its shuffle is identical.
-5. **Every distinct global mixture in {0.25,0.5,1,a_star/2,2*a_star}:** three or four arms,
-   each assigning its a to all matrices. This includes both the earlier best a=0.5 and
-   the all-shorter/all-reference/all-longer comparators for this policy.
-6. **The strongest non-mixture control frozen by REQ-063:** ordinary Muon, verified zero
-   momentum, or exact-age-a1 EMA. Use its verified implementation and resolved metadata.
-
-This gives **8 or 9 arms per seed, 32 or 36 total continuations**, including the pilot. Do
-not drop a global comparator because it beats the proposed policy. Shorter/longer memory
-changes decay times, not the number of allocated buffer tensors; compare actual resource
-costs rather than calling the old 24/24/24 constraint equal compute.
-
-The separate **10485760-token final validation set** fixed in REQ-063 is opened here for the
-first time. Evaluate at 2000,2250,2500,2750,3000,3125,3250. **Endpoint 3250 is primary**;
-2750 and mean(3000,3125,3250) are secondary, never fallback winning endpoints. Record the
-fork loss only after the correct checkpoint has been loaded. No endpoint substitution for
-failed/short runs, no test-seed tuning, no dropping unfavorable seeds. The seed-9 pilot
-permits only correctness/budget checks; any policy change after seeing it invalidates it
-as a confirmation seed and requires a newly registered test, not an automatic restart.
-
-For each guided-minus-control endpoint difference, report all four paired seed effects,
-mean, sample SD, ordinary paired 95% t CI, exact two-sided t p-value with df=3 and monotone
-Holm adjusted p-value across **all 7 or 8 primary comparisons**. A practical win requires
-mean improvement **at least 0.0005 against EVERY control** and Holm p<0.05 for each. Ordinary
-CIs must not be presented as adjusted CIs. Four seeds may yield insufficient precision;
-that is INCONCLUSIVE, not permission to add seeds until significant.
-
-Report whether guided beats shuffle and both cheap-feature policies separately from whether
-it beats global memory. A win using M3 establishes value of the selected combined geometry
-policy; it does not by itself prove isolated spectral sharpness is the essential feature.
-Report allocations, measured feature cost, total tokens, training/probe wall time, GPU-hours,
-peak memory and time to any reached loss thresholds, including the one-time measurement cost.
-An endpoint gain with no practical speed gain must be described that way.
-
-Commit the pre-outcome model/allocation hashes, resolved configs, seed/state/data manifests,
-full stdout, raw evaluation curves, complete endpoint coverage, corrected statistics and
-costs. Preserve checkpoints on the execution host only. Failure/tie is a completed scientific
-result. Stop after this bounded test; no LR retune, online controller, batch expansion or
-mechanism campaign is implicitly authorized by this request.
-
+Log rₜ, ‖sₜ‖₁, the candidate and accepted η, actual LR, the signed gradient/reference inner
+product, displacement norm, and cosine. Record how often the max rule rejects a candidate.
+This distinguishes an ineffective reference signal from a useful signal prevented from
+lowering the scale by the inherited max rule. Commit configs, code, manifests, scalar logs,
+curves, and a result summary; keep parameter histories and checkpoints off Git.
 
 ## Template
 
 ```md
-## REQ-NNN: short title
-
-- status: OPEN
-- requested: name / date
-- priority and dependencies:
-- resource limit:
-
-Question and hypothesis.
-Exact treatment, controls, seed count, checkpoints, and measurements.
-Registered decisions, uncertainty, failure/inconclusive conditions.
-Provenance, commands/configuration, cost estimate, and artifact paths.
-```
