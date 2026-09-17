@@ -10,13 +10,12 @@ in the [September 16 archive](requests_archive_20260916.md).
 
 | Request | Status | Work and dependencies |
 |---|---|---|
-| [REQ-061](#req-061-tau-bench-gold-and-step_hint-with-and-without-sod-through-step-500) | OPEN | Existing tau-bench gold/step_hint × SOD comparison; preserve its priority. |
 | [REQ-062](#req-062-second-seed-of-six-momentum-kernel-runs-that-each-test-one-property) | OPEN | Existing independent muoff second-seed study; preserve its priority and limits. |
 | [REQ-066](#req-066-adapt-step-size-with-gradient-direction-consistency) | OPEN | Test the multiplicative 1 + cos θ step-size rule with recent displacement references. |
 | [REQ-067](#req-067-use-a-100-step-reference-in-prodigys-step-size-estimator) | OPEN | Compare Prodigy's fixed w₀ reference with exact rolling wₜ₋₁₀₀ in rₜ. Independent of REQ-066's outcome. |
 
 **Pickup:** check live jobs and newly delivered artifacts before scheduling; do not interrupt
-running work. REQ-066/067 use available capacity without displacing REQ-061/062. REQ-063's
+running work. REQ-066/067 use available capacity without displacing REQ-062. REQ-063's
 control repair and REQ-064's prediction experiment have been delivered; do not rerun them
 because of old scheduling text. **REQ-065 is BLOCKED: REQ-064 reported H1 FAIL.** The new
 step-size experiments do not depend on that failed layer-wise momentum gate.
@@ -76,66 +75,11 @@ are retained in the archive; unresolved controls remain unresolved.
 | [REQ-063](requests_archive_20260916.md#req-063-verify-restored-optimizer-controls-and-repair-the-returned-evidence) | DONE 2026-09-15 | Evidence repaired (corrected REQ-059 stats keep the negative; REQ-058 fork-1500 relabeled 60-update). nomom mu-overwrite reproduced + fixed in CPU and **on silicon**: returned "nomom" was mu=0.95 (==ordinary Muon), true mu=0 is distinct + best. Exact-age EMA / names / a=1 verified; replay reproducible. Box stopped. |
 | [REQ-064](requests_archive_20260916.md#req-064-predict-local-memory-improvements-beyond-a-strong-global-setting) | DONE 2026-09-16; negative | 156/156 continuations delivered; reported H1 FAIL. Sharpness did not beat the type/depth prior; REQ-065 remains blocked. [Results](logs/kmaxwell/req064_local_memory_prediction/README.md). |
 
-## REQ-061: tau-bench gold and step_hint with and without SOD through step 500
-
-- status: **OPEN**
-- requested: Jack / 2026-09-12 PDT
-- repo: https://github.com/jacknzheng/async-sdpo
-- pinned SHA: `1e84424623f8a074ba3c9015d1ec84c8756c3874` (`main` at request time)
-- priority and dependencies: Independent of REQ-057–060; use available capacity while preserving
-  the existing queue priority and running jobs.
-- resource limit: **At most two nodes fleet-wide**, including other experiments. Use the standard
-  8×H100 setup per run (four rollout GPUs and four trainer GPUs); run in waves as capacity permits.
-
-Run the full 2×2 comparison below through **absolute training step 500**. Here, 500 means trainer
-updates (`trainer.total_steps=500`), not the number of actions allowed within a tau-bench episode.
-SOD is the step-wise reweighting controlled by `trainer.algorithm.use_sod`.
-
-| Arm | Teacher feedback (`generator.hint.prompt`) | `trainer.algorithm.use_sod` | Final training step |
-|---|---|---|---:|
-| gold-sod | `gold` | `true` | 500 |
-| gold-no-sod | `gold` | `false` | 500 |
-| step-hint-sod | `step_hint` | `true` | 500 |
-| step-hint-no-sod | `step_hint` | `false` | 500 |
-
-Use `Qwen/Qwen3-8B`, the same initial model, training seed `1234`, data split seed `0`, and the
-standard banking_knowledge/retail/airline task mixture for all four arms. Hold all other settings
-fixed at the pinned defaults, including episode limits, optimizer, batch size, sampling and hint
-model. Keep `sod_eps=1e-6` and `sod_delta=0.2` for the SOD-enabled arms. Record resolved configs and
-verify the requested SOD value before each launch.
-
-```bash
-LOG_DIR=/log/req061/gold-sod bash scripts/run_taubench.sh gold trainer.total_steps=500 trainer.algorithm.use_sod=true
-LOG_DIR=/log/req061/gold-no-sod bash scripts/run_taubench.sh gold trainer.total_steps=500 trainer.algorithm.use_sod=false
-LOG_DIR=/log/req061/step-hint-sod bash scripts/run_taubench.sh step_hint trainer.total_steps=500 trainer.algorithm.use_sod=true
-LOG_DIR=/log/req061/step-hint-no-sod bash scripts/run_taubench.sh step_hint trainer.total_steps=500 trainer.algorithm.use_sod=false
-```
-
-These are four separate jobs, scheduled within the node limit. REQ-032's gold and step-hint runs
-were stopped near steps 215/220; they did not reach 500. Reuse a checkpoint only if its code,
-model, data, seed, full training state and treatment settings match this request and it can be
-resumed faithfully. Otherwise start fresh. Never switch SOD on or off partway through an arm,
-and never add 500 more updates to a resumed run: stop at total step 500.
-
-Evaluate on the same held-out tasks at step 0, every 25 training steps, and step 500; retain the
-default checkpoint interval of 50. Report overall and per-domain pass^1 (fraction of tasks solved
-on one attempt), learning curves, and the SOD-on minus SOD-off difference separately for gold and
-step_hint. This is one seed per arm; report the observed comparison without claiming multi-seed
-certainty. A flat learning curve is still a completed run; if a run fails, report its actual final
-step and failure reason rather than marking a partial run as reaching 500.
-
-Follow the queue's live-handle and 20-minute monitoring requirements. Commit configs, launch
-commands, code/data provenance, scalar logs, evaluation curves and a four-arm summary under
-`logs/async_sdpo_req061/`, with wall time, GPU-hours and API cost where available. Keep checkpoints
-on the execution host; do not commit weights or secrets. Update this block with per-arm status
-and result links, and add the final findings to `FINDINGS.md`.
-
-
 ## REQ-062: second seed of six momentum-kernel runs that each test one property
 
 - status: OPEN
 - requested: Codex for Jeffrey Cheng / 2026-09-14 UTC
-- priority: independent of REQ-057 to REQ-061; use available capacity without displacing them
+- priority: independent of REQ-057 to REQ-060; use available capacity without displacing them
 - resource limit: **one node; 6 node-hours maximum**
 
 Self-contained. This uses none of the K-Maxwell code, states, or vocabulary from REQ-054/057/058.
@@ -240,7 +184,7 @@ No secrets. No new code beyond what is in the commit. No dependency on any K-Max
 
 - status: **OPEN**
 - requested: Jack / 2026-09-16 PDT
-- priority and dependencies: new optimizer study; preserve REQ-061/062 and live jobs
+- priority and dependencies: new optimizer study; preserve REQ-062 and live jobs
 - resource limit: **two nodes fleet-wide**; benchmark the pilot and record a finite GPU-hour
   budget before expansion
 - artifacts: `logs/kmaxwell/req066_direction_consistency/`
