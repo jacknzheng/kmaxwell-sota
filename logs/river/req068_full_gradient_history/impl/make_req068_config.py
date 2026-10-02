@@ -15,7 +15,7 @@ from pathlib import Path
 FORK_STEPS = [500, 1500, 2500]
 
 
-def build(seed, grad_dir, state_dir, chunk_steps, train_steps):
+def build(seed, grad_dir, state_dir, chunk_steps, train_steps, fork_steps=FORK_STEPS):
     return {
         "loop": "gpt_record", "run_id": f"req068_capture_s{seed}", "seed": seed,
         "require_world_size": 8, "train_steps": train_steps, "batch_tokens": 524288,
@@ -42,7 +42,7 @@ def build(seed, grad_dir, state_dir, chunk_steps, train_steps):
             {"name": "capture_full_gradients",
              "hyperparams": {"out_dir": grad_dir, "chunk_steps": chunk_steps}},
             {"name": "dump_training_state_at_steps",
-             "hyperparams": {"steps": FORK_STEPS, "dump_dir": state_dir}},
+             "hyperparams": {"steps": fork_steps, "dump_dir": state_dir}},
             {"name": "cool_down_learning_rate", "hyperparams": {"cooldown_frac": 0.7}},
         ],
         "post_optimizer": [
@@ -64,11 +64,12 @@ def main():
     ap.add_argument("--grad_dir", required=True); ap.add_argument("--state_dir", required=True)
     ap.add_argument("--seed", type=int, default=0); ap.add_argument("--chunk_steps", type=int, default=50)
     ap.add_argument("--train_steps", type=int, default=3250)
+    ap.add_argument("--fork_steps", type=int, nargs="+", default=FORK_STEPS)
     a = ap.parse_args()
-    cfg = build(a.seed, a.grad_dir, a.state_dir, a.chunk_steps, a.train_steps)
+    cfg = build(a.seed, a.grad_dir, a.state_dir, a.chunk_steps, a.train_steps, a.fork_steps)
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(yaml.safe_dump(cfg, sort_keys=False))
-    print(f"wrote {a.out} (seed {a.seed}, {a.train_steps} steps, chunk {a.chunk_steps}, forks {FORK_STEPS})")
+    print(f"wrote {a.out} (seed {a.seed}, {a.train_steps} steps, chunk {a.chunk_steps}, forks {a.fork_steps})")
 
 
 if __name__ == "__main__":
