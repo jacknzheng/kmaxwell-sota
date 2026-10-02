@@ -1,5 +1,16 @@
 # REQ-068 — full gradient history capture — plan + pre-launch forecast
 
+> **Scope amendment requested by Jack, 2026-10-02 PDT:** the current specification in
+> [requests.md](../../../requests.md#capture-scope-amendment--jack-2026-10-02-pdt) supersedes the
+> all-parameter capture/storage requirements below. Future captures use three full attention
+> output-projection matrices (first/middle/last blocks), retaining every step. REQ-072 applies
+> this same selection to raw gradients, conditioned directions, and displacements in all six arms.
+> Recompute storage and filter the capture writer before copying/serialization. Preserve existing
+> artifacts and check the live job before any change; do not cancel/restart an active run solely
+> for this scope edit. Existing full captures can supply the selected subset. The progress reports
+> below are historical reports, not fresh verification of the live job or a requirement to provision
+> full-model-history storage. This amendment updates the request only, not the running capture code.
+
 **Status: RUNNING (planning + build) 2026-10-02.** Foundational deliverable for the river-direction
 study (REQ-068→071). Pinned baseline: harness `365c392d695f95dc9a4fb89095e85a6a7b5d551e`, the simplified
 optimization trainer (`records/track_3_optimization/run.py`), K-Maxwell/Muon + auxiliary AdamW baseline,
