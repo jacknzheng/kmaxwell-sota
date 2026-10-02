@@ -11,7 +11,7 @@ in the [September 16 archive](requests_archive_20260916.md).
 | Request | Status | Work and dependencies |
 |---|---|---|
 | [REQ-062](#req-062-second-seed-of-six-momentum-kernel-runs-that-each-test-one-property) | OPEN | Existing independent muoff second-seed study; preserve its priority and limits. |
-| [REQ-068](#req-068-record-the-full-gradient-history-for-an-entire-nanogpt-run) | OPEN | Jack: required full-run, every-step gradient tensors and analysis-ready storage. |
+| [REQ-068](#req-068-record-the-full-gradient-history-for-an-entire-nanogpt-run) | RUNNING | Forecast done (162.35M params -> 1.06 TB bf16 full run); design + capture point fixed. Build+storage next. |
 | [REQ-069](#req-069-ten-data-seed-branches-to-estimate-reproducible-local-motion) | OPEN | Jack: ten branches from identical model/optimizer state; average gradients and updates. |
 | [REQ-070](#req-070-test-candidate-directions-on-independent-loss-and-curvature-probes) | OPEN | Jack: test directions from REQ-069 on independent data before claiming a river direction. |
 | [REQ-071](#req-071-fit-a-causal-gradient-history-estimator-and-test-it-in-training) | OPEN | Jack: fit an estimator against independent references; conditional on REQ-069/070 evidence. |
@@ -162,7 +162,7 @@ No secrets. No new code beyond what is in the commit. No dependency on any K-Max
 
 ## REQ-068: record the full gradient history for an entire nanoGPT run
 
-- status: **OPEN**
+- status: **RUNNING 2026-10-02 (planning/build; no live job yet)** -> `logs/river/req068_full_gradient_history/STATUS.md`. Pre-launch forecast: 162,354,816 params -> 324.7 MB/step bf16 native -> **1.055 TB** full 3250-step run (2.11 TB fp32); +~2 GB fork ckpts @500/1500/2500. Capture point = pre_optimizer hook (after accumulation+all_reduce SUM, before Muon mutates .grad). Gating blocker: provision ~1.1 TB durable volume + benchmark sustained write before the full run. Build (hook/manifest/reader/smoke tests, CPU) in progress.
 - requested: Jack / 2026-10-01 PDT
 - priority: first deliverable for the river-direction study; preserve REQ-062 and live jobs
 - artifacts: `logs/river/req068_full_gradient_history/`
