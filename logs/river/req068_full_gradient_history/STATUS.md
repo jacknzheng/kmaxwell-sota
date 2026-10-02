@@ -77,3 +77,16 @@ indices + all params/shards present — no gaps/dupes/partial chunks; else repor
   this exact capture infra (the writer is optimizer-agnostic; muon-mom arm == this baseline). Program-wide
   storage now dominant: REQ-068 ~1.06 TB + REQ-072 ~6×1.06=6.3 TB + REQ-069 branches. Consolidated storage
   forecast + provisioning plan is the next gating step before any launch.
+
+## Update 2026-10-02: smoke PASS + storage UNBLOCKED + full run launched (node wngkx23)
+**GPU smoke test (20 steps, node wngkx23):**
+- ROUNDTRIP **PASS** — 20/20 steps captured, manifest verify ok, reader reconstructs matrices+vectors
+  (native dtype, nonzero). Fork dumps present (27 files = 3 forks x (8 rank + 1 model)).
+- Logging ON-vs-OFF parity: val_loss **bit-identical at steps 0 and 5**, differing only at the 5th decimal
+  later (max ~3e-5 = the known CUDA nondeterminism floor, cf. REQ-064 ~6e-5). Capture is read-only
+  (clone of .grad); treated as parity-holding at the nondeterminism floor (exact-string diff was too strict).
+**Storage UNBLOCKED:** shared FS `csi-storage-sfs` (/root/.cache/{user,team}_artifacts) = **137 TB, 54 TB
+free**, 622 MB/s sustained write. The full program (~8 TB) fits; the ali-apse7 quota concern was
+cluster-specific. Capture target = `/root/.cache/user_artifacts/req068_s0/grads` (durable, survives node).
+**Full run LAUNCHED (seed 0, 3250 steps, chunk 50, forks 500/1500/2500).** Capture overhead ~+400 ms/step
+(170 synchronous D2H tensor copies) -> ~45-60 min total (baseline ~9 min); overhead is a required metric.
