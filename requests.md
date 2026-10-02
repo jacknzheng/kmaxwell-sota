@@ -11,15 +11,16 @@ in the [September 16 archive](requests_archive_20260916.md).
 | Request | Status | Work and dependencies |
 |---|---|---|
 | [REQ-062](#req-062-second-seed-of-six-momentum-kernel-runs-that-each-test-one-property) | OPEN | Existing independent muoff second-seed study; preserve its priority and limits. |
-| [REQ-068](#req-068-record-the-full-gradient-history-for-an-entire-nanogpt-run) | RUNNING | Capture run reported launched; Jack revised future capture to three selected full matrices. See scope amendment below and STATUS.md. |
-| [REQ-069](#req-069-ten-data-seed-branches-to-estimate-reproducible-local-motion) | OPEN | Jack: ten branches from identical model/optimizer state; average selected-matrix gradients and updates. |
+| [REQ-068](#req-068-record-the-full-gradient-history-for-an-entire-nanogpt-run) | RUNNING | Capture run reported launched; main river study now uses three 64-step whole-model windows and temporal geometry. See scope amendment/STATUS.md. |
+| [REQ-069](#req-069-ten-data-seed-branches-to-estimate-reproducible-local-motion) | OPEN | Jack: ten 64-step branches from identical state; independently confirm whole-model slow motion. |
 | [REQ-070](#req-070-test-candidate-directions-on-independent-loss-and-curvature-probes) | OPEN | Jack: test directions from REQ-069 on independent data before claiming a river direction. |
 | [REQ-071](#req-071-fit-a-causal-gradient-history-estimator-and-test-it-in-training) | OPEN | Jack: fit an estimator against independent references; conditional on REQ-069/070 evidence. |
 | [REQ-072](#req-072-six-optimizer-ablations-with-full-gradient-histories-and-spectrograms) | OPEN | Jack: AdamW / SGD / Muon, each with and without momentum; every-step histories of selected full matrices and six spectrograms. |
 
 **Pickup:** check live jobs and newly delivered artifacts before scheduling; do not interrupt
 running work. Preserve REQ-062's priority and limits. For Jack's new work, prioritize REQ-068's
-complete capture and REQ-069's middle-training pilot, then REQ-070 and conditional REQ-071.
+whole-model window analysis, then REQ-069's middle-training confirmation, REQ-070 loss tests,
+and conditional REQ-071 estimator trials.
 REQ-072 is an independent descriptive optimizer study; reuse the capture infrastructure without
 waiting for REQ-069/070/071 results or interrupting live work. These requests do not depend on the
 archived layer-wise momentum gate.
@@ -30,37 +31,47 @@ Jack's request. Existing result files, archives, deferred work, and Git history 
 
 ## Capture scope amendment — Jack, 2026-10-02 PDT
 
-**This supersedes the all-parameter history requirements in REQ-068 through REQ-072.** Save
-**a few selected full matrices at every optimizer step**, not the entire model. Training still
-updates the complete model, and run lengths and six optimizer ablations remain unchanged.
+**Latest decision: separate the whole-model river investigation from the descriptive optimizer
+spectrogram study.** This replaces the earlier three-matrix-only scope for REQ-068 through
+REQ-071. REQ-072 keeps its selected-matrix, full-run recording and all six optimizer ablations.
 
-- Default selection: the **attention output-projection weight matrix in the first, middle, and
-  last transformer blocks** — three complete matrices. For the 12-block baseline these are
-  zero-based blocks 0, 5, and 11 (expected `blocks.0.attn.proj.weight`,
-  `blocks.5.attn.proj.weight`, `blocks.11.attn.proj.weight`; resolve exact harness names).
-  Freeze a manifest of exact names, shapes, dtypes, and parameter counts before outcomes are
-  inspected. Use the identical selection across all six arms, seeds, branches, and time steps.
-- These must be complete matrices with all entries retained at every step for the full requested
-  duration. Do not replace them with sampled entries, norms, or periodic snapshots. No embeddings,
-  output head, bias/scalar tensors, or other weight matrices need persistent histories by default.
-  Do not add a separate large sampled-coordinate recording requirement.
-- REQ-068 requires raw gradients for the selected matrices. REQ-069 also retains their actual
-  displacements. REQ-072 requires raw gradients, conditioned directions, and actual displacements
-  for those same matrices in all six runs. Existing timing/precision/readback checks still apply.
-- Forecast from the actual selected shapes and each stream's native dtype. Illustratively, three
-  768-by-768 matrices have 1,769,472 entries: 3250 steps require **11.50 GB per history in 16-bit,
-  or 23.00 GB in 32-bit** (decimal units). Six arms and three histories require about **207 GB
-  or 414 GB**, respectively, before checkpoints/metadata. Mixed dtypes require an exact forecast.
-- Report exact per-matrix measurements and an explicitly labeled **selected-matrix aggregate**.
-  It is not a whole-model spectrum or proof of a universal river direction. Inexpensive whole-model
-  scalar summaries computed during training are allowed, but must not require full tensor history.
-- Preserve completed artifacts and do not cancel/restart a live training run merely for this edit.
-  Check the actual job status on pickup. If supported safely, change capture scope only at a recorded
-  clean chunk/resume boundary while retaining every step for the selected matrices. Otherwise extract
-  the selected histories from the already-running full capture and use the narrower writer for all
-  subsequent runs. Record provenance; extra historical tensors are not required future deliverables.
-  Update the existing writer/config to select these matrices before copying or serializing tensors,
-  and make smoke-test coverage assertions refer to this manifest rather than all model parameters.
+| Work | Parameters recorded | Time coverage | Required tensor streams |
+|---|---|---|---|
+| REQ-068: main river experiment | Entire model, including embeddings, head, vectors/scalars | Three 64-update windows: updates 500–563, 1500–1563, 2500–2563 (zero-based) | Raw gradients and actual parameter displacements |
+| REQ-069: independent confirmation | Entire model in ten branches from the same checkpoint | 64 consecutive updates per branch; middle-training pilot first | Raw gradients and actual parameter displacements |
+| REQ-070/071: validation and estimation | Whole-model directions derived from the above | Matched retained probe states and past-only history | Reuse captured artifacts; benchmark any live filter memory |
+| REQ-072: optimizer comparison | Three selected complete attention output-projection matrices | Every step of each 3250-update run, all six arms | Raw gradients, conditioned directions, actual displacements |
+
+**Storage estimates:** at 164M parameters, one 64-step whole-model history is approximately
+21 GB in 16-bit or 42 GB in 32-bit. Three windows with two histories are approximately **126 GB
+or 252 GB**. Ten 64-update confirmation branches with two histories are another **420 GB or
+840 GB per fork**, so start with the middle fork and budget additional forks separately. These
+are decimal, uncompressed estimates; resolve actual parameter counts, each stream's native dtype,
+checkpoints, and metadata before launch. Whole-model recording is not required outside the windows.
+
+**REQ-072 matrix selection remains:** the attention output-projection weight matrix in the first,
+middle, and last transformer blocks. For the 12-block baseline use zero-based blocks 0, 5, and 11
+(expected `blocks.0.attn.proj.weight`, `blocks.5.attn.proj.weight`, `blocks.11.attn.proj.weight`;
+resolve exact harness names). Freeze exact names/shapes/dtypes before outcomes are inspected; use
+the same three full matrices across all arms and steps. No sampled entries or periodic snapshots.
+Three 768-by-768 matrices over 3250 steps require 11.50/23.00 GB per stream at 16/32-bit, or about
+207/414 GB for three streams across six arms. These plots describe the selected matrices only.
+
+Process full-model windows in parameter/coordinate blocks; do not load the entire history on the
+GPU. Keep ordinary scalar training logs throughout. Optional fixed random projections of whole-model
+gradients/updates can provide longer-term monitoring, but first validate their norm/angle distortion
+against exact windows and benchmark projection overhead. Keep the map fixed across time and matched
+branches, use an efficient implementation without a huge dense projection matrix, and label these
+measurements approximate. They are not substitutes for the exact windows or recoverable full gradients.
+
+**Live-work handling:** preserve completed artifacts and verify the actual running job before any
+change. Do not cancel/restart an active run solely for this edit. Existing full-run captures can supply
+the required whole-model windows; extract them with step/schema provenance. If a selected-matrix writer
+is already active, enable full-model capture at a safe documented boundary for the required windows,
+or schedule missing windows from retained exact fork states, recording any replay deviations. Do not
+claim missing raw tensors or updates can be recovered from scalar logs. Implement a windowed full-model
+writer for REQ-068/069 and a separate selected-matrix full-run writer for REQ-072. Historical all-model-
+all-step and three-matrix-only river plans are superseded, not additional deliverables.
 
 ## Operating constraints
 
@@ -197,217 +208,231 @@ spread. Run 7 pushes the stability threshold below the range we have tested.
 
 No secrets. No new code beyond what is in the commit. No dependency on any K-Maxwell state or result.
 
-## REQ-068: record the full gradient history for an entire nanoGPT run
+<a id="req-068-record-the-full-gradient-history-for-an-entire-nanogpt-run"></a>
 
-- status: **RUNNING (last reported: full run launched; check live handle on pickup)** — see
-  `logs/river/req068_full_gradient_history/STATUS.md`. Jack's 2026-10-02 amendment replaces the
-  full-model capture requirement with the three-matrix manifest above. Recompute storage from
-  that selection; the previous ~1.1 TB requirement is historical, not a gate for future launches.
-- requested: Jack / 2026-10-01 PDT
-- priority: first deliverable for the river-direction study; preserve REQ-062 and live jobs
-- artifacts: `logs/river/req068_full_gradient_history/`
-- resource limit: existing two-node fleet-wide limit; measure storage/I/O and record a finite
-  GPU-hour and storage budget before the full run
+## REQ-068: whole-model river geometry from three short gradient-history windows
 
-**Required:** complete one baseline nanoGPT training run and persist the **entire raw gradient
-matrix for each of the three selected attention output projections at every optimizer step,
-throughout the entire run**, following the shared capture scope amendment. Full-model histories
-are no longer required. Norms, sampled coordinates, projections, spectra, short capture windows,
-or every-k-step snapshots are not substitutes for the selected matrices' complete histories.
+- status: **RUNNING (last reported: original capture run launched; check live handle on pickup)**
+- requested: Jack / 2026-10-01 PDT; revised 2026-10-02 PDT
+- priority: main river experiment; preserve REQ-062 and live jobs
+- artifacts: `logs/river/req068_full_gradient_history/`; see `STATUS.md` for historical progress
+- resource limit: two nodes fleet-wide; record finite GPU-hour, storage, and analysis-memory budgets
 
-### Baseline and indexing
+**Question:** does local whole-model motion contain a reproducible, slowly changing component,
+separable from fast alternating motion? A spectrogram of a few matrices does not answer this.
 
-Pin one verified Muon + auxiliary-optimizer baseline, code SHA, architecture, dataset, token
-order, batch size, loss normalization, and LR/momentum schedules before launching. Use the
-simplified optimization trainer where suitable; record the exact selected recipe. Target
-**3250 completed optimizer updates from initialization**, with ordinary validation through the
-final endpoint. Do not switch to a smaller model or shorter run and call that full delivery.
+### Capture one baseline trajectory
 
-Define theta_t as the weights before update t and g_t as that update's gradient. Capture g_t
-**after all microbatch accumulation and distributed synchronization, after any loss-scale
-unscaling, and before clipping, momentum, Muon transforms, weight decay, or optimizer mutation**.
-Copy before optimizer code mutates `.grad`. In a sharded implementation save all shards plus an
-exact reconstruction map; avoid storing duplicate replicas. Record missing/inactive gradients
-explicitly rather than silently fabricating zeros. One observation means one optimizer update,
-not one microbatch; distinguish attempted/skipped updates if applicable.
+Pin one verified nanoGPT Muon + auxiliary-optimizer recipe, code SHA, architecture, dataset, seed,
+token order, batch size, and LR/momentum schedules. Reuse the existing baseline run if compatible.
+Train normally to **3250 completed optimizer updates**, with ordinary scalar training/validation
+logging throughout. Record **64 consecutive whole-model observations** in each of the predeclared
+windows **500–563, 1500–1563, and 2500–2563**, using zero-based update indices. Do not select windows
+after viewing oscillation patterns. Shorter initial prefixes within each window provide sensitivity
+checks; any longer-window extension must be separately budgeted, not silently added everywhere.
 
-Save the actual gradient values at their native precision, losslessly; converting to float32
-is allowed but must not be described as recovering precision absent in the source. Record the
-exact conversion to mean-per-token gradients for comparable analysis without changing the
-baseline training inputs. Record parameter names, shapes, dtypes, flatten order/offsets, tying,
-sharding, tokens per update, global update index, and code/config/seed provenance.
+For every trainable parameter in those windows save:
 
-### Storage, replay, and acceptance
+1. **Raw loss gradient g_t** evaluated at theta_t, after microbatch accumulation, distributed
+   synchronization and loss-scale unscaling, but before clipping, momentum, conditioning, decay,
+   or in-place optimizer mutation. Record normalization to mean loss per token.
+2. **Actual parameter displacement delta_t = theta_(t+1) - theta_t**, including optimizer
+   conditioning, learning rate, decay, and rounding. Compute from pre/post weights with sufficient
+   arithmetic precision to represent their difference; record the calculation and dtype. Keep
+   its meaning distinct from the raw gradient or the pre-LR conditioned direction.
 
-- Stream bounded chunks to durable external storage or a retained durable volume. Do not keep
-  the full run in GPU memory or leave the only copy on a disposable training node. Publish the
-  artifact location and retrieval instructions; keep credentials out of manifests and logs.
-- Forecast bytes before launch from the selected matrices' actual counts/dtypes/step count, including
-  updates/checkpoints. Benchmark sustained writes and free capacity. If storage is unavailable,
-  report the concrete blocker; do not silently downsample, quantize, drop a selected matrix, or shorten.
-- Keep raw tensors outside Git. Commit a machine-readable manifest with chunk hashes, step
-  coverage, parameter schema, shapes, dtypes, and artifact sizes, plus a reader that reconstructs
-  every selected matrix's gradient for any requested step and streams per-matrix time series.
-- Record every-step actual displacements of the selected matrices separately where affordable, including the
-  effects of the optimizer and weight decay; clearly label them as updates rather than gradients.
-  Their storage can be scoped independently, but every-step raw capture of the selected matrices is mandatory.
-- Retain checkpoint/optimizer/RNG/data-cursor states off Git at predeclared analysis forks
-  (initially steps 500, 1500, and 2500), plus any filter state needed for later continuations.
-  Record hashes and retrieval paths so independent probes can be performed at the correct state.
-- Smoke-test round-trip tensor equality, accumulation/reduction timing, no gradient aliasing,
-  uninterrupted-versus-resumed indexing, and logging-on versus logging-off training parity.
-  Verify all 3250 expected update indices and all selected matrices/shards after the full run;
-  no gaps, duplicates, or silently partial chunks. Report failures as incomplete capture.
-- Deliver capture coverage, checksums, validation trajectory, peak memory, I/O volume, training
-  time excluding/including capture overhead, and a worked example loading one complete step.
+Include embeddings, head, hidden matrices, vectors/scalars, and all distributed shards. Record
+parameter names, shapes, tying, native dtypes, missing/inactive gradients, shard ownership, token
+counts, and step numbers. Save losslessly, with bounded chunks and copies made before mutation.
+Do not replace the full-model windows with three matrices, sampled coordinates, or projections.
+Persistent conditioned-direction history is optional here; both listed streams are mandatory.
 
-Initial descriptive analysis: gradient norms, signed direction similarity and lag correlations,
-period-two evidence, and per-matrix/selected-matrix-aggregate comparisons. A smooth average is a candidate signal,
-not proof of a valley floor. Curvature probes can use retained states under REQ-070; storing a
-full Hessian or measuring it every step is not required for this capture request.
+Retain exact model/optimizer/RNG/data-cursor states at theta_500, theta_1500, and theta_2500 for
+confirmation branches. Retain matched probe states initially at offsets 32, 48, and 63 within each
+window (or a verified replay route with documented numerical deviations). Checkpoints stay off Git.
+
+Forecast storage from actual dtypes and verify write throughput. Commit manifests, checksums,
+retrieval instructions, readers, code/configs and derived artifacts; tensors stay on durable storage
+outside Git. Verify round-trip equality, capture timing, no aliasing, logging parity, restart index
+continuity, and all 192 expected step indices with complete parameter/shard coverage for both streams.
+No all-parameter tensor history is required outside the three windows. Preserve any extra existing
+capture as historical data rather than treating it as an additional requirement for future runs.
+
+### Exact temporal geometry before filter fitting
+
+For each window analyze the raw gradients and actual displacements **separately**. Let v_i be
+one whole-model vector at local step i. Accumulate the temporal Gram matrix in parameter blocks:
+
+$$
+K_{ij}=v_i^\top v_j,\qquad
+C_{ij}=\frac{K_{ij}}{\sqrt{K_{ii}K_{jj}}}.
+$$
+
+K records vector inner products; C records cosine similarity. Both are just **64 by 64** even
+though v has millions of coordinates. Verify blockwise results against direct dot products on a
+small reference, symmetry, diagonal norms, and stable numerical accumulation. Flag zero/near-zero
+norms. Deliver exact whole-model
+heatmaps, signed lag 1/2/4/8/16/32 agreement, vector norms, and each parameter family's contribution
+to K. The Euclidean whole-model result is primary; any layer-reweighted version must be separately
+labeled, since reweighting changes the geometry. Large embedding contributions must remain visible.
+
+Use the Gram matrix to estimate dominant recurring parameter-space directions without loading
+all vectors on the GPU. Analyze both uncentered data and a separately labeled centered version;
+centering must not silently discard the shared forward component. Plot the time-varying signed
+coefficients along these directions and their temporal spectra. Ask whether alternating motion
+and gradual motion occupy distinguishable directions, and how much energy each explains. Highest
+energy does not automatically mean useful river motion. Do not identify all low-frequency power
+as signal or assume the valley floor has only one dimension.
+
+**Out-of-sample check:** estimate directions/bases from the first 32 observations and evaluate
+how much of the following 32 observations they explain, without refitting on that second half.
+Predeclare ranks 1, 2, 4, and 8; select a rank/rule on development windows, not final confirmation
+runs. Report held-out captured energy, residual energy, and direction agreement, against simple
+past-mean/pair-average/exponential-average references. Evaluate any claimed slow component using
+past-only estimates; full-window decompositions are descriptive only. All comparisons must state
+whether they target raw-gradient motion or actual optimizer motion and account for known schedules.
+
+Deliver small Gram/cosine matrices, heatmaps, spectra, signed component time courses, first-half/
+second-half comparisons, per-family contributions, raw-artifact manifests, and validation curves.
+State whether evidence supports a candidate local slow component, and where it fails. This is not
+proof of a valley floor or useful descent: independent branches and loss tests follow in REQ-069/070.
 
 ## REQ-069: ten data-seed branches to estimate reproducible local motion
 
 - status: **OPEN**
-- requested: Jack / 2026-10-01 PDT
-- dependencies: verified baseline and fork states from REQ-068, or an exactly matched retained base
+- requested: Jack / 2026-10-01 PDT; revised 2026-10-02 PDT
+- dependencies: REQ-068 whole-model window analysis and compatible exact fork state
 - artifacts: `logs/river/req069_ten_branch_ensemble/`
-- priority: start with the step-1500 pilot; then repeat at steps 500 and 2500 within the recorded budget
+- priority: start with step 1500; extend to 500/2500 only if evidence and a separately recorded budget justify it
 
-**Question:** do ten nearby training trajectories reveal a reproducible average gradient/update
-direction that changes slowly, with less period-two oscillation than individual trajectories?
+**Question:** do independent minibatch sequences reproduce the candidate slow whole-model component?
+This confirms REQ-068's local analysis; it is not ten independently initialized models.
 
-At each fork clone **identical model weights and full optimizer state** into ten branches.
-Use ten independent data-sampling seeds, with identical batch size, architecture, LR/momentum
-schedule, and starting schedule position. Document other RNG streams and dropout handling.
-Do not independently reinitialize the networks: their coordinate-wise gradients need not be
-aligned. Identical seeds and token sequences would merely replay the same trajectory.
+Clone identical model weights, full optimizer state, and schedule position from the middle fork
+into **ten branches**. Vary data-sampling seeds independently, document all other RNG streams,
+and use identical batch size/architecture/schedule. Run **64 updates per branch**, not the old
+100-step selected-matrix specification. Record full-model raw gradients and actual displacements
+at every branch step, using REQ-068's schema and timing. Retain exact states at branch offsets
+32, 48, and 63 for independent loss tests. Do not alter another branch's data cursor/RNG while probing.
 
-Run **100 completed updates per branch**. Preserve the entire gradient matrices and actual optimizer
-displacements for the shared three-matrix selection at every branch step, using REQ-068's conventions.
-Hash initial states and record the sampled token indices/cursors. Run branches sequentially if needed to
-respect fleet limits. Probe runs must not consume or modify another branch's training RNG/cursor.
+Predeclare two groups of five. Compute their ensemble averages at each matched relative step,
+separately for gradients and updates, and compare directions, magnitudes, lag dependence, and
+period-two content. Inspect convergence with 1, 2, 5, and 10 branches. Apply the frozen slow-
+component extraction rule from development data independently to the two groups; agreement is
+not a valid confirmation if the basis is fitted jointly to both groups' confirmation observations.
+If the rule was developed on this base lineage, label this a conditional diagnostic and confirm
+on a fresh initialization lineage before broader claims. Do not average coordinates across
+independently initialized models or treat correlated steps as independent seeds.
 
-### Registered analysis
+Compute whole-model temporal Gram/cosine matrices and parameter-family contributions for branches
+and ensemble means. Stream coordinate blocks to calculate cross-branch statistics. Track branch
+parameter separation, loss spread, and schedule traces to detect loss of local comparability.
+Do not reorder time steps to maximize agreement. Branches inherit a shared initial bounce phase;
+ensemble averaging may retain deterministic alternation. Report it rather than declaring the mean
+the river. Mean gradients at different weights need not equal the gradient at mean weights.
 
-- Average raw mean-per-token gradients across branches at each relative update, and separately
-  average actual parameter displacements. Analyze per selected matrix and their labeled aggregate. Do not
-  confuse averaging raw vectors with averaging unit directions; report norms and dispersion.
-- Split branches into two predeclared independent groups of five and compare their averages
-  at matched steps. Repeat summary estimates with 1, 2, 5, and 10 branches to assess convergence;
-  report uncertainty across branches, not by pretending correlated time points are new seeds.
-- Measure directional agreement at lags 1, 2, 4, 8, 16, and 32; mark near-zero vectors invalid.
-  Compare with individual branches and ordinary temporal averaging. Avoid overlapping-window
-  agreement as the only evidence, since shared inputs mechanically induce agreement.
-- Measure period-two residuals after a predeclared local trend removal; preserve gradient signs.
-  Record selected-matrix separation, loss spread, and update norms to identify when branches have
-  moved too far apart for a local interpretation. Do not align/reorder steps to maximize agreement.
-- All branches inherit a common initial oscillation phase, so averaging may retain deterministic
-  bouncing. A negative result for cancellation is informative. Different branch locations also
-  mean the ensemble gradient is not generally the gradient at the ensemble-average weights.
-
-Deliver raw-artifact manifests, per-step/per-layer measurements, cosine-versus-lag plots,
-two-group agreement, amplitude/alternation diagnostics, and all branches including failures.
-Call a reproducible average a **candidate local motion**, not established ground-truth river
-direction. No paired weight-perturbation or valley-settling experiment is requested at this stage.
+Use whole-branch uncertainty/resampling and report the limited number of independent branches.
+Deliver independent-five-group agreement, mean-motion/alternation plots, held-out temporal
+prediction checks, failures, complete window manifests, and compute/storage costs. No paired
+weight-perturbation/settling experiment is requested. A negative or ambiguous result is valid;
+do not expand to more forks or full training solely because an average looks smooth.
 
 ## REQ-070: test candidate directions on independent loss and curvature probes
 
 - status: **OPEN**
-- requested: Jack / 2026-10-01 PDT
-- dependencies: REQ-069 candidate directions and exact retained evaluation states
+- requested: Jack / 2026-10-01 PDT; revised 2026-10-02 PDT
+- dependencies: whole-model candidates from REQ-068/069 and matched exact probe states
 - artifacts: `logs/river/req070_independent_direction_tests/`
 
-**Question:** is a reproducible ensemble direction useful for descent, beyond merely being smooth?
+**Question:** does a reproducible slow whole-model direction improve loss on independent data?
+This replaces the prior selected-matrix-only intervention; move all parameters represented in
+these full-model candidates and use the same parameter support for every comparison.
 
-Before inspecting results, select probe steps (initially branch steps 20, 50, and 99), independent
-probe data, and displacement lengths. Retain exact weights and optimizer states at those steps.
-Compare raw gradient, two-step average, an exponential moving average, and the ensemble direction.
-For each evaluated branch, use a **leave-one-branch-out ensemble** so its sampling noise is not
-part of its own reference. Evaluate the candidate at that branch's own parameter state; report the
-spread across branches rather than assuming one average direction is valid at every location.
-Use the shared selected-matrix coordinates for all candidate comparisons. Temporarily move only
-those matrices, keeping other parameters fixed, and evaluate the full model's probe loss. Baseline
-and ensemble directions must use exactly the same parameter support and norm convention. Report
-this as a selected-matrix intervention, not a recovered full-model direction. Separate full model/
-optimizer fork checkpoints remain permitted for these probes; no full-model gradient history is needed.
+Before inspecting results, fix probe offsets **32, 48, 63**, independent data, displacement scales,
+and the candidate-extraction rule. Compare the baseline optimizer movement, raw downhill gradient,
+ordinary temporal averaging, the ensemble mean, and a candidate slow component if supported by
+REQ-068/069. For each branch use a **leave-one-branch-out reference** and never include its own
+sampling noise in its target. Evaluate at that branch's exact weights, not at the ensemble center.
 
-For a proposed movement vector d, evaluate fresh probe loss at theta + alpha*d/||d||, restoring
-the exact original state after each test. For gradient candidates d is the negative gradient.
-Use equal displacement lengths across candidates: initially 0.25, 0.5, 1, and 2 times that state's
-baseline update norm, plus zero. Define a shared fallback or mark the test invalid for zero norms.
-Publish full loss-versus-distance curves, paired loss changes, norms, and failures. Do not pick
-the best displacement on final validation data and report that selection as an unbiased result.
+All optimizer-relevant candidates must be available at the stated decision time: at theta_t,
+use gradients through g_t and completed displacement history through delta_(t-1). Label any
+candidate requiring future data as an offline diagnostic and exclude it from causal performance
+claims. A simulated baseline update may be computed from the current gradient on copied state.
+Do not fit decomposition rules on the probe losses or future confirmation gradients.
 
-Run distinct comparisons for raw-gradient geometry and actual optimizer movement. For the latter,
-pass each candidate through an identically copied baseline optimizer state; preserve parameter-group
-scaling, schedule, and weight decay, and avoid mutating the live trajectory. Muon/Adam transforms
-can change the result substantially; a useful raw gradient is not automatically a useful update.
+For a movement direction d, evaluate the full model's fresh probe loss at theta + alpha*d/||d||,
+restoring exact weights/state after each test. Gradient candidates use the negative sign. Compare
+equal whole-model displacement lengths: 0.25, 0.5, 1, and 2 times the same state's baseline update
+norm, plus zero. Flag zero-norm candidates and predeclare fallback behavior. Report the complete
+loss-versus-distance curves and branch-level paired differences, not just the best displacement.
 
-At selected states, optionally measure directional loss curvature for the candidate and removed
-alternating component via Hessian-vector products on a fixed independent probe objective. Preserve
-the existing eight Lanczos iterations if spectral probes are used, and report convergence. Verify
-derivatives and loss normalization, using an appropriate diagnostic attention backend if necessary.
-These are diagnostics, not a requirement for full Hessian storage or every-step curvature capture.
+Distinguish raw-gradient candidates passed through identical copied optimizer state from direct
+movement candidates already in optimizer-update units; do not condition an actual displacement a
+second time. Preserve parameter-group scaling, schedules, and declared decay treatment. Optionally
+measure directional curvature on fixed independent probe data using verified Hessian-vector products;
+use the existing eight Lanczos iterations if spectral probes are added. No full Hessian or every-step
+curvature recording is required. Keep final validation data untouched for confirmation.
 
-Use separate data for any probe-setting selection and final confirmation. Report useful-descent
-and reproducibility evidence separately. Lower curvature or greater consistency alone does not
-establish a river direction. Do not add the deferred weight-displacement/settling experiment.
+Deliver reproducibility and useful-descent evidence separately, with the actual parameter support,
+probe data/state hashes, sign/norm conventions, numerical checks, and failures. Smoothness, low
+curvature, or high captured energy alone is not evidence of a useful river direction.
 
 ## REQ-071: fit a causal gradient-history estimator and test it in training
 
 - status: **OPEN**
-- requested: Jack / 2026-10-01 PDT
-- dependencies: proceed to optimizer trials only if REQ-069/070 establish a reproducible, useful
-  reference; otherwise report why the reference is inadequate before expanding
+- requested: Jack / 2026-10-01 PDT; revised 2026-10-02 PDT
+- dependencies: a reproducible and independently useful whole-model reference from REQ-068/069/070;
+  report inadequate references instead of launching a blind filter sweep
 - artifacts: `logs/river/req071_history_estimator/`
 
-**Question:** can one run's recent gradients estimate the useful reference without the cost of
-an ensemble? Fit an estimator to independent targets rather than trying an unrestricted filter zoo.
+**Question:** can a single trajectory's past history estimate the supported whole-model reference
+without ensembles or expensive geometry probes at every step? This is no longer restricted to three
+attention matrices. Fit coefficients using full-model window data streamed in parameter blocks.
 
-Start with a shared linear temporal estimator, with window W in {4, 8, 20, 40}:
-
-$$
-\widehat{s}_t = \sum_{j=0}^{W-1} c_j g_{t-j}.
-$$
-
-Fit coefficients against leave-one-branch-out reference gradients on development trajectories.
-Fit and score only the shared selected matrices, with the same loss normalization and parameter
-coverage for inputs and targets. Do not infer an unmeasured full-model target. As an interpretable
-candidate enforce preservation of constants and current-step linear trends, and cancellation of
-constant-amplitude period-two oscillation:
+Predeclare whether the target is a slow raw-gradient component or an actual movement component,
+and keep input/target conventions consistent. These are not interchangeable through nonlinear Muon
+conditioning. Use leave-one-branch-out references and independent data; no branch enters its own
+target. The initial interpretable raw-gradient estimator is
 
 $$
-\sum_j c_j = 1, \qquad \sum_j j c_j = 0, \qquad \sum_j (-1)^j c_j = 0.
+\widehat{s}_t=\sum_{j=0}^{W-1}c_j g_{t-j},\qquad W\in\{4,8,20\},
 $$
 
-Penalize large coefficients to control noise amplification; select regularization and W only on
-development data. Predeclare any weighting across layers. Compare with unfiltered gradients,
-pair averaging, and a tuned exponential moving average with comparable tuning budget. Estimate the
-current signal using only present/past gradients; no centered windows or future leakage.
+with constraints
 
-Split development and evaluation by whole trajectory/base lineage. Do not randomly split overlapping
-windows or let an evaluated branch enter its own target. Report that branches sharing initialization
-are conditional replicates; use fresh initialization lineages for independent confirmation. Score
-magnitude error, direction error, residual alternation, and response delay when direction changes.
-Include a low/no-alternation control to test whether the method erases useful signal. Failed prediction
-is evidence against this estimator/history window, not proof that no possible estimator can work.
+$$
+\sum_j c_j=1,\qquad \sum_j j c_j=0,\qquad \sum_j(-1)^j c_j=0.
+$$
 
-If offline and independent-loss evidence are favorable, branch paired **200-update** continuations
-from identical model/optimizer states: original optimizer, simple averaging baseline, and fitted
-estimator. Predeclare insertion point (initially raw synchronized gradients before momentum/Muon),
-parameter coverage, startup/history handling, and immutable coefficient settings. Initially apply
-averaging/the fitted estimator only to the selected matrices; leave all other parameters on the
-unchanged baseline optimizer. Initialize from shared selected-matrix history and thereafter use
-each branch's own gradients. Any whole-model extension is a separately justified follow-up.
-Keep data orders paired and verify the restored optimizer actually has the intended settings.
+These preserve constants/current-step linear trends and cancel constant-amplitude period-two
+alternation. Use a shared coefficient set initially; any group weighting or alternative movement-
+history estimator must be separately labeled. Penalize large coefficients, tune only on development
+lineages, and compare with raw input, pair averaging, and a tuned exponential moving average. The
+initial maximum window is 20 so past-only testing fits the held-out half of a 64-step recording;
+longer windows require a separately budgeted extension, not future leakage or concatenated gaps.
 
-If those continuations justify expansion, compare the frozen methods through **3250 updates on
-three fresh paired initialization/data seeds**, with comparable development LR tuning budgets.
-Evaluate at least every 250 steps and at the final endpoint on untouched validation data. Report all
-seed differences, uncertainty, failures, validation loss at equal tokens, time-to-loss, runtime,
-GPU-hours, and history memory/storage. These three seeds give limited precision; an inconclusive
-result is valid. Gradients becoming smoother alone is not a successful optimizer result.
+Split by whole base lineage/trajectory and chronological halves, not random overlapping windows.
+Report whole-model and per-family direction/magnitude error, lag at turns, residual alternation,
+and a low/no-alternation control. Different time windows from one training run are not independent
+initializations. Failure only rules out the tested estimator/data regime, not all possible methods.
+
+If offline and independent-loss evidence justify it, test **200-update paired continuations**:
+original optimizer, simple averaging, and the fitted method, with identical starting weights and
+optimizer state and paired token order. Define the insertion point, initialization from pre-fork
+history, and all-parameter coverage; then each branch uses only its own newly generated history.
+Start these continuations at a retained offset-32 state so up to 20 prior gradients are available
+inside its captured window; do not synthesize missing pre-fork history or borrow another branch's
+future observations.
+Benchmark the live rolling-buffer memory/compute separately: storing short windows on disk does
+not remove the cost of a full-model online filter. If the method does not fit, report the limitation
+or implement a mathematically equivalent recurrence; do not silently restrict it to selected matrices.
+
+Only after promising continuations, compare frozen methods through **3250 updates on three fresh
+paired initialization/data seeds**, with comparable development LR-tuning budgets. Evaluate at
+least every 250 steps and at the final endpoint on untouched validation data. Persistent full-model
+history remains windowed even in these runs. Report all seed differences, uncertainty, failures,
+loss at equal tokens, time-to-loss, total GPU-hours, live history memory, and capture overhead.
+Do not equate smoother gradients with better optimization.
 
 ## REQ-072: six optimizer ablations with full gradient histories and spectrograms
 
@@ -494,9 +519,10 @@ Use bounded chunks, an exact parameter/shard schema, native-precision lossless s
 resume-safe step indices, and a reader for any arm/step/selected matrix. Durable tensor artifacts stay
 **outside Git**; commit retrieval instructions, manifests, schemas, code, and derived results.
 Forecast selected-matrix storage for all three streams and all six arms, not just one raw-gradient run. Report
-storage blockers rather than quietly reducing coverage or precision. REQ-068's complete selected-matrix raw-
-gradient run remains required; reuse a run here only if its full config and capture requirements
-match exactly, with an explicit artifact cross-reference.
+storage blockers rather than quietly reducing coverage or precision. REQ-068's whole-model windows are a separate requirement; reuse
+a run/artifact only if its config, time coverage, and tensor streams actually match, with an explicit
+cross-reference. REQ-072 does not require whole-model histories and cannot substitute its three
+matrices for REQ-068/069's whole-model observations.
 
 ### Fourier analysis and spectrogram construction
 
