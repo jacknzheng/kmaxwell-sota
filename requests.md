@@ -1,6 +1,6 @@
 # Experiment requests
 
-Active queue for the `jerry-agent` branch. Next request number: **REQ-068**.
+Active queue for the `jerry-agent` branch. Next request number: **REQ-072**.
 
 Use this file for pending experiments, execution status, and links to results. Consolidated
 findings belong in [FINDINGS.md](FINDINGS.md). Completed and blocked specifications are preserved
@@ -11,23 +11,27 @@ in the [September 16 archive](requests_archive_20260916.md).
 | Request | Status | Work and dependencies |
 |---|---|---|
 | [REQ-062](#req-062-second-seed-of-six-momentum-kernel-runs-that-each-test-one-property) | OPEN | Existing independent muoff second-seed study; preserve its priority and limits. |
-| [REQ-066](#req-066-adapt-step-size-with-gradient-direction-consistency) | OPEN | Test the multiplicative 1 + cos θ step-size rule with recent displacement references. |
-| [REQ-067](#req-067-use-a-100-step-reference-in-prodigys-step-size-estimator) | OPEN | Compare Prodigy's fixed w₀ reference with exact rolling wₜ₋₁₀₀ in rₜ. Independent of REQ-066's outcome. |
+| [REQ-068](#req-068-record-the-full-gradient-history-for-an-entire-nanogpt-run) | OPEN | Jack: required full-run, every-step gradient tensors and analysis-ready storage. |
+| [REQ-069](#req-069-ten-data-seed-branches-to-estimate-reproducible-local-motion) | OPEN | Jack: ten branches from identical model/optimizer state; average gradients and updates. |
+| [REQ-070](#req-070-test-candidate-directions-on-independent-loss-and-curvature-probes) | OPEN | Jack: test directions from REQ-069 on independent data before claiming a river direction. |
+| [REQ-071](#req-071-fit-a-causal-gradient-history-estimator-and-test-it-in-training) | OPEN | Jack: fit an estimator against independent references; conditional on REQ-069/070 evidence. |
 
 **Pickup:** check live jobs and newly delivered artifacts before scheduling; do not interrupt
-running work. REQ-066/067 use available capacity without displacing REQ-062. REQ-063's
-control repair and REQ-064's prediction experiment have been delivered; do not rerun them
-because of old scheduling text. **REQ-065 is BLOCKED: REQ-064 reported H1 FAIL.** The new
-step-size experiments do not depend on that failed layer-wise momentum gate.
+running work. Preserve REQ-062's priority and limits. For Jack's new work, prioritize REQ-068's
+complete capture and REQ-069's middle-training pilot, then REQ-070 and conditional REQ-071.
+These requests do not depend on the archived layer-wise momentum gate.
 
-This cleanup records requests only; it does not report new training runs or a live job handle.
+This queue update requests experiments; it does not report new runs or a live job handle.
+Completed entries and Jack's previous OPEN REQ-066/067 have been removed from this queue at
+Jack's request. Existing result files, archives, deferred work, and Git history are unchanged.
 
 ## Operating constraints
 
 - **At most two nodes fleet-wide**, including other experiments.
 - Preserve the existing **eight Lanczos iterations**; record convergence diagnostics.
 - Commit code, configs, logs, figures, and derived measurements. **Never commit model weights,
-  optimizer tensors, checkpoints, secrets, or environment dumps.**
+  optimizer tensors, checkpoints, secrets, or environment dumps.** Full gradient/update tensor
+  histories must also stay off Git; commit their manifests, checksums, readers, and derived summaries.
 - Record independent base-state hashes, data cursors, code SHA, actual LR traces, exact checkpoint
   steps, and the operator/loss normalization used by each probe.
 - On pickup, change OPEN to RUNNING and record the live job or host/session/process handle,
@@ -43,37 +47,13 @@ This cleanup records requests only; it does not report new training runs or a li
 | Request | State | Disposition |
 |---|---|---|
 | REQ-065 | BLOCKED | REQ-064 reported H1 FAIL on September 16. Do not launch the conditional policy trial. [Preserved specification](requests_archive_20260916.md#req-065-test-an-unconstrained-layer-wise-policy-against-the-strongest-globals). |
-| REQ-049 | OPTIONAL | Four-seed replication of the crossed per-matrix LR test; does not displace 050–052. Original specification remains in the history linked below. |
+| REQ-049 | OPTIONAL | Four-seed replication of the crossed per-matrix LR test; remains deferred; do not dispatch automatically. Original specification remains in the history linked below. |
 | REQ-042 | BLOCKED | 32×/64× batch runs exceed the available corpus. Requires a data or run-length decision; no looping/repetition is authorized by this cleanup. |
-| REQ-035 B/C/D | NOT RUN | Arm A is complete. Preserve as deferred work; do not dispatch automatically. |
+| REQ-035 B/C/D | NOT RUN | Preserve these unrun arms as deferred work; do not dispatch automatically. |
 
 [Archived request specifications](https://github.com/jacknzheng/kmaxwell-sota/blob/28d00746aa80d71caf1fb8cb38b2e336b4c5d2d9/requests.md)
 include the deferred designs. Completed results and retractions belong in [FINDINGS.md](FINDINGS.md)
 and the linked experiment directories, rather than this queue.
-
-## Delivered work and interpretation
-
-DONE means artifacts were delivered, not that every requested control or mechanism was
-established. The [September 11 audit](logs/kmaxwell/layerwise_momentum_design_20260911/README.md)
-and [September 15 audit](logs/kmaxwell/layerwise_momentum_audit_20260915/README.md) take precedence
-over stronger historical claims. Original specifications, result paragraphs, and audit notes
-are retained in the archive; unresolved controls remain unresolved.
-
-| Request | Status | Result and limits |
-|---|---|---|
-| [REQ-050](requests_archive_20260916.md#req-050-curvature-at-initialisation-and-early-training) | DONE | Establish when the depth-curvature profile appears. |
-| [REQ-051](requests_archive_20260916.md#req-051-decompose-why-each-matrix-has-a-different-lr-to-curvature-response) | DONE; audited | Four-seed LR responses delivered; the combined decomposition uses mismatched probe batches. |
-| [REQ-052](requests_archive_20260916.md#req-052-matched-uniform-versus-mixed-lr-controls-for-req-051) | DONE; audited | LR-scope comparison delivered; recorded bases differ from REQ-051, so exact pairing remains unverified. |
-| [REQ-053](requests_archive_20260916.md#req-053-what-makes-mlpproj-different--expansion-ratio-vs-nonlinearity) | DONE | Separate the ReLU² input from the fan-in shape as the source of `mlp.proj`'s excess elasticity. |
-| [REQ-054](requests_archive_20260916.md#req-054-annealed-single-ema-matched-to-k-maxwells-scheduled-memory-age) | DONE; audited | K-Maxwell beats the scheduled EMA at 1×; exact realized-age and larger-batch controls remain open. |
-| [REQ-055](requests_archive_20260916.md#req-055-downhill-alignment-and-loss-curvature-of-the-actual-post-muon-update) | DONE; audited | One-seed geometry delivered; equivalence and per-step-mechanism claims remain unresolved. See REQ-057/058. |
-| [REQ-056](requests_archive_20260916.md#req-056-test-k-maxwell-memory-in-standard-adam) | DONE; audited | K-Maxwell vs ordinary Adam is inconclusive (n=3); gain over the scheduled EMA does not isolate exact-age kernel shape. |
-| [REQ-057](requests_archive_20260916.md#req-057-validate-layer-wise-spectral-sharpness-and-cross-layer-coupling) | DONE; audited | Repeatable pilot rankings; ~97% coupling is at a diagnostic direction, not the realized momentum step. Some numerical checks remain open. |
-| [REQ-058](requests_archive_20260916.md#req-058-test-whether-layer-sharpness-predicts-the-response-to-momentum) | DELIVERED; gate not established | Raw-S_i correlation replicated; registered incremental prediction test absent, nomom control unverified, one base lacks the 64-update endpoint. |
-| [REQ-059](requests_archive_20260916.md#req-059-verify-a-sharpness-guided-layer-wise-momentum-policy) | DONE; negative, audited | Balanced raw-S_i policy loses to global a=0.5; corrected statistics retain that result. Control/provenance repairs in REQ-063. |
-| [REQ-060](requests_archive_20260916.md#req-060-identify-loss-cubic-feedback-separately-from-muon-normalization) | DELIVERED; mechanism unresolved | Simplified gradient-centered nonlinearities measured; actual-buffer causal attribution and removal replay not established. |
-| [REQ-063](requests_archive_20260916.md#req-063-verify-restored-optimizer-controls-and-repair-the-returned-evidence) | DONE 2026-09-15 | Evidence repaired (corrected REQ-059 stats keep the negative; REQ-058 fork-1500 relabeled 60-update). nomom mu-overwrite reproduced + fixed in CPU and **on silicon**: returned "nomom" was mu=0.95 (==ordinary Muon), true mu=0 is distinct + best. Exact-age EMA / names / a=1 verified; replay reproducible. Box stopped. |
-| [REQ-064](requests_archive_20260916.md#req-064-predict-local-memory-improvements-beyond-a-strong-global-setting) | DONE 2026-09-16; negative | 156/156 continuations delivered; reported H1 FAIL. Sharpness did not beat the type/depth prior; REQ-065 remains blocked. [Results](logs/kmaxwell/req064_local_memory_prediction/README.md). |
 
 ## REQ-062: second seed of six momentum-kernel runs that each test one property
 
@@ -180,171 +160,216 @@ spread. Run 7 pushes the stability threshold below the range we have tested.
 
 No secrets. No new code beyond what is in the commit. No dependency on any K-Maxwell state or result.
 
-## REQ-066: adapt step size with gradient-direction consistency
+## REQ-068: record the full gradient history for an entire nanoGPT run
 
 - status: **OPEN**
-- requested: Jack / 2026-09-16 PDT
-- priority and dependencies: new optimizer study; preserve REQ-062 and live jobs
-- resource limit: **two nodes fleet-wide**; benchmark the pilot and record a finite GPU-hour
-  budget before expansion
-- artifacts: `logs/kmaxwell/req066_direction_consistency/`
+- requested: Jack / 2026-10-01 PDT
+- priority: first deliverable for the river-direction study; preserve REQ-062 and live jobs
+- artifacts: `logs/river/req068_full_gradient_history/`
+- resource limit: existing two-node fleet-wide limit; measure storage/I/O and record a finite
+  GPU-hour and storage budget before the full run
 
-**Question:** Can we take larger steps while recent gradients keep pointing downhill, and
-smaller steps when the direction changes, using a Prodigy-inspired step-size controller?
-Think of continuing confidently along a straight path, then slowing down at a turn.
+**Required:** complete one baseline nanoGPT training run and persist the **full gradient tensor
+for every trainable parameter at every optimizer step, throughout the entire run**. For each
+matrix parameter, this means its entire gradient matrix at each step. Include embeddings,
+output head, vectors, and scalars as well as hidden matrices. Norms, sampled coordinates,
+projections, spectra, short capture windows, or every-k-step snapshots are not substitutes.
 
-Source: Bernstein and Newhouse, [Old Optimizer, New Norm: An Anthology](https://arxiv.org/pdf/2409.20325),
-Story III, equations 24–30 and the discussion following equation 30. The paper interprets
-Prodigy's step size using gradient/displacement alignment and mentions a rule akin to
-ηₜ₊₁ = ηₜ × (1 + cos θ) in preliminary experiments. The precise comparisons below are our
-experimental choices, not a claimed reproduction of an established result.
+### Baseline and indexing
 
-### Rule and comparisons
+Pin one verified Muon + auxiliary-optimizer baseline, code SHA, architecture, dataset, token
+order, batch size, loss normalization, and LR/momentum schedules before launching. Use the
+simplified optimization trainer where suitable; record the exact selected recipe. Target
+**3250 completed optimizer updates from initialization**, with ordinary validation through the
+final endpoint. Do not switch to a smaller model or shorter run and call that full delivery.
 
-Here wₜ means weights before optimizer update t, gₜ means that update's raw loss gradient,
-and ηₜ is the positive adaptive step-size scale. For a lookback of k completed optimizer
-updates, define:
+Define theta_t as the weights before update t and g_t as that update's gradient. Capture g_t
+**after all microbatch accumulation and distributed synchronization, after any loss-scale
+unscaling, and before clipping, momentum, Muon transforms, weight decay, or optimizer mutation**.
+Copy before optimizer code mutates `.grad`. In a sharded implementation save all shards plus an
+exact reconstruction map; avoid storing duplicate replicas. Record missing/inactive gradients
+explicitly rather than silently fabricating zeros. One observation means one optimizer update,
+not one microbatch; distinguish attempted/skipped updates if applicable.
 
-```text
-aₜ = wₘₐₓ₍₀,ₜ₋ₖ₎                   reference weights
-dₜ = aₜ − wₜ                       reverse of the recent weight displacement
-cₜ = dot(gₜ, dₜ) / (‖gₜ‖₂ × ‖dₜ‖₂) = cos θₜ
-ηₜ₊₁ = ηₜ × (1 + cₜ)
-```
+Save the actual gradient values at their native precision, losslessly; converting to float32
+is allowed but must not be described as recovering precision absent in the source. Record the
+exact conversion to mean-per-token gradients for comparable analysis without changing the
+baseline training inputs. Record parameter names, shapes, dtypes, flatten order/offsets, tying,
+sharding, tokens per update, global update index, and code/config/seed provenance.
 
-The dot product measures how much two directions agree; ‖·‖₂ is their ordinary length.
-Use **reference minus current**, not current minus reference: cₜ > 0 should mean that
-continuing along the recent descent path still reduces loss locally. Positive cₜ increases
-the scale; zero leaves it unchanged; negative cₜ decreases it. This is gradient-versus-path
-consistency, not the cosine between gₜ and gₜ₋₁. Those coincide only for particular update rules.
+### Storage, replay, and acceptance
 
-Start with one fixed, verified Muon recipe and its existing update direction, momentum,
-relative matrix scaling, auxiliary optimizers, weight decay, and training schedule. Freeze
-the exact recipe/code SHA before the pilot. Apply one global controller to the Muon matrix
-group; form the cosine by summing dot products and squared norms across that same group
-and all distributed shards. Preserve raw gradients before Muon's in-place transformations.
-Do not average per-matrix cosines or adapt each layer separately in this first test.
+- Stream bounded chunks to durable external storage or a retained durable volume. Do not keep
+  the full run in GPU memory or leave the only copy on a disposable training node. Publish the
+  artifact location and retrieval instructions; keep credentials out of manifests and logs.
+- Forecast bytes before launch from the actual parameter count/dtypes/step count, including
+  updates/checkpoints. Benchmark sustained writes and free capacity. If storage is unavailable,
+  report the concrete blocker; do not silently downsample, quantize, drop matrices, or shorten.
+- Keep raw tensors outside Git. Commit a machine-readable manifest with chunk hashes, step
+  coverage, parameter schema, shapes, dtypes, and artifact sizes, plus a reader that reconstructs
+  every parameter gradient for any requested step and streams per-matrix time series.
+- Record every-step actual parameter displacements separately where affordable, including the
+  effects of the optimizer and weight decay; clearly label them as updates rather than gradients.
+  Their storage can be scoped independently, but full gradient capture is mandatory.
+- Retain checkpoint/optimizer/RNG/data-cursor states off Git at predeclared analysis forks
+  (initially steps 500, 1500, and 2500), plus any filter state needed for later continuations.
+  Record hashes and retrieval paths so independent probes can be performed at the correct state.
+- Smoke-test round-trip tensor equality, accumulation/reduction timing, no gradient aliasing,
+  uninterrupted-versus-resumed indexing, and logging-on versus logging-off training parity.
+  Verify all 3250 expected update indices and all expected parameters/shards after the full run;
+  no gaps, duplicates, or silently partial chunks. Report failures as incomplete capture.
+- Deliver capture coverage, checksums, validation trajectory, peak memory, I/O volume, training
+  time excluding/including capture overhead, and a worked example loading one complete step.
 
-| Arm | Step-size rule | Reference |
-|---|---|---|
-| baseline | Existing scheduled LR; adaptive multiplier fixed at 1 | None |
-| cosine-1 | Multiplicative 1 + cₜ controller | wₜ₋₁ |
-| cosine-100 | Same controller | wₘₐₓ₍₀,ₜ₋₁₀₀₎ |
+Initial descriptive analysis: gradient norms, signed direction similarity and lag correlations,
+period-two evidence, and per-layer/global comparisons. A smooth average is a candidate signal,
+not proof of a valley floor. Curvature probes can use retained states under REQ-070; storing a
+full Hessian or measuring it every step is not required for this capture request.
 
-Factor the actual LR as ηₜ × qₜ, where qₜ is the unchanged dimensionless warmup/cooldown
-schedule. Initialize η₀ to the baseline's nominal LR, use ηₜ for update t, and use cₜ to
-set ηₜ₊₁. Do not recursively multiply by qₜ or remove the schedule in just one arm. Keep
-the weight-decay displacement on the baseline schedule so adapting the loss-gradient step
-does not also change regularization strength. Document this separation in the resolved config.
-
-For zero gradient or zero displacement, hold η unchanged. Clamp finite numerical cosine
-values to [−1, 1]. Because exact cₜ = −1 would otherwise set η permanently to zero, and
-persistent positive cₜ can grow η exponentially, predeclare a positive η floor and finite
-ceiling shared by the cosine arms. Record both the raw candidate and applied η, plus bound
-hit rates. Label the training implementation as bounded 1 + cos θ. Any damping, smoothing,
-different initialization, or gradient-versus-gradient variant is a separately named follow-up;
-do not silently alter the registered arms after seeing their losses.
-
-### Pilot, evaluation, and deliverables
-
-1. Verify the sign and update timing on tiny deterministic examples: aligned, perpendicular,
-   opposite, and zero directions. Check that disabling the controller reproduces the baseline.
-   Verify exact lookback, startup, and resumed-run parity, including distributed reductions.
-2. Pilot all three arms from the same initialization and token order on one development seed
-   through **500 completed updates**. Record validation loss at 0, 100, 250, and 500, stability,
-   bound hit rates, memory, and runtime. Freeze η bounds and any implementation fixes before
-   confirmation runs. A changed pilot is development evidence, not an independent replication.
-3. If correctness and measured cost permit, run all three frozen arms from initialization
-   through **3250 updates on three fresh paired seeds**, reserved before outcomes are opened.
-   Use the same evaluation tokens and evaluate every 250 updates and at 3250. The primary
-   comparison is each cosine arm minus baseline validation loss at 3250; comparing the two
-   windows is secondary. Do not select a favorable earlier endpoint or drop failed seeds.
-
-Publish every paired seed difference, their mean and uncertainty, train/validation curves,
-time to common loss thresholds, and total GPU-hours. Three seeds are a small comparison;
-report inconclusive results when uncertainty does not separate the methods. Log cₜ, ηₜ,
-actual LR, update norm, displacement norm, gradient norm, and bound/zero-direction events.
-Keep the seed/data/code manifests, configs, launch commands, and raw scalar logs. Report
-whether any gain survives the added runtime and memory cost. A gain with frequent bound hits
-is evidence for the bounded controller, not for the unrestricted recurrence.
-
-## REQ-067: use a 100-step reference in Prodigy's step-size estimator
+## REQ-069: ten data-seed branches to estimate reproducible local motion
 
 - status: **OPEN**
-- requested: Jack / 2026-09-16 PDT
-- priority and dependencies: independent of REQ-066's outcome; share correctness checks and
-  measurement conventions where applicable
-- resource limit: **two nodes fleet-wide**; benchmark memory/runtime and record a finite
-  GPU-hour budget before expansion
-- artifacts: `logs/kmaxwell/req067_prodigy_rolling_reference/`
+- requested: Jack / 2026-10-01 PDT
+- dependencies: verified baseline and fork states from REQ-068, or an exactly matched retained base
+- artifacts: `logs/river/req069_ten_branch_ensemble/`
+- priority: start with the step-1500 pilot; then repeat at steps 500 and 2500 within the recorded budget
 
-**Question:** Does Prodigy's step-size estimate become more useful during training if it
-compares the current weights with the weights exactly **100 optimizer updates ago**, instead
-of always comparing with initialization? The recent reference asks whether the last stretch
-of the path still points downhill, even after training has moved far from its starting point.
+**Question:** do ten nearby training trajectories reveal a reproducible average gradient/update
+direction that changes slowly, with less period-two oscillation than individual trajectories?
 
-Use the same [paper](https://arxiv.org/pdf/2409.20325), Story III, especially equations 24–27.
-The proposed change is the reference inside rₜ, the scalar running estimate used to choose
-the step size. With b = √β₂, its simplified notation is:
+At each fork clone **identical model weights and full optimizer state** into ten branches.
+Use ten independent data-sampling seeds, with identical batch size, architecture, LR/momentum
+schedule, and starting schedule position. Document other RNG streams and dropout handling.
+Do not independently reinitialize the networks: their coordinate-wise gradients need not be
+aligned. Identical seeds and token sequences would merely replay the same trajectory.
 
-```text
-standard: rₜ = b × rₜ₋₁ + (1 − b) × ηₜ² × dot(gₜ, w₀ − wₜ)
-rolling:  rₜ = b × rₜ₋₁ + (1 − b) × ηₜ² × dot(gₜ, wₘₐₓ₍₀,ₜ₋₁₀₀₎ − wₜ)
-```
+Run **100 completed updates per branch**. Preserve full gradient tensors for every parameter at
+every branch step and actual optimizer displacements, using REQ-068's conventions. Hash initial
+states and record the sampled token indices/cursors. Run branches sequentially if needed to
+respect fleet limits. Probe runs must not consume or modify another branch's training RNG/cursor.
 
-β₂ sets how quickly old information fades. **Replace only w₀ in this inner-product term.**
-Keep rₜ's smoothing, the sₜ accumulator and its norm, the moment updates, η initialization,
-schedule handling, stabilization, and all other Prodigy settings identical between arms.
-Pin and document the implementation and its mapping to the paper; the displayed equations
-omit implementation details and must not be substituted for a full production baseline.
+### Registered analysis
 
-| Arm | Optimizer | Reference in rₜ |
-|---|---|---|
-| prodigy-init | Verified standard Prodigy | w₀ |
-| prodigy-100 | Identical Prodigy except the reference term | wₘₐₓ₍₀,ₜ₋₁₀₀₎ |
+- Average raw mean-per-token gradients across branches at each relative update, and separately
+  average actual parameter displacements. Analyze both globally and per matrix/layer. Do not
+  confuse averaging raw vectors with averaging unit directions; report norms and dispersion.
+- Split branches into two predeclared independent groups of five and compare their averages
+  at matched steps. Repeat summary estimates with 1, 2, 5, and 10 branches to assess convergence;
+  report uncertainty across branches, not by pretending correlated time points are new seeds.
+- Measure directional agreement at lags 1, 2, 4, 8, 16, and 32; mark near-zero vectors invalid.
+  Compare with individual branches and ordinary temporal averaging. Avoid overlapping-window
+  agreement as the only evidence, since shared inputs mechanically induce agreement.
+- Measure period-two residuals after a predeclared local trend removal; preserve gradient signs.
+  Record parameter separation, loss spread, and update norms to identify when branches have
+  moved too far apart for a local interpretation. Do not align/reorder steps to maximize agreement.
+- All branches inherit a common initial oscillation phase, so averaging may retain deterministic
+  bouncing. A negative result for cancellation is informative. Different branch locations also
+  mean the ensemble gradient is not generally the gradient at the ensemble-average weights.
 
-Use the same parameter grouping and reference coverage in both arms. Keep the same model,
-data, initialization, token order, batch size, and schedule. REQ-066's Muon controller and
-this Prodigy comparison test different update rules; report their results separately.
+Deliver raw-artifact manifests, per-step/per-layer measurements, cosine-versus-lag plots,
+two-group agreement, amplitude/alternation diagnostics, and all branches including failures.
+Call a reproducible average a **candidate local motion**, not established ground-truth river
+direction. No paired weight-perturbation or valley-settling experiment is requested at this stage.
 
-### Exact window and interpretation
+## REQ-070: test candidate directions on independent loss and curvature probes
 
-- For t < 100 use w₀. Read wₜ₋₁₀₀ before update t; advance history after the update. Count
-  completed optimizer updates, not microbatches or gradient-accumulation passes.
-- Keep a rolling history that supplies the exact lagged weights. A snapshot refreshed every
-  100 steps has a varying age and is a different experiment. Account for the substantial
-  cost of retaining roughly 100 parameter snapshots; benchmark storage, precision, and any
-  CPU-transfer overhead before training. If exact history does not fit the budget, report
-  that limitation rather than silently using a stale or compressed approximation.
-- Do not reset rₜ or sₜ every 100 steps, truncate their smoothing, change the norm, or divide
-  the displacement by 100. Those would confound the reference replacement.
-- Standard Prodigy's ηₜ₊₁ = max(ηₜ, rₜ / ‖sₜ‖₁) keeps its adaptive scale nondecreasing.
-  Changing the reference alone therefore **cannot lower that scale**; it can slow or stop
-  further growth. An external cooldown schedule can still lower the actual LR. REQ-066
-  separately tests a controller whose scale can both increase and decrease.
+- status: **OPEN**
+- requested: Jack / 2026-10-01 PDT
+- dependencies: REQ-069 candidate directions and exact retained evaluation states
+- artifacts: `logs/river/req070_independent_direction_tests/`
 
-### Pilot, evaluation, and deliverables
+**Question:** is a reproducible ensemble direction useful for descent, beyond merely being smooth?
 
-First check parity with the baseline when both references are w₀, including the startup
-period; then verify lag selection at updates 99, 100, 101, and 200 on a known trajectory.
-Check rₜ and η against a direct small-tensor calculation. Preserve the full rolling history
-and optimizer state on resume and check uninterrupted-versus-resumed parity. Handle a zero
-denominator exactly as the pinned baseline does; log signed rₜ and invalid-value events.
+Before inspecting results, select probe steps (initially branch steps 20, 50, and 99), independent
+probe data, and displacement lengths. Retain exact weights and optimizer states at those steps.
+Compare raw gradient, two-step average, an exponential moving average, and the ensemble direction.
+For each evaluated branch, use a **leave-one-branch-out ensemble** so its sampling noise is not
+part of its own reference. Evaluate the candidate at that branch's own parameter state; report the
+spread across branches rather than assuming one average direction is valid at every location.
 
-Pilot both arms from initialization on one development seed through **500 updates**, with
-the REQ-066 evaluation points. Freeze the implementation and settings before running both
-arms on **three fresh paired seeds through 3250 updates** if correctness and cost permit.
-Evaluate every 250 updates and at 3250. Primary outcome: rolling-minus-initialization
-reference validation loss at 3250. Report all paired differences and uncertainty, failures,
-time to common loss thresholds, runtime, peak GPU/CPU memory, and history-transfer costs.
-Do not tune the 100-step window using confirmation outcomes.
+For a proposed movement vector d, evaluate fresh probe loss at theta + alpha*d/||d||, restoring
+the exact original state after each test. For gradient candidates d is the negative gradient.
+Use equal displacement lengths across candidates: initially 0.25, 0.5, 1, and 2 times that state's
+baseline update norm, plus zero. Define a shared fallback or mark the test invalid for zero norms.
+Publish full loss-versus-distance curves, paired loss changes, norms, and failures. Do not pick
+the best displacement on final validation data and report that selection as an unbiased result.
 
-Log rₜ, ‖sₜ‖₁, the candidate and accepted η, actual LR, the signed gradient/reference inner
-product, displacement norm, and cosine. Record how often the max rule rejects a candidate.
-This distinguishes an ineffective reference signal from a useful signal prevented from
-lowering the scale by the inherited max rule. Commit configs, code, manifests, scalar logs,
-curves, and a result summary; keep parameter histories and checkpoints off Git.
+Run distinct comparisons for raw-gradient geometry and actual optimizer movement. For the latter,
+pass each candidate through an identically copied baseline optimizer state; preserve parameter-group
+scaling, schedule, and weight decay, and avoid mutating the live trajectory. Muon/Adam transforms
+can change the result substantially; a useful raw gradient is not automatically a useful update.
+
+At selected states, optionally measure directional loss curvature for the candidate and removed
+alternating component via Hessian-vector products on a fixed independent probe objective. Preserve
+the existing eight Lanczos iterations if spectral probes are used, and report convergence. Verify
+derivatives and loss normalization, using an appropriate diagnostic attention backend if necessary.
+These are diagnostics, not a requirement for full Hessian storage or every-step curvature capture.
+
+Use separate data for any probe-setting selection and final confirmation. Report useful-descent
+and reproducibility evidence separately. Lower curvature or greater consistency alone does not
+establish a river direction. Do not add the deferred weight-displacement/settling experiment.
+
+## REQ-071: fit a causal gradient-history estimator and test it in training
+
+- status: **OPEN**
+- requested: Jack / 2026-10-01 PDT
+- dependencies: proceed to optimizer trials only if REQ-069/070 establish a reproducible, useful
+  reference; otherwise report why the reference is inadequate before expanding
+- artifacts: `logs/river/req071_history_estimator/`
+
+**Question:** can one run's recent gradients estimate the useful reference without the cost of
+an ensemble? Fit an estimator to independent targets rather than trying an unrestricted filter zoo.
+
+Start with a shared linear temporal estimator, with window W in {4, 8, 20, 40}:
+
+$$
+\widehat{s}_t = \sum_{j=0}^{W-1} c_j g_{t-j}.
+$$
+
+Fit coefficients against leave-one-branch-out reference gradients on development trajectories.
+Use the same loss normalization and parameter coverage for inputs and targets. As an interpretable
+candidate enforce preservation of constants and current-step linear trends, and cancellation of
+constant-amplitude period-two oscillation:
+
+$$
+\sum_j c_j = 1, \qquad \sum_j j c_j = 0, \qquad \sum_j (-1)^j c_j = 0.
+$$
+
+Penalize large coefficients to control noise amplification; select regularization and W only on
+development data. Predeclare any weighting across layers. Compare with unfiltered gradients,
+pair averaging, and a tuned exponential moving average with comparable tuning budget. Estimate the
+current signal using only present/past gradients; no centered windows or future leakage.
+
+Split development and evaluation by whole trajectory/base lineage. Do not randomly split overlapping
+windows or let an evaluated branch enter its own target. Report that branches sharing initialization
+are conditional replicates; use fresh initialization lineages for independent confirmation. Score
+magnitude error, direction error, residual alternation, and response delay when direction changes.
+Include a low/no-alternation control to test whether the method erases useful signal. Failed prediction
+is evidence against this estimator/history window, not proof that no possible estimator can work.
+
+If offline and independent-loss evidence are favorable, branch paired **200-update** continuations
+from identical model/optimizer states: original optimizer, simple averaging baseline, and fitted
+estimator. Predeclare insertion point (initially raw synchronized gradients before momentum/Muon),
+parameter coverage, startup/history handling, and immutable coefficient settings. Initialize from
+shared past history and thereafter use each branch's own gradients. Keep data orders paired and
+verify the restored optimizer actually has the intended settings.
+
+If those continuations justify expansion, compare the frozen methods through **3250 updates on
+three fresh paired initialization/data seeds**, with comparable development LR tuning budgets.
+Evaluate at least every 250 steps and at the final endpoint on untouched validation data. Report all
+seed differences, uncertainty, failures, validation loss at equal tokens, time-to-loss, runtime,
+GPU-hours, and history memory/storage. These three seeds give limited precision; an inconclusive
+result is valid. Gradients becoming smoother alone is not a successful optimizer result.
 
 ## Template
 
 ```md
+## REQ-NNN: short experiment title
+
+- status: **OPEN**
+- requested: Name / YYYY-MM-DD timezone
+- dependencies:
+- artifacts:
+
+Question, registered comparisons, resource limits, validation, and deliverables.
+```
