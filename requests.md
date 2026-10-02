@@ -1,6 +1,6 @@
 # Experiment requests
 
-Active queue for the `jerry-agent` branch. Next request number: **REQ-072**.
+Active queue for the `jerry-agent` branch. Next request number: **REQ-073**.
 
 Use this file for pending experiments, execution status, and links to results. Consolidated
 findings belong in [FINDINGS.md](FINDINGS.md). Completed and blocked specifications are preserved
@@ -15,11 +15,14 @@ in the [September 16 archive](requests_archive_20260916.md).
 | [REQ-069](#req-069-ten-data-seed-branches-to-estimate-reproducible-local-motion) | OPEN | Jack: ten branches from identical model/optimizer state; average gradients and updates. |
 | [REQ-070](#req-070-test-candidate-directions-on-independent-loss-and-curvature-probes) | OPEN | Jack: test directions from REQ-069 on independent data before claiming a river direction. |
 | [REQ-071](#req-071-fit-a-causal-gradient-history-estimator-and-test-it-in-training) | OPEN | Jack: fit an estimator against independent references; conditional on REQ-069/070 evidence. |
+| [REQ-072](#req-072-six-optimizer-ablations-with-full-gradient-histories-and-spectrograms) | OPEN | Jack: AdamW / SGD / Muon, each with and without momentum; every-step raw and conditioned histories, Fourier spectra, and six spectrograms. |
 
 **Pickup:** check live jobs and newly delivered artifacts before scheduling; do not interrupt
 running work. Preserve REQ-062's priority and limits. For Jack's new work, prioritize REQ-068's
 complete capture and REQ-069's middle-training pilot, then REQ-070 and conditional REQ-071.
-These requests do not depend on the archived layer-wise momentum gate.
+REQ-072 is an independent descriptive optimizer study; reuse the capture infrastructure without
+waiting for REQ-069/070/071 results or interrupting live work. These requests do not depend on the
+archived layer-wise momentum gate.
 
 This queue update requests experiments; it does not report new runs or a live job handle.
 Completed entries and Jack's previous OPEN REQ-066/067 have been removed from this queue at
@@ -360,6 +363,157 @@ Evaluate at least every 250 steps and at the final endpoint on untouched validat
 seed differences, uncertainty, failures, validation loss at equal tokens, time-to-loss, runtime,
 GPU-hours, and history memory/storage. These three seeds give limited precision; an inconclusive
 result is valid. Gradients becoming smoother alone is not a successful optimizer result.
+
+## REQ-072: six optimizer ablations with full gradient histories and spectrograms
+
+- status: **OPEN**
+- requested: Jack / 2026-10-02 PDT
+- dependencies: reuse REQ-068 capture/reader infrastructure after verification; independent of
+  the river-reference and learned-filter results; do not interrupt live jobs
+- artifacts: `logs/river/req072_optimizer_spectrograms/`
+- resource limit: existing **two nodes fleet-wide**; benchmark and record finite GPU-hour,
+  durable-storage, and I/O budgets for all six runs before launching the full comparison
+
+**Question:** what temporal frequencies are present in the gradients after each optimizer's
+conditioning, and how does turning momentum off change them? Deliver **six ablations, a
+spectrogram for each, and full gradient histories at every optimizer step for every arm**.
+This is descriptive analysis of the optimizers, not a search for the best temporal filter.
+
+### Six arms and matched training
+
+| Arm | Optimizer | First-moment momentum |
+|---|---|---|
+| adamw-mom | AdamW | beta1 = 0.9 |
+| adamw-nomom | AdamW | beta1 = 0 |
+| sgd-mom | SGD | momentum = 0.9, dampening = 0, Nesterov off |
+| sgd-nomom | SGD | momentum = 0, dampening = 0, Nesterov off |
+| muon-mom | Standard Muon | mu = 0.95, standard Nesterov direction |
+| muon-nomom | Same Muon conditioning | mu = 0, Nesterov off; condition the current gradient |
+
+For AdamW keep **beta2 = 0.95**, epsilon, bias correction, and other settings identical within
+its pair. "No momentum" means no first-moment averaging, **not** removal of the running squared-
+gradient scale. Keep that adaptive conditioning. For Muon retain the identical orthogonalization,
+iteration count, shape scaling, and numerical settings across its pair; do not substitute a
+K-Maxwell or other multi-timescale memory kernel. Specify SGD's sum-style momentum recurrence
+and resulting scale so amplitude differences are not mistaken for spectral effects.
+
+Use AdamW and SGD for their full model parameter sets. Muon uses the baseline's supported hidden
+matrices and auxiliary AdamW for the remaining parameters. For muon-mom use auxiliary beta1 = 0.9;
+for muon-nomom use auxiliary beta1 = 0, with beta2 = 0.95 and other auxiliary settings held fixed.
+Thus the no-momentum arms have no first-moment momentum anywhere. Document the full parameter-group
+map and label Muon auxiliary panels as AdamW; the primary optimizer comparison is on matching
+hidden matrices, with auxiliary parameters and whole-model aggregates shown separately.
+
+Run all six from **identical initial model weights and identical training token order**, with
+fresh optimizer state, fixed architecture/dataset/batch size, and identical evaluation tokens.
+Target **3250 completed updates per arm**, initially one paired initialization/data seed (six
+full runs). This is an exploratory paired comparison, not a statistically replicated performance
+claim. Each optimizer generates its own trajectory; do not present differences as a pure filter
+transfer function evaluated on identical gradients.
+
+Use a short separate development pilot to select stable optimizer-specific LR scales, with a
+matched tuning budget. Within each momentum on/off pair use the same LR scales and schedule;
+freeze these before confirmation. Different optimizers need not share the same numeric LR.
+Keep clipping and regularization rules fixed within pairs, record them, and separate weight
+decay from the measured conditioned direction. Use explicit decoupled weight decay for this
+study; set SGD's built-in coupled weight_decay to zero and apply the declared decay separately,
+so decay does not enter its momentum buffer. Label this implementation choice. Record actual
+LR/decay/momentum traces and clipping factors.
+Any arm that diverges or stops is reported as failed/incomplete with all observations retained;
+do not silently change its settings halfway through or report its partial run as full delivery.
+
+### Mandatory every-step histories: raw AND post-conditioning
+
+For **every trainable parameter at every step in all six complete runs**, store losslessly:
+
+1. **Raw loss gradient g_t:** after accumulation, synchronization, and loss-scale unscaling,
+   before clipping/regularization/momentum/optimizer mutations. Save the actual native values
+   and the exact normalization needed to obtain mean-per-token gradients.
+2. **Conditioned direction u_t:** the exact data-gradient-driven tensor after clipping (if used),
+   momentum/bias correction, adaptive scaling or Muon orthogonalization, and fixed shape scaling,
+   but **before learning-rate multiplication and decoupled weight decay**. AdamW uses its
+   bias-corrected first moment divided by sqrt(second moment) + epsilon; SGD uses its momentum
+   direction or current gradient; Muon uses its final scaled orthogonalized direction. Include
+   the corresponding direction for every auxiliary parameter, with its optimizer identified.
+3. **Actual parameter displacement:** post-step weights minus pre-step weights, including LR,
+   decay, and finite-precision effects, stored separately so direction changes can be distinguished
+   from schedule effects. Record the update decomposition and any additional transforms.
+
+Retain each matrix's **entire matrix**, plus all vector/scalar gradients, across the whole run.
+No skipped steps, matrix subsets, norm-only logs, sampled coordinates, projections, or saved
+spectrograms may substitute for these histories. Copy tensors before in-place updates overwrite
+them; do not reconstruct u_t merely by dividing a rounded weight difference by the LR.
+Use bounded chunks, an exact parameter/shard schema, native-precision lossless storage, checksums,
+resume-safe step indices, and a reader for any arm/step/parameter. Durable tensor artifacts stay
+**outside Git**; commit retrieval instructions, manifests, schemas, code, and derived results.
+Forecast storage for all three streams and all six arms, not just one raw-gradient run. Report
+storage blockers rather than quietly reducing coverage or precision. REQ-068's complete raw-
+gradient run remains required; reuse a run here only if its full config and capture requirements
+match exactly, with an explicit artifact cross-reference.
+
+### Fourier analysis and spectrogram construction
+
+Analyze **variation over optimizer steps**, not spatial Fourier transforms across matrix rows or
+columns. A matrix supplies many signed scalar time series, one per entry. Compute the temporal
+short-time Fourier transform (STFT) for each coordinate, then sum squared Fourier magnitudes
+across coordinates. Do not first take gradient norms, absolute values, or a signed coordinate
+average: those can hide sign-flipping oscillation or cancel unrelated coordinates.
+
+For a parameter tensor flattened to coordinates i, use the same window and normalization for
+all arms. The aggregate power is, up to the explicitly recorded PSD normalization:
+
+$$
+P_m(\tau,f)=\sum_{i\in m}\left|\sum_{j=0}^{W-1}h_j\,u_{\tau+j,i}\,
+ e^{-2\pi\mathrm{i}fj}\right|^2.
+$$
+
+Here m names a parameter tensor, tau is a window's start step, h is the window, and f is cycles
+per optimizer step. Normalize by window energy and sampling frequency consistently; report total
+power and mean-per-coordinate power. Compute in coordinate blocks to avoid loading the entire
+history into RAM. Sum per-tensor powers for the global view; use fixed parameter-group membership.
+
+- Primary STFT: **128-step Hann window, hop 16, sampling frequency 1 sample/update**, no temporal
+  subsampling, real one-sided frequencies from 0 to **0.5 cycles/update**. Show period two explicitly
+  at **0.5**, the Nyquist endpoint. Correctly scale DC/Nyquist versus interior one-sided bins.
+- Show raw/non-detrended spectra (including DC) and a separately labeled per-window linear-detrended
+  version, so the changing trend does not get silently deleted. Detrending is for interpretation,
+  not evidence that everything removed was noise. Include 32- and 256-step windows as sensitivity
+  checks for short changes versus frequency resolution, with the same rule across all arms.
+- Use only complete windows for primary plots; mark any padded boundary windows. Gaps or skipped
+  updates break contiguity: split the series and flag incomplete runs rather than interpolating.
+- Make the primary panels from u_t; also show matched raw-gradient and actual-displacement panels
+  to reveal what conditioning changes versus what the LR/decay schedule changes.
+- Produce whole-run Fourier power spectra and early/middle/late summaries alongside spectrograms;
+  mark LR phase boundaries and distinguish nonstationary whole-run spectra from local behavior.
+- Plot both absolute log power and per-window normalized spectral-power fractions, with shared
+  color limits within each comparable six-arm figure. Report the numerical floor and flag zero-
+  energy windows. Different optimizer scales should not masquerade as different frequency content.
+- Report power near period two (predeclare band 0.45–0.5 cycles/update), low-frequency power
+  (0–0.05), total energy, signed lag-one/lag-two agreement, and losses alongside the plots.
+  Display per-matrix/layer results so embeddings or large layers cannot hide the hidden-matrix story.
+
+Use a documented STFT implementation such as [SciPy ShortTimeFFT](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.ShortTimeFFT.html).
+For AdamW's distinction between first- and second-moment state, follow the pinned implementation
+and [AdamW documentation](https://docs.pytorch.org/docs/2.14/generated/torch.optim.AdamW.html).
+
+### Validation and deliverables
+
+- Verify optimizer capture against direct small-tensor calculations and confirm instrumentation
+  does not change the updates. Assert true zero-momentum behavior at startup and after restoring
+  state: no saved momentum hyperparameter may overwrite the ablation. Check every parameter group.
+- Validate spectra with a constant signal, a known sinusoid, exact alternating signs, and white
+  noise. Include a sign-flipping vector of constant norm to catch accidental norm-before-FFT bugs.
+  Check one-sided energy scaling, Nyquist visibility, chunk boundaries, tensor round trips, and
+  complete step/parameter/shard coverage for all six arms.
+- Deliver **six individually labeled conditioned-direction spectrograms**, a shared-scale 3-by-2
+  optimizer-by-momentum comparison, raw/conditioned/displacement comparisons, per-layer plots,
+  whole-run Fourier spectra, band-power tables, and machine-readable spectral arrays.
+- Deliver all six full histories with manifests/readers, resolved configs, code SHA, seeds/data
+  manifests, launch commands, stdout, validation curves, runtime/GPU-hours, peak memory, storage
+  volume, and capture overhead. Figures alone do not complete this request.
+- Explain whether momentum suppresses, shifts, or amplifies alternating/high-frequency structure
+  and whether conditioning changes that pattern. With one paired seed, keep conclusions descriptive;
+  a smooth spectrogram alone does not establish a river direction or better optimization.
 
 ## Template
 
