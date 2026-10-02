@@ -1,0 +1,6 @@
+T1 round-trip exact + native dtype, T2 no-aliasing, T3 None flags: PASS
+T4 chunking (3 chunks, last n=1) + verify True []: PASS
+T5 per-matrix series + full_step: PASS
+T6 verify catches corruption+missing: PASS ['hash mismatch grad_chunk_00000_steps000000-000002.pt', 'missing 1 steps e.g. [7]']
+
+PASS: REQ-068 capture writer/reader (24401 bytes, 7 steps, 4 params)
