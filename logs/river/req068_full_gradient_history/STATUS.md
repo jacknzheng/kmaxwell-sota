@@ -64,3 +64,16 @@ indices + all params/shards present — no gaps/dupes/partial chunks; else repor
 2. capture hook + manifest writer + reader + chunked streamer — CPU-validated smoke tests (free).
 3. storage provisioning + sustained-write benchmark (gating).
 4. full 3250-step run with capture + fork dumps; post-run verification + descriptive analysis.
+
+## Update 2026-10-02: config generator done + REQ-072 absorbed
+- `impl/make_req068_config.py` emits the baseline capture config: standard **Muon mu=0.95** on hidden
+  matrices + canonical aux AdamW (embed lr0.7 / head lr0.004 / scalars lr0.015, all wd0.001; blocks lr0.025
+  wd0.05). Validated against the harness parser: all 15 hooks resolve, 4 optimizer groups parse,
+  pre_optimizer order capture->dump[500,1500,2500]->cooldown, teardown finalize->mark_finished.
+- Pipeline CPU-complete: capture core (6/6) + hook patch (registers) + config (parses). Remaining before
+  launch: durable storage provisioning (gating) + GPU in-harness smoke (logging parity, round-trip, all
+  3250 indices) + the full run.
+- **REQ-072** (six optimizer ablations: AdamW/SGD/Muon ×±momentum, full histories + spectrograms) reuses
+  this exact capture infra (the writer is optimizer-agnostic; muon-mom arm == this baseline). Program-wide
+  storage now dominant: REQ-068 ~1.06 TB + REQ-072 ~6×1.06=6.3 TB + REQ-069 branches. Consolidated storage
+  forecast + provisioning plan is the next gating step before any launch.
