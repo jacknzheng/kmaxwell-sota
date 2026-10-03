@@ -299,7 +299,7 @@ proof of a valley floor or useful descent: independent branches and loss tests f
 
 ## REQ-069: ten data-seed branches to estimate reproducible local motion
 
-- status: **OPEN**
+- status: **DONE 2026-10-03 — NEGATIVE confirmation** -> `logs/river/req069_ten_branch_ensemble/`. 10 branches forked from theta_1500 (identical weights+optimizer) x independent data seeds (disjoint corpus windows), 64 updates each, both streams + offset probes. Within-branch signatures reproduce (grad lag1 ~-0.64, disp lag1 ~+0.79) BUT no reproducible common whole-model direction: two independent 5-groups agree ~0.9 at the fork then decay to ~0 within 64 steps (grad 0.944->-0.029, disp 0.899->+0.042), ensemble-mean norm shrinks with more branches (incoherent averaging), dispersion high (grad 4.0/disp 2.8). Ensemble retains the period-two (shared bounce phase) + embedding-dominated persistent delta = shared-IC artifact, not data-reproducible. Tempers REQ-068's river (bending, not low-rank valley floor). 500/2500 windows not run (gated on positive middle evidence). Node qz0mpk3 stopped
 - requested: Jack / 2026-10-01 PDT; revised 2026-10-02 PDT
 - dependencies: REQ-068 whole-model window analysis and compatible exact fork state
 - artifacts: `logs/river/req069_ten_branch_ensemble/`
