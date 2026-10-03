@@ -15,7 +15,7 @@ in the [September 16 archive](requests_archive_20260916.md).
 | [REQ-069](#req-069-ten-data-seed-branches-to-estimate-reproducible-local-motion) | OPEN | Jack: ten 64-step branches from identical state; independently confirm whole-model slow motion. |
 | [REQ-070](#req-070-test-candidate-directions-on-independent-loss-and-curvature-probes) | DONE (negative) | No candidate direction gives useful descent on independent loss (best -0.002 nats, negligible/non-robust); baseline-update overshoots, raw -grad catastrophic (+21), ensemble loss-neutral. River arc closes negative; REQ-071 gated off. Node stopped. |
 | [REQ-071](#req-071-fit-a-causal-gradient-history-estimator-and-test-it-in-training) | GATED OFF | Conditional on REQ-069/070 showing a useful reproducible slow component; both negative, so premise absent. Not launched. |
-| [REQ-072](#req-072-six-optimizer-ablations-with-full-gradient-histories-and-spectrograms) | OPEN | Jack: AdamW / SGD / Muon, each with and without momentum; every-step histories of selected full matrices and six spectrograms. |
+| [REQ-072](#req-072-six-optimizer-ablations-with-full-gradient-histories-and-spectrograms) | RUNNING | Plan+forecast done (3x blocks.{0,5,11}.attn.proj, 6 arms, 3 streams incl. conditioned u_t, ~414GB fp32). Build: CaptureAdamW + per-optimizer u_t stash next. |
 | [REQ-073](#req-073-qkmlp-spectra-through-muon-momentum-and-effective-batch-size) | OPEN | Jack: Q/K/MLP histories through each optimizer stage; Muon momentum on/off × baseline/4× effective batch; frozen-state noise and independent-loss checks. |
 
 **Pickup:** check live jobs and newly delivered artifacts before scheduling; do not interrupt
@@ -441,7 +441,7 @@ Do not equate smoother gradients with better optimization.
 
 ## REQ-072: six optimizer ablations with full gradient histories and spectrograms
 
-- status: **OPEN**
+- status: **RUNNING 2026-10-03 (planning/build)** -> `logs/river/req072_optimizer_spectrograms/STATUS.md`. Selected blocks.{0,5,11}.attn.proj.weight; 6 arms (AdamW/SGD/Muon x +-momentum, 3250 steps); 3 streams/matrix/step (raw g_t, conditioned u_t before LR/decay, displacement). Forecast ~414GB fp32 (207 bf16) on durable FS. Build: CaptureAdamW (transparent AdamW exposing m_hat/sqrt(v_hat)) + u_t stash in Muon/SgdBlocks + restricted 3-stream capture + STFT spectrograms next.
 - requested: Jack / 2026-10-02 PDT
 - dependencies: reuse REQ-068 capture/reader infrastructure after verification; independent of
   the river-reference and learned-filter results; do not interrupt live jobs
