@@ -13,7 +13,7 @@ in the [September 16 archive](requests_archive_20260916.md).
 | [REQ-062](#req-062-second-seed-of-six-momentum-kernel-runs-that-each-test-one-property) | OPEN | Existing independent muoff second-seed study; preserve its priority and limits. |
 | [REQ-068](#req-068-record-the-full-gradient-history-for-an-entire-nanogpt-run) | DONE | Both streams (g_t + delta_t) captured for all 3 windows + 64x64 K/C Gram + OOS + per-family + offset probes. Finding: gradients anti-align (lag1<0, period-two), displacements persist (lag1 ~+0.78 = river), but not low-rank-constant + embedding-dominated. Node stopped. |
 | [REQ-069](#req-069-ten-data-seed-branches-to-estimate-reproducible-local-motion) | OPEN | Jack: ten 64-step branches from identical state; independently confirm whole-model slow motion. |
-| [REQ-070](#req-070-test-candidate-directions-on-independent-loss-and-curvature-probes) | OPEN | Jack: test directions from REQ-069 on independent data before claiming a river direction. |
+| [REQ-070](#req-070-test-candidate-directions-on-independent-loss-and-curvature-probes) | RUNNING | Not mooted by REQ-069 negative (tests useful descent of baseline-update/-grad/temporal-avg/ensemble on independent loss). Direction-extraction core built+validated; loss-probe GPU driver next. |
 | [REQ-071](#req-071-fit-a-causal-gradient-history-estimator-and-test-it-in-training) | OPEN | Jack: fit an estimator against independent references; conditional on REQ-069/070 evidence. |
 | [REQ-072](#req-072-six-optimizer-ablations-with-full-gradient-histories-and-spectrograms) | OPEN | Jack: AdamW / SGD / Muon, each with and without momentum; every-step histories of selected full matrices and six spectrograms. |
 
@@ -339,7 +339,7 @@ do not expand to more forks or full training solely because an average looks smo
 
 ## REQ-070: test candidate directions on independent loss and curvature probes
 
-- status: **OPEN**
+- status: **RUNNING 2026-10-03** -> `logs/river/req070_independent_direction_tests/`. REQ-069's negative (no reproducible shared direction) does NOT moot this: REQ-070 tests whether ANY candidate movement (baseline update delta_(t-1), raw -g_t, temporal avg, leave-one-out ensemble mean) gives USEFUL DESCENT on independent probe loss at the exact probe states (offsets 32/48/63) captured in REQ-069 branches. Cheap (forward-pass loss evals, no training). Direction-extraction core (causal units, LOO, perturbation lengths 0/0.25/0.5/1/2 x baseline-update norm) built + CPU-validated (6/6); loss-probe GPU driver next.
 - requested: Jack / 2026-10-01 PDT; revised 2026-10-02 PDT
 - dependencies: whole-model candidates from REQ-068/069 and matched exact probe states
 - artifacts: `logs/river/req070_independent_direction_tests/`
