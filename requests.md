@@ -11,7 +11,7 @@ in the [September 16 archive](requests_archive_20260916.md).
 | Request | Status | Work and dependencies |
 |---|---|---|
 | [REQ-062](#req-062-second-seed-of-six-momentum-kernel-runs-that-each-test-one-property) | OPEN | Existing independent muoff second-seed study; preserve its priority and limits. |
-| [REQ-068](#req-068-record-the-full-gradient-history-for-an-entire-nanogpt-run) | RUNNING | Capture run reported launched; main river study now uses three 64-step whole-model windows and temporal geometry. See scope amendment/STATUS.md. |
+| [REQ-068](#req-068-record-the-full-gradient-history-for-an-entire-nanogpt-run) | RUNNING | Full 3250-step gradient history captured+verified (superset; covers all 3 windows' gradient stream + forks). Amendment adds displacement stream delta_t + 64x64 K/C Gram per window + offset probe states -> capturing from forks next. |
 | [REQ-069](#req-069-ten-data-seed-branches-to-estimate-reproducible-local-motion) | OPEN | Jack: ten 64-step branches from identical state; independently confirm whole-model slow motion. |
 | [REQ-070](#req-070-test-candidate-directions-on-independent-loss-and-curvature-probes) | OPEN | Jack: test directions from REQ-069 on independent data before claiming a river direction. |
 | [REQ-071](#req-071-fit-a-causal-gradient-history-estimator-and-test-it-in-training) | OPEN | Jack: fit an estimator against independent references; conditional on REQ-069/070 evidence. |
@@ -212,7 +212,7 @@ No secrets. No new code beyond what is in the commit. No dependency on any K-Max
 
 ## REQ-068: whole-model river geometry from three short gradient-history windows
 
-- status: **RUNNING (last reported: original capture run launched; check live handle on pickup)**
+- status: **RUNNING 2026-10-02 — gradient stream DONE (superset), displacement stream + K/C analysis NEXT** -> `logs/river/req068_full_gradient_history/`. The original full 3250-step **gradient** history is captured+verified (1.86 TB native-lossless, coverage 0..3249, 65 SHA-256 chunks, forks @500/1500/2500 on durable csi-storage-sfs; reader in impl) — this is a **superset** satisfying stream (1) for windows 500-563/1500-1563/2500-2563 and more (preserved as historical data per the amendment). REMAINING for the amended scope: capture stream (2) **actual displacements delta_t=theta_(t+1)-theta_t** for the 192 window steps, the 64x64 temporal **K/C Gram/cosine** per window on both streams, and probe states at offsets 32/48/63. Plan: fork from the retained theta_500/1500/2500 states, run 64 steps each capturing g_t + delta_t. Node wngkx23 stopped (data durable).
 - requested: Jack / 2026-10-01 PDT; revised 2026-10-02 PDT
 - priority: main river experiment; preserve REQ-062 and live jobs
 - artifacts: `logs/river/req068_full_gradient_history/`; see `STATUS.md` for historical progress

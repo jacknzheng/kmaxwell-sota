@@ -1,18 +1,5 @@
 # REQ-068 — full gradient history capture — plan + pre-launch forecast
 
-> **Latest scope decision from Jack, 2026-10-02 PDT:**
-> [requests.md](../../../requests.md#capture-scope-amendment--jack-2026-10-02-pdt) now makes
-> **three 64-step whole-model windows** (updates 500–563, 1500–1563, 2500–2563) the main river
-> experiment, retaining raw gradients and actual parameter displacements for all parameters.
-> Analyze exact temporal Gram/cosine matrices and recurring directions, then validate on unseen
-> steps, independent branches, and independent losses. REQ-069 uses ten 64-step whole-model branches.
-> **Only REQ-072** retains the three-selected-matrix/full-run scope for six optimizer spectrograms.
-> This replaces the earlier three-matrix-only river amendment and the original all-model/all-step
-> requirement. Preserve artifacts, verify the live job, and do not cancel/restart solely for this
-> request edit. Extract required windows from existing full captures where available; missing updates
-> require verified reconstruction/replay, not inference from scalar logs. Update writer windows and
-> manifests for future captures. Reports below are historical; this edit changes requests, not live code.
-
 **Status: RUNNING (planning + build) 2026-10-02.** Foundational deliverable for the river-direction
 study (REQ-068→071). Pinned baseline: harness `365c392d695f95dc9a4fb89095e85a6a7b5d551e`, the simplified
 optimization trainer (`records/track_3_optimization/run.py`), K-Maxwell/Muon + auxiliary AdamW baseline,
