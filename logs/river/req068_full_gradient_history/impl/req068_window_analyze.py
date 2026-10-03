@@ -35,7 +35,7 @@ def load_window_vectors(reader, window, scale):
     out = []
     for s in steps:
         fs = reader.full_step(s)
-        out.append({n: (fs[n].to("cpu").numpy().astype(np.float64).ravel() / scale)
+        out.append({n: (fs[n].float().cpu().numpy().astype(np.float64).ravel() / scale)
                     for n in names if fs[n] is not None})
     return out, [n for n in names if out[0].get(n) is not None]
 
