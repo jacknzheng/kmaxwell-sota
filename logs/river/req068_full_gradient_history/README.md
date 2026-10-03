@@ -76,3 +76,49 @@ not proof of a valley floor** — curvature probes at the retained fork states b
 (writer+reader, 6/6 CPU tests), `impl/apply_req068_capture.py` (hook patch), `impl/make_req068_config.py`,
 `impl/run_req068_smoke.sh`, `impl/req068_verify_analyze.py`. Raw 1.86 TB tensors + 27 forks: off-Git on the
 durable volume (paths above). No secrets/weights/tensors committed.
+
+---
+
+## Amended-scope results: whole-model temporal geometry (3 windows × 2 streams) — **DELIVERED**
+
+Fork-captured from the retained θ_500/1500/2500 (node q8rn683): 64 updates per window, **both streams**
+(raw gradient g_t + actual displacement δ_t=θ_{t+1}−θ_t fp32) + probe states at offsets 32/48/63 (27
+files/window). 64×64 K/C Gram per window/stream (`analysis/win{500,1500,2500}.json`; `req068_window_analyze.py`).
+
+| window | stream | lag1 | lag2 | lag4 | lag8 | top-4 eig frac | OOS r1/2/4/8 | past-mean | dominant family |
+|:--|:--|--:|--:|--:|--:|:--|:--|--:|:--|
+| 500 | gradient | **−0.723** | +0.516 | +0.159 | +0.015 | .13/.07/.07/.06 | .03/.03/.04/.07 | .004 | attn.v .40, mlp.proj .32 |
+| 500 | displacement | **+0.793** | +0.634 | +0.394 | +0.130 | .12/.12/.10/.09 | .00/.01/.02/.04 | .004 | **embed 1.0** |
+| 1500 | gradient | −0.630 | +0.449 | +0.203 | −0.028 | .15/.08/.07/.07 | .06/.07/.10/.13 | .010 | mlp.proj .40, attn.v .33 |
+| 1500 | displacement | +0.785 | +0.627 | +0.396 | +0.143 | .12/.12/.10/.09 | .00/.01/.03/.04 | .004 | **embed 1.0** |
+| 2500 | gradient | −0.249 | +0.075 | +0.038 | −0.009 | .13/.06/.05/.04 | .00/.01/.04/.07 | .001 | mlp.proj .45, attn.v .28 |
+| 2500 | displacement | +0.745 | +0.586 | +0.369 | +0.143 | .12/.11/.10/.08 | .00/.01/.02/.04 | .004 | **embed 1.0** |
+
+**1. The optimizer converts an oscillating gradient into persistent motion (the river).** Raw gradients
+**anti-align** step-to-step (lag1 −0.72/−0.63/−0.25; period-two, +lag2), weakening markedly over training.
+Actual displacements **align** step-to-step (lag1 **+0.75 to +0.79**, smooth positive decay through lag8,
+no alternation) at every window. So the net parameter motion flows smoothly along a direction while the
+gradient bounces across it — direct evidence for a candidate local slow component, **separable from the
+fast alternating gradient**. This answers REQ-068's question in the affirmative for the *existence* of a
+slow component.
+
+**2. Where the simple "river" picture fails (honest limits).** (a) **Whole-model Euclidean displacement is
+entirely embedding-dominated** (family energy share = 1.0), because AdamW lr 0.7 on `embed` dwarfs Muon
+lr 0.025 on the hidden matrices in raw δ norm — exactly the "keep embedding contributions visible" caveat.
+The hidden-matrix river needs the **separately-labeled layer-reweighted** view (follow-up). (b) The slow
+component is **not low-rank-constant over a 64-step window**: the Gram spectrum is flat (top-4 eigen fracs
+~0.12 each, no dominant mode) and **out-of-sample low-rank capture is low** (δ r8 ≈ 0.04; even past-mean/
+exp-avg baselines ≈ 0.00–0.02). High adjacent-step persistence (lag1 0.79) but a direction that drifts
+enough over 32 steps that an early rank-≤8 fit does not predict the later half — a *bending* river, not a
+straight line or a fixed valley floor. (c) Gradient geometry is attn.v/mlp.proj-dominated, distinct from
+the embedding-dominated displacement.
+
+**Verdict:** evidence **supports a candidate local slowly-changing component** (strong adjacent-step
+displacement persistence vs anti-aligned gradients), but **not** a low-dimensional constant river direction
+over these windows, and whole-model Euclidean geometry is dominated by the embedding. Independent-branch
+(REQ-069) and loss/curvature tests (REQ-070) are required before any "valley floor / useful descent" claim.
+
+**Artifacts (off-Git on durable FS):** `req068_s0/win{500,1500,2500}/{grads,disp,probes}` (both streams +
+27 probe states/window), fork states `req068_s0/forks`. Committed: `analysis/win*.json` (K/C 64×64 + all
+derived), `impl/{apply_req068_displacement,make_req068_window_config,req068_gram,req068_window_analyze}.py`
+(+ CPU tests). Node q8rn683 stopped after delivery.
