@@ -1,6 +1,6 @@
 # Experiment requests
 
-Active queue for the `jerry-agent` branch. Next request number: **REQ-073**.
+Active queue for the `jerry-agent` branch. Next request number: **REQ-074**.
 
 Use this file for pending experiments, execution status, and links to results. Consolidated
 findings belong in [FINDINGS.md](FINDINGS.md). Completed and blocked specifications are preserved
@@ -16,6 +16,7 @@ in the [September 16 archive](requests_archive_20260916.md).
 | [REQ-070](#req-070-test-candidate-directions-on-independent-loss-and-curvature-probes) | RUNNING | Not mooted by REQ-069 negative (tests useful descent of baseline-update/-grad/temporal-avg/ensemble on independent loss). Direction-extraction core built+validated; loss-probe GPU driver next. |
 | [REQ-071](#req-071-fit-a-causal-gradient-history-estimator-and-test-it-in-training) | OPEN | Jack: fit an estimator against independent references; conditional on REQ-069/070 evidence. |
 | [REQ-072](#req-072-six-optimizer-ablations-with-full-gradient-histories-and-spectrograms) | OPEN | Jack: AdamW / SGD / Muon, each with and without momentum; every-step histories of selected full matrices and six spectrograms. |
+| [REQ-073](#req-073-qkmlp-spectra-through-muon-momentum-and-effective-batch-size) | OPEN | Jack: Q/K/MLP histories through each optimizer stage; Muon momentum on/off × baseline/4× effective batch; frozen-state noise and independent-loss checks. |
 
 **Pickup:** check live jobs and newly delivered artifacts before scheduling; do not interrupt
 running work. Preserve REQ-062's priority and limits. For Jack's new work, prioritize REQ-068's
@@ -24,6 +25,10 @@ and conditional REQ-071 estimator trials.
 REQ-072 is an independent descriptive optimizer study; reuse the capture infrastructure without
 waiting for REQ-069/070/071 results or interrupting live work. These requests do not depend on the
 archived layer-wise momentum gate.
+REQ-073 is the focused follow-up to the gradient-versus-update plots: isolate Muon on matching
+hidden matrices, separate momentum from orthogonalization, and test effective batch size. Keep
+REQ-072's six-arm study distinct; share artifacts only when the full configurations and capture
+streams match, and budget both requests within the existing fleet limit.
 
 This queue update requests experiments; it does not report new runs or a live job handle.
 Completed entries and Jack's previous OPEN REQ-066/067 have been removed from this queue at
@@ -589,6 +594,159 @@ and [AdamW documentation](https://docs.pytorch.org/docs/2.14/generated/torch.opt
 - Explain whether momentum suppresses, shifts, or amplifies alternating/high-frequency structure
   and whether conditioning changes that pattern. With one paired seed, keep conclusions descriptive;
   a smooth spectrogram alone does not establish a river direction or better optimization.
+
+## REQ-073: Q/K/MLP spectra through Muon, momentum, and effective batch size
+
+- status: **OPEN**
+- requested: Jack / 2026-10-03 PDT
+- dependencies: verified REQ-068 reader/capture conventions; reuse REQ-070 independent-loss
+  machinery where compatible; do not wait for a learned filter or interrupt running jobs
+- artifacts: `logs/river/req073_muon_batch_spectrograms/`
+- resources: existing **two nodes fleet-wide**; publish finite GPU-hour, storage, and I/O
+  forecasts before launch; this request is a specification, not a live launch record
+
+**Question:** does the change from fast raw-gradient oscillation to slower parameter movement
+come from momentum, Muon's matrix transformation, or minibatch noise? Does suppressing the
+alternating component help independent loss? The whole-model REQ-068 movement spectrum was
+approximately 99.994% embedding-dominated, so it cannot establish Muon's effect on hidden matrices.
+Compare the same hidden parameters at each stage of their actual optimizer pipeline.
+
+### Three complete matrices, fixed before inspecting outcomes
+
+Use the following matrices in the **same middle block** (zero-based block 5 of 12), separating
+matrix type from layer depth. Names and shapes are present in REQ-068's recorded schema:
+
+| Matrix | Parameter name | Shape |
+|---|---|---|
+| Attention query Q | `blocks.5.attn.q.weight` | 768 × 768 |
+| Attention key K | `blocks.5.attn.k.weight` | 768 × 768 |
+| MLP output projection | `blocks.5.mlp.proj.weight` | 768 × 3072 |
+
+Verify these against the actual pinned harness before launch. Record complete tensors at every
+update, not just norms or a few entries. Keep matrices separate in primary figures: the MLP is
+larger, so also show mean power per coordinate and normalized spectral shape. A selected-matrix
+aggregate is supplementary and must not be labeled whole-model. This selection applies to
+REQ-073; it does not silently change REQ-072's existing three-depth selection.
+
+### Four training arms: effective batch × hidden-matrix momentum
+
+Let B be the baseline **524,288 tokens per optimizer update**. Use 4B = **2,097,152 tokens** for
+the larger-batch arm, implemented by four times the gradient accumulation while keeping the
+microbatch shape fixed. Accumulate before a single optimizer update: four ordinary updates do
+not constitute a 4B update.
+
+| Arm | Effective batch | Muon momentum on hidden matrices |
+|---|---|---|
+| B-mom | B | mu = 0.95, standard Nesterov direction |
+| B-nomom | B | mu = 0, Nesterov off |
+| 4B-mom | 4B | mu = 0.95, standard Nesterov direction |
+| 4B-nomom | 4B | mu = 0, Nesterov off |
+
+Hold **auxiliary AdamW fixed in all four arms**, including beta1 = 0.9 and beta2 = 0.95,
+embedding/head/scalar learning rates, decay, and schedules. Only hidden-matrix first-moment
+momentum is switched here. Label the no-momentum arms accordingly; they still have auxiliary
+AdamW momentum. This differs deliberately from REQ-072's model-wide first-moment ablation.
+
+All four arms start from identical initial weights, fresh optimizer state, and the same ordered
+token stream. The 4B loader groups four consecutive B-sized token blocks before updating. Verify
+the corpus contains enough unique tokens; no silent looping or resampling to extend coverage.
+Use one paired initialization/data seed initially. Run **3250 updates per arm** so each has a
+long continuous record; report failures/incomplete arms without changing settings mid-run.
+
+Freeze common Muon LR scales, per-update LR schedule, clipping, orthogonalization iterations,
+shape scaling, and decoupled decay after a small stability pilot across all four configurations.
+Do not automatically scale LR with batch size. Use a batch-size-invariant optimizer-input
+convention: if the baseline consumes token-summed gradients at B, divide the accumulated 4B
+sum by four before clipping and optimizer processing, preserving the B-arm convention. If it
+already consumes means, use means in all arms. Do not accidentally change effective LR, clipping,
+or the auxiliary AdamW epsilon regime by quadrupling gradient scale. Save native raw values and
+normalization factors separately; raw-gradient analysis uses mean-per-token units in every arm.
+
+The primary contrast is at equal **optimizer-update count**, holding the optimizer's memory
+and schedule in update units fixed. It is not a compute-matched performance comparison: 4B sees
+four times as many tokens, and momentum spans four times as many tokens. Also report loss and
+spectral summaries at common cumulative-token checkpoints (multiples of 4B), with schedule
+positions shown; these secondary comparisons are not matched optimizer age. Do not interpolate
+missing gradients or equate the two comparisons. Record actual tokens, GPU-hours, LR, decay,
+momentum, and clipping traces.
+
+### Capture each stage, not just the beginning and end
+
+For every selected matrix at **every update in every arm**, save losslessly:
+
+1. Raw loss gradient after accumulation/synchronization/unscaling, before clipping or mutations.
+2. Exact input to Muon's matrix transformation, after any clipping and the actual momentum/
+   Nesterov combination. Store the transformation input, not merely the momentum buffer.
+3. Exact transformed direction after orthogonalization and shape scaling, before LR and decay.
+4. Actual post-step minus pre-step parameter displacement, with LR/decay decomposition documented.
+
+Capture before in-place operations overwrite inputs; no rounded weight-difference reconstruction
+of intermediate stages. With clipping enabled, additionally save the post-clipping gradient or
+its exact reconstructible transform so clipping is not misattributed to momentum. Retain complete
+model/optimizer/data/RNG checkpoints before updates **500, 1500, and 2500** for the diagnostics below.
+
+Use bounded streaming chunks, a fixed schema, native precision, checksums, resume-safe indices,
+and tensor round-trip/capture-parity checks. Keep tensors and checkpoints off Git; commit readers,
+manifests and retrieval paths. These three matrices total **3,538,944 entries**: at 3250 steps,
+four streams and four arms require approximately **736 GB if all streams are fp32**, before
+checkpoints/metadata/extra clipping capture. Census actual dtypes and benchmark I/O before launch;
+do not reduce coverage or precision silently. Reuse historical data only with exact provenance.
+
+### Separate temporal oscillation from batch noise
+
+At the retained checkpoints, freeze weights and leave optimizer state untouched. For each fixed
+state, sample **eight disjoint groups of four B-sized probe batches**, preserving training RNG and
+data cursor. Record the selected-matrix mean-per-token gradients for each B batch and each group's
+4B mean. Keep sampling/dropout conventions explicit; disjoint corpus offsets alone do not prove
+statistical independence. Verify on a pilot that the averaged B gradients match direct accumulated
+4B gradients at identical weights within the documented numerical tolerance.
+
+Estimate sampling variance around the fixed-state mean for B and 4B. Under independent samples,
+the 4B mean has one quarter of B's variance; report departures and uncertainty rather than imposing
+this relation. Nested B/4B observations are paired, not independent replicates. These observations
+estimate noise at one state, not a temporal training spectrogram or a valley direction.
+
+For mechanistic comparison, replay the same recorded raw hidden-matrix history through shadow
+Muon pipelines with momentum on/off, identical transforms, and declared fresh/warmed state.
+Use the history from step 0 or a valid compatible buffer; do not invent missing prehistory.
+Label replay outputs as hypothetical transformations along a fixed observed trajectory, not actual
+counterfactual training updates. Contrast this with the four actual trajectories, whose gradients
+diverge after training begins. This separates immediate transformation effects from trajectory effects.
+
+### Spectrograms and checks of useful descent
+
+Reuse REQ-072's coordinate-wise temporal STFT and energy checks: sum Fourier power after transforming
+each signed coordinate, never Fourier-transform the norm or a signed coordinate average. Use full
+3250-update histories with 128-step Hann windows/hop 16; show 32/256-step sensitivity checks and
+early/middle/late views. Primary y-axis: **period in optimizer updates**, with period 2 explicit
+and DC separate. State axis spacing and retain frequency-valued arrays; do not invent a finite
+period for DC. Provide period-in-token equivalents for the batch comparison.
+
+For Q, K and MLP separately, show raw → momentum-adjusted → transformed → actual movement panels
+for all four arms. Use comparable color limits across arms within each stream; gradient and update
+streams have different units, so label separate power references. Include absolute and normalized
+power, lag-one/lag-two agreement, and predeclared bands 0.45–0.5 and 0–0.05 cycles/update. Show raw
+and separately labeled detrended spectra. Do not infer frequency conversion from power ratios alone,
+or identify every low-frequency component with useful learning. Predeclare a few fixed coordinates
+or fixed signed projections for supplementary views of evolving structure; save their definitions,
+do not select them by attractive plots, and keep the complete-matrix spectra primary.
+
+At the retained states, use independent probe data to compare the baseline direction with two
+past-only replacements for the selected matrices' raw gradient inputs: consecutive-pair averaging
+and an EMA with decay 1/3. Pass each candidate through the same copied optimizer state and apply
+all other parameter updates identically. Test both native and matched selected-matrix displacement
+norms, with the same predeclared small step-length grid for every candidate. Restore the model and
+optimizer state between probes. Reuse REQ-070's loss-evaluation conventions and report negative results.
+In the ideal fixed-state independent-noise limit, pair averaging and this EMA both have squared-weight
+sum 1/2 and mean age 1/2 update, but only pair averaging exactly cancels period two. Verify finite-history
+initialization; the match does not perfectly isolate parity on a nonlinear, changing trajectory.
+Scope conclusions to these selected-matrix interventions; lower spectral power alone is not success.
+
+Deliver the four complete histories, stage-resolved spectrograms and numerical arrays, resolved
+configs/seeds, checkpoint provenance, fixed-state variance comparisons, paired independent-loss
+results, validation curves, and resource/capture-overhead accounting. Separate descriptive evidence,
+immediate optimizer transformations, and useful-descent evidence. Do not launch a broad filter
+sweep or full filtered-training extension solely because a plot becomes smoother.
 
 ## Template
 
