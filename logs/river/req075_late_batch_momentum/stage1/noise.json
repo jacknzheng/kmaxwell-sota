@@ -1,0 +1,84 @@
+{
+  "model_ckpt": "/root/.cache/user_artifacts/req073/B-mom/forks/train_state_model_step002500.pt",
+  "probe_glob": "data/fineweb10B/fineweb_train_00010*.bin",
+  "probes": 64,
+  "B_tokens": 524288,
+  "low_noise_nsr_criterion": 0.1,
+  "matrices": {
+    "blocks.5.attn.q.weight": {
+      "N": 589824,
+      "within_state_variance_trace": 1.5692845357901692e-06,
+      "signal_norm_biased": 0.0007560254864416947,
+      "signal_norm_bias_corrected": 0.0007396313036085476,
+      "nsr_B": 1.6804122995953106,
+      "nsr_4B": 0.8201078962962141,
+      "nsr_16B": 0.3676498497757878,
+      "nsr_16B_boot_16_50_84": [
+        0.27183519477793455,
+        0.334284814919267,
+        0.34673485594941306
+      ],
+      "dir_agreement_16B_cos_mean": 0.8478025187028639,
+      "dir_agreement_16B_cos_std": 0.01738261134709875,
+      "noise_scaling": {
+        "noise_B": 0.0012428855397495168,
+        "noise_4B": 0.0006065774724372324,
+        "noise_16B": 0.00027192533766115263,
+        "ideal_4B": 0.0006214427698747584,
+        "ideal_16B": 0.0003107213849373792
+      },
+      "low_noise_16B": false,
+      "n_groups_16B": 4
+    },
+    "blocks.5.attn.k.weight": {
+      "N": 589824,
+      "within_state_variance_trace": 1.3880088315272192e-06,
+      "signal_norm_biased": 0.0006503953020404149,
+      "signal_norm_bias_corrected": 0.000633503284066965,
+      "nsr_B": 1.8451323865828064,
+      "nsr_4B": 0.8994114299646476,
+      "nsr_16B": 0.4006596906651119,
+      "nsr_16B_boot_16_50_84": [
+        0.29443682593321485,
+        0.36512171128442356,
+        0.3735057425238784
+      ],
+      "dir_agreement_16B_cos_mean": 0.8241755481441074,
+      "dir_agreement_16B_cos_std": 0.010638280716428267,
+      "noise_scaling": {
+        "noise_B": 0.0011688974264385248,
+        "noise_4B": 0.0005697800946099694,
+        "noise_16B": 0.00025381922982960274,
+        "ideal_4B": 0.0005844487132192624,
+        "ideal_16B": 0.0002922243566096312
+      },
+      "low_noise_16B": false,
+      "n_groups_16B": 4
+    },
+    "blocks.5.mlp.proj.weight": {
+      "N": 2359296,
+      "within_state_variance_trace": 1.7605082314040145e-05,
+      "signal_norm_biased": 0.0025783501888747514,
+      "signal_norm_bias_corrected": 0.0025244425692246574,
+      "nsr_B": 1.6490499957132414,
+      "nsr_4B": 0.8011463781225963,
+      "nsr_16B": 0.3593876531930642,
+      "nsr_16B_boot_16_50_84": [
+        0.2559367935841121,
+        0.32626457514514323,
+        0.3313089490551652
+      ],
+      "dir_agreement_16B_cos_mean": 0.8531531935733551,
+      "dir_agreement_16B_cos_std": 0.003113541124353841,
+      "noise_scaling": {
+        "noise_B": 0.0041629320079582454,
+        "noise_4B": 0.002022448021112836,
+        "noise_16B": 0.0009072534905743191,
+        "ideal_4B": 0.0020814660039791227,
+        "ideal_16B": 0.0010407330019895614
+      },
+      "low_noise_16B": false,
+      "n_groups_16B": 4
+    }
+  }
+}
