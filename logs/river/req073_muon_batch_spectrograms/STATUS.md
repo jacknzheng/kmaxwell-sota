@@ -55,3 +55,9 @@ fp32** (368 GB bf16) + checkpoints @500/1500/2500. Fits `csi-storage-sfs` (54 TB
 2. per-rank 4-stage capture (stage-2 instrumentation + owner-rank writers) — CPU-validated.
 3. 4B accumulation + divide-by-4 hook; 4 configs.
 4. 4 runs + stage spectra + noise + shadow analyses.
+
+## DATA REQUIREMENT (pre-launch catch 2026-10-03)
+4B arm consumes 2,097,152 × 3250 = **6.82B tokens**; the default 20-chunk bootstrap (~2B) is insufficient and
+the loader raises StopIteration on exhaustion (no silent looping, per spec). **Bootstrap must download ~72
+fineweb10B chunks (~14 GB)** so the 4B arm (and the shared ordered stream) has enough unique tokens. B arm
+needs only 1.70B (fits 20) but shares the 72-chunk stream. fineweb10B total ~10B tokens (~98 chunks) → feasible.
