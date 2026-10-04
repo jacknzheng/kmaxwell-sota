@@ -1,6 +1,6 @@
 # Experiment requests
 
-Active queue for the `jerry-agent` branch. Next request number: **REQ-074**.
+Active queue for the `jerry-agent` branch. Next request number: **REQ-075**.
 
 Use this file for pending experiments, execution status, and links to results. Consolidated
 findings belong in [FINDINGS.md](FINDINGS.md). Completed and blocked specifications are preserved
@@ -15,8 +15,9 @@ in the [September 16 archive](requests_archive_20260916.md).
 | [REQ-069](#req-069-ten-data-seed-branches-to-estimate-reproducible-local-motion) | OPEN | Jack: ten 64-step branches from identical state; independently confirm whole-model slow motion. |
 | [REQ-070](#req-070-test-candidate-directions-on-independent-loss-and-curvature-probes) | DONE (negative) | No candidate direction gives useful descent on independent loss (best -0.002 nats, negligible/non-robust); baseline-update overshoots, raw -grad catastrophic (+21), ensemble loss-neutral. River arc closes negative; REQ-071 gated off. Node stopped. |
 | [REQ-071](#req-071-fit-a-causal-gradient-history-estimator-and-test-it-in-training) | GATED OFF | Conditional on REQ-069/070 showing a useful reproducible slow component; both negative, so premise absent. Not launched. |
-| [REQ-072](#req-072-six-optimizer-ablations-with-full-gradient-histories-and-spectrograms) | DONE | 6 arms run+analyzed: first-moment MOMENTUM suppresses the period-two oscillation in u_t across all 3 optimizers (off -> period2 jumps 4-26x); AdamW sqrt(v)/Muon orthogonalization don't. Explains REQ-068 slow motion. Node stopped. |
+| [REQ-072](#req-072-six-optimizer-ablations-with-full-gradient-histories-and-spectrograms) | RUNS DONE; SPECTROGRAM DELIVERY INCOMPLETE | Six-arm spectral summaries committed; time-resolved arrays/figures missing. REQ-074 repairs delivery and the Muon displacement-proxy limitation. |
 | [REQ-073](#req-073-qkmlp-spectra-through-muon-momentum-and-effective-batch-size) | OPEN | Jack: Q/K/MLP histories through each optimizer stage; Muon momentum on/off × baseline/4× effective batch; frozen-state noise and independent-loss checks. |
+| [REQ-074](#req-074-save-every-step-frequency-decompositions-and-deliver-time-period-amplitude-spectrograms) | OPEN | Jack: recover/recompute REQ-072/073 spectra or rerun missing captures; save every sliding-window spectrum, hop 1, no averaging across time; deliver time × period × amplitude plots and numerical arrays. |
 
 **Pickup:** check live jobs and newly delivered artifacts before scheduling; do not interrupt
 running work. Preserve REQ-062's priority and limits. For Jack's new work, prioritize REQ-068's
@@ -29,6 +30,8 @@ REQ-073 is the focused follow-up to the gradient-versus-update plots: isolate Mu
 hidden matrices, separate momentum from orthogonalization, and test effective batch size. Keep
 REQ-072's six-arm study distinct; share artifacts only when the full configurations and capture
 streams match, and budget both requests within the existing fleet limit.
+REQ-074 is Jack's latest correction to REQ-072/073 spectral persistence and plotting. Read it before
+any further capture/analysis for these requests; preserve live jobs and REQ-062 priority.
 
 This queue update requests experiments; it does not report new runs or a live job handle.
 Completed entries and Jack's previous OPEN REQ-066/067 have been removed from this queue at
@@ -747,6 +750,126 @@ configs/seeds, checkpoint provenance, fixed-state variance comparisons, paired i
 results, validation curves, and resource/capture-overhead accounting. Separate descriptive evidence,
 immediate optimizer transformations, and useful-descent evidence. Do not launch a broad filter
 sweep or full filtered-training extension solely because a plot becomes smoother.
+
+## REQ-074: save every-step frequency decompositions and deliver time-period-amplitude spectrograms
+
+- status: **OPEN**
+- requested: Jack / 2026-10-03 PDT
+- dependencies: inspect actual REQ-072/073 jobs and durable captures; no river-reference gate
+- artifacts: `logs/river/req074_time_period_amplitude/`, with links to repaired REQ-072/073 artifacts
+- resource limit: existing **two nodes fleet-wide**; preserve REQ-062 priority and running jobs;
+  benchmark and record finite compute, storage, and I/O budgets before any replacement training
+
+**Direct request to Claude/Jerry's agent:** create the actual spectrograms: **training time on x,
+oscillation period on y, and amplitude as color**. Retain the frequency decomposition at every
+optimizer update. Do not replace the time axis with an average, pooled band totals, or a whole-run
+curve. Jack explicitly authorizes rerunning the affected captures if the necessary data is absent.
+
+### Why delivery must be repaired
+
+At inspected commit `9715260733366835f9ea682fc345c46fdb2ae293`, REQ-072's `stft_power` computes
+`spectrogram` and `starts`, but `req072_analyze.py` discards them and writes only `spectrum_f`
+(the mean over time) and scalar summaries. REQ-073's analyzer repeats this loss of information.
+REQ-072 Muon JSON retains only band fractions. Those outputs cannot reconstruct a time-resolved
+spectrogram. A DONE label or saved averages does not satisfy this request.
+
+1. First verify all raw-history manifests, chunk hashes, selected matrix/stage ownership, exact
+   consecutive step coverage, normalization factors, and durable retrieval paths. REQ-072 reports
+   `/root/.cache/user_artifacts/req072/<arm>/{grad,uT,disp}`; do not assume those files survived
+   without checking. Inspect actual REQ-073 job/capture state rather than trusting its queue label.
+2. If intact histories exist, recompute every time slice from them; a training rerun is unnecessary.
+   Persist all time-resolved arrays this time. If sufficient saved temporal Gram matrices exist,
+   they can recover summed coordinate power exactly, but must cover every required window and
+   matrix/stage; unrelated REQ-068 windows are not substitutes for REQ-072/073.
+3. If the required histories or intermediate stages are missing/corrupt, **rerun the affected
+   arms/captures** using their frozen original settings and declared provenance. Do not silently
+   splice unrelated trajectories or substitute partial windows. Do not restart a live job merely
+   to change the exporter; recover its intact history or schedule replacement after it finishes.
+4. Fix both analyzers so future runs never discard the time dimension. Preserve old files and
+   identify corrected versions; do not silently overwrite the archived measurements.
+
+### Save a spectrum for every update, with an explicit temporal window
+
+Temporal frequency is defined across successive gradients, not by Fourier-transforming the
+matrix rows/columns at a single instant. Use the following operational definition:
+
+- **Primary: 128 consecutive optimizer updates, periodic Hann taper, hop exactly 1 update,
+  sampling rate 1/update, no padding, no detrending.** This supersedes the old primary hop 16
+  and the implementation's hop 32. Also retain 32- and 256-update/hop-1 sensitivity arrays and
+  separately labeled per-window linear-detrended arrays; raw/no-detrending is always retained.
+- For an update indexed t, the primary spectrum uses signed values at updates t-127 through t.
+  Save `step_start`, `step_end`, and `window_center`; plot `step_end` on x. For a full zero-based
+  3250-update capture, save **3123 primary columns**, ending at every update 127 through 3249.
+  The first 127 updates have insufficient history: mark this explicitly, never invent zeros or
+  future samples. Shorter windows provide earlier coverage with their own explicit resolution.
+- Any new/replacement run must persist each selected raw gradient/stage tensor at every step,
+  and persist each spectrum once its complete window exists. A bounded asynchronous consumer
+  is acceptable; it must checkpoint progress, retain unprocessed raw history, and never drop or
+  skip steps. Older intact histories may be processed offline with identical per-step coverage.
+- Transform EACH signed coordinate across time, then sum squared Fourier magnitudes across all
+  coordinates of that selected matrix. This coordinate power sum is allowed; **averaging across
+  time is not**. Do not FFT norms, absolute gradients, or signed coordinate averages. Preserve
+  separate matrices and optimizer stages; never collapse the six/four arms into one average.
+- Apply correct one-sided PSD scaling: divide by sampling rate and Hann-window energy, double
+  interior positive-frequency bins, and do not double DC or Nyquist. Preserve DC in arrays.
+  Flag gaps/nonfinite samples and split contiguous segments; no interpolation or zero-filling.
+- Use coordinate blocks or an exact streaming method; do not require the whole coordinate-by-
+  training-time tensor in RAM. Benchmark actual overhead without changing training semantics.
+
+### Numerical artifacts must survive the job and be usable from the repository
+
+For every arm × matrix × stage × window length × detrending choice, save a lossless `.npz` (or
+equivalent documented format) containing **all frequency bins at all valid steps**, not just
+summaries: `power[time, frequency]`, `amplitude[time, frequency]`, frequency coordinates,
+positive-frequency periods, step start/end/center, validity/gap flags, and DC separately for plotting.
+Store linear values; plot log scales from them rather than saving only clipped/logarithmic pixels.
+
+Record the exact amplitude definition. Primary aggregate RMS spectral amplitude per frequency bin
+is `sqrt(PSD * delta_f)` after summing coordinate powers; this is root-sum-square amplitude over
+coordinates, not a single coordinate's sinusoidal peak amplitude. An optional per-coordinate RMS
+version divides by sqrt(number_of_coordinates) and must be labeled separately. Do not label power
+as amplitude. Keep native/mean-per-token normalization and stream units explicit.
+
+Include code/config SHA, seeds, source hashes, exact matrix names/shapes, stream definitions,
+window/hop/taper, coordinate aggregation, PSD/amplitude normalization, LR/decay/clipping traces,
+and complete coverage counts. Commit the compact derived time-frequency arrays, manifests,
+plotting code, and PNG/PDF figures to this branch; shard derived files if needed for Git limits.
+Raw gradients, optimizer states, and checkpoints remain off Git with verified retrieval paths.
+A JSON containing only `spectrum_f` or three band totals is an explicit delivery failure.
+
+### Required plots and faithful stream labels
+
+- **x: optimizer update (window end); y: period in optimizer updates; color: amplitude.** Use
+  period = 1/f for positive frequencies, a clearly labeled log-period axis, and ticks including
+  2, 4, 8, 16, 32, 64, 128 where resolved. Render the actual bin geometry; no fake fine resolution.
+  DC is a separate strip/panel, never a finite period. Do not bridge missing training segments.
+- Use a shared amplitude color scale across comparable arms within each matrix/stage. If a
+  logarithmic color scale is necessary, label it and record its floor/reference. Different stream
+  units require separate references. Absolute amplitude is primary; per-time normalized power is
+  optional and cannot replace it. Mark LR phase boundaries; label single-seed results descriptive.
+- REQ-072: all six optimizer/momentum arms, each of blocks 0/5/11 attention output-projection
+  matrices, raw gradient / directly captured conditioned direction / actual displacement panels.
+- REQ-073: all four B/4B × Muon momentum arms, middle-block Q/K/MLP output matrices, all four
+  original pipeline stages. Also give the declared period-in-token equivalents for B versus 4B.
+- Fix owner-rank capture for Muon intermediates. **Displacement is not a substitute for the
+  pre-LR conditioned direction.** Even at zero weight decay, a time-varying LR changes temporal
+  spectra; rounded parameter differences introduce another error. If direct captures are absent,
+  rerun the affected capture or deliver explicitly labeled displacement-only partial results while
+  the required direct stage remains outstanding. Do not claim exact intermediate reconstruction.
+
+### Validation and completion gate
+
+Test direct coordinate FFT versus blocked/streaming output; constant, exact alternating,
+known-sinusoid, changing-frequency, and changing-amplitude signals; one-sided Parseval scaling;
+Nyquist visibility; absence of false temporal averaging; gap boundaries; restart/round-trip
+identity; and capture-versus-no-capture training parity. Verify all per-step window counts and
+all selected matrix/arm/stage outputs. Render and visually inspect the final time-period-amplitude
+figures. Do not declare DONE until compact time-resolved arrays AND requested figures are committed
+with retrieval/provenance metadata. Report unavailable arms/stages explicitly as incomplete.
+
+On pickup record RUNNING plus the actual job/session handle; report whether this is reanalysis or
+replacement training and which data were recovered. This request does not authorize unrelated
+hyperparameter sweeps or exceed the two-node fleet ceiling.
 
 ## Template
 
