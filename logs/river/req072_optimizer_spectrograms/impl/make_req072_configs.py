@@ -54,8 +54,10 @@ def build(arm, seed, dur, lr_adamw, lr_sgd, lr_muon, train_steps, capture):
                            "hyperparams": {"names": SELECTED, "grad_dir": f"{a}/grad",
                                            "uT_dir": f"{a}/uT", "disp_dir": f"{a}/disp", "chunk_steps": 500}})
     c["setup"].append({"name": "validate_at_step_boundaries"})
+    # NOTE: fork dumps omitted - dump_training_state_at_steps requires a Muon-family group (absent in the
+    # AdamW/SGD arms). Fork states are only for optional secondary diagnostics, not the primary 3-stream
+    # spectrogram deliverable; dropped so all six arms run uniformly.
     c["pre_optimizer"] = ([{"name": "req072_pre"}] if capture else []) + \
-                         [{"name": "dump_training_state_at_steps", "hyperparams": {"steps": FORKS, "dump_dir": f"{dur}/{arm}/forks"}}] * (1 if capture else 0) + \
                          [{"name": "cool_down_learning_rate", "hyperparams": {"cooldown_frac": 0.7}}]
     c["post_optimizer"] = ([{"name": "req072_post"}] if capture else []) + \
                           [{"name": "print_training_progress"},
