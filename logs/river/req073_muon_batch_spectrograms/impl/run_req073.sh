@@ -11,14 +11,14 @@ cp /root/impl/req068_capture.py $I68/; cp /root/impl/req072_spectrogram.py $I72/
 cp /root/impl/req073_stages.py /root/impl/req073_analyze.py $I73/
 
 log "ensure >=72 fineweb train chunks (4B arm needs 6.82B tokens)"
-have=$(find $RP/data/fineweb10B -name 'fineweb_train_*.bin' 2>/dev/null | wc -l)
+have=$(find data/fineweb10B -name 'fineweb_train_*.bin' 2>/dev/null | wc -l)
 log "have $have train chunks"
 if [ "$have" -lt 72 ]; then
-  DS=$(find $RP -name cached_fineweb10B.py|head -1)
-  cd $RP && for a in 1 2 3; do $V/python "$DS" 72 >/root/req073_data.log 2>&1 && break; done; cd $ROOT
-  log "after download: $(find $RP/data/fineweb10B -name 'fineweb_train_*.bin'|wc -l) chunks"
+  DS=data/cached_fineweb10B.py
+  for a in 1 2 3; do $V/python data/cached_fineweb10B.py 72 >/root/req073_data.log 2>&1 && break; done
+  log "after download: $(find data/fineweb10B -name 'fineweb_train_*.bin'|wc -l) chunks"
 fi
-[ "$(find $RP/data/fineweb10B -name 'fineweb_train_*.bin'|wc -l)" -ge 69 ] || { log "INSUFFICIENT CHUNKS - abort 4B"; exit 1; }
+[ "$(find data/fineweb10B -name 'fineweb_train_*.bin'|wc -l)" -ge 69 ] || { log "INSUFFICIENT CHUNKS - abort 4B"; exit 1; }
 
 log "apply REQ-073 patch"
 $V/python /root/impl/apply_req073_capture.py 2>&1 | tail -1
