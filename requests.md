@@ -1,6 +1,6 @@
 # Experiment requests
 
-Active queue for the `jerry-agent` branch. Next request number: **REQ-075**.
+Active queue for the `jerry-agent` branch. Next request number: **REQ-076**.
 
 Use this file for pending experiments, execution status, and links to results. Consolidated
 findings belong in [FINDINGS.md](FINDINGS.md). Completed and blocked specifications are preserved
@@ -18,6 +18,7 @@ in the [September 16 archive](requests_archive_20260916.md).
 | [REQ-072](#req-072-six-optimizer-ablations-with-full-gradient-histories-and-spectrograms) | RUNS DONE; SPECTROGRAM DELIVERY INCOMPLETE | Six-arm spectral summaries committed; time-resolved arrays/figures missing. REQ-074 repairs delivery and the Muon displacement-proxy limitation. |
 | [REQ-073](#req-073-qkmlp-spectra-through-muon-momentum-and-effective-batch-size) | DONE | Period-two filtered PRIMARILY by momentum (stage1->2; no drop when momentum off), orthogonalization secondary; NOT minibatch noise. Time-resolved in REQ-074. |
 | [REQ-074](#req-074-save-every-step-frequency-decompositions-and-deliver-time-period-amplitude-spectrograms) | DONE | 28 time-resolved arrays + 168 heatmaps (time x period x amplitude) recomputed offline from SAVED REQ-072/073 histories (no rerun), GPU-recompute parity-exact (~1e-15) to numpy core. Time-localizes fast->slow: momentum builds the slow component over ~first quartile; orthogonalization secondary; batch size NOT the cause (4B-nomom keeps highest period-2 -> refutes "period-2 = noise"). |
+| [REQ-075](#req-075-late-training-large-batch-versus-momentum-noise-oscillations-and-useful-gains) | OPEN | Fork a common late checkpoint; frozen-state B/4B/16B noise estimates, B/16B x Muon momentum, half-LR control, and paired equal-token validation gains. Distinguish noise reduction, overshooting, and temporal averaging; extend REQ-073/074 without assuming 4B is noise-free. |
 
 **Pickup:** check live jobs and newly delivered artifacts before scheduling; do not interrupt
 running work. Preserve REQ-062's priority and limits. For Jack's new work, prioritize REQ-068's
@@ -32,6 +33,10 @@ REQ-072's six-arm study distinct; share artifacts only when the full configurati
 streams match, and budget both requests within the existing fleet limit.
 REQ-074 is Jack's latest correction to REQ-072/073 spectral persistence and plotting. Read it before
 any further capture/analysis for these requests; preserve live jobs and REQ-062 priority.
+REQ-075 is the new late-training performance/mechanism follow-up. Inspect and reuse compatible
+REQ-073/074 artifacts first, but do not substitute their full-run, equal-update B/4B results for
+the requested shared-checkpoint, larger-batch, equal-token continuations. Preserve live jobs,
+REQ-062 priority, and the existing fleet ceiling.
 
 This queue update requests experiments; it does not report new runs or a live job handle.
 Completed entries and Jack's previous OPEN REQ-066/067 have been removed from this queue at
@@ -870,6 +875,165 @@ with retrieval/provenance metadata. Report unavailable arms/stages explicitly as
 On pickup record RUNNING plus the actual job/session handle; report whether this is reanalysis or
 replacement training and which data were recovered. This request does not authorize unrelated
 hyperparameter sweeps or exceed the two-node fleet ceiling.
+
+## REQ-075: late-training large batch versus momentum: noise, oscillations, and useful gains
+
+- status: **OPEN**
+- requested: Jack / 2026-10-04 PDT
+- dependencies: inspect REQ-073/074 configurations, retained checkpoints and actual artifacts;
+  reuse their stage capture and spectral readers where verified compatible
+- artifacts: `logs/river/req075_late_batch_momentum/`
+- resources: existing **two nodes fleet-wide**; preserve REQ-062 priority and live work; publish
+  finite per-stage GPU-hour, token, storage and I/O forecasts before launch
+
+**Question:** would a sufficiently large batch reproduce the benefit of suppressing late-training
+oscillations, and can small-batch momentum achieve comparable or better loss improvement for the
+same data/compute budget? Separate random gradient-estimation noise from alternating motion caused
+by optimizer dynamics, and measure useful learning rather than treating smoother curves as success.
+
+REQ-073/074 report that 4B does not remove period-two structure and that momentum filters it. Treat
+this as motivation, not proof of an infinite-batch limit: spectral fractions can rise when other
+power falls, noise can excite oscillatory dynamics, and trajectories/compute budgets differ. Verify
+absolute power, frozen-state sampling variance and matched continuations in this request. Do not
+rewrite the older results or relaunch their complete studies as part of this addition.
+
+### Common late checkpoint and registered scope
+
+Use the baseline B-momentum checkpoint immediately before update 2500 of the 3250-update REQ-073
+recipe if a complete, verified model/optimizer/data/RNG state is retained. Otherwise reproduce that
+state with the pinned recipe, or declare the nearest verified late checkpoint before inspecting
+branch outcomes. Record hashes, exact token count, schedule position, data cursor and reconstruction
+differences; missing optimizer history must not silently become a fresh-state experiment.
+
+Set B from the actual baseline (expected **524,288 tokens/update**); target **16B = 8,388,608**.
+Keep microbatch shape fixed and increase accumulation, with exactly one optimizer step after each
+large-batch mean. Average raw gradients at unchanged parameters before clipping/momentum/Muon,
+preserving the baseline optimizer-input normalization and mean-per-token analysis units. Validate
+accumulated versus grouped small-batch gradients numerically at a frozen state.
+
+Switch **hidden-matrix Muon momentum only**, as in REQ-073: on = mu 0.95 with the actual baseline
+Nesterov combination; off = mu 0 with Nesterov disabled. Auxiliary AdamW settings remain fixed and
+must be labeled as still containing momentum. Preserve valid inherited buffers in on branches;
+disable/clear the Muon buffer in off branches. Clone all other state. Record the initial switching
+transient separately; do not selectively discard it from the performance result. Do not claim an
+EMA effective-batch formula is exact for this Nesterov-plus-Muon pipeline.
+
+### Stage 1: frozen-state noise measurement before expensive continuations
+
+Freeze the common checkpoint and compute selected-matrix mean gradients on **64 independently
+sampled B-sized probe batches**. Record sampling/dropout conventions, keep probe data separate
+from validation data, and preserve the training cursor/RNG. Form nested disjoint 4B and 16B groups;
+these are paired observations, not additional independent replicates. Disable other stochastic
+sources for a sampling-noise-only diagnostic or quantify them separately and label the result.
+
+For Q, K and MLP separately, save within-state variance, absolute mean-gradient norm, estimated
+noise-to-signal ratio, and directional agreement between independent large-batch groups. Account
+for noise bias in estimated signal norm and report uncertainty; four 16B groups are a pilot, not
+a precise variance estimate. Under independent sampling variance is expected to scale inversely
+with batch size; measure departures instead of assuming that scaling.
+
+Predeclare a numerical low-noise criterion (for example, estimated RMS gradient noise below 10%
+of signal, with uncertainty reported) before using it to label 16B. If 16B remains noisy, report
+that limitation; optional additional frozen probes up to 128 B batches can improve estimation.
+Do not call a finite batch infinite, or assume selected-matrix agreement establishes whole-model
+agreement. No automatic 32B/64B training extension is requested.
+
+### Stage 2: short equal-update mechanism pilot
+
+From the identical late state and one paired data-order seed, run **256 optimizer updates** per arm:
+
+| Arm | Tokens/update | Hidden Muon momentum | Hidden Muon LR |
+|---|---|---|---|
+| B-mom | B | baseline on | checkpoint LR |
+| B-nomom | B | off | checkpoint LR |
+| 16B-mom | 16B | baseline on | checkpoint LR |
+| 16B-nomom | 16B | off | checkpoint LR |
+| 16B-nomom-halfLR | 16B | off | half checkpoint LR |
+
+Hold all learning rates constant at the checkpoint values during this diagnostic, except the
+specified hidden-Muon half-LR control. Preserve all other optimizer transformations, clipping and
+per-update decay conventions. Do not automatically scale LR with batch size. Report actual step
+norms: removing momentum can change movement size as well as direction. If an arm becomes unstable,
+record its failure/stop point rather than silently lowering its LR mid-run.
+
+This pilot is explicitly **not compute matched**: large-batch arms consume 16 times more tokens.
+Verify sufficient unused corpus coverage first; no silent cycling/repetition or expansion of the
+deferred REQ-042 data scope. If the exact horizon cannot fit available data or forecast resources,
+declare a shorter common pilot horizon and its spectral limitations before running any arms.
+
+### Stage 3: equal-token performance comparison
+
+Run the four B/16B x momentum configurations from the same checkpoint with **three paired
+continuation data-order seeds**. These are continuation replicates conditional on the common base,
+not three independently pretrained models. Within each seed use the same ordered token stream;
+16B groups the next sixteen B blocks before updating. Restore the exact branch state between runs.
+
+Set the common token budget to the baseline's remaining training budget, rounded down to a multiple
+of 16B. At update 2500 of 3250, this is **736B = 385,875,968 tokens**: 736 B updates versus 46 16B
+updates. Preserve the original token-indexed LR schedule and endpoint mapping, recording the
+truncated endpoint; do not stretch the large-batch arm to 736 optimizer updates. Report momentum's
+memory span in both updates and tokens, since keeping its coefficient fixed changes the latter.
+
+First report the inherited-LR comparison. Then give all four configurations the same bounded
+hidden-Muon LR search: multipliers **0.5, 1, 2**, including the inherited-LR run, on one declared
+tuning data seed at the same token horizon. Keep auxiliary AdamW LR schedules fixed. Select using
+a fixed tuning-validation split and evaluate the selected settings with the three paired seeds
+and a separate reporting-validation split; count tuning compute separately. A stability failure
+counts as an outcome, not permission for a broader sweep.
+
+Match cumulative decoupled weight-decay shrinkage over equal token intervals across batch sizes
+and LR multipliers, with the formula and actual products logged; if baseline decay is zero, retain
+zero. Preserve all other hyperparameters and state conventions. Evaluate the same fixed held-out
+data at common token boundaries and endpoints. Report loss versus tokens and measured wall time,
+training time separately from probe/capture overhead, GPU-hours, throughput, actual updates and
+paired loss differences with all seed values and uncertainty. Three seeds provide limited power;
+do not claim equivalence merely because a difference is not statistically significant.
+
+### Measurements, useful-descent checks and interpretation
+
+Capture the same three complete matrices as REQ-073: middle-block Q, K and MLP output projection.
+Save raw gradients, exact momentum/Nesterov input to Muon, post-Muon direction and actual parameter
+displacement at every update of the mechanism pilot and final three-seed comparisons. Keep native
+tensors/checkpoints off Git with durable manifests/checksums; commit compact derived arrays, configs,
+readers and figures. Forecast storage from the actual arm/horizon/dtype census before capture.
+
+Report absolute and normalized period-two power, lag-one/lag-two direction agreement, gradient and
+update norms, clipping traces and independent loss. Transform signed coordinates before summing
+squared Fourier magnitudes; never substitute spectra of norms or signed coordinate averages. Reuse
+REQ-074 time-resolved arrays and plotting conventions, preserving every valid window and frequency.
+Use 128-update windows/hop 1 for the 256-update pilot, with 32-update sensitivity. The equal-token
+16B continuations have only 46 updates: use clearly labeled 32-update windows there, compare matching
+window lengths across arms, and do not fabricate 128-update windows or interpolate missing spectra.
+Provide axes in optimizer updates and tokens, with matrices/stages kept separate and DC explicit.
+
+At a few predeclared retained pilot states, reuse independent-loss probes to compare on/off directions
+from copied valid optimizer state, both at native displacement and matched selected-matrix movement
+norm over a common small step-length grid. Apply other parameter updates identically and restore
+state between probes. These local checks help separate direction quality from step length; they do
+not replace actual continuation loss or imply a whole-model intervention result.
+
+Interpret registered contrasts as follows:
+
+- Larger batch reduces measured noise, oscillation and the benefit of momentum: consistent with
+  momentum chiefly helping through denoising in this regime, not a proof of general equivalence.
+- Oscillation survives verified noise reduction but falls with half LR: supports an overshooting/
+  optimizer-dynamics explanation. Examine absolute power and actual movements, not fractions alone.
+- Momentum still improves loss at low measured noise: benefit extends beyond simple batch-noise
+  averaging, but could involve conditioning or dynamics; it does not alone prove cancellation causes gains.
+- Smoother directions without improved held-out loss: no demonstrated useful-learning benefit.
+- Better loss per update but worse per token/time: more accurate updates do not repay their cost.
+
+If the equal-token result is promising, confirm it at one additional predeclared late checkpoint
+within a separately forecast finite budget before making a general late-training claim. A causal
+claim specifically about period-two cancellation requires a follow-up matched-noise/matched-age
+filter comparison (reuse REQ-073's pair-average versus EMA control where valid), not an automatic
+broad filter sweep under this request.
+
+**Completion:** deliver frozen-state noise estimates with uncertainty, the five-arm mechanism pilot,
+four-arm inherited/tuned equal-token results, resolved configs and checkpoint provenance, paired
+loss/time tables, complete time-resolved arrays/figures, actual resource use and explicit missing
+or failed arms. Keep measured findings separate from interpretations. On pickup record RUNNING
+with the real job/session handle; adding this request does not assert that training has launched.
 
 ## Template
 
