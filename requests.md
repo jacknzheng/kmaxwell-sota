@@ -17,7 +17,7 @@ in the [September 16 archive](requests_archive_20260916.md).
 | [REQ-071](#req-071-fit-a-causal-gradient-history-estimator-and-test-it-in-training) | GATED OFF | Conditional on REQ-069/070 showing a useful reproducible slow component; both negative, so premise absent. Not launched. |
 | [REQ-072](#req-072-six-optimizer-ablations-with-full-gradient-histories-and-spectrograms) | RUNS DONE; SPECTROGRAM DELIVERY INCOMPLETE | Six-arm spectral summaries committed; time-resolved arrays/figures missing. REQ-074 repairs delivery and the Muon displacement-proxy limitation. |
 | [REQ-073](#req-073-qkmlp-spectra-through-muon-momentum-and-effective-batch-size) | OPEN | Jack: Q/K/MLP histories through each optimizer stage; Muon momentum on/off × baseline/4× effective batch; frozen-state noise and independent-loss checks. |
-| [REQ-074](#req-074-save-every-step-frequency-decompositions-and-deliver-time-period-amplitude-spectrograms) | OPEN | Jack: recover/recompute REQ-072/073 spectra or rerun missing captures; save every sliding-window spectrum, hop 1, no averaging across time; deliver time × period × amplitude plots and numerical arrays. |
+| [REQ-074](#req-074-save-every-step-frequency-decompositions-and-deliver-time-period-amplitude-spectrograms) | RUNNING | Delivery repair: recompute time-resolved spectrograms (window128 hop1) from the SAVED REQ-072/073 histories (no rerun); time-resolved STFT core built+validated. |
 
 **Pickup:** check live jobs and newly delivered artifacts before scheduling; do not interrupt
 running work. Preserve REQ-062's priority and limits. For Jack's new work, prioritize REQ-068's
@@ -753,7 +753,7 @@ sweep or full filtered-training extension solely because a plot becomes smoother
 
 ## REQ-074: save every-step frequency decompositions and deliver time-period-amplitude spectrograms
 
-- status: **OPEN**
+- status: **RUNNING 2026-10-04** -> `logs/river/req074_time_period_amplitude/`. Delivery-repair: REQ-072/073 analyzers saved only time-averaged spectrum_f, discarding the time axis; the RAW stage histories ARE on durable FS, so recompute time-resolved P(step_end, period) offline (window 128, Hann, hop 1 -> 3123 columns; +32/256 + detrended variants) -- no training rerun. Time-resolved STFT core built + CPU-validated (5/5: 3123 cols, period-2 localization, coord-blocking exact, detrend). Next: verify histories intact + recompute on a node + time x period x amplitude heatmaps + fix the analyzers.
 - requested: Jack / 2026-10-03 PDT
 - dependencies: inspect actual REQ-072/073 jobs and durable captures; no river-reference gate
 - artifacts: `logs/river/req074_time_period_amplitude/`, with links to repaired REQ-072/073 artifacts
