@@ -18,6 +18,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
                                 "req068_full_gradient_history", "impl"))
 from req068_capture import GradientHistoryReader
 from req072_spectrogram import stft_power, band_power
+import sys as _sys2; _sys2.path.insert(0, __file__.rsplit('/',4)[0]+'/req074_time_period_amplitude/impl')
+try:
+    from req074_spectrogram import time_resolved_power as _trp
+except Exception:
+    _trp=None
 
 
 def assemble_series(reader, name, scale):
