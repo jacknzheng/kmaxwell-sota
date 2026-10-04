@@ -878,7 +878,7 @@ hyperparameter sweeps or exceed the two-node fleet ceiling.
 
 ## REQ-075: late-training large batch versus momentum: noise, oscillations, and useful gains
 
-- status: **OPEN**
+- status: **RUNNING 2026-10-04** (session 01YKPwGqPuEuP2wzzHuCEhok) -> `logs/river/req075_late_batch_momentum/` (see `PLAN.md` for the pre-launch resource forecast, provenance checklist, and the data-coverage risk). Picked up autonomously; training NOT yet launched. First: provision 1 node to resolve checkpoint provenance (B-mom @2500 fork completeness + LR schedule + data coverage) and run Stage-1 frozen-noise, before any Stage-2/3 training launch.
 - requested: Jack / 2026-10-04 PDT
 - dependencies: inspect REQ-073/074 configurations, retained checkpoints and actual artifacts;
   reuse their stage capture and spectral readers where verified compatible
