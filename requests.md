@@ -597,7 +597,7 @@ and [AdamW documentation](https://docs.pytorch.org/docs/2.14/generated/torch.opt
 
 ## REQ-073: Q/K/MLP spectra through Muon, momentum, and effective batch size
 
-- status: **OPEN**
+- status: **RUNNING 2026-10-03 (planning/build)** -> `logs/river/req073_muon_batch_spectrograms/STATUS.md`. Selected blocks.5 Q/K/mlp.proj; 4 arms (B/4B effective batch x Muon momentum on/off, 3250 steps, aux AdamW fixed); 4 pipeline stages/step (raw g_t, post-momentum pre-polar input, post-polar u_t, displacement). Forecast ~736GB fp32. KEY build: per-rank sharded stage-2/3 capture (Muon intermediates live only on the owning rank; wd=0 displacement trick cannot recover intermediates) + 4B grad accumulation with divide-by-4 convention. Reuses req068/072 infra + STFT. Builds on REQ-072 (momentum = fast->slow); adds batch-noise axis + pipeline decomposition.
 - requested: Jack / 2026-10-03 PDT
 - dependencies: verified REQ-068 reader/capture conventions; reuse REQ-070 independent-loss
   machinery where compatible; do not wait for a learned filter or interrupt running jobs
