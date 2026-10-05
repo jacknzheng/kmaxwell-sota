@@ -94,17 +94,21 @@ def main():
     print(f"  loaded {len(a.names)} series (N={N}) T={T} in {time.time()-t0:.0f}s (verify_ok={v['ok']})", flush=True)
     save = {"src_dir": a.src_dir, "verify_ok": int(v["ok"]), "n_steps": T,
             "step0": steps[0], "stepN": steps[-1], "tokens": a.tokens, "device": dev}
+    usable = [W for W in WINDOWS if W <= T]     # short series (e.g. 46-update 16B) skip oversized windows
     for nm in a.names:
         key = nm.replace(".", "_"); tc = time.time()
-        for W in WINDOWS:
+        first = True
+        for W in usable:
             res = stft_power_gpu(ser[nm], window_W=W, hop=1, device=dev)
             save[f"{key}__w{W}__P"] = res["P"].astype(np.float32)
             save[f"{key}__w{W}__step_end"] = np.array(res["step_end"])
-            if W == WINDOWS[0]:
+            if first:
                 save[f"{key}__freqs"] = np.array(res["freqs"]); save[f"{key}__periods"] = np.array(res["periods"])
-        resd = stft_power_gpu(ser[nm], window_W=128, hop=1, detrend=True, device=dev)
-        save[f"{key}__w128_detrend__P"] = resd["P"].astype(np.float32)
-        print(f"  {nm}: windows={WINDOWS}+detrend ({time.time()-tc:.0f}s)", flush=True)
+                first = False
+        if 128 <= T:
+            resd = stft_power_gpu(ser[nm], window_W=128, hop=1, detrend=True, device=dev)
+            save[f"{key}__w128_detrend__P"] = resd["P"].astype(np.float32)
+        print(f"  {nm}: windows={usable}+detrend(if T>=128) ({time.time()-tc:.0f}s)", flush=True)
         del ser[nm]
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     np.savez_compressed(a.out, **save)
