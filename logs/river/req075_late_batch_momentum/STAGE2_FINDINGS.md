@@ -53,6 +53,25 @@ Per-update vector cosine; lag-1 < 0 == period-two (alternating) motion. (attn.q 
 5. **Step size is LR-controlled** (Muon normalization): displacement norms ≈ 0.091 for all full-LR arms,
    ≈ 0.046 for half-LR — independent of batch/momentum.
 
+### Absolute + normalized period-two spectral power (req074 time-resolved, window 128 hop 1; attn.q / mlp.proj)
+Normalized = period-two fraction of total spectral power (avg over the 256-update window).
+
+| arm | raw-grad (s1) p2-frac | displacement (s4) p2-frac |
+|---|---|---|
+| B-mom | 0.028 / 0.030 | 0.012 / 0.008 |
+| B-nomom | 0.031 / 0.033 | 0.031 / 0.031 |
+| 16B-mom | 0.491 / 0.418 | 0.016 / 0.014 |
+| **16B-nomom** | **0.828 / 0.726** | 0.073 / 0.075 |
+| 16B-nomom-halfLR | 0.075 / 0.056 | 0.032 / 0.032 |
+
+This **quantitatively confirms** the lag-cosine story and makes the headline sharp: the raw-gradient
+period-two fraction surges from ~3% at B to **49–83% at 16B**, then **collapses back to ~6–8% when the step is
+halved** (16B-nomom → halfLR). Same tokens/noise, half the step ⇒ the oscillation largely disappears — strong
+evidence the late-training period-two is **overshoot/optimizer-dynamics driven, not sampling-noise driven**.
+Momentum removes it from the *displacement* (16B-mom disp p2-frac 0.016 vs 16B-nomom 0.073) — the low-pass
+cancellation — while Newton-Schulz orthogonalization only partially dilutes it (16B-nomom keeps 0.073 in the
+step though 0.83 in the gradient). Absolute power in `stage2_spectra/*.npz`.
+
 ### Caveats
 - Equal-updates, NOT equal-tokens: the 16B-vs-B loss gap is mostly the 16× token difference; Stage 3 resolves
   useful-descent per token/compute. The momentum-helps-more-at-16B observation is likewise token-confounded.
