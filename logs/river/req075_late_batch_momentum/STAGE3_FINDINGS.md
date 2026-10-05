@@ -59,4 +59,8 @@ from higher LR** (higher LR partly substitutes for momentum's effective-step con
   result is at reduced, not zero, noise; a true infinite-batch claim is not made.
 - A causal claim specifically about *period-two cancellation* driving the gains would need the registered
   matched-noise/matched-age filter follow-up (REQ-073 pair-average vs EMA control) — not run here.
-- Period-two spectra at equal token (`stage3_spectra/`) corroborate Stage 2: see REPORT.md.
+- Period-two spectra at equal token (`stage3_spectra/`, window 32 matched across B/16B, seed 0) corroborate
+  Stage 2: raw-gradient period-2 fraction (attn.q) rises B→16B (B-mom 0.06 / B-nomom 0.08 → 16B-mom 0.24 /
+  16B-nomom 0.62); momentum suppresses the displacement period-2 at 16B (16B-mom 0.25 vs 16B-nomom 0.64).
+  Matrix-dependent (mlp.proj weaker). The token-indexed cooldown shrinks late-run steps, so absolute period-2
+  is lower than Stage-2's constant-LR pilot — consistent with the step-size (overshoot) origin.
