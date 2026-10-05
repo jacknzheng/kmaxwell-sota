@@ -1,0 +1,9 @@
+{
+  "note": "Stage 3 equal-token tuned (Muon LR mult=2, selected by LR search) final val_loss, reporting-val, 3 seeds. Fork 3.35099.",
+  "main_tuned_mult2": {
+    "B-mom":[3.29552,3.29572,3.29627],"B-nomom":[3.30300,3.30285,3.30333],
+    "16B-mom":[3.32230,3.32257,3.32243],"16B-nomom":[3.32214,3.32229,3.32221]},
+  "momentum_effect_nomom_minus_mom": {
+    "B_inherited":0.01141,"B_tuned":0.00722,"16B_inherited":0.00162,"16B_tuned":-0.00022},
+  "batch_effect_16B_minus_B_tuned": {"mom":0.02660,"nomom":0.01915}
+}
