@@ -76,12 +76,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out_dir", type=Path, required=True); ap.add_argument("--dur", required=True)
     ap.add_argument("--fork_dir", required=True); ap.add_argument("--mode", choices=["main3seed", "lrsearch"], required=True)
+    ap.add_argument("--lr_mult", type=float, default=1.0, help="Muon base-LR multiplier for main3seed (selected tuned LR)")
     a = ap.parse_args(); a.out_dir.mkdir(parents=True, exist_ok=True)
     n = 0
     if a.mode == "main3seed":
         for cfg in CONFIGS:
             for seed in (0, 1, 2):
-                c = build(cfg, seed, 1.0, a.fork_dir, a.dur, capture=True,
+                c = build(cfg, seed, a.lr_mult, a.fork_dir, a.dur, capture=True,
                           val_data="data/fineweb10B/fineweb_val_*.bin")  # reporting-validation
                 (a.out_dir / f"{cfg}_s{seed}.yaml").write_text(yaml.safe_dump(c, sort_keys=False)); n += 1
     else:  # lrsearch: tuning seed 0, mults 0.5/1/2, tuning-validation = held-out chunk, no capture

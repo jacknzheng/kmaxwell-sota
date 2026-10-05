@@ -1,0 +1,22 @@
+{
+  "note": "Stage 3 equal-token (736B=385,875,968 tokens) final val_loss, reporting-validation (fineweb_val), 3 paired seeds. Fork val=3.35099. Inherited LR (Muon 0.00824, cool_down_by_tokens).",
+  "main_inherited_lr": {
+    "B-mom":   [3.29598, 3.29590, 3.29646],
+    "B-nomom": [3.30748, 3.30732, 3.30777],
+    "16B-mom": [3.32367, 3.32386, 3.32378],
+    "16B-nomom":[3.32533, 3.32546, 3.32539]
+  },
+  "paired_diffs": {
+    "momentum_effect_B_nomom_minus_mom":  {"mean": 0.01141, "std": 0.00010},
+    "momentum_effect_16B_nomom_minus_mom":{"mean": 0.00162, "std": 0.00003},
+    "batch_effect_mom_16B_minus_B":       {"mean": 0.02766, "std": 0.00032},
+    "batch_effect_nomom_16B_minus_B":     {"mean": 0.01787, "std": 0.00026},
+    "momentum_benefit_ratio_B_over_16B": 7.0
+  },
+  "lr_search_tuning_val_chunk99": {
+    "B-mom":   {"0.5": 3.32179, "1": 3.31757, "2": 3.31711, "selected": 2},
+    "B-nomom": {"0.5": 3.33309, "1": 3.32905, "2": 3.32463, "selected": 2},
+    "16B-mom": {"0.5": 3.34803, "1": 3.34510, "2": 3.34378, "selected": 2},
+    "16B-nomom":{"0.5": 3.34976, "1": 3.34675, "2": 3.34362, "selected": 2}
+  }
+}
