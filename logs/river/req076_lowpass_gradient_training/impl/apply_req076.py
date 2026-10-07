@@ -79,7 +79,7 @@ _HOOKS["req076_filter"] = req076_filter
 '''
 
 h = open(HOOKS).read()
-if "req076_filter" in h:
+if "REQ-076/077 raw-gradient causal low-pass filter" in h:
     print("hooks.py already has REQ-076 filter hook")
 else:
     open(HOOKS, "w").write(h + CODE)
