@@ -19,8 +19,8 @@ in the [September 16 archive](requests_archive_20260916.md).
 | [REQ-073](#req-073-qkmlp-spectra-through-muon-momentum-and-effective-batch-size) | DONE | Period-two filtered PRIMARILY by momentum (stage1->2; no drop when momentum off), orthogonalization secondary; NOT minibatch noise. Time-resolved in REQ-074. |
 | [REQ-074](#req-074-save-every-step-frequency-decompositions-and-deliver-time-period-amplitude-spectrograms) | DONE | 28 time-resolved arrays + 168 heatmaps (time x period x amplitude) recomputed offline from SAVED REQ-072/073 histories (no rerun), GPU-recompute parity-exact (~1e-15) to numpy core. Time-localizes fast->slow: momentum builds the slow component over ~first quartile; orthogonalization secondary; batch size NOT the cause (4B-nomom keeps highest period-2 -> refutes "period-2 = noise"). |
 | [REQ-075](#req-075-late-training-large-batch-versus-momentum-noise-oscillations-and-useful-gains) | DONE | 16B does NOT reproduce momentum's benefit (worse per token); small-batch+momentum most token-efficient; momentum=denoising (vanishes at 16B+tuned LR); late period-two is overshoot/dynamics (half-LR collapses it), revealed-not-removed by large batch. 3 stages on 1 node. |
-| [REQ-076](#req-076-test-causal-low-pass-gradient-filters-for-training-efficiency) | OPEN | Test two-gradient averaging and a frequency-designed short FIR on raw hidden-matrix gradients; compare with no momentum, ordinary momentum, and half LR. Measure actual update spectra and validation loss per token/time. No perfect-alternation or independent-noise assumption; preserve REQ-062 and live jobs. |
-| [REQ-077](#req-077-period-two-cancellation-versus-matched-exponential-averaging-at-fixed-learning-rate) | OPEN | Compare pair averaging with EMA coefficient 1/3 at fixed batch, LR and update/token budget; match constant-input gain, mean information age and ideal independent-noise variance. Include no-filter and standard-momentum references; verify actual movement spectra, norms and held-out learning. |
+| [REQ-076](#req-076-test-causal-low-pass-gradient-filters-for-training-efficiency) | RUNNING | Test two-gradient averaging and a frequency-designed short FIR on raw hidden-matrix gradients; compare with no momentum, ordinary momentum, and half LR. Measure actual update spectra and validation loss per token/time. No perfect-alternation or independent-noise assumption; preserve REQ-062 and live jobs. |
+| [REQ-077](#req-077-period-two-cancellation-versus-matched-exponential-averaging-at-fixed-learning-rate) | RUNNING | Compare pair averaging with EMA coefficient 1/3 at fixed batch, LR and update/token budget; match constant-input gain, mean information age and ideal independent-noise variance. Include no-filter and standard-momentum references; verify actual movement spectra, norms and held-out learning. |
 
 **Pickup:** check live jobs and newly delivered artifacts before scheduling; do not interrupt
 running work. Preserve REQ-062's priority and limits. For Jack's new work, prioritize REQ-068's
@@ -1049,7 +1049,7 @@ with the real job/session handle; adding this request does not assert that train
 
 ## REQ-076: test causal low-pass gradient filters for training efficiency
 
-- status: **OPEN**
+- status: **RUNNING 2026-10-07** (session 01YKPwGqPuEuP2wzzHuCEhok) -> `logs/river/req076_lowpass_gradient_training/` (`PLAN.md` = forecast + published filter responses). Picked up autonomously with REQ-077 (shared arms); training NOT yet launched. Filter core built + CPU-validated (12/12). FIR9 taps + pair/fir9/ema responses published. Forecast: Stage-1 + 15-run fixed-LR screen fits ~6.25 node-h; full LR selection would exceed the 8 node-h cap -> partial, rest reported unrun.
 - requested: Jack / 2026-10-05 PDT
 - dependencies: verify REQ-073's Muon recipe and REQ-074 stage capture/plotting; inspect actual
   REQ-075 artifacts and its half-LR findings before choosing compatible states
@@ -1222,7 +1222,7 @@ This entry is a queued experiment request, not a report of launched training or 
 
 ## REQ-077: period-two cancellation versus matched exponential averaging at fixed learning rate
 
-- status: **OPEN**
+- status: **RUNNING 2026-10-07** (session 01YKPwGqPuEuP2wzzHuCEhok) -> `logs/river/req077_pair_vs_matched_ema/` (shared `PLAN.md` in req076/). Picked up with REQ-076; reuses REQ-076's nomom/pair/standard-mom runs, adds ema-third + frozen-noise probes. Filter core (incl ema-third) CPU-validated; pair vs ema-third matched sum=1/age=0.5/var=0.5 verified, pair cancels p2 (amp 0) vs ema retains 0.5. Training NOT yet launched.
 - requested: Jack / 2026-10-07 PDT
 - dependencies: verified REQ-073 Muon recipe, REQ-074 spectral readers and REQ-075 findings;
   inspect REQ-076's actual status and compatible artifacts before scheduling
