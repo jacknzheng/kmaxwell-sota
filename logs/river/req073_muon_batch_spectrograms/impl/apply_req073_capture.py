@@ -64,10 +64,18 @@ def tag_req073_capture(*, names, out_base, chunk_steps=500):
             w1=GradientHistoryWriter(f"{out_base}/s1_grad", schema, chunk_steps=chunk_steps, tokens_per_update=config.get("batch_tokens"), provenance={**prov, "stage": "1_raw_grad"}, grad_reduction="sum"),
             w2=GradientHistoryWriter(f"{out_base}/s2_premom", schema, chunk_steps=chunk_steps, provenance={**prov, "stage": "2_post_momentum_pre_polar"}, grad_reduction="muon_input"),
             w3=GradientHistoryWriter(f"{out_base}/s3_postpolar", schema, chunk_steps=chunk_steps, provenance={**prov, "stage": "3_post_polar_u_t"}, grad_reduction="conditioned"),
-            w4=GradientHistoryWriter(f"{out_base}/s4_disp", schema, chunk_steps=chunk_steps, provenance={**prov, "stage": "4_displacement"}, grad_reduction="displacement"))
-        state["print_log"](f"req073 capture tagged {len(sel)} matrices -> {out_base}", console=True)
+            w4=GradientHistoryWriter(f"{out_base}/s4_disp", schema, chunk_steps=chunk_steps, provenance={**prov, "stage": "4_displacement"}, grad_reduction="displacement"),
+            w5=(GradientHistoryWriter(f"{out_base}/s5_filtered", schema, chunk_steps=chunk_steps, tokens_per_update=config.get("batch_tokens"), provenance={**prov, "stage": "5_filtered_grad"}, grad_reduction="sum") if config.get("capture_filtered") else None))
+        state["print_log"](f"req073 capture tagged {len(sel)} matrices -> {out_base} (filtered={bool(config.get('capture_filtered'))})", console=True)
         return state
     return hook
+
+
+def _r73_in_window(config, step):
+    w = config.get("capture_windows")
+    if not w:
+        return True                      # no windows => capture every step (REQ-073 default)
+    return any(lo <= step <= hi for lo, hi in w)
 
 
 def req073_pre():
@@ -75,6 +83,8 @@ def req073_pre():
     def hook(config, state):
         r = state.get("_r73")
         if r is None or not state.get("master", False): return state
+        if not _r73_in_window(config, state["step"]):
+            r.pop("g1", None); r.pop("theta", None); return state
         r["g1"] = {n: (p.grad.detach().to("cpu", _r73_torch.float32).clone() if p.grad is not None else None) for n, p in r["sel"]}
         r["theta"] = {n: p.detach().to("cpu", _r73_torch.float32).clone() for n, p in r["sel"]}
         return state
@@ -117,6 +127,12 @@ def req073_post():
         if not state.get("master", False):
             return state
         step = state["step"]
+        if not _r73_in_window(config, step):
+            return state                 # all_reduce ran on all ranks above; only the master WRITE is gated
+        # optional stage-5: filtered gradient (REQ-076/077), stashed by req076_filter
+        fc = state.get("_r76_filtered")
+        if fc and r.get("w5") is not None:
+            r["w5"].record(step, {n: fc[n].detach().to("cpu", _r73_torch.float32) for n in fc if n in dict(r["sel"])})
         r["w1"].record(step, r.get("g1", {}))
         r["w2"].record(step, {n: s2g[n].cpu() for n in s2g})
         r["w3"].record(step, {n: s3g[n].cpu() for n in s3g})
@@ -130,7 +146,8 @@ def finalize_req073():
         r = state.get("_r73")
         if r is not None and state.get("master", False):
             for w in ("w1", "w2", "w3", "w4"): r[w].close()
-            state["print_log"]("req073 capture closed (4 stages)")
+            if r.get("w5") is not None: r["w5"].close()
+            state["print_log"]("req073 capture closed")
         return state
     return hook
 
