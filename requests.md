@@ -1,6 +1,6 @@
 # Experiment requests
 
-Active queue for the `jerry-agent` branch. Next request number: **REQ-076**.
+Active queue for the `jerry-agent` branch. Next request number: **REQ-078**.
 
 Use this file for pending experiments, execution status, and links to results. Consolidated
 findings belong in [FINDINGS.md](FINDINGS.md). Completed and blocked specifications are preserved
@@ -19,6 +19,8 @@ in the [September 16 archive](requests_archive_20260916.md).
 | [REQ-073](#req-073-qkmlp-spectra-through-muon-momentum-and-effective-batch-size) | DONE | Period-two filtered PRIMARILY by momentum (stage1->2; no drop when momentum off), orthogonalization secondary; NOT minibatch noise. Time-resolved in REQ-074. |
 | [REQ-074](#req-074-save-every-step-frequency-decompositions-and-deliver-time-period-amplitude-spectrograms) | DONE | 28 time-resolved arrays + 168 heatmaps (time x period x amplitude) recomputed offline from SAVED REQ-072/073 histories (no rerun), GPU-recompute parity-exact (~1e-15) to numpy core. Time-localizes fast->slow: momentum builds the slow component over ~first quartile; orthogonalization secondary; batch size NOT the cause (4B-nomom keeps highest period-2 -> refutes "period-2 = noise"). |
 | [REQ-075](#req-075-late-training-large-batch-versus-momentum-noise-oscillations-and-useful-gains) | DONE | 16B does NOT reproduce momentum's benefit (worse per token); small-batch+momentum most token-efficient; momentum=denoising (vanishes at 16B+tuned LR); late period-two is overshoot/dynamics (half-LR collapses it), revealed-not-removed by large batch. 3 stages on 1 node. |
+| [REQ-076](#req-076-test-causal-low-pass-gradient-filters-for-training-efficiency) | OPEN | Test two-gradient averaging and a frequency-designed short FIR on raw hidden-matrix gradients; compare with no momentum, ordinary momentum, and half LR. Measure actual update spectra and validation loss per token/time. No perfect-alternation or independent-noise assumption; preserve REQ-062 and live jobs. |
+| [REQ-077](#req-077-period-two-cancellation-versus-matched-exponential-averaging-at-fixed-learning-rate) | OPEN | Compare pair averaging with EMA coefficient 1/3 at fixed batch, LR and update/token budget; match constant-input gain, mean information age and ideal independent-noise variance. Include no-filter and standard-momentum references; verify actual movement spectra, norms and held-out learning. |
 
 **Pickup:** check live jobs and newly delivered artifacts before scheduling; do not interrupt
 running work. Preserve REQ-062's priority and limits. For Jack's new work, prioritize REQ-068's
@@ -37,6 +39,16 @@ REQ-075 is the new late-training performance/mechanism follow-up. Inspect and re
 REQ-073/074 artifacts first, but do not substitute their full-run, equal-update B/4B results for
 the requested shared-checkpoint, larger-batch, equal-token continuations. Preserve live jobs,
 REQ-062 priority, and the existing fleet ceiling.
+REQ-076 is the new direct low-pass gradient intervention. Read its registered scope before using
+the earlier `high-frequency-oscillation-experiments.md` proposal: the arbitrary matched-three-tap
+comparison is not the requested first experiment. Reuse compatible REQ-072/073/074 capture and
+REQ-075 results, but test filtering through fresh gradients on each arm's own training trajectory.
+Preserve REQ-062 priority, live jobs and the fleet ceiling. Adding this request does not launch it.
+REQ-077 is Jack's approved mechanism follow-up: pair averaging versus matched exponential averaging.
+Keep its primary LR schedule fixed across arms; half-LR results diagnose dynamics but do not isolate
+the learning value of oscillation removal. Preserve REQ-076's scope. Reuse its reference/pair runs
+only when the complete configuration, startup, seeds, evaluation and captures match REQ-077;
+otherwise forecast missing runs without interrupting live jobs or duplicating compatible work.
 
 This queue update requests experiments; it does not report new runs or a live job handle.
 Completed entries and Jack's previous OPEN REQ-066/067 have been removed from this queue at
@@ -1034,6 +1046,353 @@ four-arm inherited/tuned equal-token results, resolved configs and checkpoint pr
 loss/time tables, complete time-resolved arrays/figures, actual resource use and explicit missing
 or failed arms. Keep measured findings separate from interpretations. On pickup record RUNNING
 with the real job/session handle; adding this request does not assert that training has launched.
+
+## REQ-076: test causal low-pass gradient filters for training efficiency
+
+- status: **OPEN**
+- requested: Jack / 2026-10-05 PDT
+- dependencies: verify REQ-073's Muon recipe and REQ-074 stage capture/plotting; inspect actual
+  REQ-075 artifacts and its half-LR findings before choosing compatible states
+- artifacts: `logs/river/req076_lowpass_gradient_training/`
+- resources: **one node for this request; eight node-hours maximum across all stages**, within
+  the existing two-node fleet ceiling. Preserve REQ-062 and live jobs. Forecast time, memory,
+  tokens and durable storage before each stage; stop and report incomplete scope if it cannot fit.
+
+**Question:** does deliberately attenuating high temporal frequencies in raw gradients improve
+training efficiency? Test useful learning on noisy, changing gradient trajectories. Do not assume
+a constant downhill direction, exactly opposing consecutive gradients, a fixed valley orientation,
+independent noise, or that every slow component is useful. Constant and sinusoidal inputs below
+are implementation checks, not models assumed to describe real training.
+
+Jack rejected starting with the matched `[1/4,1/2,1/4]` versus `[5/12,1/6,5/12]` proposal. This request
+instead begins with an interpretable pair average and a filter designed from a registered frequency
+response. Establish practical usefulness first. A positive result alone will not uniquely identify
+period-two cancellation as the cause: delay, noise averaging, other frequencies and movement size
+also change. The REQ-072/073 spectrograms motivate the intervention; they do not establish causation.
+
+### Filter definition and placement
+
+Start with Muon-managed hidden matrices in the verified REQ-073 small-batch setup (expected
+**B = 524,288 tokens/update**). Keep auxiliary AdamW parameters and settings unchanged, and label
+their retained momentum explicitly. Hold architecture, data/evaluation, gradient normalization,
+batch size, clipping, Muon transformation/shape scaling, LR schedule and decay common across arms,
+except the declared momentum/filter/LR intervention. No larger-batch arm or K-Maxwell kernel.
+
+At each step compute the fresh synchronized raw gradient at that arm's current weights. Store an
+independent copy **before clipping, temporal averaging, adaptive scaling or Muon transformation**.
+Filter this signed coordinate history, then execute the normal downstream pipeline once. Preserve
+the harness's optimizer-input units; if filtering uses mean-per-token units, convert consistently
+back before optimizer processing. Apply decoupled weight decay separately, without filtering it.
+Never substitute stored gradients from another arm, replay offline-filtered updates as training,
+or reuse a filtered output as raw history. Exactly one forward/backward and optimizer update per batch.
+
+Use these fixed filters; do not select coefficients from training outcomes:
+
+1. **Pair average:** `g_filtered[t] = (g_raw[t] + g_raw[t-1]) / 2`.
+   Its amplitude response is `abs(cos(pi*f))`, where `f` is cycles per optimizer update. It cancels
+   the exact period-two frequency, attenuates nearby frequencies, and introduces half an update's
+   low-frequency delay. Real drifting oscillations need not cancel exactly.
+2. **Frequency-designed FIR:** nine coefficients, cutoff `fc = 0.20` cycles/update, using a
+   windowed-sinc low-pass design with a symmetric Hann window and unity constant-input gain:
+
+   ```text
+   k = 0,...,8; center = 4
+   sinc(x) = sin(pi*x)/(pi*x), with sinc(0) = 1
+   window[k] = 0.5 - 0.5*cos(2*pi*k/8)
+   a[k] = 2*fc*sinc(2*fc*(k-4))*window[k]
+   h[k] = a[k] / sum(a)
+   g_filtered[t] = sum(h[k]*g_raw[t-k], k=0,...,8)
+   ```
+
+   This is a registered short design targeting fast variation, particularly periods two to four
+   updates; it is **not** a sharp frequency projector. It uses current/past gradients only and has
+   four updates of linear-phase delay. Some coefficients can be negative. Publish its exact
+   coefficients and measured amplitude/power response before training, including gains at periods
+   2, 3, 4, 8, 16 and 32, transition width and any amplification. Do not claim perfect removal of
+   the entire high-frequency band. Do not silently substitute another cutoff/window/history length.
+
+Coefficient sums equal to one merely calibrate constant-input gain. They are not an assumption
+that real gradients stay constant. The cutoff/history length are bounded engineering choices,
+not claimed optimal settings. This request authorizes one FIR design, not a broad kernel sweep.
+
+For startup, use the unfiltered gradient during the first eight updates in all first-screen arms
+while recording genuine raw history, then activate each filter. Do not invent zero prehistory or
+look ahead to future gradients. Log this common startup convention and include its cost in results.
+Forecast eight retained history tensors per affected matrix for FIR; document native/accumulator
+dtypes, memory traffic, distributed ownership and synchronization. Checkpoint the history, cursor
+and schedule alongside model/optimizer/data/RNG state; verify resumed/uninterrupted parity.
+
+### Stage 1: implementation checks and short mechanism pilot
+
+Validate constant-input gain, irregular/noisy-vector filtering, sinusoidal amplitude/phase response,
+pure period-two attenuation, clipping placement, distributed parity and buffer aliasing on CPU and
+the actual distributed path. These synthetic checks establish what the implementation does; they
+are not evidence that training gradients follow those signals. Verify native-unit conversions and
+keep squared-power versus amplitude conventions explicit.
+
+Use one verified step-1000 state of the common Muon recipe for a **256-update, one-seed pilot**.
+Restore identical model/optimizer/data/RNG state for each arm; initialize experimental history empty
+and use the common startup above. Preserve inherited momentum for the momentum-on reference; clear
+and bypass hidden-matrix momentum/Nesterov in momentum-off arms. All branches compute fresh gradients.
+
+| Arm | Hidden-matrix first-moment momentum | Raw-gradient filter | Hidden Muon LR |
+|---|---|---|---|
+| `nomom` | Off, Nesterov off | None | Common LR |
+| `pair` | Off, Nesterov off | Pair average | Common LR |
+| `fir9` | Off, Nesterov off | Registered nine-coefficient FIR | Common LR |
+| `nomom-halfLR` | Off, Nesterov off | None | Half common LR |
+| `standard-mom` | Standard on with actual Nesterov rule | None | Common LR |
+
+The pilot checks execution, stability, filter overhead and whether **actual applied displacements**
+lose high-frequency power. It does not establish full-run speed or general optimality. Record
+failures with the original configuration; no silent LR adjustment or extra gradient evaluations.
+If filtering attenuates its input but the final update fails to show the intended spectral change,
+report that failure of the intervention chain before interpreting it as a cancellation experiment.
+Do not change to post-Muon filtering without a separately declared follow-up.
+
+### Stage 2: replicated full-run efficiency screen
+
+If Stage 1 passes execution and resource checks, run the **same five arms, three paired seeds,
+3,250 updates from scratch** (15 runs). Pair initialization and data order within seed; seeds must
+define independently initialized full runs, not merely new data orders from one shared base.
+Apply filtering from the common startup boundary. Use the fixed B, identical per-step/token LR
+schedule and identical evaluation cadence. Forecast the complete stage before dispatch; do not
+label a shortened common horizon a full 3,250-update replication.
+
+Predeclare reporting validation data and target **validation loss 3.40** before looking at new
+outcomes. If that target is incompatible with the verified recipe, register a replacement based
+only on existing baseline results before launch. Report loss at the fixed token budget for every
+arm, and tokens/wall time to target for arms that reach it; mark non-crossers rather than extrapolate.
+Keep training-only timing, instrumentation overhead and end-to-end time separate, and include
+filter computation/memory overhead in the efficiency claim. Compare across all paired seeds.
+
+Primary comparisons are `pair`/`fir9` against `nomom` and **against `standard-mom`**. Beating no
+momentum alone establishes a replacement benefit, not acceleration over the existing momentum
+optimizer. The half-LR arm tests whether simply shrinking steps can achieve a similar result.
+Report all per-seed values, paired loss differences and run-to-run variation; three seeds are a screen.
+
+Before claiming an optimizer improvement, give `nomom`, `standard-mom` and the best filtered
+candidate the same bounded LR selection budget: multipliers **0.5, 1, 2** on one separate tuning
+seed, selecting by fixed-budget tuning-validation loss. Use a separate reporting-validation split
+and fresh paired confirmation seeds for the chosen settings. Count tuning compute separately;
+respect the cumulative eight-node-hour cap and report any confirmation left unrun. Match cumulative
+decoupled weight-decay shrinkage across LR multipliers (or retain zero if the recipe has zero decay),
+with actual products logged. No outcome-driven expansion of the cutoff/kernel/LR search.
+
+### Capture and interpretation
+
+Capture full signed tensors for middle-block Q, K and MLP output projection at every pilot update,
+and in full-run windows **500–755, 1500–1755 and 2500–2755**. Intervention remains on all hidden
+matrices; the selected matrices are diagnostics. Record raw gradient, filtered gradient, exact
+Muon input, post-Muon pre-LR direction and actual displacement with step/schema metadata. Use
+owner-rank capture/all-reduce for exact Muon stages; displacement is not a substitute for them.
+Retain native tensors off Git with durable manifests/checksums. Save ordinary scalar loss, LR,
+gradient/filter/update norms and clipping logs throughout each run.
+
+Reuse verified REQ-074 spectral readers: Fourier-transform coordinate histories across time and
+then sum squared magnitudes. Report absolute band power, total power and band fractions for
+**near period two: 0.45–0.50 cycles/update**, and **broad high frequencies: 0.25–0.50**; retain
+low-frequency power/DC separately. Use 128-update windows/hop 1 with 32-update sensitivity; plot
+every valid time window, label amplitude versus power and use shared comparable color scales.
+Do not FFT tensor norms or averages over signed entries, and do not infer suppression solely from
+a smaller fraction. Measure delayed response, movement norms and any intermediate-frequency gain.
+
+- Lower actual high-frequency update power **and** better loss per token/time than standard
+  momentum: useful filtering in this tested regime; still not unique proof of period-two causation.
+- Improvement only versus `nomom`: filtering can replace some benefit of momentum, but has not
+  beaten the existing optimizer. Do not report it as faster than baseline momentum training.
+- Spectral suppression without learning improvement: this filter does not establish useful gains;
+  a bending landscape/stale information or loss of useful variation can offset smoothing.
+- Half LR gives comparable gains, or the gain disappears after fair LR selection: step-size/
+  stability changes remain an explanation; do not attribute the result solely to frequency removal.
+- Better loss per token but slower wall time: report both; filtering overhead defeats a speed claim.
+
+Only if a filtered candidate improves on standard Muon after confirmation, test **adding that same
+filter with standard momentum still enabled**, using paired fresh runs, to separate replacement
+from incremental benefit. An AdamW transfer is a separately forecast gated extension: keep its
+second-moment state/update intact, distinguish replacing beta1 averaging from filtering on top of
+standard beta1, and use identical scope/controls. Do not automatically launch either extension
+outside the finite budget. This request does not require a successful result to be complete.
+
+**Deliver:** exact design/frequency-response plot, validated implementation and resolved configs,
+all seed loss curves and target-crossing tables, actual timing/GPU-hours/memory, windowed tensor
+manifests and complete stage-resolved spectrogram arrays/figures, deviations/failures and an explicit
+list of gated or unrun comparisons. On pickup set RUNNING only with an actual job/session handle.
+This entry is a queued experiment request, not a report of launched training or measured improvement.
+
+## REQ-077: period-two cancellation versus matched exponential averaging at fixed learning rate
+
+- status: **OPEN**
+- requested: Jack / 2026-10-07 PDT
+- dependencies: verified REQ-073 Muon recipe, REQ-074 spectral readers and REQ-075 findings;
+  inspect REQ-076's actual status and compatible artifacts before scheduling
+- artifacts: `logs/river/req077_pair_vs_matched_ema/`
+- resources: **one node; eight node-hours maximum across this request**, within the existing
+  two-node fleet ceiling. Preserve REQ-062 priority and live jobs. Forecast each stage's time,
+  tokens, memory, capture/storage and marginal cost after reuse before launch. Report any stage
+  that cannot fit as unrun; do not silently shorten a registered full-run comparison.
+
+**Question:** does stronger suppression of near-period-two gradient variation improve learning
+when learning rate, batch size, update count, token budget and simple averaging properties are
+held fixed? Jack approved the pair-average versus matched-exponential-average comparison after
+noting that halving LR also shrinks useful movement. Half LR is not the primary causal control.
+
+REQ-075's equal-token 46-versus-736-update comparison measures efficiency, not a matched-update
+mechanism. Its 16B on/off Stage-2 comparison does show a momentum benefit at identical batch and
+update counts; residual noise means that alone does not prove a benefit beyond denoising. Halving
+LR reduced temporal period-two power, but the study did not establish that it reduced frozen-state
+sampling noise-to-signal ratio. Keep these distinctions explicit in the new report.
+
+### Four registered arms, with common LR and batch
+
+Use the verified REQ-073 small-batch recipe, expected $B=524{,}288$ tokens/update. Apply the
+intervention to all Muon-managed hidden matrices. Auxiliary AdamW settings stay fixed, including
+their momentum. Architecture, data order, normalization, clipping, matrix transform, shape scaling,
+LR schedule and weight decay are common across arms except the registered filter/momentum change.
+
+| Arm | Hidden Muon momentum/Nesterov | Raw-gradient filter |
+|---|---|---|
+| `nomom` | Off | None |
+| `pair` | Off | Current/previous pair average |
+| `ema-third` | Off | Exponential average with coefficient $1/3$ |
+| `standard-mom` | Verified standard momentum and Nesterov on | No experimental filter |
+
+Let $g_t$ be the fresh synchronized raw gradient evaluated at an arm's own current weights,
+copied before clipping, averaging or Muon's matrix transformation. The two experimental inputs are:
+
+$$
+p_t=\frac12g_t+\frac12g_{t-1},
+\qquad
+v_t=\frac23g_t+\frac13v_{t-1}.
+$$
+
+Pass the filtered input through the same normal clipping/Muon/LR application pipeline once.
+Keep hidden Muon momentum and Nesterov disabled in both filtered arms; the EMA above replaces
+temporal averaging rather than stacking on standard momentum. Preserve native optimizer-input
+units and record conversions to mean-per-token analysis units. Apply weight decay separately.
+Every arm computes its own fresh gradients; do not train by replaying another trajectory's tensors.
+
+### What the filters match, and what they do not
+
+The EMA impulse weights are $h_k=(2/3)(1/3)^k$ for $k\ge0$. In steady state both filters have:
+
+$$
+\sum_k h_k=1,
+\qquad
+\sum_k k h_k=\frac12,
+\qquad
+\sum_k h_k^2=\frac12.
+$$
+
+The pair weights are $h_0=h_1=1/2$ and zero thereafter. These equalities match constant-input
+gain, average information age (also low-frequency delay), and output variance for equal-variance
+independent zero-mean input errors. They do not match delay at every frequency or establish equal
+denoising for correlated, changing training gradients. Measure realized noise and movement effects.
+
+For an illustrative input $g_t=s+(-1)^t a$, after startup:
+
+$$
+p_t=s,
+\qquad
+v_t=s+\frac12(-1)^t a.
+$$
+
+Thus pair averaging cancels exact period two while the EMA retains half its amplitude, or one
+quarter of its power. This is an implementation check, not an assumption about real gradients.
+The filters also differ elsewhere in the spectrum, so a win supports the temporal-filter contrast
+without uniquely identifying period two as its cause. Publish amplitude, phase and power responses
+at periods 2, 3, 4, 8, 16 and 32 and the complete response curves before training.
+
+Use genuine startup history: no experimental filtering for the first eight updates. Initialize
+the shadow EMA with the first real gradient, then update it recursively throughout startup; retain
+the last real raw gradient for the pair filter. Activate experimental filters on the ninth update.
+The standard-momentum reference follows its normal optimizer throughout. Include startup in loss,
+token and timing results; label finite-startup deviations from the steady-state matches. Checkpoint
+raw-history buffers, EMA state, model/optimizer state, cursor and RNG; verify resume parity.
+
+### Stage 1: validation and 256-update pilot
+
+Validate on CPU and the actual distributed path: constant inputs, pure alternation, sinusoidal
+amplitude/phase, irregular noisy vectors, units/clipping placement, ownership/synchronization,
+independent history copies and resumed-versus-uninterrupted parity. Synthetic independent noise
+must reproduce the variance match; correlated inputs must not be labeled equally denoised by fiat.
+
+Use one verified step-1000 state of the common recipe; restore identical model/optimizer/data state
+for all four arms and run **256 updates each at the same fixed batch and constant checkpoint LR**.
+Preserve inherited momentum only in the standard reference; clear/bypass hidden momentum elsewhere.
+Each arm consumes the same text budget and update count. Verify stability, overhead and that spectral
+separation survives Muon's nonlinear transform into actual applied displacements. If it does not,
+report that the intended movement intervention failed before attributing learning effects to it.
+
+At the shared starting state and each arm's pilot endpoint, use 16 independent B-sized frozen-state
+probe batches from a disjoint region, with no optimizer steps and restored data/RNG afterward.
+Report selected-matrix raw-gradient sampling variance, bias-corrected mean-gradient norm and
+noise-to-signal ratio with pilot uncertainty. These measure sampling variation at fixed weights;
+temporal spectra and gradient-norm changes are not substitutes. Pass the common-start probe sequence
+through both filters as a separate finite-sample denoising check, explicitly labeling startup.
+
+### Stage 2: replicated learning comparison and fair LR robustness
+
+If validation and the resource forecast pass, run **four arms by three paired independently
+initialized seeds, 3,250 updates from scratch**. Pair initialization and ordered text within seed;
+fix B and one common LR schedule across all four arms. Both tokens and updates are equal across
+arms. Do not introduce a larger-batch or half-LR primary comparison. Reuse exact-compatible REQ-076
+runs/captures, recording their provenance and counting shared execution once.
+
+Primary mechanism contrast: `pair` versus `ema-third`. Practical reference: each filtered arm
+versus `standard-mom`; `nomom` supplies the no-averaging reference. Report all per-seed final
+validation losses, paired differences, loss-versus-update/token/time curves and variability.
+Use the same held-out reporting data and cadence. Predeclare target validation loss **3.40** from
+the existing recipe; report updates/tokens/time to target and mark non-crossers without extrapolation.
+Include filter overhead; separate training-only, capture/probe and end-to-end timing.
+
+A common nominal LR does not guarantee equal applied movement. Record per-matrix displacement
+norm distributions and check candidate direction quality on independent loss at predeclared pilot
+offsets 32 and 128 using copied/restored state, both at native norms and matched movement norms.
+For those local checks, replay both filters on the same genuine history with shadow EMA state,
+apply other parameter movements identically and use one fixed small step-length grid. These local
+checks do not replace continuation training. Do not continuously normalize the primary updates
+to equal lengths: that would change the filters and potentially reintroduce oscillation.
+
+Before claiming a robust optimizer improvement, give all four arms the same bounded LR multipliers
+$0.5,1,2$ on a separate tuning seed and tuning-validation split, then confirm chosen settings on
+three fresh paired seeds with separate reporting validation. Match cumulative decay or retain zero,
+and remeasure actual displacement spectra after LR selection. Forecast this stage within the total
+cap before dispatch; if tuning/confirmation cannot fit, deliver the fixed-LR screen and explicitly
+leave the stronger claim pending. No automatic wider LR/filter search or budget expansion.
+
+### Captures, interpretation and deliverables
+
+Record middle-block Q, K and MLP output-projection full signed matrices every pilot update and in
+full-run windows **500-755, 1500-1755 and 2500-2755**: raw gradient, filter output, exact Muon input,
+post-Muon pre-LR direction and actual displacement. Intervention is on all hidden matrices; these
+three are diagnostics. Preserve tensors/checkpoints off Git with manifests/checksums; commit configs,
+readers, loss/timing tables and derived arrays/figures. Resolve names/dtypes/units before launch.
+
+Reuse validated REQ-074 coordinate-wise temporal Fourier power, summed only after transforming
+signed coordinates. Save time-resolved arrays/heatmaps with 128-update windows/hop 1 and 32-update
+sensitivity. Predeclare near-period-two band $0.45\le f\le0.50$ and broad high-frequency band
+$0.25\le f\le0.50$ in cycles/update. Report absolute band power, fractions, total power, low-frequency
+power/DC, lag agreement and norms separately. Use shared scales; never infer removal from a smaller
+fraction alone, or FFT tensor norms/averages over signed entries.
+
+- More absolute period-two suppression and better held-out learning for `pair` than `ema-third`
+  supports the stronger-cancellation filter, subject to residual noise, step-size and other-frequency
+  differences; it is not unique proof that period two caused the gain.
+- Both filters beating `nomom` similarly leaves shared averaging/delay effects plausible.
+- Beating `nomom` but not standard momentum establishes replacement benefit, not baseline acceleration.
+- Less oscillation without improved loss shows no useful gain for this intervention and horizon.
+- A gain lost after equal-budget LR selection leaves step-size/stability as an explanation.
+- Better loss per token but worse wall time is not a training-speed improvement.
+
+If a gain survives confirmation, propose a separately registered narrower period-two rejection
+and comparison-band intervention before claiming frequency-specific causation; do not launch that
+extension under this request. No inference of momentum's sole mechanism from this screen.
+
+**Deliver:** registered configs/responses and implementation checks, resource/reuse ledger,
+all per-seed losses/timing/paired contrasts, frozen-state noise estimates, native and matched-norm
+local probes, complete diagnostic arrays/figures and explicit failed/gated/unrun stages. On pickup
+change OPEN to RUNNING only with an actual host/job/session handle. Queue registration is not launch.
 
 ## Template
 
