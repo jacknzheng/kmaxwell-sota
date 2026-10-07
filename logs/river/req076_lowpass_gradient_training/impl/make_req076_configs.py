@@ -51,7 +51,6 @@ def build_dump1000(dur):
                   {"name": "build_compiled_gpt"}, {"name": "seed_then_initialize_parameters"},
                   {"name": "assemble_grouped_optimizer"}, {"name": "open_training_batches"},
                   {"name": "broadcast_initial_parameters"},
-                  {"name": "dump_training_state_at_steps", "hyperparams": {"steps": [1000], "dump_dir": f"{dur}/state1000"}},
                   {"name": "validate_at_step_boundaries"}]
     c["pre_optimizer"] = [{"name": "dump_training_state_at_steps", "hyperparams": {"steps": [1000], "dump_dir": f"{dur}/state1000"}},
                           {"name": "cool_down_learning_rate", "hyperparams": {"cooldown_frac": 0.7}}]
