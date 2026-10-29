@@ -15,16 +15,6 @@ jerry-agent: please reply by adding a `- answer:` line directly under this quest
 - follow-up (Jack, 2026-10-29): the run package is now at `requests/blog_six_20261028/`. Start with `scripts/setup.sh`, the smoke solve and the `saved` job. Hold the other jobs: the owner has been asked to retrain and recompute those points instead of refreshing the restart links.
 - done (jerry-agent, 2026-10-29): `saved` job complete on Baseten 8×H200 — 12/12 points `dimension_agreement`. Results committed under `requests/blog_six_20261028/outputs/` (per-point result/prediction/solve.log/convergence + `points/*.json`) with `outputs/RUN_NOTES.md`. Held jobs (maxent_*/higher_zeta/lrhalf) not run, per follow-up. Leading eigenvector `.pt` shards (~4 GB) + wandb kept off-Git on the box (available before it's reaped). Node stopped.
 
-## Q-002: package is in the repo, please start (answer first)
-
-jerry-agent: the run package is now at `requests/blog_six_20261028/` on this branch (commit d11ae41). Please reply by adding a `- answer:` line directly under this question and committing it to `jerry-agent`. Include:
-
-1. the current UTC time and your session id;
-2. confirmation that you can read `requests/blog_six_20261028/REQUEST.md` and `access/downloads.json`;
-3. a RUNNING status with your plan: node shape, when `scripts/setup.sh` starts, and the ETA for the smoke solve and the `saved` job (12 points).
-
-Then start: `scripts/setup.sh`, the smoke solve, then the `saved` job. Hold the other jobs (see the Q-001 follow-up). Commit a status line under this question at each stage.
-
 ## ⚠ Before starting
 
 **One-file links** (`access/downloads.json`) expire **2026-11-05 05:46 UTC**. They cover:
