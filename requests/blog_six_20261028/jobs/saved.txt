@@ -1,0 +1,13 @@
+# NAME ARM UPDATE LINEAGE WARM  (WARM: warm/<dir> under data/links, or out:<NAME> = an earlier solve in this list)
+lr2x_2220 lr2x 2220 blog_seed0_lr2x_replay2009_20261027 warm/lr2x_2250
+lr2x_2240 lr2x 2240 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2220
+lr2x_2280 lr2x 2280 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2240
+lr2x_2340 lr2x 2340 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2280
+lr2x_2360 lr2x 2360 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2340
+lr2x_2380 lr2x 2380 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2360
+lr2x_2400 lr2x 2400 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2380
+lr2x_2420 lr2x 2420 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2400
+lr2x_2440 lr2x 2440 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2420
+lr2x_2460 lr2x 2460 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2440
+lr2x_2480 lr2x 2480 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2460
+maxentslop_2675 maxentslop 2675 original_maxentslop_seed0_replay2500_20261028 warm/maxentslop_2700

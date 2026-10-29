@@ -1,0 +1,10 @@
+# Recorder/optimizer unchanged. Inclusive dense interval; schedule still 3250.
+extends: capture_maxentslop.yaml
+run_id: autocovariance_seed0_dense
+output_dir: runs/autocovariance_seed0_dense
+stop_step: 3072
+capture:
+  root: ./capture_autocovariance_seed0
+  windows: [[1024, 3071]]
+  anchors: [1023, 1536, 2048, 2560, 3072]
+  ringless_anchors: [1023, 1536, 2048, 2560, 3072]

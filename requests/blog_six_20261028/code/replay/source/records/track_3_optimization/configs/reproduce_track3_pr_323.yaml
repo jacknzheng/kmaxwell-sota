@@ -1,0 +1,5 @@
+# Shared-harness configuration; CPU tests are not GPU reproduction evidence.
+extends: "base_muon.yaml"
+run_id: "reproduce_track3_pr_323_seed0"
+output_dir: "runs/pr323_seed0"
+checkpoint_dir: "checkpoints/pr323_seed0"

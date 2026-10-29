@@ -1,0 +1,11 @@
+# Exact versions of the production runtime (Florida node, Python 3.12.3, CUDA 12.8 wheels).
+# Install torch from the cu128 index, then the rest:
+#   pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.11.0+cu128
+#   pip install -r requirements.txt
+# requirements-freeze.txt is the complete `pip freeze` of that runtime for reference.
+torch==2.11.0+cu128
+numpy==2.4.3
+wandb==0.31.0
+
+# CPU-only actual-kernel bubbleforce prediction
+scipy==1.18.1

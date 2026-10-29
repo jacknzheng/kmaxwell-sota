@@ -1,0 +1,31 @@
+# Native tuned PR369 resume; never the old generic start1000 trajectory.
+format: 1
+seed: 0
+start: 780
+stop: 3060
+restart: /scratch/checkpoints/critroll/backward_maxentslop_defazio_20261005/step_00780
+trainer_archive: /scratch/artifacts/critroll/backward_maxentslop_20261005/source.tar.gz
+training_batch_tokens: 524288
+validation_tokens: 8388608
+mu:
+  scope: all_72_jointly_coupled
+  include_weight_decay: true
+  hvp_mode: compile
+  head_backend: cached
+  matmul_precision: high
+  gemm_precision: bf16_fp32
+  microbatch: 16
+  dimensions: [8, 16, 32, 64, 128]
+  residual_gating: false
+  warm_start: true
+  independent_fresh_start: true
+analysis:
+  block_lengths: [128, 256, 512]
+  max_lag: 64
+  bootstrap_replicates: 200
+  bootstrap_block: 16
+  seed: 0
+  top_rank: 5
+  feature_chunk: 16384
+  threads: 2
+  kinds: [gradient, momentum, muon_direction, executed_update]

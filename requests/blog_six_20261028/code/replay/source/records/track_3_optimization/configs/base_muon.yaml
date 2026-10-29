@@ -1,0 +1,87 @@
+# Shared-harness configuration; CPU tests are not GPU reproduction evidence.
+extends: "base.yaml"
+wandb_offline: true
+seed_offset: 1337
+reseed_before_initialization: true
+require_world_size: 8
+train_steps: 3250
+initialization:
+  zero_projection: true
+  weight_scales: {}
+optimizer_groups:
+  -
+    pattern: "^embed\\.weight$"
+    optimizer: "adamw"
+    hyperparams:
+      lr: 0.7
+      weight_decay: 0.001
+    lr_schedule:
+      kind: "cooldown"
+      fraction: 0.7
+  -
+    pattern: "^proj\\.weight$"
+    optimizer: "adamw"
+    hyperparams:
+      lr: 0.004
+      weight_decay: 0.001
+    lr_schedule:
+      kind: "cooldown"
+      fraction: 0.7
+  -
+    pattern: "^blocks\\..*\\.weight$"
+    optimizer: "muon"
+    hyperparams:
+      lr: 0.025
+      weight_decay: 0.05
+      momentum:
+        kind: "ema"
+        decay: 0.95
+        nesterov_mix: 0.95
+    lr_schedule:
+      kind: "cooldown"
+      fraction: 0.7
+  -
+    pattern: "^(?!embed\\.weight$|proj\\.weight$|blocks\\..*\\.weight$).*"
+    optimizer: "adamw"
+    hyperparams:
+      lr: 0.015
+      weight_decay: 0.001
+    lr_schedule:
+      kind: "cooldown"
+      fraction: 0.7
+setup:
+  -
+    name: "open_rank_zero_log"
+  -
+    name: "load_validation_tokens"
+  -
+    name: "build_compiled_gpt"
+  -
+    name: "seed_then_initialize_parameters"
+  -
+    name: "assemble_grouped_optimizer"
+  -
+    name: "restore_checkpoint"
+  -
+    name: "open_training_batches"
+  -
+    name: "broadcast_initial_parameters"
+  -
+    name: "validate_at_step_boundaries"
+pre_optimizer:
+  -
+    name: "schedule_optimizer_groups"
+post_optimizer:
+  -
+    name: "print_training_progress"
+  -
+    name: "validate_at_step_boundaries"
+    hyperparams:
+      every: 125
+      final_tenth_every: 25
+  -
+    name: "checkpoint_state"
+teardown:
+  -
+    name: "mark_log_finished"
+checkpoint_every: 500

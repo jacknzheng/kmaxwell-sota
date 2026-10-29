@@ -1,0 +1,25 @@
+# Raw tensors at every dense update; mu at two user-authorized 10-step bursts.
+# Probe size is a starting configuration, not evidence of sampling convergence.
+extends: capture_autocovariance.yaml
+run_id: autocovariance_local_muon_seed0_dense
+output_dir: runs/autocovariance_local_muon_seed0_dense
+capture:
+  root: ./capture_autocovariance_local_muon_seed0
+  local_muon_operator:
+    mode: newton_schulz
+    matrices: all
+    warm_start: true
+    every: 1
+    windows: [[1250, 1259], [2686, 2695]]
+    microbatch_sequences: 4
+    loss_batch: fixed_validation
+    validation_tokens: 1048576
+    validation_offset: 0
+    loss_normalization: mean
+    krylov_dim: 32
+    seed: 0
+    real_tol: 0.0000001
+    substantial_fraction: 0.1
+    convergence_dims: [4, 8, 16, 32, 64]
+    convergence_starts: 2
+    eigenvalue_rtol: 0.001

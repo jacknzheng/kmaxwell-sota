@@ -1,0 +1,2 @@
+BLOCK_PREFIX = "blocks."
+ANCHOR_FORMAT = 2
