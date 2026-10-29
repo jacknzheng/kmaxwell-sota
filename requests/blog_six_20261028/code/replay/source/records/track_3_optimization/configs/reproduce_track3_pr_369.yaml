@@ -1,0 +1,57 @@
+# Shared-harness configuration; CPU tests are not GPU reproduction evidence.
+extends: "base_muon.yaml"
+run_id: "reproduce_track3_pr_369_seed0"
+train_steps: 3060
+output_dir: "runs/pr369_seed0"
+post_optimizer:
+  -
+    name: "print_training_progress"
+  -
+    name: "validate_at_step_boundaries"
+    hyperparams:
+      every: 125
+      final_tenth_every: 25
+      dense_window:
+        - 2900
+        - 3060
+      dense_every: 10
+  -
+    name: "checkpoint_state"
+checkpoint_dir: "checkpoints/pr369_seed0"
+optimizer_group_overrides:
+  -
+    pattern: "^blocks\\..*\\.weight$"
+    hyperparams:
+      weight_decay: 0.1
+      momentum:
+        kind: "switch"
+        start_step: 780
+        before:
+          kind: "ema"
+          decay: 0.95
+          nesterov_mix: 0.95
+        after:
+          kind: "interpolate"
+          start:
+            kind: "fixed"
+            schedule:
+              kind: "maxentslop"
+              mean_lag: 90
+              log_moment: 3.7153849427
+              newest_weight: 0.07235
+              second_newest_weight: 0.02235
+          end:
+            kind: "fixed"
+            schedule:
+              kind: "maxentslop"
+              mean_lag: 24.05
+              log_moment: 2.3786333904
+              newest_weight: 0.137
+              second_newest_weight: 0.087
+          fraction:
+            kind: "linear"
+            start: 0
+            end: 1
+            start_step: 780
+            end_step: 3120
+    decay_follows_lr: true

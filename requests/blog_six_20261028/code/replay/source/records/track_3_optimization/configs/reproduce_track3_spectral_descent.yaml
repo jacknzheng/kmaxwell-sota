@@ -1,0 +1,12 @@
+# PR323 recipe with no momentum; model, data, Adam, LR and decay inherited.
+extends: reproduce_track3_pr_323.yaml
+run_id: reproduce_track3_spectral_descent_seed0
+output_dir: runs/spectral_descent_seed0
+checkpoint_dir: checkpoints/spectral_descent_seed0
+optimizer_group_overrides:
+  - pattern: "^blocks\\..*\\.weight$"
+    hyperparams:
+      momentum:
+        kind: ema
+        decay: 0.0
+        nesterov_mix: 0.0

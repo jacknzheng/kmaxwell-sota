@@ -1,0 +1,10 @@
+# Postprocessing only: does not alter training or the momentum kernel.
+block_lengths: [128, 256, 512]
+max_lag: 64
+bootstrap_replicates: 200
+bootstrap_block: 16
+seed: 0
+top_rank: 5
+feature_chunk: 16384
+threads: 8
+kinds: [gradient, momentum, muon_direction, executed_update]

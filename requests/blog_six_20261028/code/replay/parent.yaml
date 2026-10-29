@@ -1,0 +1,104 @@
+loop: gpt_record
+seed: 0
+batch_tokens: 524288
+microbatch_sequences: 8
+train_data: data/fineweb10B/fineweb_train_*.bin
+val_data: data/fineweb10B/fineweb_val_*.bin
+val_tokens: 10485760
+resume_checkpoint: /lambda/nfs/pr323-modes-20261017-asia-northeast-2/pr323_lower_lr_dense_20261018/restart/boundary_1511
+model:
+  vocab_size: 50304
+  num_layers: 12
+  model_dim: 768
+wandb_offline: true
+seed_offset: 1337
+reseed_before_initialization: true
+require_world_size: 8
+train_steps: 6475
+initialization:
+  zero_projection: true
+  weight_scales: {}
+optimizer_groups:
+- pattern: ^embed\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.7
+    weight_decay: 0.001
+  lr_schedule:
+    kind: piecewise_linear
+    knots: &id001
+    - - 975
+      - 1.0
+    - - 2474
+      - 1.0
+    - - 2974
+      - 0.5
+    - - 4474
+      - 0.5
+    - - 4974
+      - 0.25
+    - - 6474
+      - 0.25
+- pattern: ^proj\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.004
+    weight_decay: 0.001
+  lr_schedule:
+    kind: piecewise_linear
+    knots: *id001
+- pattern: ^blocks\..*\.weight$
+  optimizer: muon
+  hyperparams:
+    lr: 0.025
+    weight_decay: 0.05
+    momentum:
+      kind: ema
+      decay: 0.95
+      nesterov_mix: 0.95
+  lr_schedule:
+    kind: piecewise_linear
+    knots: *id001
+- pattern: ^(?!embed\.weight$|proj\.weight$|blocks\..*\.weight$).*
+  optimizer: adamw
+  hyperparams:
+    lr: 0.015
+    weight_decay: 0.001
+  lr_schedule:
+    kind: piecewise_linear
+    knots: *id001
+setup:
+- name: open_rank_zero_log
+- name: load_validation_tokens
+- name: build_compiled_gpt
+- name: seed_then_initialize_parameters
+- name: assemble_grouped_optimizer
+- name: restore_checkpoint
+- name: open_training_batches
+- name: broadcast_initial_parameters
+- name: validate_at_step_boundaries
+pre_optimizer:
+- name: schedule_optimizer_groups
+post_optimizer:
+- name: print_training_progress
+- name: validate_at_step_boundaries
+  hyperparams:
+    every: 125
+    final_tenth_every: 25
+- name: checkpoint_state
+teardown:
+- name: mark_log_finished
+checkpoint_every: 1000000
+run_id: pr323_lower_lr_seed0_dense_1511_1710
+output_dir: /lambda/nfs/pr323-modes-20261017-asia-northeast-2/pr323_lower_lr_dense_20261018/results/extension/train_1511_1710
+checkpoint_dir: /lambda/nfs/pr323-modes-20261017-asia-northeast-2/pr323_lower_lr_dense_20261018/extension_segments/1511_1710/restart
+resume_anchor: null
+capture:
+  root: /lambda/nfs/pr323-modes-20261017-asia-northeast-2/pr323_lower_lr_dense_20261018/extension_segments/1511_1710/captures
+  windows:
+  - - 1511
+    - 1709
+  anchors: []
+  window_gradient_only: true
+resume_protocol_sha256: 1220d4d47f27ad48c884b88317360f35619fce65b040d2548c56435879cd0076
+stop_step: 1710

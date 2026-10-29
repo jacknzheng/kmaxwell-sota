@@ -1,0 +1,115 @@
+# Shared-harness configuration; CPU tests are not GPU reproduction evidence.
+extends: "base_muon.yaml"
+run_id: "reproduce_track3_pr_368_seed0"
+reseed_before_initialization: false
+train_steps: 3010
+output_dir: "runs/pr368_seed0"
+initialization:
+  zero_projection: false
+  weight_scales:
+    .attn.proj.weight: 1.25
+    .mlp.proj.weight: 3
+    .mlp.fc.weight: 1.5
+setup:
+  -
+    name: "open_rank_zero_log"
+  -
+    name: "seed_process"
+  -
+    name: "load_validation_tokens"
+  -
+    name: "build_compiled_gpt"
+  -
+    name: "seed_then_initialize_parameters"
+  -
+    name: "assemble_grouped_optimizer"
+  -
+    name: "restore_checkpoint"
+  -
+    name: "open_training_batches"
+  -
+    name: "broadcast_initial_parameters"
+  -
+    name: "validate_at_step_boundaries"
+post_optimizer:
+  -
+    name: "print_training_progress"
+  -
+    name: "validate_at_step_boundaries"
+    hyperparams:
+      every: 125
+      final_tenth_every: 125
+      dense_window:
+        - 3000
+        - 3010
+      dense_every: 5
+  -
+    name: "checkpoint_state"
+checkpoint_dir: "checkpoints/pr368_seed0"
+optimizer_group_overrides:
+  -
+    pattern: "^embed\\.weight$"
+    hyperparams:
+      lr: 0.91
+    lr_schedule:
+      fraction: 0.85
+  -
+    pattern: "^proj\\.weight$"
+    hyperparams:
+      lr: 0.0064
+    lr_schedule:
+      fraction: 0.85
+  -
+    pattern: "^blocks\\..*\\.weight$"
+    optimizer: "muonh"
+    hyperparams:
+      lr: 1
+      radial_to_tangent_ratio: 0.044
+      radial_start_step: 750
+      momentum:
+        kind: "switch"
+        start_step: 750
+        before:
+          kind: "ema"
+          decay: 0.95
+          nesterov_mix: 0.95
+        after:
+          kind: "interpolate"
+          start:
+            kind: "fixed"
+            schedule:
+              kind: "maxentslop"
+              mean_lag: 90
+              log_moment: 3.7153849427
+              newest_weight: 0.07235
+              second_newest_weight: 0.02235
+          end:
+            kind: "fixed"
+            schedule:
+              kind: "maxentslop"
+              mean_lag: 24.05
+              log_moment: 2.3786333904
+              newest_weight: 0.137
+              second_newest_weight: 0.087
+          fraction:
+            kind: "linear"
+            start: 0
+            end: 1
+            start_step: 750
+            end_step: 3010
+    lr_schedule:
+      kind: "fast_slow"
+      warmup_end: 100
+      plateau_end: 200
+      fast_decay_end: 1750
+      peak_lr: 0.03
+      floor_lr: 0.006
+      min_lr: 0.0005018182
+      slow_decay_schedule: "linear"
+      fast_decay_exponent: 0.6
+  -
+    pattern: "^(?!embed\\.weight$|proj\\.weight$|blocks\\..*\\.weight$).*"
+    hyperparams:
+      lr: 0.0195
+    lr_schedule:
+      fraction: 0.85

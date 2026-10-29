@@ -1,0 +1,190 @@
+# Shared-harness configuration; CPU tests are not GPU reproduction evidence.
+extends: "base.yaml"
+wandb_offline: true
+run_id: "reproduce_track3_pr_341_seed0"
+require_world_size: 1
+train_steps: 2900
+stop_step: 2600
+output_dir: "runs/pr341_seed0"
+model:
+  rms_norm_fp32: true
+optimizer_groups:
+  -
+    pattern: "^embed\\.weight$"
+    optimizer: "adamw"
+    hyperparams:
+      lr: 0.3
+      weight_decay: 0
+      betas:
+        - 0.8
+        - 0.99
+      eps: 1.0e-10
+    lr_schedule:
+      kind: "power_cooldown"
+      initial_lr: 0.3
+      power_c: 0.00004976805410800738
+      power: 1.2
+      phase_switch_step: 1400
+      phase_advance: 60
+  -
+    pattern: "^proj\\.weight$"
+    optimizer: "adamw"
+    hyperparams:
+      lr: 0.003125
+      weight_decay: 0
+      betas:
+        - 0.8
+        - 0.99
+      eps: 1.0e-10
+    lr_schedule:
+      kind: "power_cooldown"
+      initial_lr: 0.003125
+      power_c: 5.184172302917436e-7
+      power: 1.2
+      phase_switch_step: 1400
+      phase_advance: 60
+  -
+    pattern: "^blocks\\..*\\.weight$"
+    optimizer: "record_soap"
+    hyperparams:
+      lr: 0.0375
+      mu: 0.95
+      record_configuration:
+        basis_beta: 0.9
+        spectrum_beta: 0.9
+        basis_frequency: 1
+        denominator_power: 0.5
+        trust_floor: 0.45
+        trust_cap: 0.85
+        trust_floor_end: 1375
+        trust_fade_end: 1625
+        trust_min_agreement: 0.2
+        trust_min_gradient_alignment: 0.0
+        trust_power: 1.0
+        outward_scale: 0.5
+        inward_scale: 1.0
+        target_update_weight_ratio: 0.3825
+        row_floor: true
+        row_floor_power: 1.0
+        cautious_decay: 0.025
+        maxwell_start: 1000
+        maxwell_fast_beta: 0.85
+        maxwell_slow_beta: 0.98
+        maxwell_fast_weight: 0.4385
+    momentum_schedule: "soap341"
+    lr_schedule:
+      kind: "power_cooldown"
+      initial_lr: 0.0375
+      power_c: 0.0000033169534699576625
+      power: 1.2
+      phase_switch_step: 1400
+      phase_advance: 60
+  -
+    pattern: ".*\\.gains$"
+    optimizer: "bias_correction_free_adam"
+    hyperparams:
+      lr: 0.01
+      betas:
+        - 0.8
+        - 0.99
+      eps: 1.0e-10
+    lr_schedule:
+      kind: "power_cooldown"
+      initial_lr: 0.01
+      power_c: 0.0000016589351369335795
+      power: 1.2
+      phase_switch_step: 1400
+      phase_advance: 60
+  -
+    pattern: "^(?!blocks\\..*\\.attn\\.proj\\.bias$).*\\.bias$"
+    optimizer: "bias_correction_free_adam"
+    hyperparams:
+      lr: 0.01
+      betas:
+        - 0.8
+        - 0.997
+      eps: 1.0e-10
+    lr_schedule:
+      kind: "power_cooldown"
+      initial_lr: 0.01
+      power_c: 0.0000016589351369335795
+      power: 1.2
+      phase_switch_step: 1400
+      phase_advance: 60
+  -
+    pattern: "^blocks\\..*\\.attn\\.proj\\.bias$"
+    optimizer: "bias_correction_free_adam"
+    hyperparams:
+      lr: 0.01
+      betas:
+        - 0.8
+        - 0.9965
+      eps: 1.0e-10
+    lr_schedule:
+      kind: "power_cooldown"
+      initial_lr: 0.01
+      power_c: 0.0000016589351369335795
+      power: 1.2
+      phase_switch_step: 1400
+      phase_advance: 60
+setup:
+  -
+    name: "seed_process"
+    hyperparams:
+      rank_offset: false
+  -
+    name: "open_rank_zero_log"
+  -
+    name: "load_validation_tokens"
+  -
+    name: "build_compiled_gpt"
+  -
+    name: "initialize_soap_record"
+  -
+    name: "assemble_grouped_optimizer"
+    hyperparams:
+      outer_nesterov:
+        lookahead_stepsize: 0.3
+        use_scheduled_lookahead_stepsize: true
+        lookahead_ema: 0.99
+        prefill_steps: 300
+        rest_steps: 1890
+  -
+    name: "install_soap_record_state"
+  -
+    name: "restore_checkpoint"
+  -
+    name: "open_training_batches"
+  -
+    name: "broadcast_initial_parameters"
+  -
+    name: "validate_soap_record"
+pre_forward:
+  -
+    name: "enable_output_kfac"
+  -
+    name: "optimizer_before_forward"
+pre_optimizer:
+  -
+    name: "apply_output_kfac"
+  -
+    name: "schedule_optimizer_groups"
+post_optimizer:
+  -
+    name: "update_soap_tail"
+  -
+    name: "validate_soap_record"
+  -
+    name: "checkpoint_state"
+teardown:
+  -
+    name: "close_soap_record_state"
+  -
+    name: "mark_log_finished"
+checkpoint_dir: "checkpoints/pr341_seed0"
+checkpoint_every: 125
+source:
+  repository: "KellerJordan/modded-nanogpt"
+  pr: 341
+  head: "730e43a0605a6c4729001c9b5495e78eb4996929"
+  path: "records/track_3_optimization/results/20260716_bimaxwell_kfac_2600/train_gpt_bimaxwell_kfac_2600.py"

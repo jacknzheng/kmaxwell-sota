@@ -1,0 +1,13 @@
+# Short validation of the same shared runner; training/LR clock stays at 3250.
+extends: capture_momentum_baseline_checkpoints.yaml
+stop_step: 12
+capture:
+  windows: [[10, 10]]
+  anchors: []
+  ringless_anchors: []
+post_optimizer:
+  - name: print_training_progress
+  - name: validate_at_step_boundaries
+    hyperparams:
+      every: 12
+      final_tenth_every: 12

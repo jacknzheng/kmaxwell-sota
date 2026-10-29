@@ -1,0 +1,33 @@
+run_id: fixed256_maxentslop_capture_UNQUALIFIED
+determinism: true
+capture:
+  root: ./capture_fixed256_maxentslop
+  windows:
+  - - 1250
+    - 1314
+  - - 2686
+    - 2750
+  anchors:
+  - 1000
+  - 1200
+  - 1249
+  - 1315
+  - 2400
+  - 2600
+  - 2685
+  - 2751
+  ringless_anchors:
+  - 1249
+  - 1315
+  - 2685
+  - 2751
+  eval_batches:
+    source: first val shard
+    token_ranges: '[b*2048, (b+1)*2048+1) for b in 0..3'
+    shape:
+    - 2
+    - 1024
+  action_targets:
+  - blocks.11.mlp.fc.weight
+  - blocks.11.mlp.proj.weight
+output_dir: runs/fixed256_maxentslop_capture_UNQUALIFIED

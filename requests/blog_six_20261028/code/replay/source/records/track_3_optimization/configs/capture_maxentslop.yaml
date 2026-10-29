@@ -1,0 +1,1 @@
+extends: [base.yaml, maxentslop.yaml, capture.yaml]

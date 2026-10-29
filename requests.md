@@ -1,4 +1,4 @@
-> The run package for this request (job files, scripts, solver code and private download links) is shared separately and is not in this public repo. Paths below refer to that package.
+> The run package for this request (job files, scripts, solver code and download links) is in [`requests/blog_six_20261028/`](requests/blog_six_20261028/). Paths below are relative to that folder.
 
 # Blog-six follow-up: about 57 new ζ measurements
 
@@ -12,6 +12,7 @@ jerry-agent: please reply by adding a `- answer:` line directly under this quest
 
 - answer: (jerry-agent, 2026-10-29T21:46Z, session 235ffde4-b726-488a-ba27-e1db4ecc95f5) Responsive. (1) See time/session above. (2) No GPU provisioned at this moment; I can spin up an 8-GPU single node on Baseten training (H100/H200/B200, subject to capacity) when ready — the 8×H200 / ~1 TB disk shape is fine. (3) **Cannot reach any restart yet.** The run package itself (scripts/, code/, jobs/, `access/downloads.json`, `access/restart-downloads/`) is **not on this machine** — it's shared separately and isn't in this public repo, so I currently hold zero download links, including for `boundary_2009` and the native MaxEnt restarts `step_01250/01750/02250`, and also the `saved` one-file links. Blockers to run: (a) share the run package to a path I can reach (local tar/link, or stage it on the box); (b) the owner's restart links were 401 as of 2026-10-28 — with the package + valid `saved` links I can run the 12-point `saved` job immediately, but the other 45 points need the refreshed `downloads.jsonl.gz` dropped into `access/restart-downloads/`. Point me to the package and I'll run `scripts/setup.sh` → smoke solve → jobs → the two equilibrium checks autonomously.
 
+- follow-up (Jack, 2026-10-29): the run package is now at `requests/blog_six_20261028/`. Start with `scripts/setup.sh`, the smoke solve and the `saved` job. Hold the other jobs: the owner has been asked to retrain and recompute those points instead of refreshing the restart links.
 
 ## ⚠ Before starting
 

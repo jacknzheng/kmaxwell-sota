@@ -1,0 +1,8 @@
+{
+  "output": "/home/ubuntu/pr323_lr_snap_portable/results",
+  "deadline": 4102444800,
+  "prediction": 0.002050858279960198,
+  "analysis_microbatch": 8,
+  "validation_sha256": "5b95c8e0966f0861685b307b23dc5ae42b228ef74b28cb499784ae021f201640",
+  "lineage": "portable_seed0_original_full_restart2000; new eight-GPU recomputation, not Tokyo1710 replay; same global batches and unchanged optimizer kernels; numerical trajectory may differ"
+}

@@ -1,0 +1,78 @@
+{
+  "jobs": [
+    {
+      "arm": "lr2x",
+      "timestamp": 2020
+    },
+    {
+      "arm": "lrhalf",
+      "timestamp": 2040
+    },
+    {
+      "arm": "lr2x",
+      "timestamp": 2080
+    },
+    {
+      "arm": "lrhalf",
+      "timestamp": 2240
+    },
+    {
+      "arm": "lr2x",
+      "timestamp": 2160
+    },
+    {
+      "arm": "lrhalf",
+      "timestamp": 2420
+    },
+    {
+      "arm": "lr2x",
+      "timestamp": 2320
+    },
+    {
+      "arm": "lrhalf",
+      "timestamp": 2580
+    },
+    {
+      "arm": "lr2x",
+      "timestamp": 2540
+    },
+    {
+      "arm": "lrhalf",
+      "timestamp": 2320
+    },
+    {
+      "arm": "lrhalf",
+      "timestamp": 2380
+    },
+    {
+      "arm": "lr2x",
+      "timestamp": 2700
+    },
+    {
+      "arm": "lrhalf",
+      "timestamp": 2660
+    },
+    {
+      "arm": "lrhalf",
+      "timestamp": 2700
+    }
+  ],
+  "stop": false,
+  "policy": "Root-approved broad gap coverage; reassess actual results before further choices; wait and notify when queue empty",
+  "last_authorized_change": {
+    "time": 1793134815.4659233,
+    "note": "Root approves7additional singles after initial8; noLR2x>2740."
+  },
+  "fallback_allowed": false,
+  "offloaded_jobs": [
+    {
+      "arm": "lr2x",
+      "timestamp": 2620,
+      "from_instance": 57971836,
+      "to_instance": 57963906,
+      "reason": "RootauthorizesproductiveH100workduringMaxparentstaging",
+      "time": 1793136644.1193974,
+      "destination": "/workspace/blog_lr_offload_20261027"
+    }
+  ]
+}

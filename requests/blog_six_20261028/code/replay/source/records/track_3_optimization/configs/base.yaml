@@ -1,0 +1,13 @@
+# Shared-harness configuration; CPU tests are not GPU reproduction evidence.
+loop: "gpt_record"
+seed: 0
+batch_tokens: 524288
+microbatch_sequences: 64
+train_data: "data/fineweb10B/fineweb_train_*.bin"
+val_data: "data/fineweb10B/fineweb_val_*.bin"
+val_tokens: 10485760
+resume_checkpoint: null
+model:
+  vocab_size: 50304
+  num_layers: 12
+  model_dim: 768
