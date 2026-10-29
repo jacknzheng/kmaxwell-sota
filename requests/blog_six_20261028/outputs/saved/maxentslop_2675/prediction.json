@@ -1,0 +1,12 @@
+{
+  "kappa_star": 19.71679614000955,
+  "crossing_angle": 2.2941351472798055,
+  "prediction": 0.008369257608441729,
+  "learning_rate": 0.004493464052287582,
+  "weight_decay": 0.01797385620915033,
+  "train_tokens": 524288,
+  "kernel_mass": 0.9999999863211997,
+  "convention": "actual256taps; frozen-kernel first positive unit-circle contact; total zeta includes weight_decay/train_tokens",
+  "update": 2675,
+  "bubbleforce": 19.71679614000955
+}
