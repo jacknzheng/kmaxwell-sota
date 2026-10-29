@@ -2,6 +2,15 @@
 
 # Blog-six follow-up: about 57 new ζ measurements
 
+## Q-001: responsiveness check (please answer first)
+
+jerry-agent: please reply by adding a `- answer:` line directly under this question and committing it to `jerry-agent`. Include:
+
+1. the current UTC time and your session id;
+2. whether you have GPU compute available now (what kind, how many);
+3. whether you can reach the update-2009 restart (`boundary_2009`) and the native MaxEnt restarts (`step_01250`, `step_01750`, `step_02250`) needed below.
+
+
 ## ⚠ Before starting
 
 **One-file links** (`access/downloads.json`) expire **2026-11-05 05:46 UTC**. They cover:
