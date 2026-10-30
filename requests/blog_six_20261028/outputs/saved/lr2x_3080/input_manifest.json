@@ -1,0 +1,16 @@
+{
+  "source_head": "a3e212ec312e0921a9875807ad5a820c1912564b72b6f8bb93fada3ca452a56f",
+  "pins": {
+    "rank0/boundary_003080.pt": "01e4377e8a5b4ddf9fa59546d90dee94bb2dfe87cdbebceeeb91466937bd1082",
+    "rank1/boundary_003080.pt": "e467130bd9fcf2a34fa82225aa3727077a2acc2a286d522079a8406aaa453303",
+    "rank2/boundary_003080.pt": "cee74465e160683406fcf6f71bbf4ee8c9f11e1f55a4a98ef789e31396d9b012",
+    "rank3/boundary_003080.pt": "0954c00a96481af03133d5322bc43125f36c7492cf418a9ac802c212a25cfd9a",
+    "rank4/boundary_003080.pt": "b09325cb0893b1b1baa5c9cebca5bd29106f960fdcbb1ffdc9d4339b5e871fa0",
+    "rank5/boundary_003080.pt": "81296b3204ba397b520c0d91d2c3d069cf4e202a393f6264a86d8e5c05a9a265",
+    "rank6/boundary_003080.pt": "1ca42aa8ded7109be012b58a2331d8bc6a0b5a2a291e0b3228125e276df79616",
+    "rank7/boundary_003080.pt": "c0ed34d8bf2405aaa627ab7743eaad857830dc8e0a5c0b04e80ac0916437f6e8",
+    "validation": "5b95c8e0966f0861685b307b23dc5ae42b228ef74b28cb499784ae021f201640"
+  },
+  "tokens": 16777216,
+  "update": 3080
+}
