@@ -1,0 +1,10 @@
+wandb: Tracking run with wandb version 0.31.0
+wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
+wandb: Run data is saved locally in /root/blog_six/work/higher_zeta/blog_outputs/blog_seed0_higher_zeta_eqcheck_replay2001_20261029/results/measure/t002150_16m/wandb/offline-run-20261030_045305-r3gcguth
+wandb: View this run in the terminal with `wandb leet`
+{"stage": "loading", "elapsed_seconds": 0.8596250228583813}
+{"stage": "loading", "elapsed_seconds": 4.7189096212387085}
+{"stage": "hvp_backend_check", "elapsed_seconds": 5.096367929130793}
+{"stage": "tuning_microbatch", "elapsed_seconds": 25.884240923449397}
+{"stage": "numerical_pilot", "elapsed_seconds": 26.052226988598704}
+{"stage": "numerical_pilot", "elapsed_seconds": 27.771080781705678}

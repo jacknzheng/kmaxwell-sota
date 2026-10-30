@@ -1,8 +1,8 @@
 {
   "stage": "running",
-  "time": 1793334168.0852308,
+  "time": 1793335622.0487573,
   "arm": "lrhalf",
-  "pid": 14611,
+  "pid": 16229,
   "argv": [
     "/root/blog_six/venv/bin/python",
     "-m",
@@ -15,9 +15,9 @@
     "--validation",
     "/root/blog_six/work/lrhalf/data/fineweb10B/fineweb_val_000000.bin",
     "--output",
-    "/root/blog_six/work/lrhalf/blog_outputs/blog_seed0_lrhalf_eqcheck_replay2001_20261029/results/measure/t002870_16m",
+    "/root/blog_six/work/lrhalf/blog_outputs/blog_seed0_lrhalf_eqcheck_replay2001_20261029/results/measure/t002930_16m",
     "--update",
-    "2870",
+    "2930",
     "--token-sizes",
     "16777216",
     "--dimensions",
@@ -34,6 +34,6 @@
     "--gemm-precision",
     "bf16_fp32",
     "--warm-start",
-    "/root/blog_six/work/lrhalf/blog_outputs/blog_seed0_lrhalf_eqcheck_replay2001_20261029/results/measure/t002850_16m"
+    "/root/blog_six/work/lrhalf/blog_outputs/blog_seed0_lrhalf_eqcheck_replay2001_20261029/results/measure/t002910_16m"
   ]
 }
