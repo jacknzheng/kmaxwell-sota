@@ -37,3 +37,9 @@ No MaxEntSlop sampling: its replays are still blocked, and nothing after 2600.
 ## Every 30 minutes
 
 Push new `point_*.json` files and results (no `.pt` tensors), plus one status line per node under the R3 section of `requests.md`: job, points done, latest check result.
+
+## Priority order (Jack, 2026-10-30 07:00Z) — overrides the order above
+
+1. **Increased momentum and LR ×0.5**: one node each, always. Search until each has a verified onset where ζ lies consistently above the line.
+2. **MaxEntSlop: 30 new points in its sparsest gaps** (all before 2600): 815, 875, 1025, 1075, …, 2175 (every 50), 1280, 2375, 2425, 2475, 2525. Job file: `jobs/maxent_scratch.json`. No MaxEnt restart exists, so **retrain native MaxEntSlop from scratch**: `train_gpt_muon_maxentslop.py` starts from step 0 (seed 0) when `RESUME_CHECKPOINT` is unset. Use `run_gaps.py` with anchor 0 and without the `input/maxentslop` resume (adapt `run_job.sh`/`run_gaps.py` as needed; note it in `RUN_NOTES.md`), capture these 30 updates, stop at 2526, and measure them. It's a fresh realization; keep its lineage name. Run it on whichever node is waiting (for example during the other arm's replay) or once an arm's onset is verified.
+3. **LR ×2 past 2700**: last; only when nothing above is runnable.
