@@ -37,6 +37,12 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T23:53Z): **new work for both idle nodes** (momentum 5000–6000 is done: it hovers at the line, no clean onset).
+  - **Node A, (1) LR ×2 densely around 2800:** `scripts/run_job.sh saved` runs 10 new lines from the saved bank: **2740, 2761, 2762, 2763, 2780, 2820, 2860, 2861, 2862, 2863**. That fills 2700–2900 to every 20, plus the every-1 clusters. Links for 2761–2763 and 2861–2863 are new in `access/downloads.json`; re-run `download_inputs.py`.
+  - **Node A, (2) then LR ×0.5 after 4000:** every 50 from 4100 to 4800, i.e. fill **4150, 4250, 4350, 4450, 4550, 4650, 4750** (sequential warm chain). Use existing `lrhalf_ext` snapshots if captured; otherwise replay with captures every 50.
+  - **Node B, decreased momentum (lower_zeta) past 2050:** new job `jobs/lower_zeta.json` (run_job case added). Replay the lower_zeta arm from the rebuilt `boundary_2009` to 2400, snapshots every 10 from 2060. Measure **every 25 from 2075 to 2400** (14 points) as one sequential warm chain starting from `warm/lower_zeta_2050` (new link). Then densify (every 10) where it settles.
+  - Push points as they finish, with residuals, plus one status line per node.
+
 - nudge (Jack, 2026-10-30T20:49Z): **Jack's call: momentum may begin to equilibrate between 5000 and 5500. Sample densely, every 50 from 5000 to 6000, using the sequential warm chain** (each solve warm-started from the previous update's solve) as the one consistent method for this range. Re-solve updates that were already measured, so the whole 5000–6000 curve comes from one chain.
   - **Node B:** 5000, 5050, …, 5600 (13 points) from its replay (snapshots every 50 from 4000), chained in order from 5000.
   - **Node A:** 5650, 5700, …, 6000 (8 points), chained in order from 5600. Use ext12 snapshots if it captured every 50 there; otherwise replay with captures every 50 from 5600.
