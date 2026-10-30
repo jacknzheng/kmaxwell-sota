@@ -26,8 +26,8 @@ By this rule, at the start of round 3:
 
 ## Node B
 
-1. Finish `lrhalf` phase 1 (every 20 from 2750 to 3250), then `python3 scripts/check_equilibrium.py lrhalf 2700`.
-2. If there's no onset: measure sparsely from the snapshots you already have, every 50 from 3300 to 3800: `scripts/run_job.sh lrhalf --phase 2 --updates 3300,3350,...,3800`. Then check again, and sample densely (every 10) wherever points are consistently above.
+1. **Change of plan: stop the every-20 sampling after 2910** (finish any point already in progress). From 2950 on, sample **every 50 to 3800** to see whether LR ×0.5 is near equilibrium at all: `scripts/run_job.sh lrhalf --phase 2 --updates 2950,3000,3050,3100,3150,3200,3250,3300,3350,3400,3450,3500,3550,3600,3650,3700,3750,3800`. If phase 1 has already exited, this uses its saved snapshots; if it's still running, stop it after the current point first. Then run `python3 scripts/check_equilibrium.py lrhalf 2700`.
+2. Sample densely (every 10) **only** where points are consistently above the line and close to it, to verify.
 3. If there's still no onset by 3800: `scripts/run_job.sh lrhalf_ext --phase 1` (replay to 4800, snapshots every 10 from 3810), then sparse every 100 from 3900, then dense where consistently above.
 
 ## Not in scope

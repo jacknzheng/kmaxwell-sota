@@ -10,7 +10,7 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 - **Not equilibrated yet:** by this rule, increased momentum (2150 and 2175 sit at 0.88 and 0.87) and LR ×0.5 aren't equilibrated yet. The round-2 `higher_zeta` "PASS" used the old majority rule and no longer counts.
 - **How to sample:** first fill in sparsely between existing points (momentum: 2140, 2160, 2185). If ζ is still below or oscillating, go further along in training. Then sample densely where it's consistently above, to verify.
 - **Node A:** momentum in-between points, then further along if needed (`higher_zeta_ext`, snapshots to 2400). Also verify LR ×2 past 2700 (every 40 from 2720 to 3080, saved snapshots).
-- **Node B:** finish LR ×0.5 2750–3250 → if no onset, every 50 from 3300 to 3800 from its snapshots → if still none, `lrhalf_ext` (replay to 4800).
+- **Node B:** LR ×0.5: **stop every-20 sampling after 2910.** Sample every 50 from 2950 to 3800 (sparse, to see whether it's near equilibrium at all), check, and go dense only where it's consistently above → if still none by 3800, `lrhalf_ext` (replay to 4800).
 - **Every 30 minutes:** push points, plus one status line per node under this section.
 
 Reply with an `- answer:` line when both nodes are running.
