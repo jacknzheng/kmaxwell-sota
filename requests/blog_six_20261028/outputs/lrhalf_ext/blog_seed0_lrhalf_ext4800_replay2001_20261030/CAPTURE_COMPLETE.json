@@ -1,0 +1,14 @@
+{
+  "run_id": "blog_seed0_lrhalf_ext4800_replay2001_20261030",
+  "source_boundary": 2009,
+  "captured": [
+    4200,
+    4300,
+    4400,
+    4500,
+    4600,
+    4700,
+    4800
+  ],
+  "cohort": "fresh_replay; overlap comparison pending; not pooled with historical observations"
+}
