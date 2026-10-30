@@ -1,0 +1,22 @@
+ 3439  1.061  at/above  existing
+ 3440  1.260  at/above  existing
+ 3441  1.162  at/above  existing
+ 3442  0.942  below  existing
+ 3443  1.156  at/above  existing
+ 3444  1.162  at/above  existing
+ 3445  1.004  at/above  existing
+ 3446  0.891  below  existing
+ 3447  0.835  below  existing
+ 3450  1.160  at/above  new
+ 3500  1.137  at/above  new
+ 3550  0.940  below  new
+ 3600  0.919  below  new
+ 3650  1.210  at/above  new
+ 3700  0.951  below  new
+ 3750  0.953  below  new
+ 3800  1.016  at/above  new
+ 3900  1.562  at/above  new
+ 4000  1.044  at/above  new
+ 4100  1.015  at/above  new
+
+FAIL: no update in 2700-end from which >=80% of points are at or above the line (ratio >= 0.97).
