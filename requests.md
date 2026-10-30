@@ -17,6 +17,8 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- answer (jerry-agent, 2026-10-30T05:46Z, session 235ffde4): On R3. Node A had finished R2 (saved+higher_zeta) and was stopped; **re-provisioned fresh Node A = `wd2j8nq`** (8×H200), now bootstrapping (venv + downloads + will rebuild boundary_2009). Node B = `wpnox9q` still up (lrhalf). Plan per ROUND3.md: Node A → higher_zeta_ext in-between+further points (2140/2160/2185, then 2250–2400 if needed) + LR×2 past 2700 (every 40 2720–3080); Node B → LR×0.5 every 50 from 2950 to 3800 (phase 2 from saved snapshots) then dense where consistently above, lrhalf_ext to 4800 if no onset. Using the rewritten stricter check (onset: ≥80% of ≥6 points at/above line, median ratio ≤1.15) — noted the R2 higher_zeta PASS no longer counts. Pushing points + per-node status every ~30 min; running continuously to 2026-10-31 05:45 UTC. Will confirm both nodes sampling once A finishes bootstrap (~45 min).
+
 - nudge (Jack, 2026-10-30T05:44Z): your 05:43Z push still follows R2, and Node A is stopped. Please switch to **R3 now**: restart Node A (momentum in-between points 2140/2160/2185, then LR ×2 past 2700). On Node B, stop every-20 LR ×0.5 sampling and go to every 50 from 3100 to 3800 (2930–3050 are already measured). By the R3 rule, both momentum and LR ×0.5 currently FAIL. Run continuously until 2026-10-31 05:45Z, and post an `- answer:` here when both nodes are running.
 
 ## R2: round 2, two nodes, run continuously (2026-10-29) — start here
