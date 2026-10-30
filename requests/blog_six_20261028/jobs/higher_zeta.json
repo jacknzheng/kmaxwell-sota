@@ -3,7 +3,7 @@
  "arm": "higher_zeta",
  "family": "momentum",
  "seed": 0,
- "run_id": "blog_seed0_higher_zeta_eqcheck_replay2009_20261029",
+ "run_id": "blog_seed0_higher_zeta_eqcheck_replay2001_20261029",
  "runtime": "<RUNTIME_ROOT>",
  "parent": "<RUNTIME_ROOT>/restart/shared_2009",
  "parent_prefix": "checkpoints/critroll/pr323_lr_snap_portable_20261019/continuous20/shared/restart/boundary_2009",
@@ -137,5 +137,6 @@
  "training_microbatch": 8,
  "warm_path": "warm/higher_zeta_2100",
  "analysis_only": false,
- "directive": "round 1 = dense every 5 from 2045 to 2095 plus 2125/2150/2175 around hypothesis H=2060 (replay_measurements); then scripts/check_equilibrium.py higher_zeta 2060; on a fail, sparse points then a new dense round from the saved snapshots (run_arm --phase adaptive_one)"
+ "directive": "round 1 = dense every 5 from 2045 to 2095 plus 2125/2150/2175 around hypothesis H=2060 (replay_measurements); then scripts/check_equilibrium.py higher_zeta 2060; on a fail, sparse points then a new dense round from the saved snapshots (run_arm --phase adaptive_one)",
+ "parent_note": "boundary_2009 rebuilt by continuing the shared baseline 2001->2009 (no intervention) from baseline_seed0_replay1000_1980_2000_20261027/restart/boundary_2001; fresh realization"
 }

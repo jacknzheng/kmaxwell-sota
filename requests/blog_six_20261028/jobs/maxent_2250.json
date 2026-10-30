@@ -166,7 +166,7 @@
  },
  "maxentslop": {
   "anchor": 2250,
-  "stop": 2631,
+  "stop": 2591,
   "train_steps": 3060,
   "source": "checkpoints/critroll/backward_maxentslop_defazio_20261005/step_02250",
   "lineage": "original_maxentslop_seed0_replay2250_density2_20261029",
@@ -180,15 +180,11 @@
  "output": "<GAP_ROOT>/blog_outputs/original_maxentslop_seed0_replay2250_density2_20261029/results",
  "captures": [
   2570,
-  2590,
-  2610,
-  2630
+  2590
  ],
  "new_measurements": [
   2570,
-  2590,
-  2610,
-  2630
+  2590
  ],
  "prediction": 0,
  "deadline": 4102444800,

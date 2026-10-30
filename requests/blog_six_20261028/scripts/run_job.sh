@@ -52,7 +52,7 @@ saved)
     mkdir -p "$out"
     "$PYTHON" "$P/code/solver/predict.py" --capture "$cap" --update "$u" > "$out/prediction.json"
     bash "$P/code/solver/launch.sh" --capture "$cap" --validation "$VAL" --output "$out" --update "$u" --warm "$w"
-    "$PYTHON" "$P/scripts/make_points.py" "$arm" "$lineage" "$P/outputs/saved/points" "$out"
+    "$PYTHON" "$P/scripts/make_points.py" "$arm" "$lineage" "$P/outputs/saved/points/$arm" "$out"
     for r in 0 1 2 3 4 5 6 7; do rm -f "$cap/rank$r/boundary_$(printf %06d "$u").pt"; done  # free disk
     echo "DONE $name $(date -u +%FT%TZ)"
   done

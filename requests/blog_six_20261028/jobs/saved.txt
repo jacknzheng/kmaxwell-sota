@@ -11,3 +11,23 @@ lr2x_2440 lr2x 2440 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2420
 lr2x_2460 lr2x 2460 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2440
 lr2x_2480 lr2x 2480 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2460
 maxentslop_2675 maxentslop 2675 original_maxentslop_seed0_replay2500_20261028 warm/maxentslop_2700
+# Round 2 (2026-10-29): LR x2 every 10 in 2200-2500 and dense 2650-2700 (no MaxEntSlop after 2600)
+lr2x_2210 lr2x 2210 blog_seed0_lr2x_replay2009_20261027 warm/lr2x_2250
+lr2x_2230 lr2x 2230 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2210
+lr2x_2270 lr2x 2270 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2230
+lr2x_2290 lr2x 2290 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2270
+lr2x_2310 lr2x 2310 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2290
+lr2x_2330 lr2x 2330 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2310
+lr2x_2350 lr2x 2350 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2330
+lr2x_2370 lr2x 2370 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2350
+lr2x_2390 lr2x 2390 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2370
+lr2x_2410 lr2x 2410 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2390
+lr2x_2430 lr2x 2430 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2410
+lr2x_2470 lr2x 2470 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2430
+lr2x_2490 lr2x 2490 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2470
+lr2x_2700 lr2x 2700 blog_seed0_lr2x_replay2009_20261027 warm/lr2x_2540
+lr2x_2680 lr2x 2680 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2700
+lr2x_2663 lr2x 2663 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2680
+lr2x_2662 lr2x 2662 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2663
+lr2x_2661 lr2x 2661 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2662
+lr2x_2660 lr2x 2660 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2661
