@@ -1,0 +1,30 @@
+ 2850  1.005  at/above  new
+ 2870  0.981  at/above  new
+ 2890  1.190  at/above  new
+ 2910  0.915  below  new
+ 2930  0.957  below  new
+ 2950  0.933  below  new
+ 2970  0.839  below  new
+ 2990  1.113  at/above  new
+ 3010  1.018  at/above  new
+ 3030  0.932  below  new
+ 3050  1.108  at/above  new
+ 3417  0.894  below  existing
+ 3439  1.061  at/above  existing
+ 3440  1.260  at/above  existing
+ 3441  1.162  at/above  existing
+ 3442  0.942  below  existing
+ 3443  1.156  at/above  existing
+ 3444  1.162  at/above  existing
+ 3445  1.004  at/above  existing
+ 3446  0.891  below  existing
+ 3447  0.835  below  existing
+ 4200  0.951  below  new
+ 4300  0.942  below  new
+ 4400  1.190  at/above  new
+ 4500  0.970  at/above  new
+ 4600  1.078  at/above  new
+ 4700  1.133  at/above  new
+ 4800  1.256  at/above  new
+
+PASS: onset 4300: 5 of 6 points from 4300 on are at or above the line. Density 4150-4550: fill gaps 4200-4300, 4300-4400, 4400-4500 and extend past 4500.
