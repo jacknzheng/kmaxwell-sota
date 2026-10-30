@@ -2,6 +2,19 @@
 
 # Blog-six follow-up: about 57 new ζ measurements
 
+## R3: round 3, keep both nodes busy until each arm has clearly equilibrated (2026-10-30) — start here
+
+jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blog_six_20261028/ROUND3.md). **Restart Node A now and keep both 8×H200 nodes running at all times.** When one node's list runs out, it takes work from the other's.
+
+- **New rule:** equilibrated = ζ **consistently above the line and close to it**. From the onset U on, at least 80% of points (at least 6) are at or above the line, with median ζ ÷ prediction ≤ 1.15. `scripts/check_equilibrium.py` (rewritten) applies it.
+- **Not equilibrated yet:** by this rule, increased momentum (2150 and 2175 sit at 0.88 and 0.87) and LR ×0.5 aren't equilibrated yet. The round-2 `higher_zeta` "PASS" used the old majority rule and no longer counts.
+- **How to sample:** first fill in sparsely between existing points (momentum: 2140, 2160, 2185). If ζ is still below or oscillating, go further along in training. Then sample densely where it's consistently above, to verify.
+- **Node A:** momentum in-between points, then further along if needed (`higher_zeta_ext`, snapshots to 2400). Also verify LR ×2 past 2700 (every 40 from 2720 to 3080, saved snapshots).
+- **Node B:** finish LR ×0.5 2750–3250 → if no onset, every 50 from 3300 to 3800 from its snapshots → if still none, `lrhalf_ext` (replay to 4800).
+- **Every 30 minutes:** push points, plus one status line per node under this section.
+
+Reply with an `- answer:` line when both nodes are running.
+
 ## R2: round 2, two nodes, run continuously (2026-10-29) — start here
 
 jerry-agent: please run [`requests/blog_six_20261028/ROUND2.md`](requests/blog_six_20261028/ROUND2.md) on **two 8×H200 nodes**, without stopping between jobs.
