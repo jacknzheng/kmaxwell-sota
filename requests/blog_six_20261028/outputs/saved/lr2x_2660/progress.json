@@ -1,0 +1,678 @@
+{
+  "stage": "hvp_backend_check",
+  "update": 2660,
+  "gpu": "NVIDIA H200",
+  "world": 8,
+  "torch": "2.11.0+cu128",
+  "normalization": "global token mean",
+  "operator": "blockdiag(s_i Dmsign(M_i)) H_Muon,Muon + diag(lambda_i/N_train); Adam frozen",
+  "include_weight_decay": true,
+  "precision": "bf16_fp32 Hessian/high; BF16 NS primals/FP32 linear tangents",
+  "hvp_mode": "compile",
+  "head_backend": "cached",
+  "matmul_precision": "high",
+  "gemm_precision": "bf16_fp32",
+  "accumulation_dtype": "float32",
+  "reduced_precision_reduction": false,
+  "residual_tolerance": null,
+  "residual_gating": false,
+  "eigenvalue_rtol": 0.001,
+  "token_rtol": 0.01,
+  "adam_training_changed": false,
+  "probes": [],
+  "tuning": [],
+  "pilot": {},
+  "study_source_sha256": "97b7959024ca64052c4a39c859d954e4753243d3c991addef3c683d405723b4a",
+  "operator_hashes": {
+    "analysis/coupled_muon.py": "859476f55e6eaac4834c2be5fd3bbb28bf650a93824203e00094ea3079b9bc53",
+    "analysis/muon_jvp.py": "c0b2483666dc5712c00a1a7f57afaa883ef5f998950707ec57bef85a28182461",
+    "analysis/validation_probe.py": "824ff3e6bb3d650b3ab6296f13dfeeb4680460cac16b217be72cb71dd3b6a916",
+    "analysis/response_decay.py": "66586fca06950a4c3c3c936cf27d70fc93d2bcf2d5c920f0b9818e7b2977d1d2",
+    "analysis/hvp_systems.py": "7083ff942a0d1fc2fc5daedab386eff58ba1705bb6e5375cd9b1e51a5c71b785",
+    "analysis/frozen_head_loss.py": "6722e20689e8b0ca4798eed9fe9ec2ed4c2aa9cb7ade053d555969f95bdd30a8",
+    "analysis/bf16_gemm.py": "cecb6a1eefc2952b78a006afa1e3e75396e4538845d3e83bd1f51f5c07afed1a",
+    "harness/model_gpt.py": "592bb7170ad02c34a204cedb3ce1a72c2a3c68f307053d2a4fa049ef160b5621"
+  },
+  "original_started_unix": 1793332094.5690212,
+  "elapsed_seconds": 5.0744234547019005,
+  "total_wall_seconds": 5.073214530944824,
+  "weight_decay_by_matrix": {
+    "blocks.0.attn.q.weight": 0.05,
+    "blocks.0.mlp.fc.weight": 0.05,
+    "blocks.10.attn.q.weight": 0.05,
+    "blocks.2.attn.q.weight": 0.05,
+    "blocks.4.attn.q.weight": 0.05,
+    "blocks.4.mlp.proj.weight": 0.05,
+    "blocks.6.attn.q.weight": 0.05,
+    "blocks.8.attn.q.weight": 0.05,
+    "blocks.8.mlp.fc.weight": 0.05,
+    "blocks.0.attn.k.weight": 0.05,
+    "blocks.1.mlp.fc.weight": 0.05,
+    "blocks.10.attn.k.weight": 0.05,
+    "blocks.2.attn.k.weight": 0.05,
+    "blocks.4.attn.k.weight": 0.05,
+    "blocks.5.mlp.proj.weight": 0.05,
+    "blocks.6.attn.k.weight": 0.05,
+    "blocks.8.attn.k.weight": 0.05,
+    "blocks.9.mlp.fc.weight": 0.05,
+    "blocks.0.attn.v.weight": 0.05,
+    "blocks.10.attn.v.weight": 0.05,
+    "blocks.10.mlp.fc.weight": 0.05,
+    "blocks.2.attn.v.weight": 0.05,
+    "blocks.2.mlp.fc.weight": 0.05,
+    "blocks.4.attn.v.weight": 0.05,
+    "blocks.6.attn.v.weight": 0.05,
+    "blocks.6.mlp.proj.weight": 0.05,
+    "blocks.8.attn.v.weight": 0.05,
+    "blocks.0.attn.proj.weight": 0.05,
+    "blocks.10.attn.proj.weight": 0.05,
+    "blocks.11.mlp.fc.weight": 0.05,
+    "blocks.2.attn.proj.weight": 0.05,
+    "blocks.3.mlp.fc.weight": 0.05,
+    "blocks.4.attn.proj.weight": 0.05,
+    "blocks.6.attn.proj.weight": 0.05,
+    "blocks.7.mlp.proj.weight": 0.05,
+    "blocks.8.attn.proj.weight": 0.05,
+    "blocks.0.mlp.proj.weight": 0.05,
+    "blocks.1.attn.q.weight": 0.05,
+    "blocks.11.attn.q.weight": 0.05,
+    "blocks.3.attn.q.weight": 0.05,
+    "blocks.4.mlp.fc.weight": 0.05,
+    "blocks.5.attn.q.weight": 0.05,
+    "blocks.7.attn.q.weight": 0.05,
+    "blocks.8.mlp.proj.weight": 0.05,
+    "blocks.9.attn.q.weight": 0.05,
+    "blocks.1.attn.k.weight": 0.05,
+    "blocks.1.mlp.proj.weight": 0.05,
+    "blocks.11.attn.k.weight": 0.05,
+    "blocks.3.attn.k.weight": 0.05,
+    "blocks.5.attn.k.weight": 0.05,
+    "blocks.5.mlp.fc.weight": 0.05,
+    "blocks.7.attn.k.weight": 0.05,
+    "blocks.9.attn.k.weight": 0.05,
+    "blocks.9.mlp.proj.weight": 0.05,
+    "blocks.1.attn.v.weight": 0.05,
+    "blocks.10.mlp.proj.weight": 0.05,
+    "blocks.11.attn.v.weight": 0.05,
+    "blocks.2.mlp.proj.weight": 0.05,
+    "blocks.3.attn.v.weight": 0.05,
+    "blocks.5.attn.v.weight": 0.05,
+    "blocks.6.mlp.fc.weight": 0.05,
+    "blocks.7.attn.v.weight": 0.05,
+    "blocks.9.attn.v.weight": 0.05,
+    "blocks.1.attn.proj.weight": 0.05,
+    "blocks.11.attn.proj.weight": 0.05,
+    "blocks.11.mlp.proj.weight": 0.05,
+    "blocks.3.attn.proj.weight": 0.05,
+    "blocks.3.mlp.proj.weight": 0.05,
+    "blocks.5.attn.proj.weight": 0.05,
+    "blocks.7.attn.proj.weight": 0.05,
+    "blocks.7.mlp.fc.weight": 0.05,
+    "blocks.9.attn.proj.weight": 0.05
+  },
+  "training_batch_tokens": 524288,
+  "decay_normalization_tokens": 524288,
+  "decay_is_instantaneous": true,
+  "hyperball_included": false,
+  "matrix_layouts": [
+    [
+      [
+        "blocks.0.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.0.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.10.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.2.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.4.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.4.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.6.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.8.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.8.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ]
+    ],
+    [
+      [
+        "blocks.0.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.1.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.10.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.2.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.4.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.5.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.6.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.8.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.9.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ]
+    ],
+    [
+      [
+        "blocks.0.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.10.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.10.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.2.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.2.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.4.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.6.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.6.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.8.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ]
+    ],
+    [
+      [
+        "blocks.0.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.10.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.11.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.2.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.3.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.4.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.6.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.7.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.8.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ]
+    ],
+    [
+      [
+        "blocks.0.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.1.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.11.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.3.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.4.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.5.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.7.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.8.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.9.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ]
+    ],
+    [
+      [
+        "blocks.1.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.1.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.11.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.3.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.5.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.5.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.7.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.9.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.9.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ]
+    ],
+    [
+      [
+        "blocks.1.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.10.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.11.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.2.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.3.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.5.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.6.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.7.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.9.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ]
+    ],
+    [
+      [
+        "blocks.1.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.11.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.11.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.3.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.3.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.5.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.7.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.7.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.9.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ]
+    ]
+  ],
+  "total_muon_parameters": 84934656,
+  "max_basis_shard_bytes_per_vector": 42467328,
+  "hvp_backend_comparison": {
+    "reports": [
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      },
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      },
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      },
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      },
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      },
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      },
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      },
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      }
+    ],
+    "selected": "reverse"
+  }
+}
