@@ -1,0 +1,8 @@
+{"observed_at": 1793332672.4716754, "update": 2009, "train_loss": 3.568544626235962, "train_tokens": 524288, "parameter_l2": 103918.03125}
+{"observed_at": 1793332686.1992712, "update": 2025, "train_loss": 3.591762065887451, "train_tokens": 524288, "parameter_l2": 104011.984375}
+{"observed_at": 1793332696.0477195, "update": 2050, "train_loss": 3.6430721282958984, "train_tokens": 524288, "parameter_l2": 104193.3359375}
+{"observed_at": 1793332710.842621, "update": 2075, "train_loss": 3.6156139373779297, "train_tokens": 524288, "parameter_l2": 104332.0390625}
+{"observed_at": 1793332728.1229901, "update": 2100, "train_loss": 3.592865467071533, "train_tokens": 524288, "parameter_l2": 104444.4921875}
+{"observed_at": 1793332750.9457245, "update": 2125, "train_loss": 3.6414411067962646, "train_tokens": 524288, "parameter_l2": 104547.5625}
+{"observed_at": 1793332777.09068, "update": 2150, "train_loss": 3.5751335620880127, "train_tokens": 524288, "parameter_l2": 104651.53125}
+{"observed_at": 1793332803.4851468, "update": 2175, "train_loss": 3.574521780014038, "train_tokens": 524288, "parameter_l2": 104741.6328125}

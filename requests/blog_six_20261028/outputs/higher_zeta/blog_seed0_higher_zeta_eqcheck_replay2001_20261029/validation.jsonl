@@ -1,0 +1,9 @@
+{"observed_at": 1793332614.3688776, "boundary": 2009, "val_loss": 3.54943, "tokens": 1048576, "subset": "fixed validation prefix", "logged_precision_digits": 5}
+{"observed_at": 1793332686.0321255, "boundary": 2025, "val_loss": 3.58633, "tokens": 1048576, "subset": "fixed validation prefix", "logged_precision_digits": 5}
+{"observed_at": 1793332695.8805168, "boundary": 2050, "val_loss": 3.59915, "tokens": 1048576, "subset": "fixed validation prefix", "logged_precision_digits": 5}
+{"observed_at": 1793332710.6647272, "boundary": 2075, "val_loss": 3.60184, "tokens": 1048576, "subset": "fixed validation prefix", "logged_precision_digits": 5}
+{"observed_at": 1793332727.9508767, "boundary": 2100, "val_loss": 3.59623, "tokens": 1048576, "subset": "fixed validation prefix", "logged_precision_digits": 5}
+{"observed_at": 1793332750.7723055, "boundary": 2125, "val_loss": 3.58882, "tokens": 1048576, "subset": "fixed validation prefix", "logged_precision_digits": 5}
+{"observed_at": 1793332776.9165678, "boundary": 2150, "val_loss": 3.58261, "tokens": 1048576, "subset": "fixed validation prefix", "logged_precision_digits": 5}
+{"observed_at": 1793332803.3119068, "boundary": 2175, "val_loss": 3.57991, "tokens": 1048576, "subset": "fixed validation prefix", "logged_precision_digits": 5}
+{"observed_at": 1793332828.1559734, "boundary": 2196, "val_loss": 3.57403, "tokens": 1048576, "subset": "fixed validation prefix", "logged_precision_digits": 5}
