@@ -1,0 +1,39 @@
+wandb: Tracking run with wandb version 0.31.0
+wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
+wandb: Run data is saved locally in /root/blog_six/work/lrhalf/blog_outputs/blog_seed0_lrhalf_eqcheck_replay2001_20261029/results/measure/t003010_16m/wandb/offline-run-20261030_052042-9bljjoqn
+wandb: View this run in the terminal with `wandb leet`
+{"stage": "loading", "elapsed_seconds": 0.8389004813507199}
+{"stage": "loading", "elapsed_seconds": 4.78414458502084}
+{"stage": "hvp_backend_check", "elapsed_seconds": 4.91271369997412}
+{"stage": "tuning_microbatch", "elapsed_seconds": 25.974344056099653}
+{"stage": "numerical_pilot", "elapsed_seconds": 26.15232502296567}
+{"stage": "numerical_pilot", "elapsed_seconds": 27.903435261920094}
+{"stage": "eigensolver", "elapsed_seconds": 110.59653834160417, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 4, "seed": 921, "mu": 0.00398718145944592, "residual": null, "relative_change": null, "spectrum": [[2.6988157852412056e-06, 0.0], [0.00398718145944592, 0.0], [0.002907063154384116, 0.0], [0.0012494439760513218, 0.0]], "operator_calls": 4, "operator_seconds": 78.7165893362835, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 188.58255722746253, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 8, "seed": 921, "mu": 0.004172934892753763, "residual": null, "relative_change": null, "spectrum": [[-0.0016530914828904158, 0.0], [-1.0587898183430692e-05, 0.0], [-2.5049856104425356e-06, 0.0], [0.0011308108139092498, 0.0], [0.002036873435147895, 0.0], [0.004172934892753763, 0.0], [0.0035460268949046303, 0.0], [0.00325370479654651, 0.0]], "operator_calls": 8, "operator_seconds": 156.67159839905798, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 267.0276054609567, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 12, "seed": 921, "mu": 0.004173407842155538, "residual": null, "relative_change": 0.04473900629930388, "spectrum": [[-0.0017036117079369554, 0.0], [0.004173407842155538, 0.0], [0.0039734242365926, 0.0], [0.0035033370306397256, 0.0], [0.0032823218715800867, 0.0], [-0.000895767255461236, 0.0], [0.002355124304640647, 0.0], [0.0018964946571554927, 0.0], [0.0012662765400230733, 0.0], [-8.651016069098633e-05, 0.0], [2.547622253240379e-06, 0.0], [0.0005428892149770846, 0.0]], "operator_calls": 12, "operator_seconds": 235.07686743047088, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 344.95577966608107, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 16, "seed": 921, "mu": 0.004176000022493564, "residual": null, "relative_change": 0.0010420035526146462, "spectrum": [[-0.0017037789358116482, 0.0], [0.004176000022493564, 0.0], [0.0040426258311737455, 0.0], [0.0037914425471569954, 0.0], [0.0034097833003924184, 0.0], [0.0032508753184829, 0.0], [0.0026937914276271603, 0.0], [0.0021872956583646975, 0.0], [0.001753265698449226, 0.0], [0.0012964884793680966, 0.0], [-0.0009477641681673571, 0.0], [-0.0007029610384217589, 0.0], [0.0007325843514013881, 0.0], [0.0002491137956807676, 0.0], [-0.0001720261445987418, 0.0], [2.644560626218485e-06, 0.0]], "operator_calls": 16, "operator_seconds": 312.9567614477128, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 422.9200086966157, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"mu": 0.004176057813099668, "residual": 0.0005679145172705961, "dimension": 19, "spectrum": [[-0.0017037860466951726, 0.0], [0.004176057813099668, 0.0], [0.004048821934612124, 0.0], [0.0038264610642379207, 0.0], [0.003605425826275457, 0.0], [0.0033818421299121326, 0.0], [0.003195238749749539, 0.0], [0.002710047636860932, 0.0], [-0.0009701933807828306, 0.0], [-0.0008471381016913595, 0.0], [0.0022174993139789435, 0.0], [0.001903642619449649, 0.0], [0.001543803507303221, 0.0], [0.0011663928405115421, 0.0], [-0.00034891240632577, 0.0], [-5.301634416224122e-05, 0.0], [-4.284228166960953e-07, 0.0], [0.0006812185892129923, 0.0], [0.00030661477087178294, 0.0]], "seed": 921, "relative_change": 0.0006373531535342839, "operator_calls": 20, "operator_seconds": 390.8244149684906, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 424.16738144587725, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"mu": 0.004176057813099668, "residual": 0.0005679145172705961, "dimension": 19, "spectrum": [[-0.0017037860466951726, 0.0], [0.004176057813099668, 0.0], [0.004048821934612124, 0.0], [0.0038264610642379207, 0.0], [0.003605425826275457, 0.0], [0.0033818421299121326, 0.0], [0.003195238749749539, 0.0], [0.002710047636860932, 0.0], [-0.0009701933807828306, 0.0], [-0.0008471381016913595, 0.0], [0.0022174993139789435, 0.0], [0.001903642619449649, 0.0], [0.001543803507303221, 0.0], [0.0011663928405115421, 0.0], [-0.00034891240632577, 0.0], [-5.301634416224122e-05, 0.0], [-4.284228166960953e-07, 0.0], [0.0006812185892129923, 0.0], [0.00030661477087178294, 0.0]], "seed": 921, "relative_change": 0.0006373531535342839, "operator_calls": 20, "operator_seconds": 390.8244149684906, "tokens": 16777216, "offset": 0}}
+{"stage": "fixed_probes_complete", "elapsed_seconds": 424.1702746488154, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"mu": 0.004176057813099668, "residual": 0.0005679145172705961, "dimension": 19, "spectrum": [[-0.0017037860466951726, 0.0], [0.004176057813099668, 0.0], [0.004048821934612124, 0.0], [0.0038264610642379207, 0.0], [0.003605425826275457, 0.0], [0.0033818421299121326, 0.0], [0.003195238749749539, 0.0], [0.002710047636860932, 0.0], [-0.0009701933807828306, 0.0], [-0.0008471381016913595, 0.0], [0.0022174993139789435, 0.0], [0.001903642619449649, 0.0], [0.001543803507303221, 0.0], [0.0011663928405115421, 0.0], [-0.00034891240632577, 0.0], [-5.301634416224122e-05, 0.0], [-4.284228166960953e-07, 0.0], [0.0006812185892129923, 0.0], [0.00030661477087178294, 0.0]], "seed": 921, "relative_change": 0.0006373531535342839, "operator_calls": 20, "operator_seconds": 390.8244149684906, "tokens": 16777216, "offset": 0}}
+wandb: 
+wandb: Run history:
+wandb: arnoldi_dimension ▁▃▅▇█
+wandb:                mu ▁████
+wandb:         objective ▁████
+wandb:            offset ▁▁▁▁▁
+wandb:          residual ▁
+wandb:              seed ▁▁▁▁▁
+wandb:            tokens ▁▁▁▁▁
+wandb: 
+wandb: Run summary:
+wandb: arnoldi_dimension 19
+wandb:                mu 0.00418
+wandb:         objective 0.00418
+wandb:            offset 0
+wandb:          residual 0.00057
+wandb:              seed 921
+wandb:            tokens 16777216
+wandb: 
+wandb: You can sync this run to the cloud by running:
+wandb: wandb sync /root/blog_six/work/lrhalf/blog_outputs/blog_seed0_lrhalf_eqcheck_replay2001_20261029/results/measure/t003010_16m/wandb/offline-run-20261030_052042-9bljjoqn
+wandb: Find logs at: ./blog_outputs/blog_seed0_lrhalf_eqcheck_replay2001_20261029/results/measure/t003010_16m/wandb/offline-run-20261030_052042-9bljjoqn/logs
