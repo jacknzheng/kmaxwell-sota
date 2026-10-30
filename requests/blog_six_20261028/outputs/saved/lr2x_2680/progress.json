@@ -1,0 +1,1701 @@
+{
+  "stage": "fixed_probes_complete",
+  "update": 2680,
+  "gpu": "NVIDIA H200",
+  "world": 8,
+  "torch": "2.11.0+cu128",
+  "normalization": "global token mean",
+  "operator": "blockdiag(s_i Dmsign(M_i)) H_Muon,Muon + diag(lambda_i/N_train); Adam frozen",
+  "include_weight_decay": true,
+  "precision": "bf16_fp32 Hessian/high; BF16 NS primals/FP32 linear tangents",
+  "hvp_mode": "compile",
+  "head_backend": "cached",
+  "matmul_precision": "high",
+  "gemm_precision": "bf16_fp32",
+  "accumulation_dtype": "float32",
+  "reduced_precision_reduction": false,
+  "residual_tolerance": null,
+  "residual_gating": false,
+  "eigenvalue_rtol": 0.001,
+  "token_rtol": 0.01,
+  "adam_training_changed": false,
+  "probes": [
+    {
+      "qualified": true,
+      "searches": [
+        {
+          "qualified": true,
+          "history": [
+            {
+              "dimension": 1,
+              "seed": 921,
+              "mu": 0.00025497460488871175,
+              "residual": null,
+              "relative_change": null,
+              "spectrum": [
+                [
+                  0.00025497460488871175,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "dimension": 2,
+              "seed": 921,
+              "mu": 0.0009318745599416103,
+              "residual": null,
+              "relative_change": null,
+              "spectrum": [
+                [
+                  6.280126344049915e-06,
+                  0.0
+                ],
+                [
+                  0.0009318745599416103,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "dimension": 3,
+              "seed": 921,
+              "mu": 0.0009721310089068637,
+              "residual": null,
+              "relative_change": null,
+              "spectrum": [
+                [
+                  0.0009721310089068637,
+                  0.0
+                ],
+                [
+                  -1.666320799960483e-06,
+                  0.0
+                ],
+                [
+                  0.0004530785119176826,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "dimension": 4,
+              "seed": 921,
+              "mu": 0.0010560779982112692,
+              "residual": null,
+              "relative_change": null,
+              "spectrum": [
+                [
+                  -8.869271189588105e-06,
+                  0.0
+                ],
+                [
+                  0.0001081150587711846,
+                  0.0
+                ],
+                [
+                  0.0008677102506198403,
+                  0.0
+                ],
+                [
+                  0.0010560779982112692,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "dimension": 5,
+              "seed": 921,
+              "mu": 0.0015882908336613856,
+              "residual": null,
+              "relative_change": null,
+              "spectrum": [
+                [
+                  0.0015882908336613856,
+                  0.0
+                ],
+                [
+                  0.0009621617828367805,
+                  0.0
+                ],
+                [
+                  0.0004194093793628292,
+                  0.0
+                ],
+                [
+                  -1.622106019659336e-07,
+                  0.0
+                ],
+                [
+                  -0.0007091092844869978,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "dimension": 6,
+              "seed": 921,
+              "mu": 0.0017203590640380278,
+              "residual": null,
+              "relative_change": null,
+              "spectrum": [
+                [
+                  -0.0009411671875700323,
+                  0.0
+                ],
+                [
+                  0.0017203590640380278,
+                  0.0
+                ],
+                [
+                  -1.576078333460369e-06,
+                  0.0
+                ],
+                [
+                  0.00018239509652033024,
+                  0.0
+                ],
+                [
+                  0.0006546274993984226,
+                  0.0
+                ],
+                [
+                  0.0009778126165606391,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "dimension": 7,
+              "seed": 921,
+              "mu": 0.0017233238727541803,
+              "residual": null,
+              "relative_change": null,
+              "spectrum": [
+                [
+                  0.0017233238727541803,
+                  0.0
+                ],
+                [
+                  -0.0009626745066366918,
+                  0.0
+                ],
+                [
+                  0.000985385168795363,
+                  0.0
+                ],
+                [
+                  0.0007926039699264249,
+                  0.0
+                ],
+                [
+                  0.0003895340682557743,
+                  0.0
+                ],
+                [
+                  1.0900954494057019e-05,
+                  0.0
+                ],
+                [
+                  -3.8561888942152363e-05,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "dimension": 8,
+              "seed": 921,
+              "mu": 0.0017282507110294308,
+              "residual": null,
+              "relative_change": null,
+              "spectrum": [
+                [
+                  0.0017282507110294308,
+                  0.0
+                ],
+                [
+                  -0.0009618705460092518,
+                  0.0
+                ],
+                [
+                  0.000990436266006362,
+                  0.0
+                ],
+                [
+                  0.0008538275112180853,
+                  0.0
+                ],
+                [
+                  0.0004968533822642822,
+                  0.0
+                ],
+                [
+                  -3.4019378065535785e-06,
+                  0.0
+                ],
+                [
+                  0.00013956317994593166,
+                  0.0
+                ],
+                [
+                  -0.0003669166240678247,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "dimension": 9,
+              "seed": 921,
+              "mu": 0.0017278127108711027,
+              "residual": null,
+              "relative_change": 0.8526827571478767,
+              "spectrum": [
+                [
+                  0.0017278127108711027,
+                  0.0
+                ],
+                [
+                  -0.00096035170092171,
+                  0.0
+                ],
+                [
+                  -0.0005965035371293505,
+                  0.0
+                ],
+                [
+                  -8.50518578053368e-06,
+                  0.0
+                ],
+                [
+                  2.114403949282277e-05,
+                  0.0
+                ],
+                [
+                  0.0009966205634422362,
+                  0.0
+                ],
+                [
+                  0.0009014525143621849,
+                  0.0
+                ],
+                [
+                  0.0003538847359005808,
+                  0.0
+                ],
+                [
+                  0.0006383142446251793,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "dimension": 10,
+              "seed": 921,
+              "mu": 0.001727706449042973,
+              "residual": null,
+              "relative_change": 0.4609441329161887,
+              "spectrum": [
+                [
+                  0.001727706449042973,
+                  0.0
+                ],
+                [
+                  -0.0009603352522574963,
+                  0.0
+                ],
+                [
+                  -0.0006278405072110819,
+                  0.0
+                ],
+                [
+                  -4.899938208315377e-05,
+                  0.0
+                ],
+                [
+                  4.2672071432065614e-06,
+                  0.0
+                ],
+                [
+                  0.00023367659637730888,
+                  0.0
+                ],
+                [
+                  0.0004791338331025228,
+                  0.0
+                ],
+                [
+                  0.0010005348087050092,
+                  0.0
+                ],
+                [
+                  0.0009388471147000071,
+                  0.0
+                ],
+                [
+                  0.0007503280015356336,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "dimension": 11,
+              "seed": 921,
+              "mu": 0.001727776395265759,
+              "residual": null,
+              "relative_change": 0.4376259012418468,
+              "spectrum": [
+                [
+                  0.001727776395265759,
+                  0.0
+                ],
+                [
+                  -0.0009604374605689196,
+                  0.0
+                ],
+                [
+                  -0.0006308672308201083,
+                  0.0
+                ],
+                [
+                  -9.01797136940142e-05,
+                  0.0
+                ],
+                [
+                  -2.4981592901844298e-08,
+                  0.0
+                ],
+                [
+                  0.00012069359860439539,
+                  0.0
+                ],
+                [
+                  0.00036643702191345803,
+                  0.0
+                ],
+                [
+                  0.0005989480361847169,
+                  0.0
+                ],
+                [
+                  0.0010115156642432441,
+                  0.0
+                ],
+                [
+                  0.0009717316141762022,
+                  0.0
+                ],
+                [
+                  0.0008329614346840577,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "dimension": 12,
+              "seed": 921,
+              "mu": 0.001727740745464894,
+              "residual": null,
+              "relative_change": 0.38904720779580615,
+              "spectrum": [
+                [
+                  0.001727740745464894,
+                  0.0
+                ],
+                [
+                  -0.0009605094129671226,
+                  0.0
+                ],
+                [
+                  -0.0006310501860179311,
+                  0.0
+                ],
+                [
+                  0.0010610031622487184,
+                  0.0
+                ],
+                [
+                  0.0009899595241737484,
+                  0.0
+                ],
+                [
+                  0.0008932255909427982,
+                  0.0
+                ],
+                [
+                  0.0006933878247559562,
+                  0.0
+                ],
+                [
+                  0.0004586252742333334,
+                  0.0
+                ],
+                [
+                  0.00024564362215686556,
+                  0.0
+                ],
+                [
+                  -0.00020053750061536953,
+                  0.0
+                ],
+                [
+                  1.1546214469190861e-05,
+                  0.0
+                ],
+                [
+                  -2.053544937778371e-05,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "dimension": 13,
+              "seed": 921,
+              "mu": 0.0017277462444471054,
+              "residual": null,
+              "relative_change": 0.0810071952509633,
+              "spectrum": [
+                [
+                  0.0017277462444471054,
+                  0.0
+                ],
+                [
+                  -0.0009605427940914265,
+                  0.0
+                ],
+                [
+                  0.001120650225346929,
+                  0.0
+                ],
+                [
+                  0.000995884660097975,
+                  0.0
+                ],
+                [
+                  0.0009229841675889644,
+                  0.0
+                ],
+                [
+                  0.0007587694781585319,
+                  0.0
+                ],
+                [
+                  -0.0006306179260549195,
+                  0.0
+                ],
+                [
+                  0.0005485265936031075,
+                  0.0
+                ],
+                [
+                  0.0003526630392886726,
+                  0.0
+                ],
+                [
+                  0.00014373831400925496,
+                  0.0
+                ],
+                [
+                  5.692229175320478e-07,
+                  0.0
+                ],
+                [
+                  -6.655645626251397e-05,
+                  0.0
+                ],
+                [
+                  -0.0003823317999332479,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "dimension": 14,
+              "seed": 921,
+              "mu": 0.0017277472947901638,
+              "residual": null,
+              "relative_change": 0.004567593313674669,
+              "spectrum": [
+                [
+                  -0.0009605492985608353,
+                  0.0
+                ],
+                [
+                  0.0017277472947901638,
+                  0.0
+                ],
+                [
+                  -0.0006301772287474796,
+                  0.0
+                ],
+                [
+                  -0.00046288544937968376,
+                  0.0
+                ],
+                [
+                  -9.385304987021223e-05,
+                  0.0
+                ],
+                [
+                  -1.2937607373115692e-06,
+                  0.0
+                ],
+                [
+                  5.7520566833331376e-05,
+                  0.0
+                ],
+                [
+                  0.00025454006109283477,
+                  0.0
+                ],
+                [
+                  0.00043880346253645833,
+                  0.0
+                ],
+                [
+                  0.001148645779637996,
+                  0.0
+                ],
+                [
+                  0.0009992408938546654,
+                  0.0
+                ],
+                [
+                  0.0009393696615131453,
+                  0.0
+                ],
+                [
+                  0.0008082293133914779,
+                  0.0
+                ],
+                [
+                  0.000631788900602307,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "dimension": 15,
+              "seed": 921,
+              "mu": 0.001727745714913016,
+              "residual": null,
+              "relative_change": 0.002851599186572789,
+              "spectrum": [
+                [
+                  0.001727745714913016,
+                  0.0
+                ],
+                [
+                  -0.0009605465160525139,
+                  0.0
+                ],
+                [
+                  -0.0006301688593535667,
+                  0.0
+                ],
+                [
+                  -0.0004944513984937806,
+                  0.0
+                ],
+                [
+                  0.0011613691888840744,
+                  0.0
+                ],
+                [
+                  0.0010014150003016576,
+                  0.0
+                ],
+                [
+                  0.0009577157705796392,
+                  0.0
+                ],
+                [
+                  0.0008565998031325075,
+                  0.0
+                ],
+                [
+                  0.0007037978065571179,
+                  0.0
+                ],
+                [
+                  0.0005165502070643151,
+                  0.0
+                ],
+                [
+                  0.000348523149133709,
+                  0.0
+                ],
+                [
+                  0.00016815809940481832,
+                  0.0
+                ],
+                [
+                  3.966617758515724e-06,
+                  0.0
+                ],
+                [
+                  -3.34051302700552e-05,
+                  0.0
+                ],
+                [
+                  -0.00014984725909833517,
+                  0.0
+                ]
+              ]
+            },
+            {
+              "mu": 0.0017277460812643438,
+              "residual": 0.0025740408279728406,
+              "dimension": 16,
+              "spectrum": [
+                [
+                  -0.0009605450134487385,
+                  0.0
+                ],
+                [
+                  0.0017277460812643438,
+                  0.0
+                ],
+                [
+                  -0.0006302535131880974,
+                  0.0
+                ],
+                [
+                  -0.0005073621246770068,
+                  0.0
+                ],
+                [
+                  -0.00022976067088286784,
+                  0.0
+                ],
+                [
+                  -6.697934620457268e-05,
+                  0.0
+                ],
+                [
+                  2.1954674275219423e-07,
+                  0.0
+                ],
+                [
+                  0.0001012627564827867,
+                  0.0
+                ],
+                [
+                  0.0002644985813693372,
+                  0.0
+                ],
+                [
+                  0.0011672445565779114,
+                  0.0
+                ],
+                [
+                  0.0004273501089309155,
+                  0.0
+                ],
+                [
+                  0.0010064842554107052,
+                  0.0
+                ],
+                [
+                  0.0009766885461672506,
+                  0.0
+                ],
+                [
+                  0.000892359252522053,
+                  0.0
+                ],
+                [
+                  0.000584276607821556,
+                  0.0
+                ],
+                [
+                  0.0007518229278809138,
+                  0.0
+                ]
+              ],
+              "seed": 921,
+              "relative_change": 0.0003150127164863982
+            }
+          ]
+        }
+      ],
+      "seed_relative_spread": null,
+      "residual_gating": false,
+      "stopping_rule": "positive_real_ritz_spread_over_9_consecutive_dimensions",
+      "independent_start_checked": false,
+      "fresh_start_reason": null,
+      "warm_start_missed_larger_mode": false,
+      "mu": 0.0017277460812643438,
+      "experimental_stopping": true,
+      "queue_initialization": "warm_previous",
+      "tokens": 16777216,
+      "offset": 0,
+      "seconds": 334.4202254023403,
+      "operator_calls": 17,
+      "operator_seconds": 334.23055100347847,
+      "batch_hashes": [
+        "66f87cfec9b54452b007ef118a23f6ede034da94827783a448f760b82e43d611",
+        "fbfe15a92f6ed26f5a108bde80fa413077f81d3eb8afa208f39e6ce78bde107a",
+        "751f7d166bf822708d95313c9c9ad1acb620bf5734fe4805b40fbe31b098760d",
+        "2286660ff7fb52d7e1a2124047510ed286fbaec75282f2a23e52c5e88e31a227",
+        "7b37303075b1e1dc24a27b021f7a5c379c80663bfd860e100081f3c165767b29",
+        "c20bad1e2539ec1d44e75d11f95ca92afaf2eab9e3718dfde7964b8f4956912b",
+        "f43c009f30f80fe85c3c6293fcc8791b01fc191e134a5ec971725f6ebe9ee2b5",
+        "7a633b5336c5396a2d203663a79f3eb78f579f440afd9353fa0ad683979e0b7b"
+      ],
+      "weight_decay_shift": 9.5367431640625e-08,
+      "mu_polar_component": 0.0017276507138327033,
+      "include_weight_decay": true
+    }
+  ],
+  "tuning": [
+    {
+      "microbatch": 16,
+      "viable": true,
+      "reports": [
+        {
+          "rank": 0,
+          "oom": false,
+          "seconds": 0.15022766403853893,
+          "peak_bytes": 68595255808,
+          "total_bytes": 150109880320
+        },
+        {
+          "rank": 1,
+          "oom": false,
+          "seconds": 0.15145349595695734,
+          "peak_bytes": 68595255808,
+          "total_bytes": 150109880320
+        },
+        {
+          "rank": 2,
+          "oom": false,
+          "seconds": 0.15129913482815027,
+          "peak_bytes": 68595255808,
+          "total_bytes": 150109880320
+        },
+        {
+          "rank": 3,
+          "oom": false,
+          "seconds": 0.15097155794501305,
+          "peak_bytes": 68595255808,
+          "total_bytes": 150109880320
+        },
+        {
+          "rank": 4,
+          "oom": false,
+          "seconds": 0.15010530222207308,
+          "peak_bytes": 68595255808,
+          "total_bytes": 150109880320
+        },
+        {
+          "rank": 5,
+          "oom": false,
+          "seconds": 0.14920278545469046,
+          "peak_bytes": 68595255808,
+          "total_bytes": 150109880320
+        },
+        {
+          "rank": 6,
+          "oom": false,
+          "seconds": 0.15079860389232635,
+          "peak_bytes": 68595255808,
+          "total_bytes": 150109880320
+        },
+        {
+          "rank": 7,
+          "oom": false,
+          "seconds": 0.15032323636114597,
+          "peak_bytes": 68595255808,
+          "total_bytes": 150109880320
+        }
+      ]
+    }
+  ],
+  "pilot": {
+    "repeatability": 0.0,
+    "homogeneity": 0.0,
+    "additivity": 0.0047477322947421735,
+    "matvec_seconds": 0.33753744829446075,
+    "batch_hashes": [
+      "a02ab2890e6055cfa7295ada131a516ce6d810da0f44a41cbdc93aef171158b9",
+      "45d447289e142ff2738d38c75c633c50cfedec429f5b1cd5a917e13c36081753",
+      "48da48b61a90bab28197cf8c4fde0aa9c115c121fb844d8c2b82cca46ecb94cf",
+      "d0a962393073d661899e9e81c4a35d36a4febd1211e8d9249e7da3bdee1b2e35",
+      "4e17b1d61dbbd43869eb07885ef47f4ab42579f603954e4faff7cc862c31d24f",
+      "60e3bd95d827cb5e019ce03f804de70a3ac431eae05460e9e54b9b6407f6889d",
+      "bf43d93379be58701fbdfce009c9627efa8c4383e2b93654604c7efbca942833",
+      "201d71182e52b4d50ff3fa6e9470588da4b64d7eb375932440bbf5989ccdb42f"
+    ],
+    "linearity_diagnostic_only": true
+  },
+  "study_source_sha256": "97b7959024ca64052c4a39c859d954e4753243d3c991addef3c683d405723b4a",
+  "operator_hashes": {
+    "analysis/coupled_muon.py": "859476f55e6eaac4834c2be5fd3bbb28bf650a93824203e00094ea3079b9bc53",
+    "analysis/muon_jvp.py": "c0b2483666dc5712c00a1a7f57afaa883ef5f998950707ec57bef85a28182461",
+    "analysis/validation_probe.py": "824ff3e6bb3d650b3ab6296f13dfeeb4680460cac16b217be72cb71dd3b6a916",
+    "analysis/response_decay.py": "66586fca06950a4c3c3c936cf27d70fc93d2bcf2d5c920f0b9818e7b2977d1d2",
+    "analysis/hvp_systems.py": "7083ff942a0d1fc2fc5daedab386eff58ba1705bb6e5375cd9b1e51a5c71b785",
+    "analysis/frozen_head_loss.py": "6722e20689e8b0ca4798eed9fe9ec2ed4c2aa9cb7ade053d555969f95bdd30a8",
+    "analysis/bf16_gemm.py": "cecb6a1eefc2952b78a006afa1e3e75396e4538845d3e83bd1f51f5c07afed1a",
+    "harness/model_gpt.py": "592bb7170ad02c34a204cedb3ce1a72c2a3c68f307053d2a4fa049ef160b5621"
+  },
+  "original_started_unix": 1793330520.7100463,
+  "elapsed_seconds": 367.4414253598079,
+  "total_wall_seconds": 367.43936824798584,
+  "weight_decay_by_matrix": {
+    "blocks.0.attn.q.weight": 0.05,
+    "blocks.0.mlp.fc.weight": 0.05,
+    "blocks.10.attn.q.weight": 0.05,
+    "blocks.2.attn.q.weight": 0.05,
+    "blocks.4.attn.q.weight": 0.05,
+    "blocks.4.mlp.proj.weight": 0.05,
+    "blocks.6.attn.q.weight": 0.05,
+    "blocks.8.attn.q.weight": 0.05,
+    "blocks.8.mlp.fc.weight": 0.05,
+    "blocks.0.attn.k.weight": 0.05,
+    "blocks.1.mlp.fc.weight": 0.05,
+    "blocks.10.attn.k.weight": 0.05,
+    "blocks.2.attn.k.weight": 0.05,
+    "blocks.4.attn.k.weight": 0.05,
+    "blocks.5.mlp.proj.weight": 0.05,
+    "blocks.6.attn.k.weight": 0.05,
+    "blocks.8.attn.k.weight": 0.05,
+    "blocks.9.mlp.fc.weight": 0.05,
+    "blocks.0.attn.v.weight": 0.05,
+    "blocks.10.attn.v.weight": 0.05,
+    "blocks.10.mlp.fc.weight": 0.05,
+    "blocks.2.attn.v.weight": 0.05,
+    "blocks.2.mlp.fc.weight": 0.05,
+    "blocks.4.attn.v.weight": 0.05,
+    "blocks.6.attn.v.weight": 0.05,
+    "blocks.6.mlp.proj.weight": 0.05,
+    "blocks.8.attn.v.weight": 0.05,
+    "blocks.0.attn.proj.weight": 0.05,
+    "blocks.10.attn.proj.weight": 0.05,
+    "blocks.11.mlp.fc.weight": 0.05,
+    "blocks.2.attn.proj.weight": 0.05,
+    "blocks.3.mlp.fc.weight": 0.05,
+    "blocks.4.attn.proj.weight": 0.05,
+    "blocks.6.attn.proj.weight": 0.05,
+    "blocks.7.mlp.proj.weight": 0.05,
+    "blocks.8.attn.proj.weight": 0.05,
+    "blocks.0.mlp.proj.weight": 0.05,
+    "blocks.1.attn.q.weight": 0.05,
+    "blocks.11.attn.q.weight": 0.05,
+    "blocks.3.attn.q.weight": 0.05,
+    "blocks.4.mlp.fc.weight": 0.05,
+    "blocks.5.attn.q.weight": 0.05,
+    "blocks.7.attn.q.weight": 0.05,
+    "blocks.8.mlp.proj.weight": 0.05,
+    "blocks.9.attn.q.weight": 0.05,
+    "blocks.1.attn.k.weight": 0.05,
+    "blocks.1.mlp.proj.weight": 0.05,
+    "blocks.11.attn.k.weight": 0.05,
+    "blocks.3.attn.k.weight": 0.05,
+    "blocks.5.attn.k.weight": 0.05,
+    "blocks.5.mlp.fc.weight": 0.05,
+    "blocks.7.attn.k.weight": 0.05,
+    "blocks.9.attn.k.weight": 0.05,
+    "blocks.9.mlp.proj.weight": 0.05,
+    "blocks.1.attn.v.weight": 0.05,
+    "blocks.10.mlp.proj.weight": 0.05,
+    "blocks.11.attn.v.weight": 0.05,
+    "blocks.2.mlp.proj.weight": 0.05,
+    "blocks.3.attn.v.weight": 0.05,
+    "blocks.5.attn.v.weight": 0.05,
+    "blocks.6.mlp.fc.weight": 0.05,
+    "blocks.7.attn.v.weight": 0.05,
+    "blocks.9.attn.v.weight": 0.05,
+    "blocks.1.attn.proj.weight": 0.05,
+    "blocks.11.attn.proj.weight": 0.05,
+    "blocks.11.mlp.proj.weight": 0.05,
+    "blocks.3.attn.proj.weight": 0.05,
+    "blocks.3.mlp.proj.weight": 0.05,
+    "blocks.5.attn.proj.weight": 0.05,
+    "blocks.7.attn.proj.weight": 0.05,
+    "blocks.7.mlp.fc.weight": 0.05,
+    "blocks.9.attn.proj.weight": 0.05
+  },
+  "training_batch_tokens": 524288,
+  "decay_normalization_tokens": 524288,
+  "decay_is_instantaneous": true,
+  "hyperball_included": false,
+  "matrix_layouts": [
+    [
+      [
+        "blocks.0.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.0.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.10.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.2.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.4.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.4.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.6.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.8.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.8.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ]
+    ],
+    [
+      [
+        "blocks.0.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.1.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.10.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.2.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.4.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.5.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.6.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.8.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.9.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ]
+    ],
+    [
+      [
+        "blocks.0.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.10.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.10.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.2.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.2.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.4.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.6.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.6.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.8.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ]
+    ],
+    [
+      [
+        "blocks.0.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.10.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.11.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.2.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.3.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.4.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.6.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.7.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.8.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ]
+    ],
+    [
+      [
+        "blocks.0.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.1.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.11.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.3.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.4.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.5.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.7.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.8.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.9.attn.q.weight",
+        [
+          768,
+          768
+        ]
+      ]
+    ],
+    [
+      [
+        "blocks.1.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.1.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.11.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.3.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.5.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.5.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.7.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.9.attn.k.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.9.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ]
+    ],
+    [
+      [
+        "blocks.1.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.10.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.11.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.2.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.3.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.5.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.6.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.7.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.9.attn.v.weight",
+        [
+          768,
+          768
+        ]
+      ]
+    ],
+    [
+      [
+        "blocks.1.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.11.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.11.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.3.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.3.mlp.proj.weight",
+        [
+          768,
+          3072
+        ]
+      ],
+      [
+        "blocks.5.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.7.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ],
+      [
+        "blocks.7.mlp.fc.weight",
+        [
+          3072,
+          768
+        ]
+      ],
+      [
+        "blocks.9.attn.proj.weight",
+        [
+          768,
+          768
+        ]
+      ]
+    ]
+  ],
+  "total_muon_parameters": 84934656,
+  "max_basis_shard_bytes_per_vector": 42467328,
+  "hvp_backend_comparison": {
+    "reports": [
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      },
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      },
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      },
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      },
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      },
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      },
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      },
+      {
+        "supported": false,
+        "error": "Use already benchmarked reverse AD for staged speedup comparison"
+      }
+    ],
+    "selected": "reverse"
+  },
+  "hvp_graph_metadata": {
+    "(((16, 1024), torch.int32, 'cuda'), ((16, 1024), torch.int64, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((3072, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 3072), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((3072, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((3072, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 3072), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((3072, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((3072, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((3072, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 3072), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((3072, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((3072, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 3072), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 3072), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((3072, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 3072), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 3072), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((3072, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 3072), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 3072), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 3072), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((3072, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 3072), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 3072), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'), ((3072, 768), torch.float32, 'cuda'), ((768, 768), torch.float32, 'cuda'))": {
+      "kind": "ATen HVP DAG",
+      "operators": {
+        "aten.embedding.default": 1,
+        "aten._fused_rms_norm.default": 50,
+        "<built-in function getitem>": 146,
+        "aten.view.default": 1106,
+        "aten.t.default": 1133,
+        "<function bf16_addmm at 0x7f52b49f9ee0>": 73,
+        "aten.detach.default": 288,
+        "aten.arange.default": 24,
+        "aten.mul.Tensor": 1527,
+        "aten.unsqueeze.default": 55,
+        "aten.cos.default": 24,
+        "aten.sin.default": 24,
+        "aten.split.Tensor": 24,
+        "aten.add.Tensor": 925,
+        "aten.neg.default": 122,
+        "aten.cat.default": 72,
+        "aten.transpose.int": 479,
+        "aten.mul.Scalar": 192,
+        "aten.ones.default": 12,
+        "aten.tril.default": 12,
+        "aten.scalar_tensor.default": 24,
+        "aten.where.self": 12,
+        "aten.expand.default": 96,
+        "aten.clone.default": 143,
+        "aten._unsafe_view.default": 155,
+        "<function bf16_bmm at 0x7f52b49f9e40>": 215,
+        "aten._safe_softmax.default": 12,
+        "aten.relu.default": 12,
+        "aten.pow.Tensor_Scalar": 198,
+        "aten.new_zeros.default": 1,
+        "aten.slice.Tensor": 147,
+        "aten.rsqrt.default": 3,
+        "aten.logsumexp.default": 1,
+        "aten.gather.default": 1,
+        "aten.squeeze.dim": 1,
+        "aten.sub.Tensor": 122,
+        "aten.sum.default": 1,
+        "aten.ones_like.default": 3,
+        "aten.exp.default": 2,
+        "aten.scatter_add.default": 2,
+        "<function bf16_mm at 0x7f52b49f9da0>": 492,
+        "aten.slice_backward.default": 50,
+        "aten.sum.dim_IntList": 265,
+        "aten.div.Scalar": 192,
+        "aten.threshold_backward.default": 36,
+        "aten._softmax_backward_data.default": 36,
+        "aten.zeros_like.default": 12
+      },
+      "nodes": 8870,
+      "gemm_precision": "bf16_fp32",
+      "bf16_replacements": {
+        "aten.addmm.default": 73,
+        "aten.bmm.default": 215,
+        "aten.mm.default": 492
+      },
+      "accumulation_dtype": "float32"
+    }
+  },
+  "microbatch": 16,
+  "graph_cache_benchmark": {
+    "reports": [
+      {
+        "rank": 0,
+        "oom": false,
+        "peak_bytes": 69318390784,
+        "seconds": 0.1878639329224825
+      },
+      {
+        "rank": 1,
+        "oom": false,
+        "peak_bytes": 69318390784,
+        "seconds": 0.1889755642041564
+      },
+      {
+        "rank": 2,
+        "oom": false,
+        "peak_bytes": 69318390784,
+        "seconds": 0.18776026088744402
+      },
+      {
+        "rank": 3,
+        "oom": false,
+        "peak_bytes": 69318390784,
+        "seconds": 0.1896731872111559
+      },
+      {
+        "rank": 4,
+        "oom": false,
+        "peak_bytes": 69318390784,
+        "seconds": 0.18898418545722961
+      },
+      {
+        "rank": 5,
+        "oom": false,
+        "peak_bytes": 69318390784,
+        "seconds": 0.1890166038647294
+      },
+      {
+        "rank": 6,
+        "oom": false,
+        "peak_bytes": 69318390784,
+        "seconds": 0.1893634218722582
+      },
+      {
+        "rank": 7,
+        "oom": false,
+        "peak_bytes": 69318390784,
+        "seconds": 0.18887733202427626
+      }
+    ],
+    "baseline_seconds": 0.33753744829446075,
+    "selected_cache_batches": 0
+  },
+  "validation_tokens_available": 100000000,
+  "maximum_three_disjoint_probe_tokens": 33333248,
+  "effective_token_sizes": [
+    16777216
+  ],
+  "warm_start": "/root/blog_six/outputs/saved/lr2x_2700",
+  "start_check_policy": {
+    "fresh_start": true,
+    "previous_mu": null,
+    "jump_rtol": 0.2
+  },
+  "current_probe": {
+    "tokens": 16777216,
+    "offset": 0
+  },
+  "current_search": {
+    "mu": 0.0017277460812643438,
+    "residual": 0.0025740408279728406,
+    "dimension": 16,
+    "spectrum": [
+      [
+        -0.0009605450134487385,
+        0.0
+      ],
+      [
+        0.0017277460812643438,
+        0.0
+      ],
+      [
+        -0.0006302535131880974,
+        0.0
+      ],
+      [
+        -0.0005073621246770068,
+        0.0
+      ],
+      [
+        -0.00022976067088286784,
+        0.0
+      ],
+      [
+        -6.697934620457268e-05,
+        0.0
+      ],
+      [
+        2.1954674275219423e-07,
+        0.0
+      ],
+      [
+        0.0001012627564827867,
+        0.0
+      ],
+      [
+        0.0002644985813693372,
+        0.0
+      ],
+      [
+        0.0011672445565779114,
+        0.0
+      ],
+      [
+        0.0004273501089309155,
+        0.0
+      ],
+      [
+        0.0010064842554107052,
+        0.0
+      ],
+      [
+        0.0009766885461672506,
+        0.0
+      ],
+      [
+        0.000892359252522053,
+        0.0
+      ],
+      [
+        0.000584276607821556,
+        0.0
+      ],
+      [
+        0.0007518229278809138,
+        0.0
+      ]
+    ],
+    "seed": 921,
+    "relative_change": 0.0003150127164863982,
+    "operator_calls": 17,
+    "operator_seconds": 334.23055100347847,
+    "tokens": 16777216,
+    "offset": 0
+  },
+  "empirical_convergence": false,
+  "nested_probe_comparison": [
+    {
+      "tokens": 16777216,
+      "mu": 0.0017277460812643438,
+      "qualified": true
+    }
+  ],
+  "fixed_probes_complete": true
+}

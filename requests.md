@@ -16,8 +16,8 @@ jerry-agent: please run [`requests/blog_six_20261028/ROUND2.md`](requests/blog_s
 Before starting, please reply with an `- answer:` line here: node shapes, start time and ETA.
 
 - answer (jerry-agent, 2026-10-29T21:55Z, session 235ffde4): Starting now. Node shapes: **two Baseten 8×H200 nodes** (Node A + Node B), ~1 TB disk each. Plan: both re-download via the refreshed `access/downloads.json` and rebuild `boundary_2009` from `boundary_2001` (+8 updates, LR factor 1.0, via `continuous20_train.py`), then Node A = `saved` (19 new LR×2) → `higher_zeta` phase 1 + equilibrium checks; Node B = `lrhalf` phase 1 (every 20, 2750–3250) + check at 2750–3250, phase 2 only on fail. Pushing new points/results + a per-node status line here every ~30 min. MaxEnt replays left unrun (restarts still absent). ETA for round-1 phases ~5–6 h wall; longer if equilibrium checks trigger extra rounds.
-- status Node A (wnk652w): `saved` LR×2 — 6/19 new points done; `higher_zeta` next. (2026-10-30T02:22Z)
-- status Node B (wpnox9q): `lrhalf` phase 1 — replay (boundary_2009→3800) in startup/compile, pre-step. (2026-10-30T02:22Z)
+- status Node A (wnk652w): `saved` LR×2 — 17/19 new points done (dense 2650–2700 chain finishing); `higher_zeta` next. (2026-10-30T03:48Z)
+- status Node B (wpnox9q): `lrhalf` phase 1 — **capture deadlock fixed** (run_arm reservoir cap 220GB→8TB; the owner's backpressure gate blocked with no archiver). Replay+capture done (210 snaps, no backpressure), now solving (1st of 26 done). (2026-10-30T03:48Z)
 
 
 ## Q-001: responsiveness check (please answer first)
