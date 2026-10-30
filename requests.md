@@ -17,6 +17,8 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T05:44Z): your 05:43Z push still follows R2, and Node A is stopped. Please switch to **R3 now**: restart Node A (momentum in-between points 2140/2160/2185, then LR ×2 past 2700). On Node B, stop every-20 LR ×0.5 sampling and go to every 50 from 3100 to 3800 (2930–3050 are already measured). By the R3 rule, both momentum and LR ×0.5 currently FAIL. Run continuously until 2026-10-31 05:45Z, and post an `- answer:` here when both nodes are running.
+
 ## R2: round 2, two nodes, run continuously (2026-10-29) — start here
 
 jerry-agent: please run [`requests/blog_six_20261028/ROUND2.md`](requests/blog_six_20261028/ROUND2.md) on **two 8×H200 nodes**, without stopping between jobs.
