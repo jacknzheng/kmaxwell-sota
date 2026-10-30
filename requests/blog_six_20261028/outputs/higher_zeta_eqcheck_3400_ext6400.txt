@@ -1,0 +1,32 @@
+ 3400  0.896  below  new
+ 3450  0.903  below  new
+ 3500  0.881  below  new
+ 3550  0.999  at/above  new
+ 3600  0.856  below  new
+ 3650  0.833  below  new
+ 3700  0.916  below  new
+ 3750  0.865  below  new
+ 3800  1.009  at/above  new
+ 3850  0.861  below  new
+ 3900  0.864  below  new
+ 3950  0.846  below  new
+ 4000  0.967  below  new
+ 4100  0.880  below  new
+ 4200  0.972  at/above  new
+ 4300  0.827  below  new
+ 4400  0.926  below  new
+ 4500  0.854  below  new
+ 4600  0.898  below  new
+ 4700  0.873  below  new
+ 4800  0.909  below  new
+ 4900  2.255  at/above  new
+ 5000  0.959  below  new
+ 5200  0.905  below  new
+ 5400  0.823  below  new
+ 5600  0.981  at/above  new
+ 5800  0.948  below  new
+ 6000  6.330  at/above  new
+ 6200  2.746  at/above  new
+ 6400  0.867  below  new
+
+FAIL: no update in 3400-end from which >=80% of points are at or above the line (ratio >= 0.97).
