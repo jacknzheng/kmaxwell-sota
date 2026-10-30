@@ -1,0 +1,38 @@
+wandb: Tracking run with wandb version 0.31.0
+wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
+wandb: Run data is saved locally in /root/blog_six/work/higher_zeta_ext11/blog_outputs/blog_seed0_higher_zeta_ext4900inbetween_replay2001_20261030/results/measure/t004300_16m/wandb/offline-run-20261030_165518-78i7nu7j
+wandb: View this run in the terminal with `wandb leet`
+{"stage": "loading", "elapsed_seconds": 0.8468843204900622}
+{"stage": "loading", "elapsed_seconds": 5.225358941592276}
+{"stage": "hvp_backend_check", "elapsed_seconds": 5.295468369498849}
+{"stage": "tuning_microbatch", "elapsed_seconds": 25.979441460222006}
+{"stage": "numerical_pilot", "elapsed_seconds": 26.17789596877992}
+{"stage": "numerical_pilot", "elapsed_seconds": 27.891908747144043}
+{"stage": "eigensolver", "elapsed_seconds": 110.83057994861156, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 4, "seed": 921, "mu": 0.0033610275889792538, "residual": null, "relative_change": null, "spectrum": [[0.0033610275889792538, 0.0], [0.0024116465711032367, 0.0], [-2.000401543565149e-06, 0.0], [0.0007124211113103704, 0.0]], "operator_calls": 4, "operator_seconds": 79.07382982689887, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 189.4821191560477, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 8, "seed": 921, "mu": 0.0033918973068206414, "residual": null, "relative_change": null, "spectrum": [[0.0033918973068206414, 0.0], [0.003065985601622941, 0.0], [0.002559188987058577, 0.0], [0.0019065204785960702, 0.0], [0.0011114104989888222, 0.0], [-0.00019130742573938376, 0.0], [2.249819239983508e-06, 0.0], [0.00034386272725540093, 0.0]], "operator_calls": 8, "operator_seconds": 157.69674854818732, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 268.31446858216077, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 12, "seed": 921, "mu": 0.0033934986030301818, "residual": null, "relative_change": 0.009568595084121572, "spectrum": [[-0.0011005338310883766, 0.0], [-0.00027343467405432795, 0.0], [-1.2504574195374715e-05, 0.0], [5.651416000633975e-05, 0.0], [0.0005610997699548881, 0.0], [0.0010687772444597167, 0.0], [0.0033934986030301818, 0.0], [0.003185353363490927, 0.0], [0.0028937068520607694, 0.0], [0.0025166197925287335, 0.0], [0.001619377986230989, 0.0], [0.0021255075473282734, 0.0]], "operator_calls": 12, "operator_seconds": 236.49163370765746, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 366.5448477063328, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"mu": 0.0033936398442050717, "residual": 0.0006071843177872803, "dimension": 16, "spectrum": [[-0.0012585677497268686, 0.0], [-0.001023852330670814, 0.0], [-0.00029495760983677883, 0.0], [-7.291749127188555e-05, 0.0], [7.410031475934876e-06, 0.0], [0.00032790419739766035, 0.0], [0.0006557885639164896, 0.0], [0.0011021094578354943, 0.0], [0.0014826807254189815, 0.0], [0.0033936398442050717, 0.0], [0.003235126359433505, 0.0], [0.0031284906130650833, 0.0], [0.0028704995181276323, 0.0], [0.0019055843458301264, 0.0], [0.002553195769360822, 0.0], [0.002315560282817788, 0.0]], "seed": 921, "relative_change": 0.0005332302157347589, "operator_calls": 17, "operator_seconds": 334.62090556602925, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 367.67216871026903, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"mu": 0.0033936398442050717, "residual": 0.0006071843177872803, "dimension": 16, "spectrum": [[-0.0012585677497268686, 0.0], [-0.001023852330670814, 0.0], [-0.00029495760983677883, 0.0], [-7.291749127188555e-05, 0.0], [7.410031475934876e-06, 0.0], [0.00032790419739766035, 0.0], [0.0006557885639164896, 0.0], [0.0011021094578354943, 0.0], [0.0014826807254189815, 0.0], [0.0033936398442050717, 0.0], [0.003235126359433505, 0.0], [0.0031284906130650833, 0.0], [0.0028704995181276323, 0.0], [0.0019055843458301264, 0.0], [0.002553195769360822, 0.0], [0.002315560282817788, 0.0]], "seed": 921, "relative_change": 0.0005332302157347589, "operator_calls": 17, "operator_seconds": 334.62090556602925, "tokens": 16777216, "offset": 0}}
+{"stage": "fixed_probes_complete", "elapsed_seconds": 367.6752504557371, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"mu": 0.0033936398442050717, "residual": 0.0006071843177872803, "dimension": 16, "spectrum": [[-0.0012585677497268686, 0.0], [-0.001023852330670814, 0.0], [-0.00029495760983677883, 0.0], [-7.291749127188555e-05, 0.0], [7.410031475934876e-06, 0.0], [0.00032790419739766035, 0.0], [0.0006557885639164896, 0.0], [0.0011021094578354943, 0.0], [0.0014826807254189815, 0.0], [0.0033936398442050717, 0.0], [0.003235126359433505, 0.0], [0.0031284906130650833, 0.0], [0.0028704995181276323, 0.0], [0.0019055843458301264, 0.0], [0.002553195769360822, 0.0], [0.002315560282817788, 0.0]], "seed": 921, "relative_change": 0.0005332302157347589, "operator_calls": 17, "operator_seconds": 334.62090556602925, "tokens": 16777216, "offset": 0}}
+wandb: 
+wandb: Run history:
+wandb: arnoldi_dimension ▁▃▆█
+wandb:                mu ▁███
+wandb:         objective ▁███
+wandb:            offset ▁▁▁▁
+wandb:          residual ▁
+wandb:              seed ▁▁▁▁
+wandb:            tokens ▁▁▁▁
+wandb: 
+wandb: Run summary:
+wandb: arnoldi_dimension 16
+wandb:                mu 0.00339
+wandb:         objective 0.00339
+wandb:            offset 0
+wandb:          residual 0.00061
+wandb:              seed 921
+wandb:            tokens 16777216
+wandb: 
+wandb: You can sync this run to the cloud by running:
+wandb: wandb sync /root/blog_six/work/higher_zeta_ext11/blog_outputs/blog_seed0_higher_zeta_ext4900inbetween_replay2001_20261030/results/measure/t004300_16m/wandb/offline-run-20261030_165518-78i7nu7j
+wandb: Find logs at: ./blog_outputs/blog_seed0_higher_zeta_ext4900inbetween_replay2001_20261030/results/measure/t004300_16m/wandb/offline-run-20261030_165518-78i7nu7j/logs
