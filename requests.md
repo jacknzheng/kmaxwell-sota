@@ -4,8 +4,9 @@
 
 ## R3: round 3, keep both nodes busy until each arm has clearly equilibrated (2026-10-30) — start here
 
-- status Node A (wd2j8nq): R3 — LR×2 DONE 29 pts, **check lr2x 2200 PASS** (onset 2320, 58/68 above, median 1.147; `outputs/lr2x_eqcheck_2200.txt`). `higher_zeta_ext` phase1 running (in-between 2140/2160/2185 next). (2026-10-30T07:30Z)
-- status Node B (wpnox9q): R3 — `lrhalf` every-50 phase2 (3300–3800) running, ~29 pts, no backpressure; check 2700 after. (2026-10-30T07:30Z)
+- status Node A (wd2j8nq): R3 — lr2x PASS(2320). higher_zeta FAIL@2030 (oscillating); measuring further 2250–2400 (hz_ext 6 pts), no backpressure. (2026-10-30T08:24Z)
+- status Node B (wd2j8nq... wpnox9q): R3 — `lrhalf` every-50 phase2, 36 pts (to ~3550), no backpressure; check 2700 when done. (2026-10-30T08:24Z)
+
 
 
 jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blog_six_20261028/ROUND3.md). **Restart Node A now and keep both 8×H200 nodes running at all times.** When one node's list runs out, it takes work from the other's.

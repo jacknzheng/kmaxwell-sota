@@ -1,0 +1,13 @@
+wandb: Tracking run with wandb version 0.31.0
+wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
+wandb: Run data is saved locally in /root/blog_six/work/higher_zeta_ext/blog_outputs/blog_seed0_higher_zeta_ext2400_replay2001_20261030/results/measure/t002400_16m/wandb/offline-run-20261030_081853-qay3ia70
+wandb: View this run in the terminal with `wandb leet`
+{"stage": "loading", "elapsed_seconds": 0.8412703275680542}
+{"stage": "loading", "elapsed_seconds": 5.142031777650118}
+{"stage": "hvp_backend_check", "elapsed_seconds": 5.199267516843975}
+{"stage": "tuning_microbatch", "elapsed_seconds": 26.397498939186335}
+{"stage": "numerical_pilot", "elapsed_seconds": 26.596445731818676}
+{"stage": "numerical_pilot", "elapsed_seconds": 28.29330561775714}
+{"stage": "eigensolver", "elapsed_seconds": 111.11256203614175, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 4, "seed": 921, "mu": 0.002729092865062474, "residual": null, "relative_change": null, "spectrum": [[-0.002869589305242073, 0.0], [-3.651829728983033e-06, 0.0], [0.00017361545301062905, 0.0], [0.002729092865062474, 0.0]], "operator_calls": 4, "operator_seconds": 78.97590570617467, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 189.6898161387071, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 8, "seed": 921, "mu": 0.0034623449692001884, "residual": null, "relative_change": null, "spectrum": [[-0.0029910990577638936, 0.0], [-0.0020506503739790988, 0.0], [-1.2380230507551606e-07, 0.0], [-0.0002621594598114673, 0.0], [0.0007333778652792446, 0.0], [0.0034623449692001884, 0.0], [0.001773940028555603, 0.0], [0.002639974554482282, 0.0]], "operator_calls": 8, "operator_seconds": 157.52650291658938, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 268.5436097839847, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 12, "seed": 921, "mu": 0.003538210370732597, "residual": null, "relative_change": 0.22867987510380638, "spectrum": [[-0.0029912173026287988, 0.0], [-0.0020472273057961037, 0.0], [0.003538210370732597, 0.0], [0.0034009812492047813, 0.0], [0.0029689947239018946, 0.0], [0.0022209522586714874, 0.0], [0.0014430125215871888, 0.0], [-0.0006100129411724948, 0.0], [-0.0002114250595885693, 0.0], [-4.398706871522198e-07, 0.0], [0.0008773921552580372, 0.0], [0.0003430847081524529, 0.0]], "operator_calls": 12, "operator_seconds": 236.3411701656878, "tokens": 16777216, "offset": 0}}
