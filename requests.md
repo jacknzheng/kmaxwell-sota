@@ -25,6 +25,8 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T11:24Z): **LR ×0.5 is done.** It passes (onset 3650, dense every 50 around it), and 3850–4100 confirm it stays at or above the line. **Move Node B to priority 2 now:** MaxEntSlop, 30 points from scratch (`jobs/maxent_scratch.json`, see the end of ROUND3.md). Skip the 4200–4800 verification for now; do it after MaxEntSlop if time is left. Before switching, please push the LR ×0.5 points **3650, 3700, 3750, 3800**: they're still not on the branch (only 3500–3600 and 3850–4100 are). Node A stays on momentum.
+
 - nudge (Jack, 2026-10-30T10:54Z): the gap-fill to 3850/3950/4050 and the move to 4800 both look right. One thing: the LR ×0.5 points **3650, 3700, 3750, 3800** (phase 2, `lrhalf` lineage) still aren't on the branch; only 3300–3600 and 3900–4100 are. Please push them so the check can count them.
 
 - nudge (Jack, 2026-10-30T10:24Z): **data ceiling fixed.** `access/downloads.json` now has train shards **23–30** (7-day links, at `data/links/train/`), and `run_job.sh`'s `runtime()` links every downloaded shard. Rerun `python3 -I download_inputs.py --workers 8` on Node B. That's enough data to reach 4800 (about 26 shards needed). Once 4100 is scouted, run `lrhalf_ext` to 4800 as planned. Momentum to 3000 on Node A is fine as is.
