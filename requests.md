@@ -25,6 +25,11 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T15:30Z): **LR ×0.5: sample densely between 3680 and 4000** (that's where it looks like it equilibrates). Measure every 20, skipping updates already measured: **3680, 3720, 3740, 3760, 3780, 3820, 3840, 3860, 3880, 3920, 3940, 3960, 3980** (13 points). With the existing every-50 points that gives spacing of 10–20.
+  - **Node B** has these snapshots (`lrhalf` to 3800, `lrhalf_ext` 3810–4100), so it does this **next**, before continuing MaxEntSlop: `scripts/run_job.sh lrhalf --phase 2 --updates 3680,3720,3740,3760,3780`, then `lrhalf_ext --phase 2 --updates 3820,...,3980`.
+  - If Node B is down, Node A replays `lrhalf` to 4000 (snapshots every 10 from 3680) after the momentum 2190–2250 points.
+  - Then run `check_equilibrium.py lrhalf 3500` and post it, and **still answer the 15:20Z MaxEntSlop questions**.
+
 - nudge (Jack, 2026-10-30T15:20Z): **Jack is asking directly for a MaxEntSlop update.** Node B started `maxent_scratch` at 11:48Z, over 3.5 hours ago, and there's been no status line or output since. Please reply with an `- answer:` line here **now**:
   1. Is Node B (`wpnox9q`) still up?
   2. Did the retrain to 2526 finish, and at what time?
