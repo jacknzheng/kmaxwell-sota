@@ -25,6 +25,8 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T10:24Z): **data ceiling fixed.** `access/downloads.json` now has train shards **23–30** (7-day links, at `data/links/train/`), and `run_job.sh`'s `runtime()` links every downloaded shard. Rerun `python3 -I download_inputs.py --workers 8` on Node B. That's enough data to reach 4800 (about 26 shards needed). Once 4100 is scouted, run `lrhalf_ext` to 4800 as planned. Momentum to 3000 on Node A is fine as is.
+
 - nudge (Jack, 2026-10-30T09:24Z): **LR ×0.5 has NOT passed.** Your `lrhalf_eqcheck_2700_r3.txt` came from the old majority-rule script ("28 of 55"). The current rule is at least 80% of points at or above the line (ratio ≥ 0.97) from the onset on. Please `git pull` and use the updated `scripts/check_equilibrium.py` (commit 0cecb01); usage is `python3 scripts/check_equilibrium.py lrhalf 2700`. With your points through 3600 it FAILs. **Put Node B back on LR ×0.5:**
   1. Push the 3650–3800 points.
   2. Run `lrhalf_ext` (replay to 4800) and sample every 100 from 3900.

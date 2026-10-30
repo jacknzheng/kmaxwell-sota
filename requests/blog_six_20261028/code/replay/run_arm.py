@@ -12,7 +12,7 @@ def child(argv,log,**kw):
  with open(log,'ab')as f:
   p=subprocess.Popen(argv,stdout=f,stderr=subprocess.STDOUT,**kw);status('running',pid=p.pid,argv=argv);rc=p.wait()
  if rc:raise RuntimeError(f'Child rc{rc}; preserved {log}')
-q.ENV['BLOG_CAPTURE_RESERVOIR_BYTES']=str(min(8_000_000_000_000,max(28_000_000_000,shutil.disk_usage(R).total-180_000_000_000)))
+q.ENV['BLOG_CAPTURE_RESERVOIR_BYTES']=str(min(220_000_000_000,max(28_000_000_000,shutil.disk_usage(R).total-180_000_000_000)))
 q.ROOT=R;q.OUT=OUT/'results';q.OUT.mkdir(exist_ok=True);q.ENV.update(PYTHONPATH=str(R/'source')+':'+str(R),DENSE_PREFIX_WINDOW='9',DENSE_INDEPENDENT='0',NCCL_CUMEM_ENABLE='0',NCCL_CUMEM_HOST_ENABLE='0');q.PLAN.update(deadline=4102444800,analysis_microbatch=int(os.environ.get("BLOG_MICROBATCH","16")),lineage=Q['run_id'],validation_sha256='5b95c8e0966f0861685b307b23dc5ae42b228ef74b28cb499784ae021f201640');q.child=child
 parent=R/'restart/shared_2009'
 if not Q.get('analysis_only') and not (OUT/'CAPTURE_COMPLETE.json').exists():
