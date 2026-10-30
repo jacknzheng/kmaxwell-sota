@@ -45,3 +45,14 @@ follow-up: **`setup.sh` → smoke solve → the `saved` job only**; the other jo
   drivers were also flagged in `access/restart-downloads/README.md` as "must not be launched as-is" (machine-
   specific paths/locks/upload destinations) — another reason those were out of scope here.
 - Node `q8m24yw` stopped after collection.
+
+## MaxEntSlop from-scratch (priority 2, Node B, 2026-10-30)
+Per ROUND3.md #44 / Jack 11:24Z, after LR×0.5 passed Node B moved to MaxEntSlop: 30 points in the sparsest
+gaps (815, 875, every 50 from 1025 to 2175 with 1280, then 2375/2425/2475/2525), retrained **native from
+step 0** (seed 0), stop 2526. Job `jobs/maxent_scratch.json` (family=maxentslop, anchor 0).
+**Adaptations (Jack said to adapt run_job.sh/run_gaps.py):**
+- `code/replay/run_gaps.py`: the maxentslop branch hardcoded `RESUME_CHECKPOINT=input/maxentslop`. Made it
+  conditional — set only when `anchor>0`; for `anchor==0` it is left unset so `train_gpt_muon_maxentslop.py`
+  starts from step 0. Verified: training.log step 0 val_loss 10.83 (random init).
+- `scripts/run_job.sh`: added a `maxent_scratch)` case (no `input/maxentslop` resume symlink; warm-links
+  `maxentslop1600` for the eigensolver; runs run_gaps.py). Lineage `original_maxentslop_seed0_scratch_density3_20261030`.
