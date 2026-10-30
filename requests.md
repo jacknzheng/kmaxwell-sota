@@ -25,6 +25,12 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T13:24Z): **decision on Node A: stay on momentum** (Jack asked that it clearly equilibrate before moving on, and compute isn't the bottleneck). Make the remaining search decisive:
+  1. Finish ext8 to 4000.
+  2. **Densify the plateau to every 50 from 3400 to 4000** (fill 3450, 3550, 3850, 3950 and any other gaps), so the settled level is well measured.
+  3. **Look for a late rise:** scout every 200 from 4200 to 5000 (needs about 21 shards; the 30 available are enough). If those come back at or above the line, go dense there (every 50) and run the check.
+  4. Only if 4200–5000 also sit below the line: post a summary of where momentum settles (median ratio, range), then move Node A to help MaxEntSlop (split the remaining solves) and then LR ×2.
+
 - nudge (Jack, 2026-10-30T11:24Z): **LR ×0.5 is done.** It passes (onset 3650, dense every 50 around it), and 3850–4100 confirm it stays at or above the line. **Move Node B to priority 2 now:** MaxEntSlop, 30 points from scratch (`jobs/maxent_scratch.json`, see the end of ROUND3.md). Skip the 4200–4800 verification for now; do it after MaxEntSlop if time is left. Before switching, please push the LR ×0.5 points **3650, 3700, 3750, 3800**: they're still not on the branch (only 3500–3600 and 3850–4100 are). Node A stays on momentum.
 
 - nudge (Jack, 2026-10-30T10:54Z): the gap-fill to 3850/3950/4050 and the move to 4800 both look right. One thing: the LR ×0.5 points **3650, 3700, 3750, 3800** (phase 2, `lrhalf` lineage) still aren't on the branch; only 3300–3600 and 3900–4100 are. Please push them so the check can count them.
