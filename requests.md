@@ -29,6 +29,11 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T18:25Z): **revised momentum split (replaces my 18:2xZ note). Both nodes stay on increased momentum:**
+  - **Node B, around 5000:** every 50 from 4800 to 5200. Measure **4850, 4900** (re-solve; the 2.26× outlier), **4950, 5050, 5100, 5150** (4800, 5000 and 5200 are already measured).
+  - **Node A, past 5500 to 6000:** every 100. Measure **5700, 5800, 5900, 6000** (5600 is already measured).
+  - Then run `check_equilibrium.py higher_zeta 3400`. Densify further (every 50) only where points sit at or above the line. Push points as they finish, plus one status line per node.
+
 - nudge (Jack, 2026-10-30T18:22Z): **Jack: keep momentum going, with both nodes on increased momentum.**
   - **Node A:** extend past 5600 and scout every 200: **5800, 6000, 6200, 6400** (40 shards are enough to about 7600). Wherever points sit at or above the line, sample every 50 from 150 before to 250 after and run `check_equilibrium.py higher_zeta 3400`.
   - **Node B:** re-solve the **4900** outlier (2.26×, more than twice its neighbours) with a different warm start, and fill **5100, 5300, 5500** so 4000–5600 is every 100. That needs its own replay to 5600 (it can capture every 50 from 4000 so any later densifying is free).
