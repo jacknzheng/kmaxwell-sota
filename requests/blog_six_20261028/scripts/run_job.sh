@@ -69,7 +69,7 @@ maxent_1250|maxent_1750|maxent_2250)
   (cd "$R" && GAP_ROOT="$R" GAP_ARCHIVE=0 "$PYTHON" run_gaps.py)
   collect "$R" "$(python3 -c "import json;print(json.load(open('$R/plan.json'))['run_id'])")"
   ;;
-higher_zeta|lrhalf|higher_zeta_ext|lrhalf_ext|higher_zeta_ext2|lrhalf_ext2)
+higher_zeta|lrhalf|higher_zeta_ext|lrhalf_ext|higher_zeta_ext2|lrhalf_ext2|higher_zeta_ext3|lrhalf_ext3)
   R="$P/work/$JOB"; Q="$P/jobs/$JOB.json"
   RID=$(python3 -c "import json;print(json.load(open('$Q'))['run_id'])")
   runtime "$R"

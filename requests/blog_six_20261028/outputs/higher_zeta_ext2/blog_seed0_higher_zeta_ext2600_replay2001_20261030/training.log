@@ -1,0 +1,60 @@
+/root/blog_six/work/higher_zeta_ext2/blog_outputs/blog_seed0_higher_zeta_ext2600_replay2001_20261030/training/train.log
+wandb: Tracking run with wandb version 0.31.0
+wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
+wandb: Run data is saved locally in /root/blog_six/work/higher_zeta_ext2/blog_outputs/blog_seed0_higher_zeta_ext2600_replay2001_20261030/training/wandb/offline-run-20261030_083342-la899197
+wandb: View this run in the terminal with `wandb leet`
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_val_000000.bin (100000000 tokens; batch 1048576 tokens)
+step:2009/6475 val_loss:3.54945 train_time:0.000s step_avg:nanms
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_train_000001.bin (100000000 tokens; batch 524288 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_train_000002.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_train_000003.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_train_000004.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_train_000005.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_train_000006.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_train_000007.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_train_000008.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_train_000009.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_train_000010.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_train_000011.bin (100000000 tokens)
+step:2025/6475 val_loss:3.58602 train_time:8.240s step_avg:514.96ms
+step:2050/6475 val_loss:3.59853 train_time:13.580s step_avg:213.60ms
+step:2075/6475 val_loss:3.60210 train_time:18.908s step_avg:213.12ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_train_000012.bin (100000000 tokens)
+step:2100/6475 val_loss:3.59777 train_time:24.279s step_avg:214.86ms
+step:2125/6475 val_loss:3.59143 train_time:29.626s step_avg:213.86ms
+step:2150/6475 val_loss:3.58199 train_time:34.960s step_avg:213.38ms
+step:2175/6475 val_loss:3.57671 train_time:40.297s step_avg:213.46ms
+step:2200/6475 val_loss:3.57042 train_time:45.661s step_avg:214.57ms
+step:2225/6475 val_loss:3.56772 train_time:51.007s step_avg:213.82ms
+step:2250/6475 val_loss:3.57036 train_time:56.350s step_avg:213.73ms
+step:2275/6475 val_loss:3.56136 train_time:61.623s step_avg:210.92ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_train_000013.bin (100000000 tokens)
+step:2300/6475 val_loss:3.55648 train_time:66.942s step_avg:212.77ms
+step:2325/6475 val_loss:3.55766 train_time:72.228s step_avg:211.45ms
+step:2350/6475 val_loss:3.55172 train_time:77.513s step_avg:211.38ms
+step:2375/6475 val_loss:3.54942 train_time:82.870s step_avg:214.29ms
+step:2400/6475 val_loss:3.54708 train_time:88.202s step_avg:213.29ms
+step:2425/6475 val_loss:3.54154 train_time:93.544s step_avg:213.66ms
+step:2450/6475 val_loss:3.53585 train_time:99.715s step_avg:246.84ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext2/data/fineweb10B/fineweb_train_000014.bin (100000000 tokens)
+step:2475/6475 val_loss:3.53816 train_time:108.392s step_avg:347.09ms
+step:2500/6475 val_loss:3.53588 train_time:114.547s step_avg:246.19ms
+step:2525/6475 val_loss:3.53347 train_time:123.139s step_avg:343.67ms
+step:2550/6475 val_loss:3.53349 train_time:129.304s step_avg:246.60ms
+step:2575/6475 val_loss:3.52814 train_time:137.749s step_avg:337.80ms
+step:2600/6475 val_loss:3.52692 train_time:143.916s step_avg:246.71ms
+step:2601/6475 val_loss:3.52674 train_time:147.261s step_avg:3344.95ms
+wandb: 
+wandb: Run history:
+wandb: objective ▃▇███▇▆▆▅▅▅▄▄▄▃▃▃▂▂▂▂▂▂▁▁▁
+wandb:      step ▁▁▁▂▂▂▃▃▃▄▄▄▄▅▅▅▆▆▆▇▇▇▇███
+wandb:  val_loss ▃▇███▇▆▆▅▅▅▄▄▄▃▃▃▂▂▂▂▂▂▁▁▁
+wandb: 
+wandb: Run summary:
+wandb: objective 3.52674
+wandb:      step 2601
+wandb:  val_loss 3.52674
+wandb: 
+wandb: You can sync this run to the cloud by running:
+wandb: wandb sync /root/blog_six/work/higher_zeta_ext2/blog_outputs/blog_seed0_higher_zeta_ext2600_replay2001_20261030/training/wandb/offline-run-20261030_083342-la899197
+wandb: Find logs at: ./blog_outputs/blog_seed0_higher_zeta_ext2600_replay2001_20261030/training/wandb/offline-run-20261030_083342-la899197/logs
