@@ -1,0 +1,51 @@
+/root/blog_six/work/higher_zeta_ext/blog_outputs/blog_seed0_higher_zeta_ext2400_replay2001_20261030/training/train.log
+wandb: Tracking run with wandb version 0.31.0
+wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
+wandb: Run data is saved locally in /root/blog_six/work/higher_zeta_ext/blog_outputs/blog_seed0_higher_zeta_ext2400_replay2001_20261030/training/wandb/offline-run-20261030_072924-h1f0yh97
+wandb: View this run in the terminal with `wandb leet`
+data shard loaded: /root/blog_six/work/higher_zeta_ext/data/fineweb10B/fineweb_val_000000.bin (100000000 tokens; batch 1048576 tokens)
+step:2009/6475 val_loss:3.54945 train_time:0.001s step_avg:nanms
+data shard loaded: /root/blog_six/work/higher_zeta_ext/data/fineweb10B/fineweb_train_000001.bin (100000000 tokens; batch 524288 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext/data/fineweb10B/fineweb_train_000002.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext/data/fineweb10B/fineweb_train_000003.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext/data/fineweb10B/fineweb_train_000004.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext/data/fineweb10B/fineweb_train_000005.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext/data/fineweb10B/fineweb_train_000006.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext/data/fineweb10B/fineweb_train_000007.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext/data/fineweb10B/fineweb_train_000008.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext/data/fineweb10B/fineweb_train_000009.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext/data/fineweb10B/fineweb_train_000010.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext/data/fineweb10B/fineweb_train_000011.bin (100000000 tokens)
+step:2025/6475 val_loss:3.58619 train_time:71.809s step_avg:4488.03ms
+step:2050/6475 val_loss:3.60031 train_time:77.285s step_avg:219.01ms
+step:2075/6475 val_loss:3.60224 train_time:82.827s step_avg:221.71ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext/data/fineweb10B/fineweb_train_000012.bin (100000000 tokens)
+step:2100/6475 val_loss:3.59877 train_time:88.385s step_avg:222.31ms
+step:2125/6475 val_loss:3.58948 train_time:94.742s step_avg:254.29ms
+step:2150/6475 val_loss:3.58230 train_time:121.057s step_avg:1052.58ms
+step:2175/6475 val_loss:3.57616 train_time:147.096s step_avg:1041.57ms
+step:2200/6475 val_loss:3.57064 train_time:173.196s step_avg:1043.99ms
+step:2225/6475 val_loss:3.56898 train_time:190.231s step_avg:681.41ms
+step:2250/6475 val_loss:3.56839 train_time:204.884s step_avg:586.09ms
+step:2275/6475 val_loss:3.56344 train_time:221.980s step_avg:683.84ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext/data/fineweb10B/fineweb_train_000013.bin (100000000 tokens)
+step:2300/6475 val_loss:3.55697 train_time:236.750s step_avg:590.80ms
+step:2325/6475 val_loss:3.55642 train_time:253.671s step_avg:676.86ms
+step:2350/6475 val_loss:3.55236 train_time:268.225s step_avg:582.16ms
+step:2375/6475 val_loss:3.54874 train_time:285.392s step_avg:686.69ms
+step:2400/6475 val_loss:3.54720 train_time:300.072s step_avg:587.18ms
+step:2401/6475 val_loss:3.54708 train_time:303.525s step_avg:3453.13ms
+wandb: 
+wandb: Run history:
+wandb: objective ▁▆███▆▅▅▄▄▄▃▂▂▂▁▁▁
+wandb:      step ▁▁▂▂▃▃▄▄▄▅▅▆▆▇▇███
+wandb:  val_loss ▁▆███▆▅▅▄▄▄▃▂▂▂▁▁▁
+wandb: 
+wandb: Run summary:
+wandb: objective 3.54708
+wandb:      step 2401
+wandb:  val_loss 3.54708
+wandb: 
+wandb: You can sync this run to the cloud by running:
+wandb: wandb sync /root/blog_six/work/higher_zeta_ext/blog_outputs/blog_seed0_higher_zeta_ext2400_replay2001_20261030/training/wandb/offline-run-20261030_072924-h1f0yh97
+wandb: Find logs at: ./blog_outputs/blog_seed0_higher_zeta_ext2400_replay2001_20261030/training/wandb/offline-run-20261030_072924-h1f0yh97/logs
