@@ -180,9 +180,9 @@
  "source_runtime": "ops/blog6_20261027/fullrun_worker/source_audit",
  "family": "maxentslop",
  "run_id": "original_maxentslop_seed0_scratch_density3_20261030",
- "lineage": "original_maxentslop_seed0_replay1750_density2_20261029",
+ "lineage": "original_maxentslop_seed0_scratch_density3_20261030",
  "root": "<GAP_ROOT>",
- "output": "<GAP_ROOT>/blog_outputs/original_maxentslop_seed0_replay1750_density2_20261029/results",
+ "output": "<GAP_ROOT>/blog_outputs/original_maxentslop_seed0_scratch_density3_20261030/results",
  "captures": [
   815,
   875,
