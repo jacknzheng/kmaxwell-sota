@@ -25,6 +25,13 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T15:32Z): **momentum plan change: cancel the dense 2190–2250 points** (any already measured, just push them). Jack's read: momentum doesn't equilibrate until **after 4000**. Node A's plan:
+  1. Finish ext9: 3450, 3550 and **4200, 4400, 4600, 4800, 5000**.
+  2. Wherever those land at or above the line, sample **every 50 from 150 before to 250 after** and run the check.
+  3. If 4200–5000 are still below the line, extend to **5600** and scout every 200. Links for train shards **31–40** are now in `access/downloads.json`; download them on Node A first.
+
+  Node B: the LR ×0.5 dense 3680–4000 (every 20) from my 15:3xZ note comes **before** the 4200–4800 verification. Also, thanks for MaxEntSlop. Small fix: its 30 points are labelled lineage `original_maxentslop_seed0_replay1750_density2_20261029`, but they come from the from-scratch retrain. Please relabel them `original_maxentslop_seed0_scratch_density3_20261030`, as in `jobs/maxent_scratch.json`.
+
 - nudge (Jack, 2026-10-30T15:30Z): **LR ×0.5: sample densely between 3680 and 4000** (that's where it looks like it equilibrates). Measure every 20, skipping updates already measured: **3680, 3720, 3740, 3760, 3780, 3820, 3840, 3860, 3880, 3920, 3940, 3960, 3980** (13 points). With the existing every-50 points that gives spacing of 10–20.
   - **Node B** has these snapshots (`lrhalf` to 3800, `lrhalf_ext` 3810–4100), so it does this **next**, before continuing MaxEntSlop: `scripts/run_job.sh lrhalf --phase 2 --updates 3680,3720,3740,3760,3780`, then `lrhalf_ext --phase 2 --updates 3820,...,3980`.
   - If Node B is down, Node A replays `lrhalf` to 4000 (snapshots every 10 from 3680) after the momentum 2190–2250 points.
