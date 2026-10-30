@@ -1,6 +1,6 @@
 # Blog-six follow-up: new ζ measurements
 
-**Current plan: [`ROUND2.md`](ROUND2.md)** (two nodes, run continuously, push points every 30 minutes). Round 1's `saved` job (12 points) is done; its results are in `outputs/`. Where this file and `ROUND2.md` differ, `ROUND2.md` wins.
+**Current plan: [`ROUND3.md`](ROUND3.md)** (both nodes busy until each arm has clearly equilibrated, push points every 30 minutes). Rounds 1 and 2 are done or finishing; results are in `outputs/`. Where this file differs from `ROUND2.md` or `ROUND3.md`, the later round wins.
 
 ## ⚠ Before starting
 

@@ -1,43 +1,40 @@
 #!/usr/bin/env python3
-"""Check an equilibration hypothesis for higher_zeta or lrhalf.
-   check_equilibrium.py JOB H [END]   (H = hypothesised equilibration update; END = optional last update to count)
+"""Find where an arm has equilibrated: ζ consistently above the predicted line and close to it.
+   check_equilibrium.py ARM [START [END]]      ARM = lr2x | lrhalf | higher_zeta
 
-Equilibrated from H = more than half of all points at or after H sit at or above the predicted line (zeta / prediction >= 1.00).
-Existing measurements count. On a fail, the script prints sparse points to measure next (from the snapshots the replay
-already saved) so a new hypothesis can be formed; then sample densely around the new H and run this check again."""
-import json, pathlib, sys
+Rule: the onset U is the earliest measured update such that, counting every point from U to END (at least 6 points),
+  - at least 80% have ζ / prediction >= 1.00 (consistently above the line), and
+  - their median ζ / prediction is <= 1.15 (close to the line).
+Existing measurements (jobs/existing_ratios.json) and every new point_*.json under outputs/ and work/ count.
+PASS = an onset exists. Then verify it: sample between the points after U (and a little past the last one) and rerun.
+FAIL = no onset yet. Look at the printout: sample between points where ζ hovers at or just above the line; if most
+points are below or oscillating, sample further along in training."""
+import json, pathlib, statistics, sys
 
 P = pathlib.Path(__file__).resolve().parent.parent
-JOB, H = sys.argv[1], int(sys.argv[2])
+ARM = sys.argv[1]
+START = int(sys.argv[2]) if len(sys.argv) > 2 else 0
 END = int(sys.argv[3]) if len(sys.argv) > 3 else 10**9
-# Flat predicted equilibrium after the 2009 intervention (saved kernel, no fit), existing points as (update, zeta / prediction),
-# dense half-width and step, and the sparse step used to look for a new hypothesis.
-SPEC = {
-    'lrhalf': dict(pred=0.004102903720889337, half=100, step=10, sparse=100,
-                   existing=[(2700, 1.134), (2715, 0.936), (2716, 0.873), (2717, 0.889), (2718, 0.956), (3417, 0.894),
-                             (3439, 1.061), (3440, 1.26), (3441, 1.162), (3442, 0.942), (3443, 1.156), (3444, 1.162),
-                             (3445, 1.004), (3446, 0.891), (3447, 0.835)]),
-    'higher_zeta': dict(pred=0.004101621231676908, half=30, step=5, sparse=25,
-                        existing=[(2030, 0.997), (2031, 0.975), (2032, 1.088), (2033, 1.072), (2034, 1.022), (2035, 1.21),
-                                  (2036, 0.957), (2037, 0.999), (2038, 0.988), (2039, 0.861), (2040, 0.919), (2050, 1.216),
-                                  (2060, 0.991), (2070, 1.04), (2080, 1.051), (2090, 1.039), (2100, 0.947), (2200, 1.087)]),
-}[JOB]
-q = json.load(open(P / f'jobs/{JOB}.json'))
-new = {}
-for f in (P / f"work/{JOB}/blog_outputs/{q['run_id']}/results").glob('point_*.json'):
+spec = json.load(open(P / 'jobs/existing_ratios.json'))[ARM]
+ratio = {u: x for u, x in spec['points']}
+new = set()
+for f in [*(P / 'outputs').rglob('point_*.json'), *(P / 'work').rglob('point_*.json')]:
     d = json.load(open(f))
-    new[d['update']] = d['zeta'] / SPEC['pred']
-points = sorted((dict(SPEC['existing']) | new).items())
-after = [(u, x) for u, x in points if H <= u <= END]
-for u, x in points:
-    print(f"{u:5d}  {x:.3f}  {'above' if x >= 1 else 'below'}  {'new' if u in new else 'existing'}{'' if u >= H else '  (before H)'}")
-above = sum(x >= 1 for _, x in after)
-print(f"\nH = {H}{f' to {END}' if END < 10**9 else ''}: {above} of {len(after)} points are at or above the line")
-if above * 2 > len(after):
-    print('PASS: equilibrated from H. Send this printout back.')
-    sys.exit(0)
-sparse = [t for t in q['capture_updates'] if t > H and t % SPEC['sparse'] == 0 and t not in new]
-print(f'FAIL: not equilibrated from {H}. Measure these sparse points to form a new hypothesis:')
-print(f"  scripts/run_job.sh {JOB} --phase 2 --updates {','.join(map(str, sparse))}")
-print(f"Then pick the new H (the first update from which most later points sit at or above the line), measure densely around it\n"
-      f"(every {SPEC['step']} from H-{SPEC['half']} to H+{SPEC['half']}) with --phase 2 --updates, and rerun this check with the new H.")
+    if (d.get('arm') or d.get('run')) == ARM:
+        u = int(d.get('update', d.get('timestamp')))
+        ratio[u] = d['zeta'] / spec['pred']; new.add(u)
+pts = sorted((u, x) for u, x in ratio.items() if START <= u <= END)
+for u, x in pts:
+    print(f"{u:5d}  {x:.3f}  {'above' if x >= 1 else 'below'}  {'new' if u in new else 'existing'}")
+onset = None
+for i, (u, _) in enumerate(pts):
+    tail = [x for _, x in pts[i:]]
+    if len(tail) >= 6 and sum(x >= 1 for x in tail) >= 0.8 * len(tail) and statistics.median(tail) <= 1.15:
+        onset = u
+        break
+if onset is None:
+    print(f'\nFAIL: no update in {START}-{END if END < 10**9 else "end"} from which >=80% of points are at or above the line with median <= 1.15.')
+    sys.exit(1)
+tail = [x for u, x in pts if u >= onset]
+print(f'\nPASS: onset {onset}: {sum(x >= 1 for x in tail)} of {len(tail)} points from {onset} on are at or above the line, '
+      f'median {statistics.median(tail):.3f}. Verify by sampling between these points and a little beyond the last one.')

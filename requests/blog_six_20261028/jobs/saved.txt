@@ -31,3 +31,14 @@ lr2x_2663 lr2x 2663 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2680
 lr2x_2662 lr2x 2662 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2663
 lr2x_2661 lr2x 2661 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2662
 lr2x_2660 lr2x 2660 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2661
+# Round 3 (2026-10-30): LR x2 past 2700, sparse every 40 to verify the onset at ~2450; densify (every 20, same bank) where needed
+lr2x_2720 lr2x 2720 blog_seed0_lr2x_replay2009_20261027 warm/lr2x_2540
+lr2x_2760 lr2x 2760 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2720
+lr2x_2800 lr2x 2800 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2760
+lr2x_2840 lr2x 2840 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2800
+lr2x_2880 lr2x 2880 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2840
+lr2x_2920 lr2x 2920 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2880
+lr2x_2960 lr2x 2960 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2920
+lr2x_3000 lr2x 3000 blog_seed0_lr2x_replay2009_20261027 out:lr2x_2960
+lr2x_3040 lr2x 3040 blog_seed0_lr2x_replay2009_20261027 out:lr2x_3000
+lr2x_3080 lr2x 3080 blog_seed0_lr2x_replay2009_20261027 out:lr2x_3040
