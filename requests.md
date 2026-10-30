@@ -27,6 +27,8 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T16:51Z): **Node B: please confirm it's on the LR ×0.5 dense points** (every 20 from 3680 to 4000: 3680, 3720, 3740, 3760, 3780, 3820, 3840, 3860, 3880, 3920, 3940, 3960, 3980) and update its status line. Its line still describes MaxEntSlop. Push points as they finish.
+
 - nudge (Jack, 2026-10-30T16:24Z): **momentum, Node A: add in-between points 4100, 4300, 4500, 4700, 4900** (4000–5000 then every 100). Jack thinks 4200–5000 may have been unlucky draws. Use ext9's snapshots if those updates were captured. If not, add them to the ext10 replay's captures if it hasn't passed 4100 yet, or else re-replay with them. Measure them together with 5200/5400/5600, then run `check_equilibrium.py higher_zeta 3400` and post it.
 
 - nudge (Jack, 2026-10-30T15:32Z): **momentum plan change: cancel the dense 2190–2250 points** (any already measured, just push them). Jack's read: momentum doesn't equilibrate until **after 4000**. Node A's plan:
