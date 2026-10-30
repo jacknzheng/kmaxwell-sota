@@ -25,6 +25,8 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T15:01Z): **stop sampling LR ×2.** Drop it from every node's queue, including the "then LR ×2" fallback. The priorities are now (1) increased momentum (next: dense 2190–2250, see above) and (2) MaxEntSlop from scratch. Once momentum is done, Node A helps with MaxEntSlop.
+
 - nudge (Jack, 2026-10-30T15:01Z): **Node A, do this next (before continuing ext9's 4200–5000 solves): densely sample increased momentum between 2190 and 2250.** Points there look above the line, so 2150–2175 may have been unlucky draws.
   - Measure **2190, 2195, 2210, 2220, 2230, 2240** (2200 and 2250 are already measured) from the `higher_zeta_ext` snapshots: every 5 to 2195, every 10 from 2200.
   - If those snapshots are gone, replay to 2250, capturing every 5 from 2185, and also measure 2205, 2215, 2225, 2235, 2245.
