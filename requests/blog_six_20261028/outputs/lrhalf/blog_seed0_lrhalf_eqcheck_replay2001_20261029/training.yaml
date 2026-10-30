@@ -1,0 +1,319 @@
+loop: gpt_record
+seed: 0
+batch_tokens: 524288
+microbatch_sequences: 8
+train_data: data/fineweb10B/fineweb_train_*.bin
+val_data: data/fineweb10B/fineweb_val_*.bin
+val_tokens: 10485760
+resume_checkpoint: /root/blog_six/work/lrhalf/restart/shared_2009
+model:
+  vocab_size: 50304
+  num_layers: 12
+  model_dim: 768
+wandb_offline: true
+seed_offset: 1337
+reseed_before_initialization: true
+require_world_size: 8
+train_steps: 6475
+initialization:
+  zero_projection: true
+  weight_scales: {}
+optimizer_groups:
+- pattern: ^embed\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.7
+    weight_decay: 0.001
+  lr_schedule:
+    kind: piecewise_constant
+    boundaries:
+    - 2009
+    factors:
+    - 1.0
+    - 0.5
+- pattern: ^proj\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.004
+    weight_decay: 0.001
+  lr_schedule:
+    kind: piecewise_constant
+    boundaries:
+    - 2009
+    factors:
+    - 1.0
+    - 0.5
+- pattern: ^blocks\..*\.weight$
+  optimizer: muon
+  hyperparams:
+    lr: 0.025
+    weight_decay: 0.05
+    momentum:
+      kind: ema
+      decay: 0.95
+      nesterov_mix: 0.95
+  lr_schedule:
+    kind: piecewise_constant
+    boundaries:
+    - 2009
+    factors:
+    - 1.0
+    - 0.5
+- pattern: ^(?!embed\.weight$|proj\.weight$|blocks\..*\.weight$).*
+  optimizer: adamw
+  hyperparams:
+    lr: 0.015
+    weight_decay: 0.001
+  lr_schedule:
+    kind: piecewise_constant
+    boundaries:
+    - 2009
+    factors:
+    - 1.0
+    - 0.5
+setup:
+- name: open_rank_zero_log
+- name: load_validation_tokens
+- name: build_compiled_gpt
+- name: seed_then_initialize_parameters
+- name: assemble_grouped_optimizer
+- name: restore_checkpoint
+- name: open_training_batches
+- name: broadcast_initial_parameters
+- name: validate_at_step_boundaries
+pre_optimizer:
+- name: schedule_optimizer_groups
+post_optimizer:
+- name: print_training_progress
+- name: validate_at_step_boundaries
+  hyperparams:
+    every: 3800
+    final_tenth_every: 3800
+- name: checkpoint_state
+teardown:
+- name: mark_log_finished
+checkpoint_every: 999999
+run_id: blog_seed0_lrhalf_eqcheck_replay2001_20261029
+output_dir: /root/blog_six/work/lrhalf/blog_outputs/blog_seed0_lrhalf_eqcheck_replay2001_20261029/training
+checkpoint_dir: /root/blog_six/work/lrhalf/blog_outputs/blog_seed0_lrhalf_eqcheck_replay2001_20261029/restart
+resume_anchor: null
+capture:
+  root: /root/blog_six/work/lrhalf/blog_outputs/blog_seed0_lrhalf_eqcheck_replay2001_20261029/captures
+  windows:
+  - - 2750
+    - 2750
+  - - 2760
+    - 2760
+  - - 2770
+    - 2770
+  - - 2780
+    - 2780
+  - - 2790
+    - 2790
+  - - 2800
+    - 2800
+  - - 2810
+    - 2810
+  - - 2820
+    - 2820
+  - - 2830
+    - 2830
+  - - 2840
+    - 2840
+  - - 2850
+    - 2850
+  - - 2860
+    - 2860
+  - - 2870
+    - 2870
+  - - 2880
+    - 2880
+  - - 2890
+    - 2890
+  - - 2900
+    - 2900
+  - - 2910
+    - 2910
+  - - 2920
+    - 2920
+  - - 2930
+    - 2930
+  - - 2940
+    - 2940
+  - - 2950
+    - 2950
+  - - 2960
+    - 2960
+  - - 2970
+    - 2970
+  - - 2980
+    - 2980
+  - - 2990
+    - 2990
+  - - 3000
+    - 3000
+  - - 3010
+    - 3010
+  - - 3020
+    - 3020
+  - - 3030
+    - 3030
+  - - 3040
+    - 3040
+  - - 3050
+    - 3050
+  - - 3060
+    - 3060
+  - - 3070
+    - 3070
+  - - 3080
+    - 3080
+  - - 3090
+    - 3090
+  - - 3100
+    - 3100
+  - - 3110
+    - 3110
+  - - 3120
+    - 3120
+  - - 3130
+    - 3130
+  - - 3140
+    - 3140
+  - - 3150
+    - 3150
+  - - 3160
+    - 3160
+  - - 3170
+    - 3170
+  - - 3180
+    - 3180
+  - - 3190
+    - 3190
+  - - 3200
+    - 3200
+  - - 3210
+    - 3210
+  - - 3220
+    - 3220
+  - - 3230
+    - 3230
+  - - 3240
+    - 3240
+  - - 3250
+    - 3250
+  - - 3260
+    - 3260
+  - - 3270
+    - 3270
+  - - 3280
+    - 3280
+  - - 3290
+    - 3290
+  - - 3300
+    - 3300
+  - - 3310
+    - 3310
+  - - 3320
+    - 3320
+  - - 3330
+    - 3330
+  - - 3340
+    - 3340
+  - - 3350
+    - 3350
+  - - 3360
+    - 3360
+  - - 3370
+    - 3370
+  - - 3380
+    - 3380
+  - - 3390
+    - 3390
+  - - 3400
+    - 3400
+  - - 3410
+    - 3410
+  - - 3420
+    - 3420
+  - - 3430
+    - 3430
+  - - 3450
+    - 3450
+  - - 3460
+    - 3460
+  - - 3470
+    - 3470
+  - - 3480
+    - 3480
+  - - 3490
+    - 3490
+  - - 3500
+    - 3500
+  - - 3510
+    - 3510
+  - - 3520
+    - 3520
+  - - 3530
+    - 3530
+  - - 3540
+    - 3540
+  - - 3550
+    - 3550
+  - - 3560
+    - 3560
+  - - 3570
+    - 3570
+  - - 3580
+    - 3580
+  - - 3590
+    - 3590
+  - - 3600
+    - 3600
+  - - 3610
+    - 3610
+  - - 3620
+    - 3620
+  - - 3630
+    - 3630
+  - - 3640
+    - 3640
+  - - 3650
+    - 3650
+  - - 3660
+    - 3660
+  - - 3670
+    - 3670
+  - - 3680
+    - 3680
+  - - 3690
+    - 3690
+  - - 3700
+    - 3700
+  - - 3710
+    - 3710
+  - - 3720
+    - 3720
+  - - 3730
+    - 3730
+  - - 3740
+    - 3740
+  - - 3750
+    - 3750
+  - - 3760
+    - 3760
+  - - 3770
+    - 3770
+  - - 3780
+    - 3780
+  - - 3790
+    - 3790
+  - - 3800
+    - 3800
+  anchors: []
+  window_gradient_only: true
+resume_protocol_sha256: 343d9499bea3cd38c0218e5963a05e685e793c4d5e1880e0f68c363dfa2432de
+stop_step: 3801
+train_data_seed: 0
+pre_forward:
+- name: capture_space
