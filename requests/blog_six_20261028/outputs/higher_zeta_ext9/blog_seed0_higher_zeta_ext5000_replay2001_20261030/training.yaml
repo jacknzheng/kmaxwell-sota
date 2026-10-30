@@ -1,0 +1,124 @@
+loop: gpt_record
+seed: 0
+batch_tokens: 524288
+microbatch_sequences: 8
+train_data: data/fineweb10B/fineweb_train_*.bin
+val_data: data/fineweb10B/fineweb_val_*.bin
+val_tokens: 1048576
+resume_checkpoint: /root/blog_six/work/higher_zeta_ext9/restart/shared_2009
+model:
+  vocab_size: 50304
+  num_layers: 12
+  model_dim: 768
+wandb_offline: true
+seed_offset: 1337
+reseed_before_initialization: true
+require_world_size: 8
+train_steps: 6475
+initialization:
+  zero_projection: true
+  weight_scales: {}
+optimizer_groups:
+- pattern: ^embed\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.7
+    weight_decay: 0.001
+  lr_schedule:
+    kind: piecewise_constant
+    boundaries: []
+    factors:
+    - 1.0
+- pattern: ^proj\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.004
+    weight_decay: 0.001
+  lr_schedule:
+    kind: piecewise_constant
+    boundaries: []
+    factors:
+    - 1.0
+- pattern: ^blocks\..*\.weight$
+  optimizer: muon
+  hyperparams:
+    lr: 0.025
+    weight_decay: 0.05
+    momentum:
+      kind: tied_step_nesterov
+      beta_after: 0.9750961447125188
+      beta_before: 0.95
+      start_step: 2009
+  lr_schedule:
+    kind: piecewise_constant
+    boundaries: []
+    factors:
+    - 1.0
+- pattern: ^(?!embed\.weight$|proj\.weight$|blocks\..*\.weight$).*
+  optimizer: adamw
+  hyperparams:
+    lr: 0.015
+    weight_decay: 0.001
+  lr_schedule:
+    kind: piecewise_constant
+    boundaries: []
+    factors:
+    - 1.0
+setup:
+- name: open_rank_zero_log
+- name: load_validation_tokens
+- name: build_compiled_gpt
+- name: seed_then_initialize_parameters
+- name: assemble_grouped_optimizer
+- name: restore_checkpoint
+- name: open_training_batches
+- name: broadcast_initial_parameters
+- name: validate_at_step_boundaries
+pre_optimizer:
+- name: schedule_optimizer_groups
+post_optimizer:
+- name: print_training_progress
+- name: validate_at_step_boundaries
+  hyperparams:
+    every: 25
+    final_tenth_every: 25
+    dense_window:
+    - 5001
+    - 5001
+    dense_every: 1
+- name: checkpoint_state
+teardown:
+- name: mark_log_finished
+checkpoint_every: 999999
+run_id: blog_seed0_higher_zeta_ext5000_replay2001_20261030
+output_dir: /root/blog_six/work/higher_zeta_ext9/blog_outputs/blog_seed0_higher_zeta_ext5000_replay2001_20261030/training
+checkpoint_dir: /root/blog_six/work/higher_zeta_ext9/blog_outputs/blog_seed0_higher_zeta_ext5000_replay2001_20261030/restart
+resume_anchor: null
+capture:
+  root: /root/blog_six/work/higher_zeta_ext9/blog_outputs/blog_seed0_higher_zeta_ext5000_replay2001_20261030/captures
+  windows:
+  - - 3450
+    - 3450
+  - - 3550
+    - 3550
+  - - 4200
+    - 4200
+  - - 4400
+    - 4400
+  - - 4600
+    - 4600
+  - - 4800
+    - 4800
+  - - 5000
+    - 5000
+  anchors: []
+  window_gradient_only: true
+resume_protocol_sha256: 343d9499bea3cd38c0218e5963a05e685e793c4d5e1880e0f68c363dfa2432de
+stop_step: 5001
+checkpoint_boundaries: []
+momentum_arm: higher_zeta
+capture_reserve_bytes: 10000000000
+checkpoint_reserve_bytes: 105000000000
+pre_forward:
+- name: capture_space
+train_data_seed: 0

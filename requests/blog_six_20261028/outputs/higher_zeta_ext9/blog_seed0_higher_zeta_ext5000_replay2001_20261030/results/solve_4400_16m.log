@@ -1,0 +1,38 @@
+wandb: Tracking run with wandb version 0.31.0
+wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
+wandb: Run data is saved locally in /root/blog_six/work/higher_zeta_ext9/blog_outputs/blog_seed0_higher_zeta_ext5000_replay2001_20261030/results/measure/t004400_16m/wandb/offline-run-20261030_150804-xwaf8y6o
+wandb: View this run in the terminal with `wandb leet`
+{"stage": "loading", "elapsed_seconds": 0.8007806623354554}
+{"stage": "loading", "elapsed_seconds": 4.603312643244863}
+{"stage": "hvp_backend_check", "elapsed_seconds": 5.271983507089317}
+{"stage": "tuning_microbatch", "elapsed_seconds": 25.66732186358422}
+{"stage": "numerical_pilot", "elapsed_seconds": 25.83701605256647}
+{"stage": "numerical_pilot", "elapsed_seconds": 27.5667288498953}
+{"stage": "eigensolver", "elapsed_seconds": 110.65241752751172, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 4, "seed": 921, "mu": 0.003623480967814987, "residual": null, "relative_change": null, "spectrum": [[0.003623480967814987, 0.0], [1.7722123790472194e-06, 0.0], [0.0024791870974546024, 0.0], [0.0010234711156136597, 0.0]], "operator_calls": 4, "operator_seconds": 79.13578650634736, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 189.26289264764637, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 8, "seed": 921, "mu": 0.0037943424241993528, "residual": null, "relative_change": null, "spectrum": [[0.0037943424241993528, 0.0], [0.0033662344735285754, 0.0], [0.002874992006891296, 0.0], [0.0021095920325689744, 0.0], [0.001338200343115113, 0.0], [-7.955848258242683e-05, 0.0], [6.723752827041264e-06, 0.0], [0.0005312846500576376, 0.0]], "operator_calls": 8, "operator_seconds": 157.71821906976402, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 268.162932776846, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 12, "seed": 921, "mu": 0.003796789609477791, "residual": null, "relative_change": 0.0456461009138298, "spectrum": [[-0.0009223151145313053, 0.0], [-0.00012453763213192507, 0.0], [2.224293910807752e-06, 0.0], [0.00026471156887199746, 0.0], [0.0007390595961633441, 0.0], [0.0012950622305318584, 0.0], [0.003796789609477791, 0.0], [0.0035100510025324713, 0.0], [0.0032102911051017633, 0.0], [0.0027789817311293127, 0.0], [0.0018825269841431928, 0.0], [0.0023073048239529224, 0.0]], "operator_calls": 12, "operator_seconds": 236.58293864876032, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 366.45214779675007, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"mu": 0.0037970892957950274, "residual": 0.0003076527633622159, "dimension": 16, "spectrum": [[-0.0009383359418024674, 0.0], [0.0037970892957950274, 0.0], [0.0035156147386864746, 0.0], [0.0032656457283458985, 0.0], [0.0031519067942958686, 0.0], [0.002767357573346155, 0.0], [0.002441822312535869, 0.0], [0.0020680752591528875, 0.0], [0.0017387212312004348, 0.0], [0.0012932655946216876, 0.0], [0.0008972444307695814, 0.0], [-0.00043491810512968513, 0.0], [0.000491736959901448, 0.0], [-0.00013803164715746964, 0.0], [1.9464567324327607e-06, 0.0], [0.00016447536024049634, 0.0]], "seed": 921, "relative_change": 0.0007461552986336175, "operator_calls": 17, "operator_seconds": 334.77848213911057, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 367.73275687359273, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"mu": 0.0037970892957950274, "residual": 0.0003076527633622159, "dimension": 16, "spectrum": [[-0.0009383359418024674, 0.0], [0.0037970892957950274, 0.0], [0.0035156147386864746, 0.0], [0.0032656457283458985, 0.0], [0.0031519067942958686, 0.0], [0.002767357573346155, 0.0], [0.002441822312535869, 0.0], [0.0020680752591528875, 0.0], [0.0017387212312004348, 0.0], [0.0012932655946216876, 0.0], [0.0008972444307695814, 0.0], [-0.00043491810512968513, 0.0], [0.000491736959901448, 0.0], [-0.00013803164715746964, 0.0], [1.9464567324327607e-06, 0.0], [0.00016447536024049634, 0.0]], "seed": 921, "relative_change": 0.0007461552986336175, "operator_calls": 17, "operator_seconds": 334.77848213911057, "tokens": 16777216, "offset": 0}}
+{"stage": "fixed_probes_complete", "elapsed_seconds": 367.7350328853354, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"mu": 0.0037970892957950274, "residual": 0.0003076527633622159, "dimension": 16, "spectrum": [[-0.0009383359418024674, 0.0], [0.0037970892957950274, 0.0], [0.0035156147386864746, 0.0], [0.0032656457283458985, 0.0], [0.0031519067942958686, 0.0], [0.002767357573346155, 0.0], [0.002441822312535869, 0.0], [0.0020680752591528875, 0.0], [0.0017387212312004348, 0.0], [0.0012932655946216876, 0.0], [0.0008972444307695814, 0.0], [-0.00043491810512968513, 0.0], [0.000491736959901448, 0.0], [-0.00013803164715746964, 0.0], [1.9464567324327607e-06, 0.0], [0.00016447536024049634, 0.0]], "seed": 921, "relative_change": 0.0007461552986336175, "operator_calls": 17, "operator_seconds": 334.77848213911057, "tokens": 16777216, "offset": 0}}
+wandb: 
+wandb: Run history:
+wandb: arnoldi_dimension ▁▃▆█
+wandb:                mu ▁███
+wandb:         objective ▁███
+wandb:            offset ▁▁▁▁
+wandb:          residual ▁
+wandb:              seed ▁▁▁▁
+wandb:            tokens ▁▁▁▁
+wandb: 
+wandb: Run summary:
+wandb: arnoldi_dimension 16
+wandb:                mu 0.0038
+wandb:         objective 0.0038
+wandb:            offset 0
+wandb:          residual 0.00031
+wandb:              seed 921
+wandb:            tokens 16777216
+wandb: 
+wandb: You can sync this run to the cloud by running:
+wandb: wandb sync /root/blog_six/work/higher_zeta_ext9/blog_outputs/blog_seed0_higher_zeta_ext5000_replay2001_20261030/results/measure/t004400_16m/wandb/offline-run-20261030_150804-xwaf8y6o
+wandb: Find logs at: ./blog_outputs/blog_seed0_higher_zeta_ext5000_replay2001_20261030/results/measure/t004400_16m/wandb/offline-run-20261030_150804-xwaf8y6o/logs
