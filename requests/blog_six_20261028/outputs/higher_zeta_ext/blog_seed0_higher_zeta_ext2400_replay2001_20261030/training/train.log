@@ -1,0 +1,206 @@
+loop: gpt_record
+seed: 0
+batch_tokens: 524288
+microbatch_sequences: 8
+train_data: data/fineweb10B/fineweb_train_*.bin
+val_data: data/fineweb10B/fineweb_val_*.bin
+val_tokens: 1048576
+resume_checkpoint: /root/blog_six/work/higher_zeta_ext/restart/shared_2009
+model:
+  vocab_size: 50304
+  num_layers: 12
+  model_dim: 768
+wandb_offline: true
+seed_offset: 1337
+reseed_before_initialization: true
+require_world_size: 8
+train_steps: 6475
+initialization:
+  zero_projection: true
+  weight_scales: {}
+optimizer_groups:
+- pattern: ^embed\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.7
+    weight_decay: 0.001
+  lr_schedule:
+    kind: piecewise_constant
+    boundaries: []
+    factors:
+    - 1.0
+- pattern: ^proj\.weight$
+  optimizer: adamw
+  hyperparams:
+    lr: 0.004
+    weight_decay: 0.001
+  lr_schedule:
+    kind: piecewise_constant
+    boundaries: []
+    factors:
+    - 1.0
+- pattern: ^blocks\..*\.weight$
+  optimizer: muon
+  hyperparams:
+    lr: 0.025
+    weight_decay: 0.05
+    momentum:
+      kind: tied_step_nesterov
+      beta_after: 0.9750961447125188
+      beta_before: 0.95
+      start_step: 2009
+  lr_schedule:
+    kind: piecewise_constant
+    boundaries: []
+    factors:
+    - 1.0
+- pattern: ^(?!embed\.weight$|proj\.weight$|blocks\..*\.weight$).*
+  optimizer: adamw
+  hyperparams:
+    lr: 0.015
+    weight_decay: 0.001
+  lr_schedule:
+    kind: piecewise_constant
+    boundaries: []
+    factors:
+    - 1.0
+setup:
+- name: open_rank_zero_log
+- name: load_validation_tokens
+- name: build_compiled_gpt
+- name: seed_then_initialize_parameters
+- name: assemble_grouped_optimizer
+- name: restore_checkpoint
+- name: open_training_batches
+- name: broadcast_initial_parameters
+- name: validate_at_step_boundaries
+pre_optimizer:
+- name: schedule_optimizer_groups
+post_optimizer:
+- name: print_training_progress
+- name: validate_at_step_boundaries
+  hyperparams:
+    every: 25
+    final_tenth_every: 25
+    dense_window:
+    - 2401
+    - 2401
+    dense_every: 1
+- name: checkpoint_state
+teardown:
+- name: mark_log_finished
+checkpoint_every: 999999
+run_id: blog_seed0_higher_zeta_ext2400_replay2001_20261030
+output_dir: /root/blog_six/work/higher_zeta_ext/blog_outputs/blog_seed0_higher_zeta_ext2400_replay2001_20261030/training
+checkpoint_dir: /root/blog_six/work/higher_zeta_ext/blog_outputs/blog_seed0_higher_zeta_ext2400_replay2001_20261030/restart
+resume_anchor: null
+capture:
+  root: /root/blog_six/work/higher_zeta_ext/blog_outputs/blog_seed0_higher_zeta_ext2400_replay2001_20261030/captures
+  windows:
+  - - 2125
+    - 2125
+  - - 2130
+    - 2130
+  - - 2135
+    - 2135
+  - - 2140
+    - 2140
+  - - 2145
+    - 2145
+  - - 2150
+    - 2150
+  - - 2155
+    - 2155
+  - - 2160
+    - 2160
+  - - 2165
+    - 2165
+  - - 2170
+    - 2170
+  - - 2175
+    - 2175
+  - - 2180
+    - 2180
+  - - 2185
+    - 2185
+  - - 2190
+    - 2190
+  - - 2195
+    - 2195
+  - - 2200
+    - 2200
+  - - 2210
+    - 2210
+  - - 2220
+    - 2220
+  - - 2230
+    - 2230
+  - - 2240
+    - 2240
+  - - 2250
+    - 2250
+  - - 2260
+    - 2260
+  - - 2270
+    - 2270
+  - - 2280
+    - 2280
+  - - 2290
+    - 2290
+  - - 2300
+    - 2300
+  - - 2310
+    - 2310
+  - - 2320
+    - 2320
+  - - 2330
+    - 2330
+  - - 2340
+    - 2340
+  - - 2350
+    - 2350
+  - - 2360
+    - 2360
+  - - 2370
+    - 2370
+  - - 2380
+    - 2380
+  - - 2390
+    - 2390
+  - - 2400
+    - 2400
+  anchors: []
+  window_gradient_only: true
+resume_protocol_sha256: 343d9499bea3cd38c0218e5963a05e685e793c4d5e1880e0f68c363dfa2432de
+stop_step: 2401
+checkpoint_boundaries: []
+momentum_arm: higher_zeta
+capture_reserve_bytes: 10000000000
+checkpoint_reserve_bytes: 105000000000
+pre_forward:
+- name: capture_space
+train_data_seed: 0
+
+====================================================================================================
+git HEAD: unknown
+Running PyTorch 2.11.0+cu128 compiled for CUDA 12.8 on NVIDIA H200 with world_size 8
+====================================================================================================
+step:2009/6475 val_loss:3.54945 train_time:0.001s step_avg:nanms
+step:2025/6475 val_loss:3.58619 train_time:71.809s step_avg:4488.03ms
+step:2050/6475 val_loss:3.60031 train_time:77.285s step_avg:219.01ms
+step:2075/6475 val_loss:3.60224 train_time:82.827s step_avg:221.71ms
+step:2100/6475 val_loss:3.59877 train_time:88.385s step_avg:222.31ms
+step:2125/6475 val_loss:3.58948 train_time:94.742s step_avg:254.29ms
+step:2150/6475 val_loss:3.58230 train_time:121.057s step_avg:1052.58ms
+step:2175/6475 val_loss:3.57616 train_time:147.096s step_avg:1041.57ms
+step:2200/6475 val_loss:3.57064 train_time:173.196s step_avg:1043.99ms
+step:2225/6475 val_loss:3.56898 train_time:190.231s step_avg:681.41ms
+step:2250/6475 val_loss:3.56839 train_time:204.884s step_avg:586.09ms
+step:2275/6475 val_loss:3.56344 train_time:221.980s step_avg:683.84ms
+step:2300/6475 val_loss:3.55697 train_time:236.750s step_avg:590.80ms
+step:2325/6475 val_loss:3.55642 train_time:253.671s step_avg:676.86ms
+step:2350/6475 val_loss:3.55236 train_time:268.225s step_avg:582.16ms
+step:2375/6475 val_loss:3.54874 train_time:285.392s step_avg:686.69ms
+step:2400/6475 val_loss:3.54720 train_time:300.072s step_avg:587.18ms
+step:2401/6475 val_loss:3.54708 train_time:303.525s step_avg:3453.13ms
+run finished: 2401 executed steps, total train_time 303.525s
