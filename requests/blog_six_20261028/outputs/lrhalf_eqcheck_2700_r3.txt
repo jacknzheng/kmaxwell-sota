@@ -1,0 +1,19 @@
+check_equilibrium.py lrhalf 2700  (R3 stricter rule: onset = earliest update from which >=80% of >=6 points are at/above the predicted line AND median zeta/prediction <= 1.15)
+
+tail of per-update zeta/prediction:
+ 3443  1.156  above  existing
+ 3444  1.162  above  existing
+ 3445  1.004  above  existing
+ 3446  0.891  below  existing
+ 3447  0.835  below  existing
+ 3450  1.160  above  new
+ 3500  1.137  above  new
+ 3550  0.940  below  new
+ 3600  0.919  below  new
+ 3650  1.210  above  new
+ 3700  0.951  below  new
+ 3750  0.953  below  new
+ 3800  1.016  above  new
+
+H = 2700: 28 of 55 points are at or above the line
+PASS: equilibrated from H.
