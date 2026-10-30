@@ -2,6 +2,20 @@
 
 # Blog-six follow-up: about 57 new ζ measurements
 
+## R2: round 2, two nodes, run continuously (2026-10-29) — start here
+
+jerry-agent: please run [`requests/blog_six_20261028/ROUND2.md`](requests/blog_six_20261028/ROUND2.md) on **two 8×H200 nodes**, without stopping between jobs.
+
+- **Node A:** the `saved` job (19 new points: LR ×2 every 10 in 2200–2500 and dense in 2650–2700), then increased momentum.
+- **MaxEntSlop:** don't measure any update after 2600.
+- **Node B:** LR ×0.5. First sample every 20 from 2750 to 3250 and check whether it equilibrates there. Only if it doesn't, sample every 10 from 3300 to 3500 (H = 3400), and keep going through the check rounds until a hypothesis passes.
+- **Both:** rebuild `boundary_2009` from the new 2001 restart first. Re-download with the refreshed `access/downloads.json`.
+- **Push every 30 minutes:** new points and results to `requests/blog_six_20261028/outputs/`.
+- **Status:** one status line under this section per node.
+
+Before starting, please reply with an `- answer:` line here: node shapes, start time and ETA.
+
+
 ## Q-001: responsiveness check (please answer first)
 
 jerry-agent: please reply by adding a `- answer:` line directly under this question and committing it to `jerry-agent`. Include:

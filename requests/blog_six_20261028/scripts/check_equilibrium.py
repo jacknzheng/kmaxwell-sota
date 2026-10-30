@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Check an equilibration hypothesis for higher_zeta or lrhalf.
-   check_equilibrium.py JOB H     (H = hypothesised equilibration update; run after the dense points around H are measured)
+   check_equilibrium.py JOB H [END]   (H = hypothesised equilibration update; END = optional last update to count)
 
 Equilibrated from H = more than half of all points at or after H sit at or above the predicted line (zeta / prediction >= 1.00).
 Existing measurements count. On a fail, the script prints sparse points to measure next (from the snapshots the replay
@@ -9,6 +9,7 @@ import json, pathlib, sys
 
 P = pathlib.Path(__file__).resolve().parent.parent
 JOB, H = sys.argv[1], int(sys.argv[2])
+END = int(sys.argv[3]) if len(sys.argv) > 3 else 10**9
 # Flat predicted equilibrium after the 2009 intervention (saved kernel, no fit), existing points as (update, zeta / prediction),
 # dense half-width and step, and the sparse step used to look for a new hypothesis.
 SPEC = {
@@ -27,11 +28,11 @@ for f in (P / f"work/{JOB}/blog_outputs/{q['run_id']}/results").glob('point_*.js
     d = json.load(open(f))
     new[d['update']] = d['zeta'] / SPEC['pred']
 points = sorted((dict(SPEC['existing']) | new).items())
-after = [(u, x) for u, x in points if u >= H]
+after = [(u, x) for u, x in points if H <= u <= END]
 for u, x in points:
     print(f"{u:5d}  {x:.3f}  {'above' if x >= 1 else 'below'}  {'new' if u in new else 'existing'}{'' if u >= H else '  (before H)'}")
 above = sum(x >= 1 for _, x in after)
-print(f'\nH = {H}: {above} of {len(after)} points at or after H are at or above the line')
+print(f"\nH = {H}{f' to {END}' if END < 10**9 else ''}: {above} of {len(after)} points are at or above the line")
 if above * 2 > len(after):
     print('PASS: equilibrated from H. Send this printout back.')
     sys.exit(0)
