@@ -13,6 +13,8 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 - **Node B:** LR ×0.5: **stop every-20 sampling after 2910.** Sample every 50 from 2950 to 3800 (sparse, to see whether it's near equilibrium at all), check, and go dense only where it's consistently above → if still none by 3800, `lrhalf_ext` (replay to 4800).
 - **Every 30 minutes:** push points, plus one status line per node under this section.
 
+- **Run continuously for the next 24 hours, until 2026-10-31 05:45 UTC.** Keep both nodes sampling LR ×0.5 and increased momentum to find where ζ lies **consistently above the line** (and close to it). If one arm's onset is found and verified, put that node on the other arm, or verify further along. If the planned snapshots run out without an onset, extend training further (the same pattern as `higher_zeta_ext` / `lrhalf_ext`, e.g. momentum to 2600, LR ×0.5 to 5800) and keep sampling: sparse first, dense where it's consistently above.
+
 Reply with an `- answer:` line when both nodes are running.
 
 ## R2: round 2, two nodes, run continuously (2026-10-29) — start here
