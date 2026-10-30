@@ -1,0 +1,11 @@
+{
+  "run_id": "blog_seed0_higher_zeta_ext3200_replay2001_20261030",
+  "source_boundary": 2009,
+  "captured": [
+    3050,
+    3100,
+    3150,
+    3200
+  ],
+  "cohort": "fresh_replay; overlap comparison pending; not pooled with historical observations"
+}
