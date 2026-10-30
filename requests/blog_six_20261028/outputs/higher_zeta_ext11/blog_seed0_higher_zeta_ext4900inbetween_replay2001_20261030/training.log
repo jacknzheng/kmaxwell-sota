@@ -1,0 +1,164 @@
+/root/blog_six/work/higher_zeta_ext11/blog_outputs/blog_seed0_higher_zeta_ext4900inbetween_replay2001_20261030/training/train.log
+wandb: Tracking run with wandb version 0.31.0
+wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
+wandb: Run data is saved locally in /root/blog_six/work/higher_zeta_ext11/blog_outputs/blog_seed0_higher_zeta_ext4900inbetween_replay2001_20261030/training/wandb/offline-run-20261030_163448-bkdffmsn
+wandb: View this run in the terminal with `wandb leet`
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_val_000000.bin (100000000 tokens; batch 1048576 tokens)
+step:2009/6475 val_loss:3.54945 train_time:0.000s step_avg:nanms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000001.bin (100000000 tokens; batch 524288 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000002.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000003.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000004.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000005.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000006.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000007.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000008.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000009.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000010.bin (100000000 tokens)
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000011.bin (100000000 tokens)
+step:2025/6475 val_loss:3.58598 train_time:8.110s step_avg:506.86ms
+step:2050/6475 val_loss:3.59829 train_time:13.458s step_avg:213.90ms
+step:2075/6475 val_loss:3.60393 train_time:18.791s step_avg:213.32ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000012.bin (100000000 tokens)
+step:2100/6475 val_loss:3.60257 train_time:24.140s step_avg:213.98ms
+step:2125/6475 val_loss:3.59106 train_time:29.451s step_avg:212.43ms
+step:2150/6475 val_loss:3.58366 train_time:34.762s step_avg:212.43ms
+step:2175/6475 val_loss:3.57454 train_time:40.067s step_avg:212.21ms
+step:2200/6475 val_loss:3.57183 train_time:45.385s step_avg:212.72ms
+step:2225/6475 val_loss:3.56901 train_time:50.699s step_avg:212.53ms
+step:2250/6475 val_loss:3.56679 train_time:56.073s step_avg:214.96ms
+step:2275/6475 val_loss:3.56053 train_time:61.465s step_avg:215.71ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000013.bin (100000000 tokens)
+step:2300/6475 val_loss:3.55698 train_time:66.896s step_avg:217.22ms
+step:2325/6475 val_loss:3.55524 train_time:72.357s step_avg:218.43ms
+step:2350/6475 val_loss:3.55136 train_time:77.865s step_avg:220.33ms
+step:2375/6475 val_loss:3.55062 train_time:83.311s step_avg:217.87ms
+step:2400/6475 val_loss:3.54797 train_time:88.777s step_avg:218.64ms
+step:2425/6475 val_loss:3.54269 train_time:94.197s step_avg:216.77ms
+step:2450/6475 val_loss:3.53824 train_time:99.615s step_avg:216.75ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000014.bin (100000000 tokens)
+step:2475/6475 val_loss:3.53761 train_time:105.048s step_avg:217.32ms
+step:2500/6475 val_loss:3.53642 train_time:110.460s step_avg:216.48ms
+step:2525/6475 val_loss:3.53438 train_time:115.800s step_avg:213.58ms
+step:2550/6475 val_loss:3.53061 train_time:121.138s step_avg:213.54ms
+step:2575/6475 val_loss:3.52737 train_time:126.489s step_avg:214.02ms
+step:2600/6475 val_loss:3.52626 train_time:131.855s step_avg:214.64ms
+step:2625/6475 val_loss:3.52693 train_time:137.211s step_avg:214.26ms
+step:2650/6475 val_loss:3.52264 train_time:142.570s step_avg:214.33ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000015.bin (100000000 tokens)
+step:2675/6475 val_loss:3.51989 train_time:147.935s step_avg:214.59ms
+step:2700/6475 val_loss:3.52639 train_time:153.271s step_avg:213.47ms
+step:2725/6475 val_loss:3.51925 train_time:158.604s step_avg:213.29ms
+step:2750/6475 val_loss:3.51936 train_time:163.956s step_avg:214.08ms
+step:2775/6475 val_loss:3.51513 train_time:169.300s step_avg:213.77ms
+step:2800/6475 val_loss:3.51238 train_time:174.643s step_avg:213.73ms
+step:2825/6475 val_loss:3.51357 train_time:179.982s step_avg:213.56ms
+step:2850/6475 val_loss:3.51492 train_time:185.324s step_avg:213.68ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000016.bin (100000000 tokens)
+step:2875/6475 val_loss:3.51224 train_time:190.703s step_avg:215.14ms
+step:2900/6475 val_loss:3.51224 train_time:196.069s step_avg:214.67ms
+step:2925/6475 val_loss:3.51072 train_time:201.409s step_avg:213.60ms
+step:2950/6475 val_loss:3.50711 train_time:206.756s step_avg:213.87ms
+step:2975/6475 val_loss:3.50629 train_time:212.102s step_avg:213.86ms
+step:3000/6475 val_loss:3.50616 train_time:217.472s step_avg:214.79ms
+step:3025/6475 val_loss:3.49918 train_time:222.819s step_avg:213.88ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000017.bin (100000000 tokens)
+step:3050/6475 val_loss:3.50062 train_time:228.192s step_avg:214.93ms
+step:3075/6475 val_loss:3.50020 train_time:233.547s step_avg:214.17ms
+step:3100/6475 val_loss:3.50269 train_time:238.900s step_avg:214.12ms
+step:3125/6475 val_loss:3.50040 train_time:244.247s step_avg:213.91ms
+step:3150/6475 val_loss:3.49283 train_time:249.594s step_avg:213.85ms
+step:3175/6475 val_loss:3.49455 train_time:254.925s step_avg:213.26ms
+step:3200/6475 val_loss:3.49214 train_time:260.277s step_avg:214.09ms
+step:3225/6475 val_loss:3.49001 train_time:265.621s step_avg:213.75ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000018.bin (100000000 tokens)
+step:3250/6475 val_loss:3.48972 train_time:270.988s step_avg:214.66ms
+step:3275/6475 val_loss:3.49157 train_time:276.311s step_avg:212.93ms
+step:3300/6475 val_loss:3.49196 train_time:281.634s step_avg:212.91ms
+step:3325/6475 val_loss:3.48712 train_time:286.965s step_avg:213.25ms
+step:3350/6475 val_loss:3.48983 train_time:292.313s step_avg:213.93ms
+step:3375/6475 val_loss:3.48724 train_time:297.626s step_avg:212.50ms
+step:3400/6475 val_loss:3.48926 train_time:302.983s step_avg:214.30ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000019.bin (100000000 tokens)
+step:3425/6475 val_loss:3.48643 train_time:308.370s step_avg:215.46ms
+step:3450/6475 val_loss:3.48565 train_time:313.750s step_avg:215.21ms
+step:3475/6475 val_loss:3.48242 train_time:319.114s step_avg:214.55ms
+step:3500/6475 val_loss:3.48546 train_time:324.473s step_avg:214.37ms
+step:3525/6475 val_loss:3.47978 train_time:329.862s step_avg:215.59ms
+step:3550/6475 val_loss:3.47960 train_time:335.228s step_avg:214.60ms
+step:3575/6475 val_loss:3.48055 train_time:340.578s step_avg:214.02ms
+step:3600/6475 val_loss:3.47839 train_time:345.930s step_avg:214.09ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000020.bin (100000000 tokens)
+step:3625/6475 val_loss:3.48140 train_time:351.312s step_avg:215.26ms
+step:3650/6475 val_loss:3.48246 train_time:356.663s step_avg:214.05ms
+step:3675/6475 val_loss:3.47651 train_time:362.005s step_avg:213.71ms
+step:3700/6475 val_loss:3.47589 train_time:367.369s step_avg:214.55ms
+step:3725/6475 val_loss:3.47620 train_time:372.725s step_avg:214.25ms
+step:3750/6475 val_loss:3.47787 train_time:378.083s step_avg:214.31ms
+step:3775/6475 val_loss:3.47726 train_time:383.466s step_avg:215.30ms
+step:3800/6475 val_loss:3.47430 train_time:388.822s step_avg:214.26ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000021.bin (100000000 tokens)
+step:3825/6475 val_loss:3.47434 train_time:394.183s step_avg:214.44ms
+step:3850/6475 val_loss:3.47796 train_time:399.515s step_avg:213.29ms
+step:3875/6475 val_loss:3.47465 train_time:404.824s step_avg:212.35ms
+step:3900/6475 val_loss:3.47378 train_time:410.166s step_avg:213.67ms
+step:3925/6475 val_loss:3.47632 train_time:415.486s step_avg:212.81ms
+step:3950/6475 val_loss:3.47496 train_time:420.806s step_avg:212.79ms
+step:3975/6475 val_loss:3.47358 train_time:426.116s step_avg:212.42ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000022.bin (100000000 tokens)
+step:4000/6475 val_loss:3.47307 train_time:431.497s step_avg:215.25ms
+step:4025/6475 val_loss:3.47158 train_time:436.837s step_avg:213.57ms
+step:4050/6475 val_loss:3.46843 train_time:442.177s step_avg:213.63ms
+step:4075/6475 val_loss:3.47319 train_time:447.507s step_avg:213.19ms
+step:4100/6475 val_loss:3.46956 train_time:453.713s step_avg:248.22ms
+step:4125/6475 val_loss:3.47255 train_time:462.478s step_avg:350.63ms
+step:4150/6475 val_loss:3.46489 train_time:467.819s step_avg:213.63ms
+step:4175/6475 val_loss:3.46547 train_time:473.138s step_avg:212.74ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000023.bin (100000000 tokens)
+step:4200/6475 val_loss:3.46479 train_time:478.483s step_avg:213.81ms
+step:4225/6475 val_loss:3.46874 train_time:483.808s step_avg:213.01ms
+step:4250/6475 val_loss:3.46427 train_time:489.131s step_avg:212.90ms
+step:4275/6475 val_loss:3.46551 train_time:494.464s step_avg:213.32ms
+step:4300/6475 val_loss:3.46424 train_time:500.653s step_avg:247.58ms
+step:4325/6475 val_loss:3.46404 train_time:509.373s step_avg:348.81ms
+step:4350/6475 val_loss:3.46216 train_time:514.712s step_avg:213.55ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000024.bin (100000000 tokens)
+step:4375/6475 val_loss:3.46370 train_time:520.075s step_avg:214.50ms
+step:4400/6475 val_loss:3.46058 train_time:525.410s step_avg:213.43ms
+step:4425/6475 val_loss:3.45839 train_time:530.742s step_avg:213.27ms
+step:4450/6475 val_loss:3.46664 train_time:536.054s step_avg:212.47ms
+step:4475/6475 val_loss:3.47231 train_time:541.356s step_avg:212.08ms
+step:4500/6475 val_loss:3.46286 train_time:547.554s step_avg:247.93ms
+step:4525/6475 val_loss:3.46000 train_time:556.273s step_avg:348.77ms
+step:4550/6475 val_loss:3.46017 train_time:561.619s step_avg:213.84ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000025.bin (100000000 tokens)
+step:4575/6475 val_loss:3.46004 train_time:566.980s step_avg:214.41ms
+step:4600/6475 val_loss:3.46029 train_time:572.318s step_avg:213.56ms
+step:4625/6475 val_loss:3.45764 train_time:577.658s step_avg:213.59ms
+step:4650/6475 val_loss:3.46049 train_time:583.008s step_avg:213.98ms
+step:4675/6475 val_loss:3.45982 train_time:588.349s step_avg:213.66ms
+step:4700/6475 val_loss:3.45713 train_time:594.551s step_avg:248.07ms
+step:4725/6475 val_loss:3.45972 train_time:603.299s step_avg:349.92ms
+step:4750/6475 val_loss:3.45407 train_time:608.612s step_avg:212.50ms
+data shard loaded: /root/blog_six/work/higher_zeta_ext11/data/fineweb10B/fineweb_train_000026.bin (100000000 tokens)
+step:4775/6475 val_loss:3.45242 train_time:613.965s step_avg:214.12ms
+step:4800/6475 val_loss:3.45050 train_time:619.281s step_avg:212.64ms
+step:4825/6475 val_loss:3.45341 train_time:624.619s step_avg:213.54ms
+step:4850/6475 val_loss:3.45135 train_time:629.974s step_avg:214.19ms
+step:4875/6475 val_loss:3.45329 train_time:635.321s step_avg:213.86ms
+step:4900/6475 val_loss:3.45223 train_time:641.526s step_avg:248.21ms
+step:4901/6475 val_loss:3.45193 train_time:645.146s step_avg:3620.50ms
+wandb: 
+wandb: Run history:
+wandb: objective ▇██▇▇▆▆▆▅▅▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▁▁▁▁
+wandb:      step ▁▁▁▁▂▂▂▂▂▃▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▆▆▆▆▆▆▆▇▇▇▇▇███
+wandb:  val_loss ▆▇█▇▇▆▆▆▆▆▅▅▄▄▄▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▁▁▁
+wandb: 
+wandb: Run summary:
+wandb: objective 3.45193
+wandb:      step 4901
+wandb:  val_loss 3.45193
+wandb: 
+wandb: You can sync this run to the cloud by running:
+wandb: wandb sync /root/blog_six/work/higher_zeta_ext11/blog_outputs/blog_seed0_higher_zeta_ext4900inbetween_replay2001_20261030/training/wandb/offline-run-20261030_163448-bkdffmsn
+wandb: Find logs at: ./blog_outputs/blog_seed0_higher_zeta_ext4900inbetween_replay2001_20261030/training/wandb/offline-run-20261030_163448-bkdffmsn/logs
