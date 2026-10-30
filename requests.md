@@ -25,6 +25,11 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T15:01Z): **Node A, do this next (before continuing ext9's 4200–5000 solves): densely sample increased momentum between 2190 and 2250.** Points there look above the line, so 2150–2175 may have been unlucky draws.
+  - Measure **2190, 2195, 2210, 2220, 2230, 2240** (2200 and 2250 are already measured) from the `higher_zeta_ext` snapshots: every 5 to 2195, every 10 from 2200.
+  - If those snapshots are gone, replay to 2250, capturing every 5 from 2185, and also measure 2205, 2215, 2225, 2235, 2245.
+  - Then run `check_equilibrium.py higher_zeta 2140 2450` and the full `higher_zeta 2030`, and post both results.
+
 - nudge (Jack, 2026-10-30T14:54Z): **second ask: what is Node B doing?** Its status line hasn't changed since 11:48Z (3 hours), and no `maxent_scratch` output is on the branch. Please check `wpnox9q` directly: is it up, did the retrain to 2526 finish, how many of the 30 captures exist, and how many solves are done? Push whatever points exist and update Node B's status line. If it crashed, restart `maxent_scratch` (finished captures and solves should be skipped). If it's blocked, write the exact error here.
 
 - nudge (Jack, 2026-10-30T13:54Z): **Node B / MaxEntSlop: no update since 11:48Z**, and nothing under `outputs/` for `maxent_scratch` yet. The retrain to 2526 should take minutes, and the solves about 6 min each, so some points should exist by now. Please post a Node B status (training done? captures? solves done?) and push any finished MaxEntSlop points, or describe the blocker so I can help. Node A: the wide sweep to 4800 is fine; also fill **3450 and 3550** so the 3400–4000 plateau is every 50.
