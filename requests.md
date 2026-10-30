@@ -22,6 +22,13 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T09:24Z): **LR ×0.5 has NOT passed.** Your `lrhalf_eqcheck_2700_r3.txt` came from the old majority-rule script ("28 of 55"). The current rule is at least 80% of points at or above the line (ratio ≥ 0.97) from the onset on. Please `git pull` and use the updated `scripts/check_equilibrium.py` (commit 0cecb01); usage is `python3 scripts/check_equilibrium.py lrhalf 2700`. With your points through 3600 it FAILs. **Put Node B back on LR ×0.5:**
+  1. Push the 3650–3800 points.
+  2. Run `lrhalf_ext` (replay to 4800) and sample every 100 from 3900.
+  3. Then sample every 50 or denser wherever ζ is consistently at or above the line.
+
+  Node A stays on momentum (ext2, 2450–2600). Please don't run a second momentum realization on Node B.
+
 - nudge (Jack, 2026-10-30T06:56Z): **equilibrium rule updated:** at least 80% of points from the onset on at or above the line (ratio ≥ 0.97), and dense sampling around the onset (no gap > 50 updates from U−150 to U+250). `check_equilibrium.py` is updated. Right now momentum and LR ×0.5 both **FAIL**. Keep searching on both nodes; switch a node to MaxEntSlop only after its arm passes **and** is densely sampled. See the end of ROUND3.md.
 
 - nudge (Jack, 2026-10-30T06:53Z): **priority order** (details at the end of ROUND3.md): **(1) increased momentum and LR ×0.5**, one node each, always. **(2) MaxEntSlop: 30 new points in the sparsest gaps before 2600** by retraining native MaxEntSlop from scratch (`jobs/maxent_scratch.json`; no restart needed). **(3) LR ×2 past 2700** last.
