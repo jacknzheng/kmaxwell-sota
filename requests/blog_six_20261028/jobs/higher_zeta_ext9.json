@@ -3,18 +3,21 @@
  "arm": "higher_zeta",
  "family": "momentum",
  "seed": 0,
- "run_id": "blog_seed0_higher_zeta_ext4800_replay2001_20261030",
+ "run_id": "blog_seed0_higher_zeta_ext5000_replay2001_20261030",
  "runtime": "<RUNTIME_ROOT>",
  "parent": "<RUNTIME_ROOT>/restart/shared_2009",
  "parent_prefix": "checkpoints/critroll/pr323_lr_snap_portable_20261019/continuous20/shared/restart/boundary_2009",
  "parent_bytes": 95270261840,
  "lr_factor": null,
- "last_capture": 4800,
+ "last_capture": 5000,
  "capture_updates": [
+  3450,
+  3550,
   4200,
   4400,
   4600,
-  4800
+  4800,
+  5000
  ],
  "saved_measurements": [],
  "replay_measurements": [],
@@ -106,6 +109,6 @@
  "training_microbatch": 8,
  "warm_path": "warm/higher_zeta_2100",
  "analysis_only": false,
- "directive": "round 3 extension 9 (final sweep): momentum firmly below line through 4000. Wide every-200 scout to 4800 to test the whole remaining range; expected to confirm no verified onset for increased momentum anywhere 2030-4800.",
+ "directive": "round 3 (Jack 13:24Z decisive plan): densify plateau 3400-4000 (fill 3450,3550) + look for late rise, scout every-200 4200-5000. If 4200-5000 at/above line, go dense there; else summarize settle level and move Node A to MaxEntSlop.",
  "parent_note": "boundary_2009 rebuilt by continuing the shared baseline 2001->2009 (no intervention) from baseline_seed0_replay1000_1980_2000_20261027/restart/boundary_2001; fresh realization"
 }
