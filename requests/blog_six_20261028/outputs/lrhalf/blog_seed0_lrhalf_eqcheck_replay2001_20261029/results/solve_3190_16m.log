@@ -1,0 +1,12 @@
+wandb: Tracking run with wandb version 0.31.0
+wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
+wandb: Run data is saved locally in /root/blog_six/work/lrhalf/blog_outputs/blog_seed0_lrhalf_eqcheck_replay2001_20261029/results/measure/t003190_16m/wandb/offline-run-20261030_062733-0yicto9z
+wandb: View this run in the terminal with `wandb leet`
+{"stage": "loading", "elapsed_seconds": 0.8407851355150342}
+{"stage": "loading", "elapsed_seconds": 4.960242632776499}
+{"stage": "hvp_backend_check", "elapsed_seconds": 5.238519145175815}
+{"stage": "tuning_microbatch", "elapsed_seconds": 25.90467507019639}
+{"stage": "numerical_pilot", "elapsed_seconds": 26.083135096356273}
+{"stage": "numerical_pilot", "elapsed_seconds": 27.817967156879604}
+{"stage": "eigensolver", "elapsed_seconds": 110.51603844948113, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 4, "seed": 921, "mu": 0.004105789575788441, "residual": null, "relative_change": null, "spectrum": [[0.004105789575788441, 0.0], [0.003248364122418356, 0.0], [3.29809194579839e-06, 0.0], [0.0012495243917828647, 0.0]], "operator_calls": 4, "operator_seconds": 78.78654650878161, "tokens": 16777216, "offset": 0}}
+{"stage": "eigensolver", "elapsed_seconds": 188.4659974416718, "current_probe": {"tokens": 16777216, "offset": 0}, "current_search": {"dimension": 8, "seed": 921, "mu": 0.004422719219365152, "residual": null, "relative_change": null, "spectrum": [[-0.0008951992465395911, 0.0], [8.833405074386188e-07, 0.0], [0.00035155937535220807, 0.0], [0.0015312078858967973, 0.0], [0.004422719219365152, 0.0], [0.004044531766202295, 0.0], [0.0034489850892496263, 0.0], [0.0026297663071737478, 0.0]], "operator_calls": 8, "operator_seconds": 156.70743887033314, "tokens": 16777216, "offset": 0}}
