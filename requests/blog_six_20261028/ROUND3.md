@@ -43,3 +43,10 @@ Push new `point_*.json` files and results (no `.pt` tensors), plus one status li
 1. **Increased momentum and LR ×0.5**: one node each, always. Search until each has a verified onset where ζ lies consistently above the line.
 2. **MaxEntSlop: 30 new points in its sparsest gaps** (all before 2600): 815, 875, then every 50 from 1025 to 2175 (with 1280 instead of 1275), then 2375, 2425, 2475, 2525. Job file: `jobs/maxent_scratch.json`. No MaxEnt restart exists, so **retrain native MaxEntSlop from scratch**: `train_gpt_muon_maxentslop.py` starts from step 0 (seed 0) when `RESUME_CHECKPOINT` is unset. Use `run_gaps.py` with anchor 0 and without the `input/maxentslop` resume (adapt `run_job.sh`/`run_gaps.py` as needed; note it in `RUN_NOTES.md`), capture these 30 updates, stop at 2526, and measure them. It's a fresh realization; keep its lineage name. Run it on whichever node is waiting (for example during the other arm's replay) or once an arm's onset is verified.
 3. **LR ×2 past 2700**: last; only when nothing above is runnable.
+
+## Equilibrium rule and switch condition (Jack, 2026-10-30 07:00Z) — overrides the rule above
+
+- **Equilibrated** = from an onset U on, **at least 80% of points are at or above the line** (ζ ÷ prediction ≥ 0.97 counts as "at"), with at least 6 points. The old "median ≤ 1.15" condition is dropped. `scripts/check_equilibrium.py` (updated) applies this, and also reports sampling density around U.
+- **Densely plotted** = no gap wider than 50 updates between measured points from U−150 to U+250. Fill any gaps the check lists.
+- **A node switches to MaxEntSlop (priority 2) only after its arm PASSes and its density is OK.** Until then it keeps searching: in-between points first; if most are below or oscillating, further along in training (sparse, every 50), extending the replay if snapshots run out (momentum beyond 2400, LR ×0.5 beyond 4800).
+- At 07:00Z, with all points so far: increased momentum **FAIL**, LR ×0.5 **FAIL**.

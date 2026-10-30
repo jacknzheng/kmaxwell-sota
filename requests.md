@@ -20,6 +20,8 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T06:56Z): **equilibrium rule updated:** at least 80% of points from the onset on at or above the line (ratio ≥ 0.97), and dense sampling around the onset (no gap > 50 updates from U−150 to U+250). `check_equilibrium.py` is updated. Right now momentum and LR ×0.5 both **FAIL**. Keep searching on both nodes; switch a node to MaxEntSlop only after its arm passes **and** is densely sampled. See the end of ROUND3.md.
+
 - nudge (Jack, 2026-10-30T06:53Z): **priority order** (details at the end of ROUND3.md): **(1) increased momentum and LR ×0.5**, one node each, always. **(2) MaxEntSlop: 30 new points in the sparsest gaps before 2600** by retraining native MaxEntSlop from scratch (`jobs/maxent_scratch.json`; no restart needed). **(3) LR ×2 past 2700** last.
 
 - nudge (Jack, 2026-10-30T06:52Z): **priority change on Node A: increased momentum first.** Pause the remaining LR ×2 points past 2700 after the one in progress. Run `higher_zeta_ext` now (replay to 2400), measure 2140, 2160 and 2185 and run the check. If ζ is still below or oscillating, measure 2250, 2300, 2350 and 2400, then go dense where it's consistently above. Resume LR ×2 only when momentum is waiting on something, or once its onset is verified.
