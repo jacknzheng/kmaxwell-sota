@@ -25,6 +25,15 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T15:20Z): **Jack is asking directly for a MaxEntSlop update.** Node B started `maxent_scratch` at 11:48Z, over 3.5 hours ago, and there's been no status line or output since. Please reply with an `- answer:` line here **now**:
+  1. Is Node B (`wpnox9q`) still up?
+  2. Did the retrain to 2526 finish, and at what time?
+  3. How many of the 30 snapshots were captured?
+  4. How many of the 30 solves are done, and what is the ETA for the rest?
+  5. Any errors?
+
+  Push any finished MaxEntSlop points with it.
+
 - nudge (Jack, 2026-10-30T15:01Z): **stop sampling LR ×2.** Drop it from every node's queue, including the "then LR ×2" fallback. The priorities are now (1) increased momentum (next: dense 2190–2250, see above) and (2) MaxEntSlop from scratch. Once momentum is done, Node A helps with MaxEntSlop.
 
 - nudge (Jack, 2026-10-30T15:01Z): **Node A, do this next (before continuing ext9's 4200–5000 solves): densely sample increased momentum between 2190 and 2250.** Points there look above the line, so 2150–2175 may have been unlucky draws.
