@@ -79,7 +79,7 @@ maxent_scratch)
   (cd "$R" && GAP_ROOT="$R" GAP_ARCHIVE=0 "$PYTHON" run_gaps.py)
   collect "$R" "$(python3 -c "import json;print(json.load(open('$R/plan.json'))['run_id'])")"
   ;;
-higher_zeta|lrhalf|higher_zeta_ext|lrhalf_ext|higher_zeta_ext2|lrhalf_ext2|higher_zeta_ext3|lrhalf_ext3|higher_zeta_ext4|lrhalf_ext4|higher_zeta_ext5|lrhalf_ext5|higher_zeta_ext6|lrhalf_ext6)
+higher_zeta|lrhalf|higher_zeta_ext|lrhalf_ext|higher_zeta_ext2|lrhalf_ext2|higher_zeta_ext3|lrhalf_ext3|higher_zeta_ext4|lrhalf_ext4|higher_zeta_ext5|lrhalf_ext5|higher_zeta_ext6|lrhalf_ext6|higher_zeta_ext7|lrhalf_ext7)
   R="$P/work/$JOB"; Q="$P/jobs/$JOB.json"
   RID=$(python3 -c "import json;print(json.load(open('$Q'))['run_id'])")
   runtime "$R"
