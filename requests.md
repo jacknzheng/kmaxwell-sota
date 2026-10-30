@@ -35,6 +35,11 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T20:49Z): **Jack's call: momentum may begin to equilibrate between 5000 and 5500. Sample densely, every 50 from 5000 to 6000, using the sequential warm chain** (each solve warm-started from the previous update's solve) as the one consistent method for this range. Re-solve updates that were already measured, so the whole 5000–6000 curve comes from one chain.
+  - **Node B:** 5000, 5050, …, 5600 (13 points) from its replay (snapshots every 50 from 4000), chained in order from 5000.
+  - **Node A:** 5650, 5700, …, 6000 (8 points), chained in order from 5600. Use ext12 snapshots if it captured every 50 there; otherwise replay with captures every 50 from 5600.
+  - Push points as they finish, then run `check_equilibrium.py higher_zeta 5000` using only these chain points, and post it with residuals.
+
 - nudge (Jack, 2026-10-30T18:26Z): **correction: ignore the "revised momentum split" note; go back to the earlier plan.**
   - **Node A:** extend past 5600 and scout **5800, 6000, 6200, 6400**. Wherever points sit at or above the line, sample every 50 from 150 before to 250 after, then run `check_equilibrium.py higher_zeta 3400`.
   - **Node B:** re-solve the **4900** outlier with a different warm start, and fill **5100, 5300, 5500** (4000–5600 every 100). Use its own replay to 5600, capturing every 50 from 4000.
