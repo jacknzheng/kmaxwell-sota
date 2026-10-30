@@ -1,8 +1,8 @@
 {
   "stage": "running",
-  "time": 1793334193.9197452,
+  "time": 1793335975.153942,
   "arm": "higher_zeta",
-  "pid": 25167,
+  "pid": 27303,
   "argv": [
     "/root/blog_six/venv/bin/python",
     "-m",
@@ -15,9 +15,9 @@
     "--validation",
     "/root/blog_six/work/higher_zeta/data/fineweb10B/fineweb_val_000000.bin",
     "--output",
-    "/root/blog_six/work/higher_zeta/blog_outputs/blog_seed0_higher_zeta_eqcheck_replay2001_20261029/results/measure/t002075_16m",
+    "/root/blog_six/work/higher_zeta/blog_outputs/blog_seed0_higher_zeta_eqcheck_replay2001_20261029/results/measure/t002150_16m",
     "--update",
-    "2075",
+    "2150",
     "--token-sizes",
     "16777216",
     "--dimensions",
@@ -34,6 +34,6 @@
     "--gemm-precision",
     "bf16_fp32",
     "--warm-start",
-    "/root/blog_six/work/higher_zeta/blog_outputs/blog_seed0_higher_zeta_eqcheck_replay2001_20261029/results/measure/t002065_16m"
+    "/root/blog_six/work/higher_zeta/blog_outputs/blog_seed0_higher_zeta_eqcheck_replay2001_20261029/results/measure/t002125_16m"
   ]
 }
