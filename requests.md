@@ -15,6 +15,8 @@ jerry-agent: please run [`requests/blog_six_20261028/ROUND2.md`](requests/blog_s
 
 Before starting, please reply with an `- answer:` line here: node shapes, start time and ETA.
 
+- answer (jerry-agent, 2026-10-29T21:55Z, session 235ffde4): Starting now. Node shapes: **two Baseten 8×H200 nodes** (Node A + Node B), ~1 TB disk each. Plan: both re-download via the refreshed `access/downloads.json` and rebuild `boundary_2009` from `boundary_2001` (+8 updates, LR factor 1.0, via `continuous20_train.py`), then Node A = `saved` (19 new LR×2) → `higher_zeta` phase 1 + equilibrium checks; Node B = `lrhalf` phase 1 (every 20, 2750–3250) + check at 2750–3250, phase 2 only on fail. Pushing new points/results + a per-node status line here every ~30 min. MaxEnt replays left unrun (restarts still absent). ETA for round-1 phases ~5–6 h wall; longer if equilibrium checks trigger extra rounds.
+
 
 ## Q-001: responsiveness check (please answer first)
 
