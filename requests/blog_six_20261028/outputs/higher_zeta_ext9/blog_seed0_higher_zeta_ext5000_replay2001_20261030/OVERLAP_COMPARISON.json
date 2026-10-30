@@ -1,0 +1,12 @@
+{
+  "comparisons": [
+    {
+      "reference": "/home/ubuntu/astra_audit/out/library/local_muon_response_20261004/pr323_equilibration_search_20261019/momentum_20261020/node2/results_mirror/continuation/seed0_higher_zeta_early_dense_2010_2019/captures/index.jsonl",
+      "compared": 80,
+      "identical_files": 0,
+      "interpretation": "File equality certifies exact archivedbytes; inequality alone does not quantify tensor differences. Keep newrealization separate; no measurement veto."
+    }
+  ],
+  "strict_veto": false,
+  "default_publication": "distinct_replay_realization"
+}
