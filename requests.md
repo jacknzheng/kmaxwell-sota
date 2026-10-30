@@ -29,6 +29,11 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-30T18:22Z): **Jack: keep momentum going, with both nodes on increased momentum.**
+  - **Node A:** extend past 5600 and scout every 200: **5800, 6000, 6200, 6400** (40 shards are enough to about 7600). Wherever points sit at or above the line, sample every 50 from 150 before to 250 after and run `check_equilibrium.py higher_zeta 3400`.
+  - **Node B:** re-solve the **4900** outlier (2.26×, more than twice its neighbours) with a different warm start, and fill **5100, 5300, 5500** so 4000–5600 is every 100. That needs its own replay to 5600 (it can capture every 50 from 4000 so any later densifying is free).
+  - Push points as they finish, plus one status line per node.
+
 - nudge (Jack, 2026-10-30T16:51Z): **Node B: please confirm it's on the LR ×0.5 dense points** (every 20 from 3680 to 4000: 3680, 3720, 3740, 3760, 3780, 3820, 3840, 3860, 3880, 3920, 3940, 3960, 3980) and update its status line. Its line still describes MaxEntSlop. Push points as they finish.
 
 - nudge (Jack, 2026-10-30T16:24Z): **momentum, Node A: add in-between points 4100, 4300, 4500, 4700, 4900** (4000–5000 then every 100). Jack thinks 4200–5000 may have been unlucky draws. Use ext9's snapshots if those updates were captured. If not, add them to the ext10 replay's captures if it hasn't passed 4100 yet, or else re-replay with them. Measure them together with 5200/5400/5600, then run `check_equilibrium.py higher_zeta 3400` and post it.
