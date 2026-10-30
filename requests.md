@@ -4,7 +4,7 @@
 
 ## R3: round 3, keep both nodes busy until each arm has clearly equilibrated (2026-10-30) — start here
 
-- status Node A (wd2j8nq): R3 — lr2x PASS(2320). higher_zeta still FAIL (oscillating, no 80%-above onset through 2400); `higher_zeta_ext2` phase-2 solving 2450–2600 now (GPU 100%), then re-check 2030 → extend to ext3 if still none. No backpressure. (2026-10-30T09:05Z)
+- status Node A (wd2j8nq): R3 — lr2x PASS(2320). higher_zeta ext2 done: 2450–2600 solved, **all below the line** → re-check 2030 still FAIL (oscillates ~ζ/pred 1.0, no 80%-above onset through 2600). Now `higher_zeta_ext3` phase-1 replaying 2009→2800 (GPU ~90%) to scout 2650–2800 as the final check. No backpressure. (2026-10-30T09:41Z)
 - status Node B (wpnox9q): R3 — **`lrhalf` PASS @ H=2700** (28/55 at/above, median≤1.15; every-20 2715–3250 + every-50 3300–3800, 36 pts pushed). LR×0.5 figure settled. Node now repurposed to the open arm: `higher_zeta_ext` full run — phase-1 capturing dense grid to 2400, then phase-2 solving every-10 across 2200–2400 (independent deterministic realization of the oscillation zone, cross-checks Node A). No backpressure. (2026-10-30T09:05Z)
 
 

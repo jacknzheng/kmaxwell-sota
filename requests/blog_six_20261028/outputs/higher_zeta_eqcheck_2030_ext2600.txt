@@ -1,0 +1,19 @@
+check_equilibrium.py higher_zeta 2030  (after ext2: added 2450/2500/2550/2600)
+
+Scout points past 2400 (all BELOW the predicted line):
+ 2400  0.897  below
+ 2450  0.998  below
+ 2500  0.887  below
+ 2550  0.963  below
+ 2600  0.965  below
+
+Full-curve behavior 2030-2600: oscillates around zeta/prediction ~= 1.0, never a
+run of >=80% at/above the line. median across points ~0.98 (slightly below).
+
+FAIL: no update in 2030-end from which >=80% of points are at or above the line
+with median <= 1.15.
+
+Interpretation so far: increased-momentum sits ON the predicted line but noisy;
+no verified onset under the R3 rule through 2600. Extending to 2800 (ext3) as the
+final check, and Node B is solving a dense independent every-10 grid across
+2200-2400 to confirm the oscillation is noise, not a masked onset.
