@@ -37,7 +37,9 @@ if not (O/'CAPTURE_COMPLETE.json').exists():
   assert cfg['train_steps']==3250 and all(g['lr_schedule']==dict(kind='cooldown',fraction=.7) for g in cfg['optimizer_groups'])
   (O/'training.yaml').write_text(yaml.safe_dump(cfg,sort_keys=False));child(TR+[str(R/'pr_streaming_train.py'),str(O/'training.yaml')],O/'training.log')
  else:
-  native={**ENV,'DENSE_CAPTURE_ROOT':str(C),'GAP_CAPTURE_STEPS':json.dumps(P['captures']),'TUNED_TRAINER_SOURCE':str(R/'train_gpt_muon_maxentslop.py'),'TUNED_TRAINER_SHA256':SPEC['trainer_sha256'],'RESUME_CHECKPOINT':str(R/'input/maxentslop'),'STOP_STEP':str(SPEC['stop']),'CHECKPOINT_ROOT':str(O/'restart'),'CHECKPOINT_STEPS':str(SPEC['stop'])}
+  native={**ENV,'DENSE_CAPTURE_ROOT':str(C),'GAP_CAPTURE_STEPS':json.dumps(P['captures']),'TUNED_TRAINER_SOURCE':str(R/'train_gpt_muon_maxentslop.py'),'TUNED_TRAINER_SHA256':SPEC['trainer_sha256'],'STOP_STEP':str(SPEC['stop']),'CHECKPOINT_ROOT':str(O/'restart'),'CHECKPOINT_STEPS':str(SPEC['stop'])}
+  if SPEC['anchor']>0: native['RESUME_CHECKPOINT']=str(R/'input/maxentslop')
+  else: native.pop('RESUME_CHECKPOINT',None)  # scratch: anchor 0 -> trainer starts from step 0 (seed 0)
   for k in ['WAYPOINT_SCHEDULE_PATH','CONSTRAINED_SCHEDULE_PATH','TRIAL_BATCH_PATH','COMPARE_CHECKPOINT']:native.pop(k,None)
   child(TR+[str(R/'maxent_sparse_capture.py'),'--seed','0','--train_steps',str(SPEC['train_steps'])],O/'training.log',env=native)
  write(O/'CAPTURE_COMPLETE.json',dict(captures=P['captures'],lineage=P['lineage']))

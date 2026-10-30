@@ -69,6 +69,16 @@ maxent_1250|maxent_1750|maxent_2250)
   (cd "$R" && GAP_ROOT="$R" GAP_ARCHIVE=0 "$PYTHON" run_gaps.py)
   collect "$R" "$(python3 -c "import json;print(json.load(open('$R/plan.json'))['run_id'])")"
   ;;
+maxent_scratch)
+  # native MaxEntSlop retrained from step 0 (no restart resume); run_gaps leaves RESUME_CHECKPOINT unset for anchor 0
+  R="$P/work/$JOB"
+  runtime "$R"
+  cp "$P/jobs/$JOB.json" "$R/plan.json"
+  ln -sfn "$L/warm/maxentslop1600" "$R/warm/maxentslop1600"
+  touch "$R/DIRECT_DOWNLOAD_COMPLETE"
+  (cd "$R" && GAP_ROOT="$R" GAP_ARCHIVE=0 "$PYTHON" run_gaps.py)
+  collect "$R" "$(python3 -c "import json;print(json.load(open('$R/plan.json'))['run_id'])")"
+  ;;
 higher_zeta|lrhalf|higher_zeta_ext|lrhalf_ext|higher_zeta_ext2|lrhalf_ext2|higher_zeta_ext3|lrhalf_ext3|higher_zeta_ext4|lrhalf_ext4|higher_zeta_ext5|lrhalf_ext5|higher_zeta_ext6|lrhalf_ext6)
   R="$P/work/$JOB"; Q="$P/jobs/$JOB.json"
   RID=$(python3 -c "import json;print(json.load(open('$Q'))['run_id'])")
