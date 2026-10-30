@@ -3,24 +3,17 @@
  "arm": "lrhalf",
  "family": "lr",
  "seed": 0,
- "run_id": "blog_seed0_lrhalf_ext4800_replay2001_20261030",
+ "run_id": "blog_seed0_lrhalf_ext4100_replay2001_20261030",
  "runtime": "<RUNTIME_ROOT>",
  "parent": "<RUNTIME_ROOT>/restart/shared_2009",
  "parent_prefix": "checkpoints/critroll/pr323_lr_snap_portable_20261019/continuous20/shared/restart/boundary_2009",
  "parent_bytes": 95270261840,
  "lr_factor": 0.5,
- "last_capture": 4800,
+ "last_capture": 4100,
  "capture_updates": [
   3900,
   4000,
-  4100,
-  4200,
-  4300,
-  4400,
-  4500,
-  4600,
-  4700,
-  4800
+  4100
  ],
  "saved_measurements": [],
  "replay_measurements": [],
@@ -157,6 +150,6 @@
  "training_microbatch": 8,
  "warm_path": "warm/lrhalf_2700",
  "analysis_only": false,
- "directive": "round 3 (Jack 09:24Z): lrhalf FAILs through 3800 under the 0.97/80% rule. Replay to 4800, sparse scout every 100 from 3900; then sample every 50 or denser wherever zeta is consistently at/above the line (ratio>=0.97).",
+ "directive": "round 3 (Jack 09:24Z asked for 4800, but only 22 fineweb shards exist = ~2.2B tokens = max replay step ~4196; one-shot generator StopIterations beyond). Extending to the DATA MAX: last_capture 4100, scout 3900/4000/4100. If any region is consistently at/above the line (ratio>=0.97), densify there; otherwise LR x0.5 has no verified onset within available data.",
  "parent_note": "boundary_2009 rebuilt by continuing the shared baseline 2001->2009 (no intervention) from baseline_seed0_replay1000_1980_2000_20261027/restart/boundary_2001; fresh realization"
 }
