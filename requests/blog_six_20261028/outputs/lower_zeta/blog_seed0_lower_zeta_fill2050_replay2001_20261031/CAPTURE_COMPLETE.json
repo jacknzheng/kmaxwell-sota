@@ -1,0 +1,9 @@
+{
+  "run_id": "blog_seed0_lower_zeta_fill2050_replay2001_20261031",
+  "source_boundary": 2009,
+  "captured": [
+    2048,
+    2049
+  ],
+  "cohort": "fresh_replay; overlap comparison pending; not pooled with historical observations"
+}
