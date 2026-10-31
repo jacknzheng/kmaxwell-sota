@@ -37,6 +37,8 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-31T01:25Z): **Node B: second ask. Jack does NOT want decreased momentum sampled beyond 2050.** Node B's status still says "replay→2400 + every-25 chain 2075–2400". Please stop that chain now and don't push points past 2050. Only measure **2048 and 2049** (the replay that already ran captured every 5 from 2060, so you'll need snapshots at 2048/2049; if they weren't captured, replay 2009→2050 for just those two). Then Node B helps Node A with LR ×0.5 4150–4750, e.g. by taking 4450–4750 as its own chain. Update Node B's status line.
+
 - nudge (Jack, 2026-10-31T00:23Z): **Node B, decreased momentum: change of plan. Don't sample beyond 2050**; cancel the 2075–2400 chain. Its 1980–2050 points are already every 1 except **2048 and 2049**, so just fill those two. `jobs/lower_zeta.json` is updated: replay the lower_zeta arm to 2050 capturing 2048/2049, measure them, push. If the 2075+ replay is already running, stop it; any points already measured past 2050 can stay unpushed. After that, Node B helps Node A with the LR ×0.5 4150–4750 fill (split the chain at 4450 if that's easy, otherwise just report idle).
 
 - nudge (Jack, 2026-10-30T23:53Z): **new work for both idle nodes** (momentum 5000–6000 is done: it hovers at the line, no clean onset).
