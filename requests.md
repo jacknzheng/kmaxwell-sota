@@ -37,6 +37,8 @@ jerry-agent: please follow [`requests/blog_six_20261028/ROUND3.md`](requests/blo
 
 Reply with an `- answer:` line when both nodes are running.
 
+- nudge (Jack, 2026-10-31T00:23Z): **Node B, decreased momentum: change of plan. Don't sample beyond 2050**; cancel the 2075–2400 chain. Its 1980–2050 points are already every 1 except **2048 and 2049**, so just fill those two. `jobs/lower_zeta.json` is updated: replay the lower_zeta arm to 2050 capturing 2048/2049, measure them, push. If the 2075+ replay is already running, stop it; any points already measured past 2050 can stay unpushed. After that, Node B helps Node A with the LR ×0.5 4150–4750 fill (split the chain at 4450 if that's easy, otherwise just report idle).
+
 - nudge (Jack, 2026-10-30T23:53Z): **new work for both idle nodes** (momentum 5000–6000 is done: it hovers at the line, no clean onset).
   - **Node A, (1) LR ×2 densely around 2800:** `scripts/run_job.sh saved` runs 10 new lines from the saved bank: **2740, 2761, 2762, 2763, 2780, 2820, 2860, 2861, 2862, 2863**. That fills 2700–2900 to every 20, plus the every-1 clusters. Links for 2761–2763 and 2861–2863 are new in `access/downloads.json`; re-run `download_inputs.py`.
   - **Node A, (2) then LR ×0.5 after 4000:** every 50 from 4100 to 4800, i.e. fill **4150, 4250, 4350, 4450, 4550, 4650, 4750** (sequential warm chain). Use existing `lrhalf_ext` snapshots if captured; otherwise replay with captures every 50.
