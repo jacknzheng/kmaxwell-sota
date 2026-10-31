@@ -1,0 +1,2 @@
+tokens,offset,qualified,mu,mu_polar_component,include_weight_decay,weight_decay_shift,seconds,operator_calls,operator_seconds,seed_relative_spread
+16777216,0,True,0.00419417718654908,0.004194081819117439,True,9.5367431640625e-08,217.2952210251242,11,217.17216470651329,
